@@ -170,6 +170,8 @@ type App struct {
 	usageDayShown    float64 // the day the panel shows, as it folds away too
 	share            shareDialog
 	resetting        string    // the share whose link is being reset, in settings
+	archiveArm       string    // the row whose archive button asks to be clicked again
+	archiveArmAt     time.Time // since when
 	membershipSeen   string    // user|fingerprint of the workspaces they belong to
 	membershipAt     time.Time // when it was last asked
 	membershipAsking bool

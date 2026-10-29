@@ -1094,5 +1094,7 @@
   "previewUnavailable": "预览不可用",
   "projectPageFiles": "文件",
   "projectPageFilesLead": "项目在其机器上的文件夹，只读。",
-  "workspaceLinkNotMember": "你不是这个工作区的成员。请向其所有者索取邀请或加入链接。"
+  "workspaceLinkNotMember": "你不是这个工作区的成员。请向其所有者索取邀请或加入链接。",
+  "archiveConfirm": "确认",
+  "archiveConfirmLabel": "确认归档会话"
 }

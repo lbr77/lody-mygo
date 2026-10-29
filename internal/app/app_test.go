@@ -1633,3 +1633,29 @@ func TestProjectFiles(t *testing.T) {
 		t.Fatalf("files: %q", tt.Texts())
 	}
 }
+
+func TestSidebarRowArchive(t *testing.T) {
+	a := fixture()
+	tt := snap(t, a, "sidebar-row", false, nil)
+	r, ok := tt.Find("Sidebar status marks")
+	if !ok {
+		t.Fatal("no row")
+	}
+	tt.Move(r.X+r.W/2, r.Y+r.H/2)
+	tt.Frame()
+	tt.Advance(200 * time.Millisecond)
+	tt.Frame()
+	if !tt.HasText("Archive") {
+		t.Fatalf("no archive on hover: %q", tt.Texts())
+	}
+	a.archiveArm, a.archiveArmAt = "s2", time.Now()
+	tt.Frame()
+	if !tt.HasText("Confirm Archive session") {
+		t.Fatalf("not armed: %q", tt.Texts())
+	}
+	a.archiveArmAt = time.Now().Add(-4 * time.Second)
+	tt.Frame()
+	if a.archiveArm != "" {
+		t.Fatal("the confirmation outlives 3.5s")
+	}
+}

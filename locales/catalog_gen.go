@@ -11042,3 +11042,23 @@ func WorkspaceLinkNotMember() string { return In(i18n.Locale()).WorkspaceLinkNot
 func (msgs Messages) WorkspaceLinkNotMember() string {
 	return Catalog.Format(msgs.locale, "workspaceLinkNotMember", nil)
 }
+
+// ArchiveConfirm says "Confirm"
+// in the language the app shows.
+func ArchiveConfirm() string { return In(i18n.Locale()).ArchiveConfirm() }
+
+// ArchiveConfirm says "Confirm"
+// in the language of msgs.
+func (msgs Messages) ArchiveConfirm() string {
+	return Catalog.Format(msgs.locale, "archiveConfirm", nil)
+}
+
+// ArchiveConfirmLabel says "Confirm Archive session"
+// in the language the app shows.
+func ArchiveConfirmLabel() string { return In(i18n.Locale()).ArchiveConfirmLabel() }
+
+// ArchiveConfirmLabel says "Confirm Archive session"
+// in the language of msgs.
+func (msgs Messages) ArchiveConfirmLabel() string {
+	return Catalog.Format(msgs.locale, "archiveConfirmLabel", nil)
+}

@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"github.com/lbr77/lody-mygo/internal/cloud"
 	"github.com/lbr77/lody-mygo/locales"
 	"math"
@@ -289,18 +290,20 @@ func (a *App) projectRow(c *ui.Context, p *palette, r sideRow) {
 	case hovered:
 		row.Background(p.SideHover)
 	}
+	// The chevron turns between open and folded over 150ms, easing out.
+	turn := row.AnimateWith("chevron", b2f(collapsed), 150*time.Millisecond, ui.EaseOut)
 	row.Children(func() {
 		icon := iconFolderOpen
 		if collapsed {
 			icon = iconFolder
 		}
-		if hovered {
-			icon = iconChevronDown
-			if collapsed {
-				icon = iconChevronRight
+		ui.Box(c).Size(14, 16).Center().Shrink(0).Children(func() {
+			if hovered {
+				ui.Icon(c, iconChevronDown).Size(16, 16).TextColor(p.SideMuted).Rotate(-90 * turn)
+				return
 			}
-		}
-		ui.Box(c).Size(14, 16).Center().Shrink(0).Children(func() { ui.Icon(c, icon).Size(16, 16).TextColor(p.SideMuted) })
+			ui.Icon(c, icon).Size(16, 16).TextColor(p.SideMuted)
+		})
 		ui.Text(c, r.label).FontSize(sizeSub).TextColor(p.SideRow).SingleLine().Grow(1).MinWidth(0)
 		if hovered {
 			b := ui.ButtonBase(c).Size(20, 20).Radius(4).Cursor(ui.CursorPointer).Label(locales.NewChatIn(r.label)).Tooltip(locales.NewChat()).Transition(colorFade)
@@ -377,8 +380,90 @@ func (a *App) sessionRow(c *ui.Context, p *palette, r sideRow) {
 			a.renameField(c, p, s)
 			return
 		}
-		ui.Text(c, s.Title).FontSize(sizeSub).TextColor(ink).SingleLine().Grow(1).MinWidth(0)
-		a.statusMark(c, p, s, !r.nested && r.depth == 0)
+		rowTitle(c, s.Title, ink, hovered)
+		a.rowEnd(c, p, s, !r.nested && r.depth == 0, hovered)
+	})
+}
+
+// rowTitle is a row's title, ellipsized; while the row is hovered, a
+// title too long to show runs back and forth, as Lody's marquee does:
+// after 600ms, over max(3.8s, 2.4s + 1s every 30px it overflows by).
+func rowTitle(c *ui.Context, title string, ink ui.Color, hovered bool) {
+	clip := ui.Column(c.Key("title")).Grow(1).MinWidth(0).ClipX()
+	clip.Children(func() {
+		var natural float32
+		// The title's own width, measured where it takes no room.
+		ui.Row(c.Key("measure")).FillWidth().Height(0).Opacity(0).Children(func() {
+			natural = ui.Text(c.Key("m"), title).FontSize(sizeSub).SingleLine().Shrink(0).Bounds().W
+		})
+		over := natural - clip.Bounds().W
+		if !hovered || over <= 8 {
+			ui.Text(c.Key("t"), title).FontSize(sizeSub).TextColor(ink).SingleLine().FillWidth()
+			return
+		}
+		run := ui.Text(c.Key("run"), title).FontSize(sizeSub).TextColor(ink).SingleLine().Shrink(0)
+		dur := time.Duration(max(3.8, 2.4+float64(over)/30) * float64(time.Second))
+		k := run.Keyframes("marquee", []ui.Keyframe{{Value: 0}, {At: dur, Value: 1, Ease: ui.EaseInOut}},
+			ui.KeyframeOptions{Repeat: ui.RepeatForever, Alternate: true, Delay: 600 * time.Millisecond})
+		run.Translate(-over*k, 0)
+	})
+}
+
+// archiveArmed is how long an archive button waits for its confirmation.
+const archiveArmed = 3500 * time.Millisecond
+
+// rowEnd is a row's end: its status mark at rest; while hovered, the mark
+// fades out over 100ms as the archive button fades in over it, which asks
+// to be clicked again to archive, as Lody's sidebar does.
+func (a *App) rowEnd(c *ui.Context, p *palette, s *catalog.Session, age, hovered bool) {
+	armed := a.archiveArm == s.ID && time.Since(a.archiveArmAt) < archiveArmed
+	if a.archiveArm == s.ID && !armed {
+		a.archiveArm = ""
+	}
+	if armed {
+		c.After(archiveArmed - time.Since(a.archiveArmAt))
+	}
+	show := (hovered || armed) && !s.Archived
+	slot := ui.Row(c.Key("end")).Height(20).MinWidth(20).Shrink(0).Justify(ui.End).AlignItems(ui.Center)
+	rest := slot.AnimateWith("rest", b2f(!show), 100*time.Millisecond, easeStandard)
+	slot.Children(func() {
+		ui.Row(c.Key("rest")).AlignItems(ui.Center).Opacity(rest).Children(func() { a.statusMark(c, p, s, age) })
+		if !show {
+			return
+		}
+		fade := ui.ElementTransition{Duration: 100 * time.Millisecond, Ease: easeStandard, Enter: &ui.Motion{}, Exit: &ui.Motion{}}
+		id := s.ID
+		if armed {
+			// The confirmation snaps in, a pill in the destructive ink.
+			pill := ui.ButtonBase(c.Key("confirm")).Absolute().Right(0).Top(0).Height(20).MinWidth(56).Padding(0, 8).Radius(10).
+				Border(1, p.Danger.Alpha(0.2)).Background(p.Ground).Justify(ui.Center).AlignItems(ui.Center).Cursor(ui.CursorPointer).
+				Label(locales.ArchiveConfirmLabel())
+			if pill.PressedOutside() || !hovered {
+				a.archiveArm = ""
+			}
+			pill.OnClick(func() {
+				a.archiveArm = ""
+				if a.selected == id {
+					a.open("")
+				}
+				a.catalogAction(locales.FailArchive(), func(ctx context.Context, sync *catalog.Sync) error {
+					return sync.Archive(ctx, id, true)
+				})
+			})
+			pill.Children(func() {
+				ui.Box(c).Absolute().Left(0).Top(0).Right(0).Bottom(0).Radius(10).Background(p.Danger.Alpha(0.12))
+				ui.Text(c, locales.ArchiveConfirm()).FontSize(11).FontWeight(500).TextColor(p.Danger).SingleLine()
+			})
+			return
+		}
+		b := ui.ButtonBase(c.Key("archive")).Absolute().Right(0).Top(0).Size(20, 20).Radius(4).Justify(ui.Center).AlignItems(ui.Center).
+			Cursor(ui.CursorPointer).Label(locales.ActionArchive()).Tooltip(locales.ActionArchive()).Transition(fade)
+		ink := p.SideMuted
+		if b.Hovered() {
+			ink = p.SideRow
+		}
+		b.OnClick(func() { a.archiveArm, a.archiveArmAt = id, time.Now() })
+		b.Children(func() { ui.Icon(c, iconArchive).Size(14, 14).TextColor(ink) })
 	})
 }
 
