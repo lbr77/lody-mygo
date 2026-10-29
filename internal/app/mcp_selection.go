@@ -110,7 +110,7 @@ func (a *App) plusMenu(c *ui.Context, p *palette, sessionID string) {
 		b.Background(p.Hover)
 	}
 	servers := a.catalog.MCPServers
-	if len(servers) == 0 {
+	if len(servers) == 0 && sessionID == "" {
 		// Nothing to choose: the button picks files at once.
 		b.OnClick(a.pickFiles)
 		return
@@ -180,6 +180,29 @@ func (a *App) plusMenu(c *ui.Context, p *palette, sessionID string) {
 				ui.Icon(c, iconPaperclip).Size(14, 14).TextColor(p.Secondary)
 				ui.Text(c, locales.AttachMenu()).FontSize(sizeSub).TextColor(p.Text)
 			})
+			if sessionID != "" {
+				// Schedule send holds the next message for a time.
+				reason := a.scheduleSendReason(a.catalog.Session(sessionID))
+				sched := menuRow(c.Key("schedule"), p, locales.SmMenu()).Disabled(reason != "")
+				if reason != "" {
+					sched.Opacity(0.5).Tooltip(reason)
+				}
+				sched.OnClick(func() {
+					*open = false
+					at := time.Time{}
+					if d := a.schedSends[sessionID]; d != nil {
+						at = d.at
+					}
+					a.openScheduleSend(sessionID, at, "")
+				})
+				sched.Children(func() {
+					ui.Icon(c, iconClock).Size(14, 14).TextColor(p.Secondary)
+					ui.Text(c, locales.SmMenu()).FontSize(sizeSub).TextColor(p.Text)
+				})
+			}
+			if len(servers) == 0 {
+				return
+			}
 			ui.Box(c).FillWidth().Height(1).Margin(3, 0).Background(p.Border)
 			label := locales.McpLoadNone()
 			if n := len(selected); n > 0 {

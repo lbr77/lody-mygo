@@ -3127,5 +3127,32 @@
       }
     }
   },
-  "schedUpgrade": "Update the target machine’s CLI to edit schedules."
+  "schedUpgrade": "Update the target machine’s CLI to edit schedules.",
+  "smMenu": "Schedule send…",
+  "smTitle": "Schedule send",
+  "smComposerAction": "Scheduled · {time}",
+  "@smComposerAction": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "smIn30Minutes": "In 30 minutes",
+  "smInOneHour": "In 1 hour",
+  "smInFiveHours": "In 5 hours",
+  "smDateAndTime": "Date and time",
+  "smFutureTime": "Choose a time in the future.",
+  "smMachineHint": "The target machine must be running. If it is asleep or offline, this message will be sent once it returns.",
+  "smApply": "Apply",
+  "smRemoveTime": "Remove time",
+  "smSaved": "Message scheduled",
+  "smOwnMachine": "Schedule messages in your own chats on a machine you own.",
+  "smUpgrade": "Update the target machine’s CLI to schedule complete messages.",
+  "smArchived": "Reopen this chat before scheduling a message.",
+  "smCancel": "Cancel scheduled message",
+  "smCancelled": "Scheduled message cancelled",
+  "smSaveError": "Could not confirm the scheduled message. Your draft is kept. Retry to check the same reservation.",
+  "smEditTime": "Edit scheduled time",
+  "smNotSent": "Not sent"
 }

@@ -28,6 +28,7 @@ type Document struct {
 	Exists     bool
 	Definition Definition
 	Prompt     string
+	Message    map[string]any // a scheduled message's payload
 	Timeline   []Activity
 }
 
@@ -162,6 +163,10 @@ func read(doc *loro.LoroDoc) Document {
 		out.Exists = out.Definition.ScheduleID != ""
 	}
 	out.Prompt = doc.GetText(loro.AsContainerId("prompt")).String()
+	message, _ := loro.ValueAsAny(doc.GetMap(loro.AsContainerId("message")).GetDeepValue())
+	if m, ok := message.(map[string]any); ok {
+		out.Message, _ = m["payload"].(map[string]any)
+	}
 	timeline, _ := loro.ValueAsAny(doc.GetList(loro.AsContainerId("timeline")).GetDeepValue())
 	b, _ := json.Marshal(timeline)
 	json.Unmarshal(b, &out.Timeline)
@@ -190,11 +195,16 @@ func (d *Doc) Write(ctx context.Context, edit func(doc *loro.LoroDoc) error) err
 	return err
 }
 
-// writeDocument sets the definition and prompt, appending activity to the
-// timeline when given.
-func writeDocument(doc *loro.LoroDoc, def Definition, prompt string, activity *Activity) error {
+// writeDocument sets the definition, prompt and a message's payload,
+// appending activity to the timeline when given.
+func writeDocument(doc *loro.LoroDoc, def Definition, prompt string, message map[string]any, activity *Activity) error {
 	if err := setMap(doc.GetMap(loro.AsContainerId("definition")), plain(def).(map[string]any)); err != nil {
 		return err
+	}
+	if message != nil {
+		if err := setMap(doc.GetMap(loro.AsContainerId("message")), map[string]any{"payload": plain(message)}); err != nil {
+			return err
+		}
 	}
 	text := doc.GetText(loro.AsContainerId("prompt"))
 	if text.String() != prompt {

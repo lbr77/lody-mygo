@@ -49,17 +49,21 @@ func (a *App) bottom(c *ui.Context, p *palette, sess *catalog.Session, v *sessio
 	if sess != nil && a.busyBehavior == "steer" && a.steerable(sess) {
 		busyLabel = locales.Steer()
 	}
+	scheduled, onScheduled := a.scheduledAction(sess)
 	a.composerBox(c, p, composerOptions{
-		sessionID:  a.selected,
-		expandable: true,
-		quota:      quota,
-		hint:       hint,
-		busyLabel:  busyLabel,
-		canSend:    ready && !a.sending,
-		working:    working,
-		onSend:     a.send,
-		onStop:     a.stop,
+		sessionID:   a.selected,
+		scheduled:   scheduled,
+		onScheduled: onScheduled,
+		expandable:  true,
+		quota:       quota,
+		hint:        hint,
+		busyLabel:   busyLabel,
+		canSend:     ready && !a.sending,
+		working:     working,
+		onSend:      a.send,
+		onStop:      a.stop,
 		above: func() {
+			a.scheduledQueue(c, p, sess)
 			a.quickReplyRow(c, p, sess, v)
 			if sess != nil {
 				a.infoBar(c, p, sess)
@@ -190,6 +194,10 @@ type composerOptions struct {
 	sessionID   string // the chat the composer writes to; "" for a new one
 	expandable  bool   // the composer can take the conversation's room, as lody-ios's full screen
 	quota       string // the Free quota's count-down, over the input
+	// scheduled is the chip of a message held for a time, onScheduled
+	// what it opens.
+	scheduled   string
+	onScheduled func()
 }
 
 // composerBox is Lody's message box: a 16-DIP-round card with the text
@@ -299,6 +307,18 @@ func (a *App) composerBox(c *ui.Context, p *palette, o composerOptions) {
 					} else {
 						spinner(c).Size(14, 14)
 					}
+				}
+				if o.scheduled != "" {
+					chip := ui.ButtonBase(c.Key("scheduled")).Height(26).Padding(0, 10).Radius(13).Gap(5).Border(1, p.Border).Cursor(ui.CursorPointer).
+						Label(o.scheduled).OnClick(o.onScheduled).Transition(colorFade)
+					pressable(chip, 0.97)
+					if chip.Hovered() {
+						chip.Background(p.Hover)
+					}
+					chip.Children(func() {
+						ui.Icon(c, iconClock).Size(13, 13).TextColor(p.Text)
+						ui.Text(c, o.scheduled).FontSize(sizeFoot).FontWeight(500).TextColor(p.Text).SingleLine()
+					})
 				}
 				empty := strings.TrimSpace(a.draft) == "" && !hasFiles
 				if o.working && empty && o.onStop != nil {

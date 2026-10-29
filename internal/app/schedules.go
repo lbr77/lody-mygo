@@ -1155,6 +1155,10 @@ func (a *App) schedDialog(c *ui.Context, p *palette) {
 			}
 			ui.Box(c).FillWidth().Height(0.5).Background(p.Border).Shrink(0)
 			ui.Scroll(c).FillWidth().Grow(1).MinHeight(0).Padding(16, 24, 0, 24).Children(func() {
+				if row != nil && row.ScheduledMessage {
+					a.schedMessageView(c, p, f, *row)
+					return
+				}
 				if st.tab == "history" && row != nil && !f.create {
 					a.schedHistory(c, p, *row)
 					return
@@ -1462,6 +1466,47 @@ func (a *App) schedFormView(c *ui.Context, p *palette, f *schedForm, row *schedu
 			}
 			primaryButton(c, p, label, owner && !a.sched.saving && a.canRunSchedules(f.machine)).OnClick(a.saveSchedule)
 		})
+	})
+}
+
+// schedMessageView is a scheduled message: what it sends, where and
+// when, with its time to change and a cancel while it waits.
+func (a *App) schedMessageView(c *ui.Context, p *palette, f *schedForm, row schedule.Row) {
+	if f.loading {
+		ui.Row(c).FillWidth().Justify(ui.Center).Padding(40).Children(func() { spinner(c).Size(16, 16) })
+		return
+	}
+	rt := a.sched.reg.Runtime[row.ScheduleID]
+	pending := row.Enabled && (rt == nil || rt.MessageState == "" || rt.MessageState == "pending")
+	owner := row.OwnerID == a.userID()
+	ui.Column(c).FillWidth().Gap(14).Padding(0, 0, 16, 0).Children(func() {
+		ui.Text(c, f.prompt).FontSize(sizeBody).LineHeight(1.5).TextColor(p.Text).Selectable().FillWidth().
+			Padding(12, 14).Radius(12).Border(1, p.ComposerBorder).Background(p.Composer)
+		ui.Column(c).FillWidth().Radius(12).Border(0.5, p.Border).Background(p.Canvas).Dividers(0.5, p.Border).Children(func() {
+			if s := a.catalog.Session(row.Destination.SessionID); s != nil {
+				propertyRow(c, p, "chat", locales.SchedSendTo(), func() {
+					ghostButton(c, p, s.Title).OnClick(func() { a.closeSchedule(); a.open(s.ID) })
+				})
+			}
+			at, _ := time.Parse(time.RFC3339Nano, row.Trigger.At)
+			propertyRow(c, p, "at", locales.SchedRunAt(), func() {
+				zone := a.machineZone(row.MachineID)
+				ui.Text(c, instantText(at.In(loadZone(zone)))+" ("+zone+")").FontSize(sizeSub).TextColor(p.Text)
+				if pending && owner {
+					ghostButton(c, p, locales.SmEditTime()).OnClick(func() { a.openScheduleSend(row.Destination.SessionID, at, row.ScheduleID) })
+				}
+			})
+		})
+		if pending && owner {
+			ui.Row(c).FillWidth().Justify(ui.End).Children(func() {
+				outlineButton(c, p, iconX, locales.SmCancel()).OnClick(func() {
+					user := a.userID()
+					a.schedAct(func(ctx context.Context, s *schedule.Store) error {
+						return s.SetEnabled(ctx, row.ScheduleID, false, user, time.Now())
+					}, func() { a.toast("success", locales.SmCancelled()) })
+				})
+			})
+		}
 	})
 }
 

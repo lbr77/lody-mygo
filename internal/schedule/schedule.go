@@ -184,22 +184,31 @@ func plain(v any) any {
 // Fingerprint is a definition's fingerprint with its prompt: the SHA-256 of
 // the canonical JSON of what decides a run, which leaves out the title and
 // the times it was made and changed.
-func Fingerprint(d Definition, prompt string) string {
+func Fingerprint(d Definition, prompt string) string { return fingerprint(d, prompt, nil) }
+
+// fingerprint takes a scheduled message's payload in too.
+func fingerprint(d Definition, prompt string, message map[string]any) string {
 	def := plain(d).(map[string]any)
 	for _, k := range []string{"title", "createdAt", "updatedAt", "createdBy"} {
 		delete(def, k)
 	}
-	sum := sha256.Sum256(Canonical(map[string]any{"definition": def, "prompt": prompt}))
+	doc := map[string]any{"definition": def, "prompt": prompt}
+	if message != nil {
+		doc["message"] = message
+	}
+	sum := sha256.Sum256(Canonical(doc))
 	return hex.EncodeToString(sum[:])
 }
 
 // RowOf is the registry row of a definition.
-func RowOf(d Definition, prompt string) Row {
+func RowOf(d Definition, prompt string) Row { return rowOf(d, prompt, nil) }
+
+func rowOf(d Definition, prompt string, message map[string]any) Row {
 	r := Row{
 		ScheduleID: d.ScheduleID, Title: d.Title, OwnerID: d.OwnerID, MachineID: d.MachineID, Enabled: d.Enabled,
 		ActivationID: d.ActivationID, ActiveFrom: d.ActiveFrom, Trigger: d.Trigger, Destination: d.Destination,
 		AgentConfigID: d.Agent.AgentConfigID, ScheduledMessage: d.MessageVersion == 1,
-		ElevatedPermissions: d.Agent.Elevated(), DefinitionFingerprint: Fingerprint(d, prompt),
+		ElevatedPermissions: d.Agent.Elevated(), DefinitionFingerprint: fingerprint(d, prompt, message),
 		CreatedAt: d.CreatedAt, UpdatedAt: d.UpdatedAt,
 	}
 	if p := d.Project; p != nil {

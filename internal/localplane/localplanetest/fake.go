@@ -13,6 +13,8 @@ import (
 	"testing"
 	"time"
 
+	loro "github.com/aholstenson/loro-go"
+
 	"github.com/lbr77/lody-mygo/internal/localplane"
 )
 
@@ -146,6 +148,30 @@ func (d *Daemon) Updates(room localplane.Room) []Message {
 		}
 	}
 	return out
+}
+
+// EchoDocs answers a document room's join with what peers sent of it, as
+// the daemon keeps the documents its peers write.
+func (d *Daemon) EchoDocs(t testing.TB) {
+	d.OnJoin = func(r localplane.Room) *localplane.Payload {
+		ups := d.Updates(r)
+		if r.Scope != "doc" || len(ups) == 0 {
+			return nil
+		}
+		doc := loro.NewLoroDoc()
+		for _, m := range ups {
+			if data, err := m.Payload.Bytes(); err == nil {
+				doc.Import(data)
+			}
+		}
+		snapshot, err := doc.Export(loro.SnapshotMode())
+		if err != nil {
+			t.Errorf("localplanetest: %v", err)
+			return nil
+		}
+		p := localplane.DocUpdate(snapshot)
+		return &p
+	}
 }
 
 // WaitUpdates waits until peers sent at least n updates of a room, which

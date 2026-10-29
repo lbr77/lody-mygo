@@ -211,15 +211,15 @@ func (s *Store) Save(ctx context.Context, id string, create bool, d Draft, actor
 		kind = "edited"
 	}
 	activity := &Activity{ID: uuid.NewString(), Kind: kind, ActorID: actor, CreatedAt: ms(now)}
-	return s.commit(ctx, doc, def, d.Prompt, activity)
+	return s.commit(ctx, doc, def, d.Prompt, nil, activity)
 }
 
 // commit writes the document, then the Registry row that lets it run.
-func (s *Store) commit(ctx context.Context, doc *Doc, def Definition, prompt string, activity *Activity) error {
-	if err := doc.Write(ctx, func(ld *loro.LoroDoc) error { return writeDocument(ld, def, prompt, activity) }); err != nil {
+func (s *Store) commit(ctx context.Context, doc *Doc, def Definition, prompt string, message map[string]any, activity *Activity) error {
+	if err := doc.Write(ctx, func(ld *loro.LoroDoc) error { return writeDocument(ld, def, prompt, message, activity) }); err != nil {
 		return err
 	}
-	row := RowOf(def, prompt)
+	row := rowOf(def, prompt, message)
 	return s.room.Write(ctx, func(f *flock.Flock) error {
 		if tombstoned(f, def.ScheduleID) {
 			return ErrDeleted
@@ -280,7 +280,87 @@ func (s *Store) SetEnabled(ctx context.Context, id string, enabled bool, actor s
 	if enabled {
 		def.ActivationID, def.ActiveFrom, kind = uuid.NewString(), ms(now), "resumed"
 	}
-	return s.commit(ctx, doc, def, cur.Prompt, &Activity{ID: uuid.NewString(), Kind: kind, ActorID: actor, CreatedAt: ms(now)})
+	return s.commit(ctx, doc, def, cur.Prompt, cur.Message, &Activity{ID: uuid.NewString(), Kind: kind, ActorID: actor, CreatedAt: ms(now)})
+}
+
+// MessageDraft is a message to send into a chat once, later.
+type MessageDraft struct {
+	SessionID, MachineID string
+	Agent                Agent
+	Payload              map[string]any // inputBlocks, and mcpServerIds when chosen
+	At                   time.Time
+}
+
+// ErrTimePassed is a scheduled message's time that has come.
+var ErrTimePassed = errors.New("schedule: choose a time in the future")
+
+// MessagePrompt is a message's prompt: its text blocks, a line each.
+func MessagePrompt(payload map[string]any) string {
+	var lines []string
+	blocks, _ := plain(payload["inputBlocks"]).([]any)
+	for _, b := range blocks {
+		if m, ok := b.(map[string]any); ok && m["type"] == "text" {
+			text, _ := m["text"].(string)
+			lines = append(lines, text)
+		}
+	}
+	return strings.Join(lines, "\n")
+}
+
+// SaveMessage schedules a message into a chat, as the composer's Schedule
+// send does: once, to that chat, the title its first line.
+func (s *Store) SaveMessage(ctx context.Context, id string, d MessageDraft, actor, fallbackTitle string, now time.Time) error {
+	if !d.At.After(now) {
+		return ErrTimePassed
+	}
+	prompt := MessagePrompt(d.Payload)
+	title := strings.TrimSpace(prompt)
+	if i := strings.IndexByte(title, '\n'); i >= 0 {
+		title = title[:i]
+	}
+	if r := []rune(title); len(r) > 200 {
+		title = string(r[:200])
+	}
+	title = firstNonEmpty(title, fallbackTitle)
+	doc, err := OpenDoc(ctx, s.Conn, s.Local, id, true)
+	if err != nil {
+		return err
+	}
+	defer doc.Close()
+	def := Definition{
+		ScheduleID: id, MessageVersion: 1, Title: title, OwnerID: actor, MachineID: d.MachineID, Enabled: true,
+		ActivationID: uuid.NewString(), ActiveFrom: ms(d.At), Trigger: Trigger{Kind: "once", At: ISO(d.At)},
+		MisfirePolicy: Policy{Kind: "run_once"}, OverlapPolicy: "queue_one", Agent: d.Agent,
+		Destination: Destination{Kind: ExistingSession, SessionID: d.SessionID}, RetryPolicy: DefaultRetry,
+		CreatedAt: ms(now), UpdatedAt: ms(now), CreatedBy: actor,
+	}
+	payload := plain(d.Payload).(map[string]any)
+	return s.commit(ctx, doc, def, prompt, loroValue(payload).(map[string]any), &Activity{ID: uuid.NewString(), Kind: "created", ActorID: actor, CreatedAt: ms(now)})
+}
+
+// Reschedule moves a scheduled message to another time.
+func (s *Store) Reschedule(ctx context.Context, id string, at time.Time, actor string, now time.Time) error {
+	if !at.After(now) {
+		return ErrTimePassed
+	}
+	doc, cur, err := s.owned(ctx, id, actor)
+	if err != nil {
+		return err
+	}
+	defer doc.Close()
+	def := cur.Definition
+	def.Trigger = Trigger{Kind: "once", At: ISO(at)}
+	def.ActivationID, def.ActiveFrom, def.UpdatedAt, def.Enabled = uuid.NewString(), ms(at), ms(now), true
+	return s.commit(ctx, doc, def, cur.Prompt, cur.Message, &Activity{ID: uuid.NewString(), Kind: "edited", ActorID: actor, CreatedAt: ms(now)})
+}
+
+func firstNonEmpty(values ...string) string {
+	for _, v := range values {
+		if v != "" {
+			return v
+		}
+	}
+	return ""
 }
 
 // RunNow asks the schedule's machine for a run with what was last saved.

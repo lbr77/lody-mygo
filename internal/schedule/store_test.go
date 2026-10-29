@@ -189,3 +189,72 @@ func TestRegistryRuntime(t *testing.T) {
 		t.Fatal("a stale runtime row counted")
 	}
 }
+
+// A scheduled message is a once schedule into a chat whose document holds
+// the message; its fingerprint takes the message in.
+func TestScheduledMessage(t *testing.T) {
+	d := localplanetest.Start(t)
+	docRoom, registry := DocRoom("m1"), localplane.FlockRoom("ws:sr")
+	d.OnJoin = func(r localplane.Room) *localplane.Payload {
+		if r == docRoom && len(d.Updates(docRoom)) > 0 {
+			snapshot, _ := daemonDoc(t, d, docRoom).Export(loro.SnapshotMode())
+			p := localplane.DocUpdate(snapshot)
+			return &p
+		}
+		return nil
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	lc, err := localplane.Dial(ctx, d.Path, "ws")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer lc.Close()
+	s := &Store{Local: lc, Workspace: "ws"}
+	s.Start()
+	defer s.Stop()
+	if err := s.room.WaitReady(ctx); err != nil {
+		t.Fatal(err)
+	}
+	now := time.Date(2026, 10, 29, 9, 0, 0, 0, time.UTC)
+	draft := MessageDraft{SessionID: "chat1", MachineID: "mach", Agent: Agent{AgentConfigID: "a1", ModelID: "opus"},
+		Payload: map[string]any{"inputBlocks": []any{map[string]any{"type": "text", "text": "Check the deploy\nand report"}}, "mcpServerIds": []any{"gh"}},
+		At:      now.Add(time.Hour)}
+	if err := s.SaveMessage(ctx, "m1", MessageDraft{At: now}, "u1", "Schedule send", now); err != ErrTimePassed {
+		t.Fatalf("past time: %v", err)
+	}
+	if err := s.SaveMessage(ctx, "m1", draft, "u1", "Schedule send", now); err != nil {
+		t.Fatal(err)
+	}
+	d.WaitUpdates(t, docRoom, 1)
+	d.WaitUpdates(t, registry, 1)
+	got := read(daemonDoc(t, d, docRoom))
+	def := got.Definition
+	if def.MessageVersion != 1 || def.Title != "Check the deploy" || def.Trigger.At != "2026-10-29T10:00:00.000Z" || def.ActiveFrom != draft.At.UnixMilli() ||
+		def.Destination.Kind != ExistingSession || def.Destination.SessionID != "chat1" || got.Prompt != "Check the deploy\nand report" || got.Message == nil {
+		t.Fatalf("document %+v", got)
+	}
+	row := RegistryOf(mustScan(t, daemonFlock(t, d, registry))).Row("m1")
+	if row == nil || !row.ScheduledMessage || row.DefinitionFingerprint != fingerprint(def, got.Prompt, got.Message) || row.DefinitionFingerprint == Fingerprint(def, got.Prompt) {
+		t.Fatalf("row %+v", row)
+	}
+
+	// Moving it keeps the message, at the new time.
+	if err := s.Reschedule(ctx, "m1", now.Add(3*time.Hour), "u1", now); err != nil {
+		t.Fatal(err)
+	}
+	d.WaitUpdates(t, registry, 2)
+	moved := read(daemonDoc(t, d, docRoom))
+	if moved.Definition.Trigger.At != "2026-10-29T12:00:00.000Z" || moved.Message == nil {
+		t.Fatalf("moved %+v", moved)
+	}
+	// Cancelling turns it off, which the machine confirms.
+	if err := s.SetEnabled(ctx, "m1", false, "u1", now); err != nil {
+		t.Fatal(err)
+	}
+	d.WaitUpdates(t, registry, 3)
+	off := RegistryOf(mustScan(t, daemonFlock(t, d, registry))).Row("m1")
+	if off.Enabled || off.DefinitionFingerprint != fingerprint(read(daemonDoc(t, d, docRoom)).Definition, moved.Prompt, moved.Message) {
+		t.Fatalf("cancelled %+v", off)
+	}
+}

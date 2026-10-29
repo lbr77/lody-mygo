@@ -70,8 +70,12 @@ type App struct {
 	// local is its data plane connection while the daemon is up.
 	localOnly bool
 	sched     schedState // the Schedules page
-	local     *localplane.Conn
-	stopLocal context.CancelFunc
+	// schedSends are the times chosen for chats' next messages, and
+	// schedSendDlg the picker.
+	schedSends   map[string]*schedSendDraft
+	schedSendDlg schedSendDialog
+	local        *localplane.Conn
+	stopLocal    context.CancelFunc
 
 	selected string // session id; empty shows New chat
 	replica  *session.Replica
@@ -260,6 +264,7 @@ func New() *App {
 		drafts:       map[string]string{},
 		models:       map[string]string{},
 		runValues:    map[string]map[string]any{},
+		schedSends:   map[string]*schedSendDraft{},
 		diffs:        map[string]*editor.DiffState{},
 		showAll:      map[string]bool{},
 		modes:        map[string]string{},
@@ -671,8 +676,13 @@ func (a *App) steerable(s *catalog.Session) bool {
 	return a.catalog.Capabilities[s.AgentConfigID].Steer
 }
 
-// send sends the composer's text to the open session.
+// send sends the composer's text to the open session, or reserves it for
+// the time chosen.
 func (a *App) send() {
+	if d := a.schedSends[a.selected]; d != nil {
+		a.sendScheduled(d)
+		return
+	}
 	text := strings.TrimSpace(a.draft)
 	sess := a.catalog.Session(a.selected)
 	files := a.attachments

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/lbr77/lody-mygo/internal/catalog"
+	"github.com/lbr77/lody-mygo/internal/cloud"
 	"github.com/lbr77/lody-mygo/internal/localplane"
 	"github.com/lbr77/lody-mygo/internal/localplane/localplanetest"
 	"github.com/lbr77/lody-mygo/internal/schedule"
@@ -174,5 +175,91 @@ func TestScheduleChatRuns(t *testing.T) {
 	runs := chatRuns(a.view, "s2")
 	if len(runs) != 2 || runs[0].ID != "u3" || runState(a.view, "u3") != "running" || runState(a.view, "u1") != "done" {
 		t.Fatalf("runs %+v", runs)
+	}
+}
+
+// Schedule send holds the composer's next message for a time; Send then
+// reserves it in the chat, whose queue shows it until it goes.
+func TestScheduleSend(t *testing.T) {
+	d := localplanetest.Start(t)
+	d.EchoDocs(t)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	lc, err := localplane.Dial(ctx, d.Path, "w1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer lc.Close()
+	a := fixture()
+	a.view.Entries, a.view.Working = a.view.Entries[:2], false
+	a.conn = &cloud.Conn{ID: "w1"}
+	a.catalog.MachineOwner = map[string]string{"m1": "u1"}
+	a.catalog.MachineZone = map[string]string{"m1": "Asia/Shanghai"}
+	pump := pumpUpdates(t, a)
+	a.startSchedules("w1", lc)
+	defer a.stopSchedules()
+	pump("the registry", func() bool { return a.sched.ready })
+
+	tt := snap(t, a, "schedule-send", false, nil)
+	if err := tt.Click("Add attachment"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if err := tt.Click("Schedule send…"); err != nil {
+		t.Fatalf("%v in %q", err, tt.Texts())
+	}
+	tt.Frame()
+	tt.Advance(400 * time.Millisecond)
+	tt.Frame()
+	snapFrame(t, tt, "schedule-send-dialog")
+	for _, want := range []string{"Schedule send", "In 30 minutes", "In 1 hour", "In 5 hours", "Date and time", "Apply"} {
+		if !tt.HasText(want) {
+			t.Errorf("dialog: missing %q in %q", want, tt.Texts())
+		}
+	}
+	if err := tt.Click("In 5 hours"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if err := tt.Click("Apply"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	tt.Advance(400 * time.Millisecond)
+	tt.Frame()
+	draft := a.schedSends["s1"]
+	if draft == nil || draft.at.Before(time.Now().Add(4*time.Hour)) {
+		t.Fatalf("draft %+v", draft)
+	}
+	label, _ := a.scheduledAction(a.catalog.Session("s1"))
+	if !tt.HasText(label) {
+		t.Errorf("no %q chip in %q", label, tt.Texts())
+	}
+
+	a.draft = "Ship the release notes"
+	a.send()
+	pump("the reservation", func() bool { return a.sched.reg.Row(draft.id) != nil && !a.sending })
+	row := a.sched.reg.Row(draft.id)
+	if !row.ScheduledMessage || row.Destination.SessionID != "s1" || row.Title != "Ship the release notes" || row.AgentConfigID == "" && a.catalog.Session("s1").AgentConfigID != "" {
+		t.Fatalf("row %+v", row)
+	}
+	if a.schedSends["s1"] != nil || a.draft != "" {
+		t.Fatal("the draft wasn't cleared")
+	}
+	tt.Frame()
+	tt.Advance(500 * time.Millisecond)
+	tt.Frame()
+	snapFrame(t, tt, "schedule-send-queue")
+	if !tt.HasText("Ship the release notes") {
+		t.Fatalf("no queue row in %q", tt.Texts())
+	}
+	// Cancelling turns it off.
+	if err := tt.Click("Cancel scheduled message"); err != nil {
+		t.Fatal(err)
+	}
+	pump("the cancel", func() bool { r := a.sched.reg.Row(draft.id); return r != nil && !r.Enabled })
+	tt.Frame()
+	if tt.HasText("Ship the release notes") {
+		t.Fatal("still queued")
 	}
 }

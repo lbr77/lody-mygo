@@ -15556,3 +15556,203 @@ func SchedUpgrade() string { return In(i18n.Locale()).SchedUpgrade() }
 func (msgs Messages) SchedUpgrade() string {
 	return Catalog.Format(msgs.locale, "schedUpgrade", nil)
 }
+
+// SmMenu says "Schedule send…"
+// in the language the app shows.
+func SmMenu() string { return In(i18n.Locale()).SmMenu() }
+
+// SmMenu says "Schedule send…"
+// in the language of msgs.
+func (msgs Messages) SmMenu() string {
+	return Catalog.Format(msgs.locale, "smMenu", nil)
+}
+
+// SmTitle says "Schedule send"
+// in the language the app shows.
+func SmTitle() string { return In(i18n.Locale()).SmTitle() }
+
+// SmTitle says "Schedule send"
+// in the language of msgs.
+func (msgs Messages) SmTitle() string {
+	return Catalog.Format(msgs.locale, "smTitle", nil)
+}
+
+// SmComposerAction says "Scheduled · {time}"
+// in the language the app shows.
+func SmComposerAction(time_ string) string { return In(i18n.Locale()).SmComposerAction(time_) }
+
+// SmComposerAction says "Scheduled · {time}"
+// in the language of msgs.
+func (msgs Messages) SmComposerAction(time_ string) string {
+	return Catalog.Format(msgs.locale, "smComposerAction", map[string]any{"time": time_})
+}
+
+// SmIn30Minutes says "In 30 minutes"
+// in the language the app shows.
+func SmIn30Minutes() string { return In(i18n.Locale()).SmIn30Minutes() }
+
+// SmIn30Minutes says "In 30 minutes"
+// in the language of msgs.
+func (msgs Messages) SmIn30Minutes() string {
+	return Catalog.Format(msgs.locale, "smIn30Minutes", nil)
+}
+
+// SmInOneHour says "In 1 hour"
+// in the language the app shows.
+func SmInOneHour() string { return In(i18n.Locale()).SmInOneHour() }
+
+// SmInOneHour says "In 1 hour"
+// in the language of msgs.
+func (msgs Messages) SmInOneHour() string {
+	return Catalog.Format(msgs.locale, "smInOneHour", nil)
+}
+
+// SmInFiveHours says "In 5 hours"
+// in the language the app shows.
+func SmInFiveHours() string { return In(i18n.Locale()).SmInFiveHours() }
+
+// SmInFiveHours says "In 5 hours"
+// in the language of msgs.
+func (msgs Messages) SmInFiveHours() string {
+	return Catalog.Format(msgs.locale, "smInFiveHours", nil)
+}
+
+// SmDateAndTime says "Date and time"
+// in the language the app shows.
+func SmDateAndTime() string { return In(i18n.Locale()).SmDateAndTime() }
+
+// SmDateAndTime says "Date and time"
+// in the language of msgs.
+func (msgs Messages) SmDateAndTime() string {
+	return Catalog.Format(msgs.locale, "smDateAndTime", nil)
+}
+
+// SmFutureTime says "Choose a time in the future."
+// in the language the app shows.
+func SmFutureTime() string { return In(i18n.Locale()).SmFutureTime() }
+
+// SmFutureTime says "Choose a time in the future."
+// in the language of msgs.
+func (msgs Messages) SmFutureTime() string {
+	return Catalog.Format(msgs.locale, "smFutureTime", nil)
+}
+
+// SmMachineHint says "The target machine must be running. If it is asleep or offline, this message will be sent once it returns."
+// in the language the app shows.
+func SmMachineHint() string { return In(i18n.Locale()).SmMachineHint() }
+
+// SmMachineHint says "The target machine must be running. If it is asleep or offline, this message will be sent once it returns."
+// in the language of msgs.
+func (msgs Messages) SmMachineHint() string {
+	return Catalog.Format(msgs.locale, "smMachineHint", nil)
+}
+
+// SmApply says "Apply"
+// in the language the app shows.
+func SmApply() string { return In(i18n.Locale()).SmApply() }
+
+// SmApply says "Apply"
+// in the language of msgs.
+func (msgs Messages) SmApply() string {
+	return Catalog.Format(msgs.locale, "smApply", nil)
+}
+
+// SmRemoveTime says "Remove time"
+// in the language the app shows.
+func SmRemoveTime() string { return In(i18n.Locale()).SmRemoveTime() }
+
+// SmRemoveTime says "Remove time"
+// in the language of msgs.
+func (msgs Messages) SmRemoveTime() string {
+	return Catalog.Format(msgs.locale, "smRemoveTime", nil)
+}
+
+// SmSaved says "Message scheduled"
+// in the language the app shows.
+func SmSaved() string { return In(i18n.Locale()).SmSaved() }
+
+// SmSaved says "Message scheduled"
+// in the language of msgs.
+func (msgs Messages) SmSaved() string {
+	return Catalog.Format(msgs.locale, "smSaved", nil)
+}
+
+// SmOwnMachine says "Schedule messages in your own chats on a machine you own."
+// in the language the app shows.
+func SmOwnMachine() string { return In(i18n.Locale()).SmOwnMachine() }
+
+// SmOwnMachine says "Schedule messages in your own chats on a machine you own."
+// in the language of msgs.
+func (msgs Messages) SmOwnMachine() string {
+	return Catalog.Format(msgs.locale, "smOwnMachine", nil)
+}
+
+// SmUpgrade says "Update the target machine’s CLI to schedule complete messages."
+// in the language the app shows.
+func SmUpgrade() string { return In(i18n.Locale()).SmUpgrade() }
+
+// SmUpgrade says "Update the target machine’s CLI to schedule complete messages."
+// in the language of msgs.
+func (msgs Messages) SmUpgrade() string {
+	return Catalog.Format(msgs.locale, "smUpgrade", nil)
+}
+
+// SmArchived says "Reopen this chat before scheduling a message."
+// in the language the app shows.
+func SmArchived() string { return In(i18n.Locale()).SmArchived() }
+
+// SmArchived says "Reopen this chat before scheduling a message."
+// in the language of msgs.
+func (msgs Messages) SmArchived() string {
+	return Catalog.Format(msgs.locale, "smArchived", nil)
+}
+
+// SmCancel says "Cancel scheduled message"
+// in the language the app shows.
+func SmCancel() string { return In(i18n.Locale()).SmCancel() }
+
+// SmCancel says "Cancel scheduled message"
+// in the language of msgs.
+func (msgs Messages) SmCancel() string {
+	return Catalog.Format(msgs.locale, "smCancel", nil)
+}
+
+// SmCancelled says "Scheduled message cancelled"
+// in the language the app shows.
+func SmCancelled() string { return In(i18n.Locale()).SmCancelled() }
+
+// SmCancelled says "Scheduled message cancelled"
+// in the language of msgs.
+func (msgs Messages) SmCancelled() string {
+	return Catalog.Format(msgs.locale, "smCancelled", nil)
+}
+
+// SmSaveError says "Could not confirm the scheduled message. Your draft is kept. Retry to check the same reservation."
+// in the language the app shows.
+func SmSaveError() string { return In(i18n.Locale()).SmSaveError() }
+
+// SmSaveError says "Could not confirm the scheduled message. Your draft is kept. Retry to check the same reservation."
+// in the language of msgs.
+func (msgs Messages) SmSaveError() string {
+	return Catalog.Format(msgs.locale, "smSaveError", nil)
+}
+
+// SmEditTime says "Edit scheduled time"
+// in the language the app shows.
+func SmEditTime() string { return In(i18n.Locale()).SmEditTime() }
+
+// SmEditTime says "Edit scheduled time"
+// in the language of msgs.
+func (msgs Messages) SmEditTime() string {
+	return Catalog.Format(msgs.locale, "smEditTime", nil)
+}
+
+// SmNotSent says "Not sent"
+// in the language the app shows.
+func SmNotSent() string { return In(i18n.Locale()).SmNotSent() }
+
+// SmNotSent says "Not sent"
+// in the language of msgs.
+func (msgs Messages) SmNotSent() string {
+	return Catalog.Format(msgs.locale, "smNotSent", nil)
+}
