@@ -61,7 +61,7 @@ func (a *App) bottom(c *ui.Context, p *palette, sess *catalog.Session, v *sessio
 		busyLabel:   busyLabel,
 		canSend:     ready && !a.sending,
 		working:     working,
-		onSend:      a.send,
+		onSend:      a.sendChecked,
 		onStop:      a.stop,
 		above: func() {
 			a.notifyPrompt(c, p, sess, v)
@@ -98,9 +98,8 @@ func (a *App) bottom(c *ui.Context, p *palette, sess *catalog.Session, v *sessio
 			}
 			modes := a.catalog.ModesFor(sess.AgentConfigID, sess.AgentType)
 			pickMode := func(id string) { a.modes[sess.ID] = id }
-			a.modeButton(c, p, "mode/"+sess.ID, modes, mode, pickMode)
+			a.surfNext.mode = a.permissionButton(c, p, "mode/"+sess.ID, sess.ID, sess.AgentConfigID, modes, mode, pickMode, last)
 			a.surfNext.model = a.modelCycle(sess.AgentConfigID, current, pickModel)
-			a.surfNext.mode = modeCycle(modes, mode, pickMode)
 		},
 	})
 }

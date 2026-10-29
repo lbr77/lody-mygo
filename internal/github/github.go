@@ -404,6 +404,45 @@ func (c *Client) DefaultBranch(ctx context.Context, repo string) (string, error)
 	return out.DefaultBranch, nil
 }
 
+// maxBranchPages bounds Branches: 100 pages of 100 branches.
+const maxBranchPages = 100
+
+// Branches lists a repository's branches, sorted, with its default branch,
+// as Lody's chat landing reads them for a new chat's base: the default
+// branch joins the list, and the repository names one, only when the
+// repository has a branch at all, which an empty one has not.
+func (c *Client) Branches(ctx context.Context, repo string) (branches []string, defaultBranch string, err error) {
+	if defaultBranch, err = c.DefaultBranch(ctx, repo); err != nil {
+		return nil, "", err
+	}
+	seen := map[string]bool{}
+	for page := 1; page <= maxBranchPages; page++ {
+		var rows []struct {
+			Name string `json:"name"`
+		}
+		if err := c.do(ctx, http.MethodGet, fmt.Sprintf("%s/branches?per_page=100&page=%d", repoPath(repo), page), nil, &rows); err != nil {
+			return nil, "", err
+		}
+		for _, r := range rows {
+			if name := strings.TrimSpace(r.Name); name != "" && !seen[name] {
+				seen[name] = true
+				branches = append(branches, name)
+			}
+		}
+		if len(rows) < 100 {
+			break
+		}
+	}
+	if len(branches) == 0 {
+		return nil, "", nil
+	}
+	if defaultBranch = strings.TrimSpace(defaultBranch); defaultBranch != "" && !seen[defaultBranch] {
+		branches = append(branches, defaultBranch)
+	}
+	sort.Strings(branches)
+	return branches, defaultBranch, nil
+}
+
 // ErrTooLarge is a file longer than a read allows.
 var ErrTooLarge = errors.New("GitHub: file too large")
 

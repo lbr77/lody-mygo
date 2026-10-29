@@ -168,6 +168,9 @@ type App struct {
 	memAgentModel    string                   // the agent and model it last remembered
 	tier             planTier                 // the workspace's plan, for the Free quota
 	quotaAnnounced   string                   // the session whose closed composer was explained
+	checkoutSeen     map[string]bool          // workspaces whose pending checkout was shown this visit
+	repoBranchLists  map[string]*repoBranches // GitHub repositories' branches, by workspace and repository
+	repoBranchShown  string                   // the repository whose branch New chat last showed, by workspace
 	quickReplies     []quickReply             // as edited; nil for the defaults
 	quickForm        quickReplyForm
 	composerFocused  bool      // the composer had the focus last frame

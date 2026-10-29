@@ -103,7 +103,7 @@ func (a *App) quickReplyRow(c *ui.Context, p *palette, sess *catalog.Session, v 
 				}
 				b.OnClick(func() {
 					a.draft = message
-					a.send()
+					a.sendChecked()
 				})
 				b.Children(func() { ui.Text(c, q.Label).FontSize(sizeSub).TextColor(p.Text).SingleLine().MaxWidth(240) })
 			}

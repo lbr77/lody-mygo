@@ -1392,7 +1392,7 @@ func (a *App) schedFormView(c *ui.Context, p *palette, f *schedForm, row *schedu
 				if agent != nil {
 					a.runConfig(c, p, "sched/model", agent.ID, a.models["sched"], nil, func(id string) { a.models["sched"] = id })
 					a.runOptions(c, p, "sched", agent.ID, a.models["sched"], f.options)
-					a.modeButton(c, p, "sched/mode", a.catalog.ModesFor(agent.ID, agent.AgentType), a.modes["sched"], func(id string) { a.modes["sched"] = id })
+					a.permissionButton(c, p, "sched/mode", "sched", agent.ID, a.catalog.ModesFor(agent.ID, agent.AgentType), a.modes["sched"], func(id string) { a.modes["sched"] = id }, f.options)
 				}
 			})
 		})

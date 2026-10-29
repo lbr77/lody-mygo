@@ -150,6 +150,7 @@ type confirmation struct {
 	open        bool
 	title, body string
 	action      string
+	cancel      string // the cancel button's label; Cancel when empty
 	run         func()
 	notice      bool // only tells: one button, in ink, no cancel
 	safe        bool // not destructive: the action in ink, with a cancel
@@ -179,7 +180,7 @@ func (a *App) confirmDialog(c *ui.Context, p *palette) {
 		}
 		ui.Row(c).Gap(8).Justify(ui.End).Padding(8, 0, 0, 0).Children(func() {
 			if !cf.notice {
-				ghostButton(c, p, locales.Cancel()).Border(1, p.Border).OnClick(func() { cf.open = false })
+				ghostButton(c, p, firstNonEmpty(cf.cancel, locales.Cancel())).Border(1, p.Border).OnClick(func() { cf.open = false })
 			}
 			fill := p.Danger
 			if cf.notice || cf.safe {

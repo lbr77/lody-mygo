@@ -10,9 +10,11 @@ import (
 )
 
 // The composer's agent settings beyond the model, as Lody's footer and the
-// iOS model panel offer them: the reasoning effort the model allows, and
-// Fast where the agent has it. A choice rides on the next message's
-// configOptionValues, over what the last turn used.
+// iOS model panel offer them: the reasoning effort the model allows, Fast
+// where the agent has it, the permission button, and Lody's
+// run-configuration menu for every other setting the agent reports, select
+// or switch. A choice rides on the next message's configOptionValues, over
+// what the last turn used, at creation and in a running conversation alike.
 
 // effortOption is the agent's reasoning effort, its choices those model
 // allows.
@@ -42,14 +44,119 @@ func effortOption(cap catalog.Capability, model string) (catalog.ConfigOption, b
 	return catalog.ConfigOption{}, false
 }
 
-// fastOption is the agent's Fast switch, by either of its ids.
+// fastOption is the agent's Fast switch, by either of its ids: a boolean,
+// or a select of on and off.
 func fastOption(cap catalog.Capability) (catalog.ConfigOption, bool) {
 	for _, o := range cap.Options {
-		if o.Type == "boolean" && (o.ID == "fast-mode" || o.ID == "fast") {
+		if optionKind(o) == "fast" {
 			return o, true
 		}
 	}
 	return catalog.ConfigOption{}, false
+}
+
+// optionKind places an agent's setting as Lody's run configuration orders
+// them: model, effort, interaction, permission, mode, fast, plan, a switch,
+// or other.
+func optionKind(o catalog.ConfigOption) string {
+	switch {
+	case o.Category == "model" && o.Type == "select":
+		return "model"
+	case o.ID == "reasoning_effort" || o.Category == "thought_level":
+		return "effort"
+	case o.ID == "interaction_mode" && o.Type == "select":
+		return "interaction"
+	case o.Type == "select" && (o.ID == "permission_mode" || o.Category == "_permission"):
+		return "permission"
+	case o.Category == "mode" && o.Type == "select":
+		return "mode"
+	case (o.ID == "fast-mode" || o.ID == "fast") && (o.Type == "boolean" || onOffSelect(o)):
+		return "fast"
+	case o.ID == "plan_mode" || o.ID == "collaboration_mode" || o.Category == "collaboration_mode":
+		return "plan"
+	case o.Type == "boolean":
+		return "switch"
+	}
+	return "other"
+}
+
+// onOffSelect is a select whose choices are on and off, a switch by
+// another name.
+func onOffSelect(o catalog.ConfigOption) bool {
+	has := func(v string) bool {
+		return slices.ContainsFunc(o.Choices, func(ch catalog.Choice) bool { return ch.Value == v })
+	}
+	return o.Type == "select" && has("on") && has("off")
+}
+
+// switchOn is whether a switch is on as v sets it: true, "on" for a
+// select of on and off, or "plan" for the collaboration mode.
+func switchOn(o catalog.ConfigOption, v any) bool {
+	switch {
+	case o.Type == "boolean":
+		return v == true
+	case optionKind(o) == "plan":
+		return v == "plan"
+	}
+	return v == "on"
+}
+
+// switchValue is what turns a switch on or off, in its own kind of value.
+func switchValue(o catalog.ConfigOption, on bool) any {
+	switch {
+	case o.Type == "boolean":
+		return on
+	case optionKind(o) == "plan":
+		return map[bool]string{true: "plan", false: "default"}[on]
+	}
+	return map[bool]string{true: "on", false: "off"}[on]
+}
+
+// permissionOption is the setting the permission button writes, as Lody
+// resolves it: the agent's permission setting, over its modes; with
+// neither, a setting of the mode category standing in. ok is false while
+// the modes are what it picks.
+func permissionOption(cap catalog.Capability, modes []catalog.Mode) (o catalog.ConfigOption, ok bool) {
+	var stand *catalog.ConfigOption
+	for i, opt := range cap.Options {
+		switch optionKind(opt) {
+		case "permission":
+			return opt, len(opt.Choices) > 0
+		case "mode":
+			if stand == nil {
+				stand = &cap.Options[i]
+			}
+		}
+	}
+	if len(modes) > 0 || stand == nil || len(stand.Choices) == 0 {
+		return catalog.ConfigOption{}, false
+	}
+	return *stand, true
+}
+
+// menuOptions are the settings Lody's run-configuration menu holds beyond
+// the model, the effort and Fast: the agent's other choices, its
+// interaction mode, then its switches, Plan first. The permission setting
+// has its button, and so has a mode-category one standing in for it.
+func menuOptions(cap catalog.Capability) (selects, switches []catalog.ConfigOption) {
+	var interaction, plans []catalog.ConfigOption
+	for _, o := range cap.Options {
+		switch optionKind(o) {
+		case "other":
+			if len(o.Choices) > 0 {
+				selects = append(selects, o)
+			}
+		case "interaction":
+			if len(o.Choices) > 0 {
+				interaction = append(interaction, o)
+			}
+		case "plan":
+			plans = append(plans, o)
+		case "switch":
+			switches = append(switches, o)
+		}
+	}
+	return append(selects, interaction...), append(plans, switches...)
 }
 
 // runValue is a setting as the composer shows it: chosen, else as the last
@@ -128,7 +235,7 @@ func (a *App) runOptions(c *ui.Context, p *palette, key, agentConfig, model stri
 		a.surfNext.effort = &cycleTarget{values: values, current: current, pick: pick}
 	}
 	if o, ok := fastOption(cap); ok {
-		on := a.runValue(key, o, last) == true
+		on := switchOn(o, a.runValue(key, o, last))
 		tip := locales.FastModeTooltip()
 		if o.ID == "fast" {
 			tip = locales.FastModeTooltipClaude()
@@ -141,6 +248,103 @@ func (a *App) runOptions(c *ui.Context, p *palette, key, agentConfig, model stri
 		if on {
 			b.Background(p.Text.Alpha(0.08))
 		}
-		b.OnClick(func() { a.setRunValue(key, o.ID, !on) })
+		b.OnClick(func() { a.setRunValue(key, o.ID, switchValue(o, !on)) })
 	}
+	a.runConfigMenu(c, p, key, cap, last)
+}
+
+// iconListChecks is Lucide's list-checks, Lody's Plan.
+var iconListChecks = lucide(`<path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/><path d="M13 6h8"/><path d="M13 12h8"/><path d="M13 18h8"/>`)
+
+// runConfigMenu is Lody's run-configuration menu for the settings the
+// footer has no control of its own for: each choice a row naming its
+// value that opens the values beside it, then the switches, Plan first.
+// Rows act in place, the menu staying open, as Lody's. Once a
+// conversation has started, its agent preset is fixed, as its agent is.
+func (a *App) runConfigMenu(c *ui.Context, p *palette, key string, cap catalog.Capability, last map[string]any) {
+	selects, switches := menuOptions(cap)
+	if len(selects) == 0 && len(switches) == 0 {
+		return
+	}
+	started := a.catalog.Session(key) != nil
+	planOn := false
+	for _, o := range switches {
+		planOn = planOn || optionKind(o) == "plan" && switchOn(o, a.runValue(key, o, last))
+	}
+	b := ui.ButtonBase(c.Key("run-config/"+key)).Height(26).MinWidth(26).Padding(0, 5).Radius(8).Gap(4).AlignItems(ui.Center).Justify(ui.Center).
+		Cursor(ui.CursorPointer).Label(locales.RunConfigTitle()).Transition(colorFade)
+	st := &a.rowMenu("run-config/" + key).menuState
+	if !st.open {
+		tip(c, p, b, locales.RunConfigTitle())
+	}
+	ink := p.SideMuted
+	if b.Hovered() || st.open {
+		ink = p.Text
+		b.Background(p.Hover)
+	}
+	b.Children(func() {
+		ui.Icon(c, iconSliders).Size(16, 16).TextColor(ink)
+		if planOn {
+			ui.Icon(c, iconListChecks).Size(14, 14).TextColor(p.Text)
+		}
+	})
+	lodyMenuAbove(c, p, b, st, false, 6, 240, 290, 28, func(m *lodyMenu) {
+		for _, o := range selects {
+			current := str(a.runValue(key, o, last))
+			value := current
+			for _, ch := range o.Choices {
+				if ch.Value == current {
+					value = firstNonEmpty(ch.Name, ch.Value)
+				}
+			}
+			locked := started && o.ID == "agent_preset"
+			m.submenu(o.ID, nil, firstNonEmpty(o.Name, o.ID), menuItem{bare: true, value: value, disabled: locked}, 108, func(sm *lodyMenu) {
+				for _, ch := range o.Choices {
+					chosen := ch.Value == current
+					check := func() {
+						if chosen {
+							ui.Icon(c, iconCheck).Size(14, 14).TextColor(p.Text)
+						}
+					}
+					if sm.item(ch.Value, nil, firstNonEmpty(ch.Name, ch.Value), menuItem{bare: true, keepOpen: true, end: check}) {
+						a.setRunValue(key, o.ID, ch.Value)
+					}
+				}
+			})
+		}
+		if len(selects) > 0 && len(switches) > 0 {
+			m.sep()
+		}
+		for _, o := range switches {
+			on := switchOn(o, a.runValue(key, o, last))
+			var icon *ui.SVG
+			label := firstNonEmpty(o.Name, o.ID)
+			if optionKind(o) == "plan" {
+				icon, label = iconListChecks, locales.RunConfigPlan()
+			}
+			if m.item(o.ID, icon, label, menuItem{keepOpen: true, bare: icon == nil, end: func() { menuSwitch(c, p, on) }}) {
+				a.setRunValue(key, o.ID, switchValue(o, !on))
+			}
+		}
+	})
+}
+
+// permissionButton is the composer's permission button, its choices the
+// agent's permission setting where it has one, else its modes, else a
+// mode-category setting standing in; it returns them for the commands
+// that step through them. key is the composer's, for its settings.
+func (a *App) permissionButton(c *ui.Context, p *palette, button, key, agentConfig string, modes []catalog.Mode, mode string, pickMode func(string), last map[string]any) *cycleTarget {
+	o, ok := permissionOption(a.catalog.Capabilities[agentConfig], modes)
+	if !ok {
+		a.modeButton(c, p, button, modes, mode, pickMode)
+		return modeCycle(modes, mode, pickMode)
+	}
+	choices := make([]catalog.Mode, 0, len(o.Choices))
+	for _, ch := range o.Choices {
+		choices = append(choices, catalog.Mode{ID: ch.Value, Name: firstNonEmpty(ch.Name, ch.Value)})
+	}
+	current := str(a.runValue(key, o, last))
+	pick := func(v string) { a.setRunValue(key, o.ID, v) }
+	a.modeButton(c, p, button, choices, current, pick)
+	return modeCycle(choices, current, pick)
 }

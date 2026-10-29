@@ -106,8 +106,15 @@ func (a *App) newChatBranch(st *gitState) string {
 }
 
 // workdirControls are the Local / Worktree switch and the branch, after
-// the project.
+// the project; for a GitHub repository, its branch and its worktree, which
+// it always has.
 func (a *App) workdirControls(c *ui.Context, p *palette) {
+	if repo, ok := strings.CutPrefix(a.newChat.project, "github:"); ok {
+		a.repoWorkdirControls(c, p, repo)
+		return
+	}
+	// Choosing the repository again reads its branches again.
+	a.repoBranchShown = ""
 	pr := a.catalog.Project(a.newChat.project)
 	if pr == nil || !strings.Contains(pr.ID, ":local:") || a.conn == nil {
 		return

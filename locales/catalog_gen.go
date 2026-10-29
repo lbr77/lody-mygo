@@ -20842,3 +20842,211 @@ func UnloadQuit() string { return In(i18n.Locale()).UnloadQuit() }
 func (msgs Messages) UnloadQuit() string {
 	return Catalog.Format(msgs.locale, "unloadQuit", nil)
 }
+
+// BranchPlaceholder says "Select Branch"
+// in the language the app shows.
+func BranchPlaceholder() string { return In(i18n.Locale()).BranchPlaceholder() }
+
+// BranchPlaceholder says "Select Branch"
+// in the language of msgs.
+func (msgs Messages) BranchPlaceholder() string {
+	return Catalog.Format(msgs.locale, "branchPlaceholder", nil)
+}
+
+// BranchSearchPlaceholder says "Search branches"
+// in the language the app shows.
+func BranchSearchPlaceholder() string { return In(i18n.Locale()).BranchSearchPlaceholder() }
+
+// BranchSearchPlaceholder says "Search branches"
+// in the language of msgs.
+func (msgs Messages) BranchSearchPlaceholder() string {
+	return Catalog.Format(msgs.locale, "branchSearchPlaceholder", nil)
+}
+
+// BranchEmpty says "No branches found"
+// in the language the app shows.
+func BranchEmpty() string { return In(i18n.Locale()).BranchEmpty() }
+
+// BranchEmpty says "No branches found"
+// in the language of msgs.
+func (msgs Messages) BranchEmpty() string {
+	return Catalog.Format(msgs.locale, "branchEmpty", nil)
+}
+
+// BranchMissing says "Choose a branch before starting."
+// in the language the app shows.
+func BranchMissing() string { return In(i18n.Locale()).BranchMissing() }
+
+// BranchMissing says "Choose a branch before starting."
+// in the language of msgs.
+func (msgs Messages) BranchMissing() string {
+	return Catalog.Format(msgs.locale, "branchMissing", nil)
+}
+
+// WorkdirGitHubRequired says "GitHub projects always run in an isolated worktree."
+// in the language the app shows.
+func WorkdirGitHubRequired() string { return In(i18n.Locale()).WorkdirGitHubRequired() }
+
+// WorkdirGitHubRequired says "GitHub projects always run in an isolated worktree."
+// in the language of msgs.
+func (msgs Messages) WorkdirGitHubRequired() string {
+	return Catalog.Format(msgs.locale, "workdirGitHubRequired", nil)
+}
+
+// SessionLimitNotice says "This workspace reached the Free plan limit of {limit} sessions. Upgrade to Plus to keep creating new sessions."
+// in the language the app shows.
+func SessionLimitNotice(limit int) string { return In(i18n.Locale()).SessionLimitNotice(limit) }
+
+// SessionLimitNotice says "This workspace reached the Free plan limit of {limit} sessions. Upgrade to Plus to keep creating new sessions."
+// in the language of msgs.
+func (msgs Messages) SessionLimitNotice(limit int) string {
+	return Catalog.Format(msgs.locale, "sessionLimitNotice", map[string]any{"limit": limit})
+}
+
+// UpgradeToPlus says "Upgrade to Plus"
+// in the language the app shows.
+func UpgradeToPlus() string { return In(i18n.Locale()).UpgradeToPlus() }
+
+// UpgradeToPlus says "Upgrade to Plus"
+// in the language of msgs.
+func (msgs Messages) UpgradeToPlus() string {
+	return Catalog.Format(msgs.locale, "upgradeToPlus", nil)
+}
+
+// FreeSessionLimitReachedTitle says "Free session limit reached"
+// in the language the app shows.
+func FreeSessionLimitReachedTitle() string { return In(i18n.Locale()).FreeSessionLimitReachedTitle() }
+
+// FreeSessionLimitReachedTitle says "Free session limit reached"
+// in the language of msgs.
+func (msgs Messages) FreeSessionLimitReachedTitle() string {
+	return Catalog.Format(msgs.locale, "freeSessionLimitReachedTitle", nil)
+}
+
+// FreeSessionLimitReachedDescription says "Free workspaces can keep up to {limit} sessions. Current: {current}. Upgrade to Plus for unlimited sessions."
+// in the language the app shows.
+func FreeSessionLimitReachedDescription(limit int, current int) string {
+	return In(i18n.Locale()).FreeSessionLimitReachedDescription(limit, current)
+}
+
+// FreeSessionLimitReachedDescription says "Free workspaces can keep up to {limit} sessions. Current: {current}. Upgrade to Plus for unlimited sessions."
+// in the language of msgs.
+func (msgs Messages) FreeSessionLimitReachedDescription(limit int, current int) string {
+	return Catalog.Format(msgs.locale, "freeSessionLimitReachedDescription", map[string]any{"limit": limit, "current": current})
+}
+
+// WorkspaceCheckoutPendingTitle says "Checkout required"
+// in the language the app shows.
+func WorkspaceCheckoutPendingTitle() string { return In(i18n.Locale()).WorkspaceCheckoutPendingTitle() }
+
+// WorkspaceCheckoutPendingTitle says "Checkout required"
+// in the language of msgs.
+func (msgs Messages) WorkspaceCheckoutPendingTitle() string {
+	return Catalog.Format(msgs.locale, "workspaceCheckoutPendingTitle", nil)
+}
+
+// WorkspaceCheckoutPendingDescription says "Complete checkout for this workspace before sending messages."
+// in the language the app shows.
+func WorkspaceCheckoutPendingDescription() string {
+	return In(i18n.Locale()).WorkspaceCheckoutPendingDescription()
+}
+
+// WorkspaceCheckoutPendingDescription says "Complete checkout for this workspace before sending messages."
+// in the language of msgs.
+func (msgs Messages) WorkspaceCheckoutPendingDescription() string {
+	return Catalog.Format(msgs.locale, "workspaceCheckoutPendingDescription", nil)
+}
+
+// FreeTurnLimitReachedTitle says "Free plan turn limit reached"
+// in the language the app shows.
+func FreeTurnLimitReachedTitle() string { return In(i18n.Locale()).FreeTurnLimitReachedTitle() }
+
+// FreeTurnLimitReachedTitle says "Free plan turn limit reached"
+// in the language of msgs.
+func (msgs Messages) FreeTurnLimitReachedTitle() string {
+	return Catalog.Format(msgs.locale, "freeTurnLimitReachedTitle", nil)
+}
+
+// FreeTurnLimitReachedDescription says "Free plan sessions are limited to {limit} turns. Current: {current}."
+// in the language the app shows.
+func FreeTurnLimitReachedDescription(limit int, current int) string {
+	return In(i18n.Locale()).FreeTurnLimitReachedDescription(limit, current)
+}
+
+// FreeTurnLimitReachedDescription says "Free plan sessions are limited to {limit} turns. Current: {current}."
+// in the language of msgs.
+func (msgs Messages) FreeTurnLimitReachedDescription(limit int, current int) string {
+	return Catalog.Format(msgs.locale, "freeTurnLimitReachedDescription", map[string]any{"limit": limit, "current": current})
+}
+
+// CheckoutPendingTitle says "Complete checkout to activate this workspace"
+// in the language the app shows.
+func CheckoutPendingTitle() string { return In(i18n.Locale()).CheckoutPendingTitle() }
+
+// CheckoutPendingTitle says "Complete checkout to activate this workspace"
+// in the language of msgs.
+func (msgs Messages) CheckoutPendingTitle() string {
+	return Catalog.Format(msgs.locale, "checkoutPendingTitle", nil)
+}
+
+// CheckoutPendingDescription says "This Plus workspace was created but checkout wasn't completed. Finish payment to start using it."
+// in the language the app shows.
+func CheckoutPendingDescription() string { return In(i18n.Locale()).CheckoutPendingDescription() }
+
+// CheckoutPendingDescription says "This Plus workspace was created but checkout wasn't completed. Finish payment to start using it."
+// in the language of msgs.
+func (msgs Messages) CheckoutPendingDescription() string {
+	return Catalog.Format(msgs.locale, "checkoutPendingDescription", nil)
+}
+
+// CheckoutPendingMemberDescription says "A workspace admin needs to complete checkout before this workspace can be used."
+// in the language the app shows.
+func CheckoutPendingMemberDescription() string {
+	return In(i18n.Locale()).CheckoutPendingMemberDescription()
+}
+
+// CheckoutPendingMemberDescription says "A workspace admin needs to complete checkout before this workspace can be used."
+// in the language of msgs.
+func (msgs Messages) CheckoutPendingMemberDescription() string {
+	return Catalog.Format(msgs.locale, "checkoutPendingMemberDescription", nil)
+}
+
+// CheckoutPendingLater says "Later"
+// in the language the app shows.
+func CheckoutPendingLater() string { return In(i18n.Locale()).CheckoutPendingLater() }
+
+// CheckoutPendingLater says "Later"
+// in the language of msgs.
+func (msgs Messages) CheckoutPendingLater() string {
+	return Catalog.Format(msgs.locale, "checkoutPendingLater", nil)
+}
+
+// CheckoutPendingGoToCheckout says "Go to checkout"
+// in the language the app shows.
+func CheckoutPendingGoToCheckout() string { return In(i18n.Locale()).CheckoutPendingGoToCheckout() }
+
+// CheckoutPendingGoToCheckout says "Go to checkout"
+// in the language of msgs.
+func (msgs Messages) CheckoutPendingGoToCheckout() string {
+	return Catalog.Format(msgs.locale, "checkoutPendingGoToCheckout", nil)
+}
+
+// RunConfigTitle says "Run configuration"
+// in the language the app shows.
+func RunConfigTitle() string { return In(i18n.Locale()).RunConfigTitle() }
+
+// RunConfigTitle says "Run configuration"
+// in the language of msgs.
+func (msgs Messages) RunConfigTitle() string {
+	return Catalog.Format(msgs.locale, "runConfigTitle", nil)
+}
+
+// RunConfigPlan says "Plan"
+// in the language the app shows.
+func RunConfigPlan() string { return In(i18n.Locale()).RunConfigPlan() }
+
+// RunConfigPlan says "Plan"
+// in the language of msgs.
+func (msgs Messages) RunConfigPlan() string {
+	return Catalog.Format(msgs.locale, "runConfigPlan", nil)
+}
