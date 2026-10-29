@@ -18662,3 +18662,73 @@ func SchedMessagesInfo() string { return In(i18n.Locale()).SchedMessagesInfo() }
 func (msgs Messages) SchedMessagesInfo() string {
 	return Catalog.Format(msgs.locale, "schedMessagesInfo", nil)
 }
+
+// DiagramDownload says "Download diagram"
+// in the language the app shows.
+func DiagramDownload() string { return In(i18n.Locale()).DiagramDownload() }
+
+// DiagramDownload says "Download diagram"
+// in the language of msgs.
+func (msgs Messages) DiagramDownload() string {
+	return Catalog.Format(msgs.locale, "diagramDownload", nil)
+}
+
+// DiagramDownloadSvg says "SVG"
+// in the language the app shows.
+func DiagramDownloadSvg() string { return In(i18n.Locale()).DiagramDownloadSvg() }
+
+// DiagramDownloadSvg says "SVG"
+// in the language of msgs.
+func (msgs Messages) DiagramDownloadSvg() string {
+	return Catalog.Format(msgs.locale, "diagramDownloadSvg", nil)
+}
+
+// DiagramDownloadPng says "PNG"
+// in the language the app shows.
+func DiagramDownloadPng() string { return In(i18n.Locale()).DiagramDownloadPng() }
+
+// DiagramDownloadPng says "PNG"
+// in the language of msgs.
+func (msgs Messages) DiagramDownloadPng() string {
+	return Catalog.Format(msgs.locale, "diagramDownloadPng", nil)
+}
+
+// DiagramDownloadSource says "Mermaid source"
+// in the language the app shows.
+func DiagramDownloadSource() string { return In(i18n.Locale()).DiagramDownloadSource() }
+
+// DiagramDownloadSource says "Mermaid source"
+// in the language of msgs.
+func (msgs Messages) DiagramDownloadSource() string {
+	return Catalog.Format(msgs.locale, "diagramDownloadSource", nil)
+}
+
+// CopyCode says "Copy code"
+// in the language the app shows.
+func CopyCode() string { return In(i18n.Locale()).CopyCode() }
+
+// CopyCode says "Copy code"
+// in the language of msgs.
+func (msgs Messages) CopyCode() string {
+	return Catalog.Format(msgs.locale, "copyCode", nil)
+}
+
+// Copied says "Copied"
+// in the language the app shows.
+func Copied() string { return In(i18n.Locale()).Copied() }
+
+// Copied says "Copied"
+// in the language of msgs.
+func (msgs Messages) Copied() string {
+	return Catalog.Format(msgs.locale, "copied", nil)
+}
+
+// CopyTable says "Copy table"
+// in the language the app shows.
+func CopyTable() string { return In(i18n.Locale()).CopyTable() }
+
+// CopyTable says "Copy table"
+// in the language of msgs.
+func (msgs Messages) CopyTable() string {
+	return Catalog.Format(msgs.locale, "copyTable", nil)
+}

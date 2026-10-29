@@ -19,16 +19,16 @@ func boxMembers(members []string, size float32) (w, h float32) {
 		return 0, 0
 	}
 	for _, m := range members {
-		mw, mh := ui.ShapeText(m, ui.Font{Family: fontUI, Size: size * 0.85}, 0).Size()
+		mw, mh := diagramText(m, ui.Font{Family: fontUI, Size: size * 0.85}, 0).Size()
 		w, h = max(w, mw), h+mh+size*0.2
 	}
 	return w, h + size*0.6
 }
 
-func drawBox(p *ui.Painter, n *mmNode, r ui.Rect, size float32, ink, line, fill ui.Color) {
+func drawBox(p diagramPen, n *mmNode, r ui.Rect, size float32, ink, line, fill ui.Color) {
 	p.Fill(r, fill, 4)
 	p.Stroke(r, line, 4, 1.2)
-	head := ui.ShapeText(n.label, ui.Font{Family: fontUI, Size: size, Weight: 600}, 220)
+	head := diagramText(n.label, ui.Font{Family: fontUI, Size: size, Weight: 600}, 220)
 	hw, hh := head.Size()
 	headH := hh + size
 	p.TextLayout(head, r.X+(r.W-hw)/2, r.Y+size/2, ink)
@@ -38,7 +38,7 @@ func drawBox(p *ui.Painter, n *mmNode, r ui.Rect, size float32, ink, line, fill 
 	seg(p, r.X, r.Y+headH, r.X+r.W, r.Y+headH, 1, line)
 	y := r.Y + headH + size*0.3
 	for _, m := range n.members {
-		l := ui.ShapeText(m, ui.Font{Family: fontUI, Size: size * 0.85}, 0)
+		l := diagramText(m, ui.Font{Family: fontUI, Size: size * 0.85}, 0)
 		_, mh := l.Size()
 		p.TextLayout(l, r.X+size*0.8, y, ink)
 		y += mh + size*0.2
@@ -47,7 +47,7 @@ func drawBox(p *ui.Painter, n *mmNode, r ui.Rect, size float32, ink, line, fill 
 
 // endMark draws a relationship's mark where it meets a box at (x, y),
 // coming from (fx, fy), and its cardinality beside it.
-func endMark(p *ui.Painter, mark, text string, x, y, fx, fy, size float32, ink, line, fill ui.Color) {
+func endMark(p diagramPen, mark, text string, x, y, fx, fy, size float32, ink, line, fill ui.Color) {
 	if mark == "" && text == "" {
 		return
 	}
@@ -60,22 +60,18 @@ func endMark(p *ui.Painter, mark, text string, x, y, fx, fy, size float32, ink, 
 	case "arrow":
 		p.FillPath(arrowHead(x, y, ang+math.Pi, float64(l)), line)
 	case "triangle", "diamond", "odiamond":
-		path := &ui.Path{}
-		path.MoveTo(x, y)
+		pts := [][2]float32{{x, y}}
 		if mark == "triangle" {
 			ax, ay := at(l, l*0.55)
 			bx, by := at(l, -l*0.55)
-			path.LineTo(ax, ay)
-			path.LineTo(bx, by)
+			pts = append(pts, [2]float32{ax, ay}, [2]float32{bx, by})
 		} else {
 			ax, ay := at(l*0.7, l*0.45)
 			bx, by := at(l*1.4, 0)
 			cx, cy := at(l*0.7, -l*0.45)
-			path.LineTo(ax, ay)
-			path.LineTo(bx, by)
-			path.LineTo(cx, cy)
+			pts = append(pts, [2]float32{ax, ay}, [2]float32{bx, by}, [2]float32{cx, cy})
 		}
-		path.Close()
+		path := polygon(pts...)
 		if mark == "diamond" {
 			p.FillPath(path, line)
 		} else {
@@ -110,7 +106,7 @@ func endMark(p *ui.Painter, mark, text string, x, y, fx, fy, size float32, ink, 
 		}
 	}
 	if text != "" {
-		lay := ui.ShapeText(text, ui.Font{Family: fontUI, Size: size * 0.8}, 0)
+		lay := diagramText(text, ui.Font{Family: fontUI, Size: size * 0.8}, 0)
 		w, h := lay.Size()
 		tx, ty := at(l*1.9, l*0.9)
 		p.TextLayout(lay, tx-w/2, ty-h/2, ink)
@@ -422,11 +418,11 @@ func (xc *xyChart) size(size float32) (w, h float32) {
 	return w, h
 }
 
-func (xc *xyChart) draw(p *ui.Painter, ox, oy, size float32, ink, line, accent ui.Color) {
+func (xc *xyChart) draw(p diagramPen, ox, oy, size float32, ink, line, accent ui.Color) {
 	font := ui.Font{Family: fontUI, Size: size * 0.8}
 	top := oy
 	if xc.title != "" {
-		t := ui.ShapeText(xc.title, ui.Font{Family: fontUI, Size: size, Weight: 600}, 0)
+		t := diagramText(xc.title, ui.Font{Family: fontUI, Size: size, Weight: 600}, 0)
 		tw, _ := t.Size()
 		p.TextLayout(t, ox+(size*xyPlotW-tw)/2, oy, ink)
 		top += size * 2
@@ -442,18 +438,18 @@ func (xc *xyChart) draw(p *ui.Painter, ox, oy, size float32, ink, line, accent u
 		v := xc.yMin + (xc.yMax-xc.yMin)*float64(i)/4
 		y := val(v)
 		seg(p, left, y, right, y, 0.6, line.Alpha(0.35))
-		lay := ui.ShapeText(trimNumber(v), font, 0)
+		lay := diagramText(trimNumber(v), font, 0)
 		w, h := lay.Size()
 		p.TextLayout(lay, left-w-size*0.4, y-h/2, ink)
 	}
 	if xc.yLabel != "" {
-		lay := ui.ShapeText(xc.yLabel, font, 0)
+		lay := diagramText(xc.yLabel, font, 0)
 		p.TextLayout(lay, ox, top-size*1.2, ink)
 	}
 	n := len(xc.xLabels)
 	slot := plotW / float32(n)
 	for i, label := range xc.xLabels {
-		lay := ui.ShapeText(label, font, slot)
+		lay := diagramText(label, font, slot)
 		w, _ := lay.Size()
 		p.TextLayout(lay, left+slot*float32(i)+(slot-w)/2, bottom+size*0.4, ink)
 	}

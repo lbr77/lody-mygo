@@ -162,9 +162,14 @@ func (a *App) block(c *ui.Context, p *palette, e session.Entry, b block, last bo
 		id := e.ID + "/" + it.ID
 		src := a.findMarkdown(id, it.Text)
 		var md ui.Element
-		if live {
+		switch segs := splitMarkdownTables(src); {
+		case live:
 			md = markdown.Stream(c.Key(it.ID), src, &a.md)
-		} else {
+		case segs != nil && a.md.Theme != nil:
+			// Finished, its tables shown on their own for their copy
+			// buttons.
+			md = a.segmentedMarkdown(c, p, it.ID, segs)
+		default:
 			md = markdown.View(c.Key(it.ID), src, &a.md)
 		}
 		a.findRing(p, id, md)

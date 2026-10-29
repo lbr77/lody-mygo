@@ -1851,5 +1851,12 @@
   "schedLoading": "正在加载定时任务…",
   "schedMachineOfflineHint": "目标机器当前未连接。",
   "schedWhatIs": "什么是{title}？",
-  "schedMessagesInfo": "在对话输入框里用「定时发送…」写好的一条消息，到点只发送一次。"
+  "schedMessagesInfo": "在对话输入框里用「定时发送…」写好的一条消息，到点只发送一次。",
+  "diagramDownload": "下载图表",
+  "diagramDownloadSvg": "SVG",
+  "diagramDownloadPng": "PNG",
+  "diagramDownloadSource": "Mermaid 源码",
+  "copyCode": "复制代码",
+  "copied": "已复制",
+  "copyTable": "复制表格"
 }

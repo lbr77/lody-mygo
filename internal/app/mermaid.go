@@ -241,7 +241,7 @@ func (fc *flowchart) layout(size float32) (w, h float32) {
 		n.order = len(ranks[n.rank])
 		ranks[n.rank] = append(ranks[n.rank], n)
 		maxRank = max(maxRank, n.rank)
-		tw, th := ui.ShapeText(n.label, ui.Font{Family: fontUI, Size: size}, 220).Size()
+		tw, th := diagramText(n.label, ui.Font{Family: fontUI, Size: size}, 220).Size()
 		n.w, n.h = max(tw+size*1.6, size*3), th+size
 		if n.shape == "box" {
 			mw, mh := boxMembers(n.members, size)
@@ -327,7 +327,7 @@ func edgePoint(n *mmNode, tx, ty float32) (float32, float32) {
 	return cx + dx*s, cy + dy*s
 }
 
-func (fc *flowchart) draw(p *ui.Painter, ox, oy, size float32, ink, line, fill ui.Color) {
+func (fc *flowchart) draw(p diagramPen, ox, oy, size float32, ink, line, fill ui.Color) {
 	pairs := map[[2]string]bool{}
 	for _, e := range fc.edges {
 		pairs[[2]string{e.from, e.to}] = true
@@ -359,7 +359,7 @@ func (fc *flowchart) draw(p *ui.Painter, ox, oy, size float32, ink, line, fill u
 			p.FillPath(arrowHead(x1, y1, ang, l), line)
 		}
 		if e.label != "" {
-			layout := ui.ShapeText(e.label, ui.Font{Family: fontUI, Size: size * 0.85}, 0)
+			layout := diagramText(e.label, ui.Font{Family: fontUI, Size: size * 0.85}, 0)
 			w, h := layout.Size()
 			mx, my := (x0+x1)/2, (y0+y1)/2
 			// A two-way edge's label stands off to its side.
@@ -376,12 +376,7 @@ func (fc *flowchart) draw(p *ui.Painter, ox, oy, size float32, ink, line, fill u
 		r := ui.Rect{X: n.x + ox, Y: n.y + oy, W: n.w, H: n.h}
 		switch n.shape {
 		case "diamond":
-			path := &ui.Path{}
-			path.MoveTo(r.X+r.W/2, r.Y)
-			path.LineTo(r.X+r.W, r.Y+r.H/2)
-			path.LineTo(r.X+r.W/2, r.Y+r.H)
-			path.LineTo(r.X, r.Y+r.H/2)
-			path.Close()
+			path := polygon([2]float32{r.X + r.W/2, r.Y}, [2]float32{r.X + r.W, r.Y + r.H/2}, [2]float32{r.X + r.W/2, r.Y + r.H}, [2]float32{r.X, r.Y + r.H/2})
 			p.FillPath(path, fill)
 			p.StrokePath(path, 1.2, line)
 		case "dot":
@@ -404,7 +399,7 @@ func (fc *flowchart) draw(p *ui.Painter, ox, oy, size float32, ink, line, fill u
 			p.Fill(r, fill, radius)
 			p.Stroke(r, line, radius, 1.2)
 		}
-		layout := ui.ShapeText(n.label, ui.Font{Family: fontUI, Size: size}, 220)
+		layout := diagramText(n.label, ui.Font{Family: fontUI, Size: size}, 220)
 		w, h := layout.Size()
 		p.TextLayout(layout, r.X+(r.W-w)/2, r.Y+(r.H-h)/2, ink)
 	}
@@ -412,20 +407,17 @@ func (fc *flowchart) draw(p *ui.Painter, ox, oy, size float32, ink, line, fill u
 
 // seg draws a straight line at any angle; Painter.Line draws only level
 // and upright ones.
-func seg(p *ui.Painter, x0, y0, x1, y1, width float32, c ui.Color) {
+func seg(p diagramPen, x0, y0, x1, y1, width float32, c ui.Color) {
 	p.StrokePolyline([][2]float32{{x0, y0}, {x1, y1}}, width, c)
 }
 
 func arrowHead(x, y float32, ang, l float64) *ui.Path {
-	path := &ui.Path{}
-	path.MoveTo(x, y)
-	path.LineTo(x-float32(l*math.Cos(ang-0.4)), y-float32(l*math.Sin(ang-0.4)))
-	path.LineTo(x-float32(l*math.Cos(ang+0.4)), y-float32(l*math.Sin(ang+0.4)))
-	path.Close()
-	return path
+	return polygon([2]float32{x, y},
+		[2]float32{x - float32(l*math.Cos(ang-0.4)), y - float32(l*math.Sin(ang-0.4))},
+		[2]float32{x - float32(l*math.Cos(ang+0.4)), y - float32(l*math.Sin(ang+0.4))})
 }
 
-func dashLine(p *ui.Painter, x0, y0, x1, y1, width float32, c ui.Color) {
+func dashLine(p diagramPen, x0, y0, x1, y1, width float32, c ui.Color) {
 	dx, dy := x1-x0, y1-y0
 	n := float32(math.Hypot(float64(dx), float64(dy)))
 	if n == 0 {
@@ -499,12 +491,12 @@ func (sq *sequence) label(id string) string {
 func (sq *sequence) size(size float32) (w, h float32, col []float32, boxW float32) {
 	boxW = size * 5
 	for _, a := range sq.actors {
-		tw, _ := ui.ShapeText(sq.label(a), ui.Font{Family: fontUI, Size: size}, 0).Size()
+		tw, _ := diagramText(sq.label(a), ui.Font{Family: fontUI, Size: size}, 0).Size()
 		boxW = max(boxW, tw+size*1.6)
 	}
 	gap := size * 3
 	for _, m := range sq.messages {
-		tw, _ := ui.ShapeText(m.label, ui.Font{Family: fontUI, Size: size * 0.85}, 0).Size()
+		tw, _ := diagramText(m.label, ui.Font{Family: fontUI, Size: size * 0.85}, 0).Size()
 		gap = max(gap, tw+size*2-boxW)
 	}
 	for i := range sq.actors {
@@ -515,7 +507,7 @@ func (sq *sequence) size(size float32) (w, h float32, col []float32, boxW float3
 	return w, h, col, boxW
 }
 
-func (sq *sequence) draw(p *ui.Painter, ox, oy, size float32, ink, line, fill ui.Color) {
+func (sq *sequence) draw(p diagramPen, ox, oy, size float32, ink, line, fill ui.Color) {
 	w, h, col, boxW := sq.size(size)
 	_ = w
 	boxH := size * 2.4
@@ -528,7 +520,7 @@ func (sq *sequence) draw(p *ui.Painter, ox, oy, size float32, ink, line, fill ui
 			r := ui.Rect{X: x - boxW/2, Y: y, W: boxW, H: boxH}
 			p.Fill(r, fill, 4)
 			p.Stroke(r, line, 4, 1.2)
-			layout := ui.ShapeText(sq.label(a), ui.Font{Family: fontUI, Size: size}, 0)
+			layout := diagramText(sq.label(a), ui.Font{Family: fontUI, Size: size}, 0)
 			tw, th := layout.Size()
 			p.TextLayout(layout, x-tw/2, y+(boxH-th)/2, ink)
 		}
@@ -552,7 +544,7 @@ func (sq *sequence) draw(p *ui.Painter, ox, oy, size float32, ink, line, fill ui
 			}
 			p.FillPath(arrowHead(x1, y, ang, float64(size*0.6)), line)
 		}
-		layout := ui.ShapeText(m.label, ui.Font{Family: fontUI, Size: size * 0.85}, 0)
+		layout := diagramText(m.label, ui.Font{Family: fontUI, Size: size * 0.85}, 0)
 		tw, th := layout.Size()
 		p.TextLayout(layout, (x0+x1)/2-tw/2, y-th-3, ink)
 	}
@@ -596,19 +588,19 @@ func (a *App) registerMermaid(o *markdown.Options) {
 		src := strings.TrimSpace(b.Code())
 		size := o.Theme.FontSize * 0.9
 		var w, h float32
-		var draw func(p *ui.Painter, x, y float32)
+		var draw func(p diagramPen, x, y float32)
 		ink, line, fill := o.Theme.Text, o.Theme.Muted, o.Theme.CodeBlockBackground
 		switch kind := mermaidKind(src); {
 		case b.Open:
 		case kind == "flowchart":
 			if fc, ok := parseFlowchart(src); ok {
 				w, h = fc.layout(size)
-				draw = func(p *ui.Painter, x, y float32) { fc.draw(p, x, y, size, ink, line, fill) }
+				draw = func(p diagramPen, x, y float32) { fc.draw(p, x, y, size, ink, line, fill) }
 			}
 		case kind == "state":
 			if fc, ok := parseState(src); ok {
 				w, h = fc.layout(size)
-				draw = func(p *ui.Painter, x, y float32) { fc.draw(p, x, y, size, ink, line, fill) }
+				draw = func(p diagramPen, x, y float32) { fc.draw(p, x, y, size, ink, line, fill) }
 			}
 		case kind == "class" || kind == "er":
 			parse := parseClass
@@ -617,18 +609,18 @@ func (a *App) registerMermaid(o *markdown.Options) {
 			}
 			if fc, ok := parse(src); ok {
 				w, h = fc.layout(size)
-				draw = func(p *ui.Painter, x, y float32) { fc.draw(p, x, y, size, ink, line, fill) }
+				draw = func(p diagramPen, x, y float32) { fc.draw(p, x, y, size, ink, line, fill) }
 			}
 		case kind == "xychart":
 			if xc, ok := parseXYChart(src); ok {
 				w, h = xc.size(size)
 				accent := o.Theme.Link
-				draw = func(p *ui.Painter, x, y float32) { xc.draw(p, x, y, size, ink, line, accent) }
+				draw = func(p diagramPen, x, y float32) { xc.draw(p, x, y, size, ink, line, accent) }
 			}
 		case kind == "sequence":
 			if sq, ok := parseSequence(src); ok {
 				w, h, _, _ = sq.size(size)
-				draw = func(p *ui.Painter, x, y float32) { sq.draw(p, x, y, size, ink, line, fill) }
+				draw = func(p diagramPen, x, y float32) { sq.draw(p, x, y, size, ink, line, fill) }
 			}
 		}
 		if draw == nil || w <= 0 || h <= 0 || w > 8192 || h > 8192 {
@@ -636,7 +628,8 @@ func (a *App) registerMermaid(o *markdown.Options) {
 			return
 		}
 		frame := ui.Column(c).AlignSelf(ui.Stretch).Padding(12).Radius(o.Theme.CodeBlockRadius).Border(1, o.Theme.CodeBlockBorder).Label("Mermaid\n" + src)
-		lodyContextMenu(c, framePalette, frame, a.rowMenu(fmt.Sprintf("mermaid/%x", frame.ID())), 28, func(m *lodyMenu) {
+		id := fmt.Sprintf("mermaid/%x", frame.ID())
+		lodyContextMenu(c, framePalette, frame, a.rowMenu(id), 28, func(m *lodyMenu) {
 			if m.item("copy", iconCopy, locales.Copy(), menuItem{}) {
 				writeClipboard(src)
 			}
@@ -651,6 +644,8 @@ func (a *App) registerMermaid(o *markdown.Options) {
 			ui.Box(c).Size(w*scale, h*scale).AlignSelf(ui.Center).Draw(func(p *ui.Painter, r ui.Rect) {
 				p.Transform(ui.Scaling(scale, scale), r.X, r.Y, func() { draw(p, r.X, r.Y) })
 			})
+			// Placed over the diagram, as what lies absolutely does.
+			a.mermaidActions(c, framePalette, frame, id, src, w, h, o.Theme.CodeBlockBackground, draw)
 		})
 	}
 }

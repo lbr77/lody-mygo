@@ -133,6 +133,7 @@ type App struct {
 	plusLevel      string               // the "+" menu's level: "" or "mcp"
 	gitStates      map[string]*gitState // projects' Git, by project
 	quotaAsked     map[string]time.Time // when each provider's quota was last asked for
+	copiedAt       map[string]time.Time // when each copy button last copied, by key
 
 	sidebarHidden    bool
 	sideOut          float32 // how far the sidebar is out as it slides, 1 shown
