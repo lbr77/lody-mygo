@@ -14,6 +14,7 @@ import (
 
 	"github.com/lbr77/lody-mygo/internal/catalog"
 	"github.com/lbr77/lody-mygo/internal/cloud"
+	"github.com/lbr77/lody-mygo/internal/collab"
 	"github.com/lbr77/lody-mygo/internal/mention"
 	"github.com/lbr77/lody-mygo/internal/session"
 )
@@ -466,7 +467,7 @@ func TestChangesPanel(t *testing.T) {
 	items[2].Content = []any{map[string]any{"type": "diff", "path": "README.md", "oldText": "# Lody", "newText": "# Lody Native"}}
 	tt := snap(t, a, "changes-panel", false, func(tt *ui.Tester) {
 		tt.Frame()
-		if err := tt.Click("Changes"); err != nil {
+		if err := tt.Click("Show panel"); err != nil {
 			t.Fatal(err)
 		}
 	})
@@ -540,5 +541,56 @@ func TestMentions(t *testing.T) {
 	tt.Frame()
 	if tt.HasText("No matches") || a.mention.active {
 		t.Fatalf("Escape left the panel open: %q", tt.Texts())
+	}
+}
+
+func TestFilesPanel(t *testing.T) {
+	a := fixture()
+	a.view.Entries = a.view.Entries[:2]
+	a.view.Working = false
+	a.conn = &cloud.Conn{ID: "w1"}
+	a.panelOpen = true
+	text := func(s string) *collab.Snapshot {
+		return &collab.Snapshot{Kind: "text", Text: &collab.Text{Encoding: "plain", Text: s}}
+	}
+	two, one := 2, 1
+	in := a.inspectFor("s1")
+	in.changes[collab.ScopeBranch] = &changesState{res: &collab.Changes{Status: "ok", Base: "0123456789abcdef", Entries: []collab.Change{
+		{Status: "ok", Path: "internal/app/view.go", Old: text("package app\n"), New: text("package app\n\nconst x = 1\n"), Add: &two, Del: &one},
+	}}}
+	in.dirs[""] = &dirListing{entries: []collab.DirEntry{{Name: "internal", Type: "directory"}, {Name: "README.md", Type: "file"}}}
+	in.dirs["internal"] = &dirListing{entries: []collab.DirEntry{{Name: "app", Type: "directory"}}}
+	in.preview = &filePreview{path: "README.md", text: "# Hello from the machine"}
+	tt := snap(t, a, "files-panel", false, nil)
+	if !tt.HasText("view.go") || !tt.HasText("Compared with 0123456") {
+		t.Fatalf("changes: %q", tt.Texts())
+	}
+	if err := tt.Click("internal/app/view.go"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if in.change != "internal/app/view.go" || a.diffs["machine/branch/internal/app/view.go"] == nil {
+		t.Fatalf("diff not shown: %q", tt.Texts())
+	}
+	if err := tt.Click("Files"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if !tt.HasText("README.md") || tt.HasText("app") {
+		t.Fatalf("tree: %q", tt.Texts())
+	}
+	if err := tt.Click("internal"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if !tt.HasText("app") {
+		t.Fatalf("folder didn't open: %q", tt.Texts())
+	}
+	if err := tt.Click("README.md"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if !tt.HasText("Hello from the machine") {
+		t.Fatalf("file: %q", tt.Texts())
 	}
 }

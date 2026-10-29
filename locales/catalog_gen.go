@@ -2622,3 +2622,213 @@ func MentionOffline(machine string) string { return In(i18n.Locale()).MentionOff
 func (msgs Messages) MentionOffline(machine string) string {
 	return Catalog.Format(msgs.locale, "mentionOffline", map[string]any{"machine": machine})
 }
+
+// PanelToggle says "Show panel"
+// in the language the app shows.
+func PanelToggle() string { return In(i18n.Locale()).PanelToggle() }
+
+// PanelToggle says "Show panel"
+// in the language of msgs.
+func (msgs Messages) PanelToggle() string {
+	return Catalog.Format(msgs.locale, "panelToggle", nil)
+}
+
+// PanelFiles says "Files"
+// in the language the app shows.
+func PanelFiles() string { return In(i18n.Locale()).PanelFiles() }
+
+// PanelFiles says "Files"
+// in the language of msgs.
+func (msgs Messages) PanelFiles() string {
+	return Catalog.Format(msgs.locale, "panelFiles", nil)
+}
+
+// Refresh says "Refresh"
+// in the language the app shows.
+func Refresh() string { return In(i18n.Locale()).Refresh() }
+
+// Refresh says "Refresh"
+// in the language of msgs.
+func (msgs Messages) Refresh() string {
+	return Catalog.Format(msgs.locale, "refresh", nil)
+}
+
+// ScopeBranch says "Branch"
+// in the language the app shows.
+func ScopeBranch() string { return In(i18n.Locale()).ScopeBranch() }
+
+// ScopeBranch says "Branch"
+// in the language of msgs.
+func (msgs Messages) ScopeBranch() string {
+	return Catalog.Format(msgs.locale, "scopeBranch", nil)
+}
+
+// ScopeUncommitted says "Uncommitted"
+// in the language the app shows.
+func ScopeUncommitted() string { return In(i18n.Locale()).ScopeUncommitted() }
+
+// ScopeUncommitted says "Uncommitted"
+// in the language of msgs.
+func (msgs Messages) ScopeUncommitted() string {
+	return Catalog.Format(msgs.locale, "scopeUncommitted", nil)
+}
+
+// PanelLoadingChanges says "Loading changes…"
+// in the language the app shows.
+func PanelLoadingChanges() string { return In(i18n.Locale()).PanelLoadingChanges() }
+
+// PanelLoadingChanges says "Loading changes…"
+// in the language of msgs.
+func (msgs Messages) PanelLoadingChanges() string {
+	return Catalog.Format(msgs.locale, "panelLoadingChanges", nil)
+}
+
+// PanelComparedWith says "Compared with {base}"
+// in the language the app shows.
+func PanelComparedWith(base string) string { return In(i18n.Locale()).PanelComparedWith(base) }
+
+// PanelComparedWith says "Compared with {base}"
+// in the language of msgs.
+func (msgs Messages) PanelComparedWith(base string) string {
+	return Catalog.Format(msgs.locale, "panelComparedWith", map[string]any{"base": base})
+}
+
+// PanelTruncated says "Some entries aren't shown."
+// in the language the app shows.
+func PanelTruncated() string { return In(i18n.Locale()).PanelTruncated() }
+
+// PanelTruncated says "Some entries aren't shown."
+// in the language of msgs.
+func (msgs Messages) PanelTruncated() string {
+	return Catalog.Format(msgs.locale, "panelTruncated", nil)
+}
+
+// PanelConversationEdits says "EDITS IN THIS CONVERSATION"
+// in the language the app shows.
+func PanelConversationEdits() string { return In(i18n.Locale()).PanelConversationEdits() }
+
+// PanelConversationEdits says "EDITS IN THIS CONVERSATION"
+// in the language of msgs.
+func (msgs Messages) PanelConversationEdits() string {
+	return Catalog.Format(msgs.locale, "panelConversationEdits", nil)
+}
+
+// PanelNoStats says "Diff stats unavailable"
+// in the language the app shows.
+func PanelNoStats() string { return In(i18n.Locale()).PanelNoStats() }
+
+// PanelNoStats says "Diff stats unavailable"
+// in the language of msgs.
+func (msgs Messages) PanelNoStats() string {
+	return Catalog.Format(msgs.locale, "panelNoStats", nil)
+}
+
+// PanelNotGit says "This workspace isn't a Git repository."
+// in the language the app shows.
+func PanelNotGit() string { return In(i18n.Locale()).PanelNotGit() }
+
+// PanelNotGit says "This workspace isn't a Git repository."
+// in the language of msgs.
+func (msgs Messages) PanelNotGit() string {
+	return Catalog.Format(msgs.locale, "panelNotGit", nil)
+}
+
+// PanelNoCommits says "This repository has no commits yet."
+// in the language the app shows.
+func PanelNoCommits() string { return In(i18n.Locale()).PanelNoCommits() }
+
+// PanelNoCommits says "This repository has no commits yet."
+// in the language of msgs.
+func (msgs Messages) PanelNoCommits() string {
+	return Catalog.Format(msgs.locale, "panelNoCommits", nil)
+}
+
+// PanelUnavailable says "Changes are unavailable ({reason})."
+// in the language the app shows.
+func PanelUnavailable(reason string) string { return In(i18n.Locale()).PanelUnavailable(reason) }
+
+// PanelUnavailable says "Changes are unavailable ({reason})."
+// in the language of msgs.
+func (msgs Messages) PanelUnavailable(reason string) string {
+	return Catalog.Format(msgs.locale, "panelUnavailable", map[string]any{"reason": reason})
+}
+
+// PanelNoDiff says "There's no diff to show."
+// in the language the app shows.
+func PanelNoDiff() string { return In(i18n.Locale()).PanelNoDiff() }
+
+// PanelNoDiff says "There's no diff to show."
+// in the language of msgs.
+func (msgs Messages) PanelNoDiff() string {
+	return Catalog.Format(msgs.locale, "panelNoDiff", nil)
+}
+
+// PanelBinary says "Binary files can't be shown."
+// in the language the app shows.
+func PanelBinary() string { return In(i18n.Locale()).PanelBinary() }
+
+// PanelBinary says "Binary files can't be shown."
+// in the language of msgs.
+func (msgs Messages) PanelBinary() string {
+	return Catalog.Format(msgs.locale, "panelBinary", nil)
+}
+
+// PanelTooLarge says "This file is too large to show."
+// in the language the app shows.
+func PanelTooLarge() string { return In(i18n.Locale()).PanelTooLarge() }
+
+// PanelTooLarge says "This file is too large to show."
+// in the language of msgs.
+func (msgs Messages) PanelTooLarge() string {
+	return Catalog.Format(msgs.locale, "panelTooLarge", nil)
+}
+
+// PanelNoFiles says "No project files"
+// in the language the app shows.
+func PanelNoFiles() string { return In(i18n.Locale()).PanelNoFiles() }
+
+// PanelNoFiles says "No project files"
+// in the language of msgs.
+func (msgs Messages) PanelNoFiles() string {
+	return Catalog.Format(msgs.locale, "panelNoFiles", nil)
+}
+
+// PanelNoFilesHint says "Files can be browsed for sessions in a local project."
+// in the language the app shows.
+func PanelNoFilesHint() string { return In(i18n.Locale()).PanelNoFilesHint() }
+
+// PanelNoFilesHint says "Files can be browsed for sessions in a local project."
+// in the language of msgs.
+func (msgs Messages) PanelNoFilesHint() string {
+	return Catalog.Format(msgs.locale, "panelNoFilesHint", nil)
+}
+
+// PanelSource says "Source"
+// in the language the app shows.
+func PanelSource() string { return In(i18n.Locale()).PanelSource() }
+
+// PanelSource says "Source"
+// in the language of msgs.
+func (msgs Messages) PanelSource() string {
+	return Catalog.Format(msgs.locale, "panelSource", nil)
+}
+
+// PanelPreview says "Preview"
+// in the language the app shows.
+func PanelPreview() string { return In(i18n.Locale()).PanelPreview() }
+
+// PanelPreview says "Preview"
+// in the language of msgs.
+func (msgs Messages) PanelPreview() string {
+	return Catalog.Format(msgs.locale, "panelPreview", nil)
+}
+
+// PanelCantOpen says "Couldn't open this file"
+// in the language the app shows.
+func PanelCantOpen() string { return In(i18n.Locale()).PanelCantOpen() }
+
+// PanelCantOpen says "Couldn't open this file"
+// in the language of msgs.
+func (msgs Messages) PanelCantOpen() string {
+	return Catalog.Format(msgs.locale, "panelCantOpen", nil)
+}

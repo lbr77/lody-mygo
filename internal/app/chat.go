@@ -69,7 +69,7 @@ func (a *App) tabBar(c *ui.Context, p *palette, sess *catalog.Session) {
 			s := *sess
 			iconButton(c, p, iconMore, locales.MoreActions(), p.Hover).Menu(func(m *ui.Menu) { a.sessionMenu(m, s) })
 			if !a.panelOpen {
-				iconButton(c, p, iconPanelRight, locales.PanelChanges(), p.Hover).OnClick(func() { a.panelOpen = true })
+				iconButton(c, p, iconPanelRight, locales.PanelToggle(), p.Hover).OnClick(func() { a.panelOpen = true })
 			}
 		}
 	})

@@ -9,13 +9,16 @@ import (
 	"github.com/egoist/mygo/ui"
 	"github.com/egoist/mygo/ui/editor"
 
+	"github.com/lbr77/lody-mygo/internal/collab"
 	"github.com/lbr77/lody-mygo/internal/session"
 	"github.com/lbr77/lody-mygo/locales"
 )
 
 // The inspector: a panel beside the conversation, as Lody's right panel.
-// Its Changes tab lists the files the session's turns edited, each with
-// its edits in order, from the diffs the agent's tool calls carry.
+// Files browses the session's project and shows a file read from the
+// machine; Changes lists what the session changed, as the machine
+// compares it with the branch's base or the last commit, or else the
+// edits the agent's tool calls carry.
 
 // fileChange is a file a session edited.
 type fileChange struct {
@@ -96,57 +99,258 @@ func lineChanges(old, new string) (add, del int) {
 	return add, del
 }
 
-// inspector is the panel's content.
+// inspector is the panel's content: the session's files, or its changes.
 func (a *App) inspector(c *ui.Context, p *palette) {
-	changes := sessionChanges(a.view)
+	in := a.inspectFor(a.selected)
 	ui.Column(c).Fill().Background(p.Canvas).BorderWidth(0, 0, 0, 1).BorderColor(p.Border).Children(func() {
-		ui.Row(c).Height(titleBarHeight).Shrink(0).Padding(0, 8, 0, 12).Gap(4).AlignItems(ui.Center).DragWindow().Children(func() {
-			tab := ui.Row(c).Height(28).Padding(0, 10).Radius(8).Gap(6).AlignItems(ui.Center).Background(p.Text.Alpha(0.06))
-			tab.Children(func() {
-				ui.Text(c, locales.PanelChanges()).FontSize(sizeSub).FontWeight(500).TextColor(p.Text)
-				if len(changes) > 0 {
-					ui.Text(c, fmt.Sprint(len(changes))).FontSize(sizeFoot).TextColor(p.Secondary)
-				}
-			})
+		ui.Row(c).Height(titleBarHeight).Shrink(0).Padding(0, 8, 0, 8).Gap(2).AlignItems(ui.Center).DragWindow().
+			BorderWidth(0, 0, 1, 0).BorderColor(p.Border).Children(func() {
+			panelTab(c, p, locales.PanelFiles(), in.tab == tabFiles).OnClick(func() { in.tab = tabFiles })
+			panelTab(c, p, locales.PanelChanges(), in.tab == tabChanges).OnClick(func() { in.tab = tabChanges })
 			ui.Spacer(c)
+			iconButton(c, p, iconRefresh, locales.Refresh(), p.Hover).OnClick(func() { a.refreshInspector(in) })
 			iconButton(c, p, iconX, locales.Close(), p.Hover).OnClick(func() { a.panelOpen = false })
 		})
-		if a.panelFile != "" {
-			for _, ch := range changes {
-				if ch.path == a.panelFile {
-					a.fileEdits(c, p, ch)
-					return
+		if in.tab == tabFiles {
+			a.filesTab(c, p, in)
+		} else {
+			a.changesTab(c, p, in)
+		}
+	})
+}
+
+func panelTab(c *ui.Context, p *palette, label string, active bool) ui.Element {
+	tab := ui.ButtonBase(c.Key(label)).Height(28).Padding(0, 10).Radius(8).Cursor(ui.CursorPointer).Label(label)
+	ink := p.Secondary
+	switch {
+	case active:
+		tab.Background(p.Text.Alpha(0.07))
+		ink = p.Text
+	case tab.Hovered():
+		tab.Background(p.Hover)
+	}
+	tab.Children(func() {
+		ui.Text(c, label).FontSize(sizeSub).FontWeight(500).TextColor(ink)
+	})
+	return tab
+}
+
+// changesTab lists what the session changed in its workspace, as the
+// machine compares it, and falls back to the edits the conversation shows
+// when the machine can't.
+func (a *App) changesTab(c *ui.Context, p *palette, in *inspectState) {
+	if in.change != "" {
+		a.machineDiff(c, p, in)
+		return
+	}
+	if a.panelFile != "" {
+		for _, ch := range sessionChanges(a.view) {
+			if ch.path == a.panelFile {
+				a.fileEdits(c, p, ch)
+				return
+			}
+		}
+		a.panelFile = ""
+	}
+	cs := a.loadChanges(in)
+	ui.Row(c).Shrink(0).Height(40).Padding(0, 12).Gap(8).AlignItems(ui.Center).Children(func() {
+		picked := 0
+		if in.scope == collab.ScopeUncommitted {
+			picked = 1
+		}
+		was := picked
+		ui.Segmented(c, &picked, locales.ScopeBranch(), locales.ScopeUncommitted()).Label(locales.PanelChanges())
+		if picked != was {
+			in.scope = []string{collab.ScopeBranch, collab.ScopeUncommitted}[picked]
+		}
+		ui.Spacer(c)
+		if cs.res != nil && cs.res.Status == "ok" {
+			add, del := 0, 0
+			for _, e := range cs.res.Entries {
+				if e.Add != nil {
+					add += *e.Add
+				}
+				if e.Del != nil {
+					del += *e.Del
 				}
 			}
-			a.panelFile = ""
+			ui.Text(c, fmt.Sprint(len(cs.res.Entries))).FontSize(sizeFoot).TextColor(p.Secondary)
+			diffCounts(c, p, add, del)
 		}
-		if len(changes) == 0 {
-			ui.Column(c).Grow(1).Center().Padding(24).Gap(6).Children(func() {
-				ui.Text(c, locales.PanelNoChanges()).FontSize(sizeSub).FontWeight(500).TextColor(p.Text)
-				ui.Text(c, locales.PanelNoChangesHint()).FontSize(sizeFoot).TextColor(p.Secondary).TextAlign(ui.Center)
-			})
+	})
+	switch {
+	case cs.loading && cs.res == nil:
+		panelStatus(c, p, true, locales.PanelLoadingChanges(), "")
+		return
+	case cs.res != nil && cs.res.Status == "ok":
+		if len(cs.res.Entries) == 0 {
+			panelStatus(c, p, false, locales.PanelNoChanges(), "")
 			return
 		}
-		ui.Scroll(c).Grow(1).MinHeight(0).Padding(4, 8, 12, 8).Gap(1).Children(func() {
-			sorted := append([]fileChange(nil), changes...)
-			sort.SliceStable(sorted, func(i, j int) bool { return sorted[i].path < sorted[j].path })
-			for _, ch := range sorted {
-				dir, file := path.Split(ch.path)
-				row := ui.Row(c.Key(ch.path)).Height(30).Padding(0, 8).Radius(6).Gap(6).AlignItems(ui.Center).Cursor(ui.CursorPointer).Label(ch.path)
-				if row.Hovered() {
-					row.Background(p.Hover)
+		if base := cs.res.Base; base != "" && base != "diff-store" {
+			ui.Text(c, locales.PanelComparedWith(shortSHA(base))).FontSize(sizeCaption).TextColor(p.Tertiary).Padding(0, 14, 6, 14)
+		}
+		ui.Scroll(c).Grow(1).MinHeight(0).Padding(0, 8, 12, 8).Gap(1).Children(func() {
+			for _, e := range cs.res.Entries {
+				add, del := -1, -1
+				if e.Add != nil {
+					add = *e.Add
 				}
-				pathOf := ch.path
-				row.OnClick(func() { a.panelFile = pathOf })
-				row.Children(func() {
-					ui.Icon(c, iconFile).Size(14, 14).TextColor(p.Secondary)
-					ui.Text(c, file).FontSize(sizeSub).TextColor(p.Text).SingleLine().Shrink(0).MaxWidth(200)
-					ui.Text(c, strings.TrimSuffix(dir, "/")).FontSize(sizeFoot).TextColor(p.Tertiary).SingleLine().Grow(1).MinWidth(0)
-					diffCounts(c, p, ch.add, ch.del)
-				})
+				if e.Del != nil {
+					del = *e.Del
+				}
+				pathOf := e.Path
+				changeRow(c.Key(e.Path), p, e.Path, e.Kind(), add, del).OnClick(func() { in.change = pathOf })
+			}
+			if cs.res.Truncated {
+				ui.Text(c, locales.PanelTruncated()).FontSize(sizeCaption).TextColor(p.Tertiary).Padding(6, 8)
 			}
 		})
+		return
+	}
+	// The machine couldn't compare: show why, then the conversation's edits.
+	reason := cs.err
+	if cs.res != nil {
+		reason = firstNonEmpty(cs.res.Message, unavailableReason(cs.res.Reason))
+	}
+	changes := sessionChanges(a.view)
+	if reason != "" {
+		ui.Text(c, reason).FontSize(sizeFoot).TextColor(p.Secondary).Padding(4, 14, 8, 14).Selectable()
+	}
+	if len(changes) == 0 {
+		panelStatus(c, p, false, locales.PanelNoChanges(), locales.PanelNoChangesHint())
+		return
+	}
+	ui.Text(c, locales.PanelConversationEdits()).FontSize(sizeCaption).FontWeight(600).TextColor(p.Tertiary).Padding(4, 14)
+	ui.Scroll(c).Grow(1).MinHeight(0).Padding(0, 8, 12, 8).Gap(1).Children(func() {
+		sorted := append([]fileChange(nil), changes...)
+		sort.SliceStable(sorted, func(i, j int) bool { return sorted[i].path < sorted[j].path })
+		for _, ch := range sorted {
+			pathOf := ch.path
+			changeRow(c.Key(ch.path), p, ch.path, "", ch.add, ch.del).OnClick(func() { a.panelFile = pathOf })
+		}
 	})
+}
+
+// changeRow is a changed file: its name over its folder, and its counts.
+func changeRow(c *ui.Context, p *palette, file, kind string, add, del int) ui.Element {
+	dir, name := path.Split(file)
+	row := ui.Row(c).MinHeight(36).Padding(4, 8).Radius(6).Gap(8).AlignItems(ui.Center).Cursor(ui.CursorPointer).Label(file)
+	if row.Hovered() {
+		row.Background(p.Hover)
+	}
+	row.Children(func() {
+		ui.Icon(c, iconFile).Size(16, 16).TextColor(p.Secondary).Shrink(0)
+		ui.Column(c).Grow(1).MinWidth(0).Children(func() {
+			ink := p.Text
+			switch kind {
+			case "added":
+				ink = p.DiffAdd
+			case "deleted":
+				ink = p.DiffDel
+			}
+			ui.Text(c, name).FontSize(sizeSub).LineHeight(20.0 / 13).TextColor(ink).SingleLine()
+			if dir != "" {
+				ui.Text(c, dir).FontSize(sizeCaption).TextColor(p.Tertiary).SingleLine()
+			}
+		})
+		if add < 0 && del < 0 {
+			ui.Text(c, "--").FontSize(sizeFoot).TextColor(p.Tertiary).Tooltip(locales.PanelNoStats())
+			return
+		}
+		diffCounts(c, p, max(add, 0), max(del, 0))
+	})
+	return row
+}
+
+func panelStatus(c *ui.Context, p *palette, loading bool, title, hint string) {
+	ui.Column(c).Grow(1).Center().Padding(24).Gap(6).Children(func() {
+		ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
+			if loading {
+				ui.Spinner(c).Size(13, 13)
+			}
+			ui.Text(c, title).FontSize(sizeSub).FontWeight(500).TextColor(p.Text)
+		})
+		if hint != "" {
+			ui.Text(c, hint).FontSize(sizeFoot).TextColor(p.Secondary).TextAlign(ui.Center)
+		}
+	})
+}
+
+func shortSHA(s string) string {
+	if len(s) > 7 {
+		return s[:7]
+	}
+	return s
+}
+
+func unavailableReason(reason string) string {
+	switch reason {
+	case "not_a_git_worktree":
+		return locales.PanelNotGit()
+	case "no_commits":
+		return locales.PanelNoCommits()
+	case "":
+		return ""
+	}
+	return locales.PanelUnavailable(reason)
+}
+
+// machineDiff shows one file of the machine's changes.
+func (a *App) machineDiff(c *ui.Context, p *palette, in *inspectState) {
+	cs := a.loadChanges(in)
+	var entry *collab.Change
+	if cs.res != nil {
+		for i := range cs.res.Entries {
+			if cs.res.Entries[i].Path == in.change {
+				entry = &cs.res.Entries[i]
+			}
+		}
+	}
+	if entry == nil {
+		in.change = ""
+		return
+	}
+	if entry.Status == "deferred" {
+		entry = a.deferredChange(in, cs, entry.Path)
+	}
+	ui.Row(c).Shrink(0).Height(36).Padding(0, 8).Gap(6).AlignItems(ui.Center).BorderWidth(0, 0, 1, 0).BorderColor(p.Border).Children(func() {
+		iconButton(c, p, iconChevronLeft, locales.NavBack(), p.Hover).OnClick(func() { in.change = "" })
+		ui.Text(c, in.change).Font(fontMono).FontSize(sizeFoot).TextColor(p.Text).SingleLine().Grow(1).MinWidth(0)
+		if entry != nil && entry.Add != nil && entry.Del != nil {
+			diffCounts(c, p, *entry.Add, *entry.Del)
+		}
+	})
+	if entry == nil {
+		panelStatus(c, p, true, locales.Loading(), "")
+		return
+	}
+	old, okOld := entry.Old.String()
+	now, okNew := entry.New.String()
+	if entry.Status != "ok" || !okOld || !okNew {
+		why := locales.PanelNoDiff()
+		switch {
+		case entry.Old != nil && entry.Old.Kind == "binary", entry.New != nil && entry.New.Kind == "binary":
+			why = locales.PanelBinary()
+		case entry.Old != nil && entry.Old.Kind == "too_large", entry.New != nil && entry.New.Kind == "too_large":
+			why = locales.PanelTooLarge()
+		case entry.Reason != "":
+			why = unavailableReason(entry.Reason)
+		}
+		panelStatus(c, p, false, why, "")
+		return
+	}
+	key := "machine/" + in.scope + "/" + entry.Path
+	d := a.diffs[key]
+	if d == nil {
+		lang := editor.LanguageFor(entry.Path)
+		before, after := editor.NewBuffer(old), editor.NewBuffer(now)
+		before.SetLanguage(lang)
+		after.SetLanguage(lang)
+		d = &editor.DiffState{Old: before, New: after, Layout: editor.DiffUnified, Wrap: true}
+		a.diffs[key] = d
+	}
+	editor.DiffView(c, d).Grow(1).MinHeight(0).FillWidth()
 }
 
 // fileEdits shows a file's edits, each as its own diff.

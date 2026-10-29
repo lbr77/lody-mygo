@@ -621,5 +621,40 @@
         "type": "String"
       }
     }
-  }
+  },
+  "panelToggle": "Show panel",
+  "panelFiles": "Files",
+  "refresh": "Refresh",
+  "scopeBranch": "Branch",
+  "scopeUncommitted": "Uncommitted",
+  "panelLoadingChanges": "Loading changes…",
+  "panelComparedWith": "Compared with {base}",
+  "@panelComparedWith": {
+    "placeholders": {
+      "base": {
+        "type": "String"
+      }
+    }
+  },
+  "panelTruncated": "Some entries aren't shown.",
+  "panelConversationEdits": "EDITS IN THIS CONVERSATION",
+  "panelNoStats": "Diff stats unavailable",
+  "panelNotGit": "This workspace isn't a Git repository.",
+  "panelNoCommits": "This repository has no commits yet.",
+  "panelUnavailable": "Changes are unavailable ({reason}).",
+  "@panelUnavailable": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "panelNoDiff": "There's no diff to show.",
+  "panelBinary": "Binary files can't be shown.",
+  "panelTooLarge": "This file is too large to show.",
+  "panelNoFiles": "No project files",
+  "panelNoFilesHint": "Files can be browsed for sessions in a local project.",
+  "panelSource": "Source",
+  "panelPreview": "Preview",
+  "panelCantOpen": "Couldn't open this file"
 }
