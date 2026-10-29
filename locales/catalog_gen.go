@@ -5878,3 +5878,223 @@ func ProjectWaitingDevice() string { return In(i18n.Locale()).ProjectWaitingDevi
 func (msgs Messages) ProjectWaitingDevice() string {
 	return Catalog.Format(msgs.locale, "projectWaitingDevice", nil)
 }
+
+// ShortcutsLead says "Save prompts to send with a slash command. Each says where it applies; with none set it works anywhere in this worksp…"
+// in the language the app shows.
+func ShortcutsLead() string { return In(i18n.Locale()).ShortcutsLead() }
+
+// ShortcutsLead says "Save prompts to send with a slash command. Each says where it applies; with none set it works anywhere in this worksp…"
+// in the language of msgs.
+func (msgs Messages) ShortcutsLead() string {
+	return Catalog.Format(msgs.locale, "shortcutsLead", nil)
+}
+
+// ShortcutsNew says "New Prompt Shortcut"
+// in the language the app shows.
+func ShortcutsNew() string { return In(i18n.Locale()).ShortcutsNew() }
+
+// ShortcutsNew says "New Prompt Shortcut"
+// in the language of msgs.
+func (msgs Messages) ShortcutsNew() string {
+	return Catalog.Format(msgs.locale, "shortcutsNew", nil)
+}
+
+// ShortcutsEdit says "Edit Prompt Shortcut"
+// in the language the app shows.
+func ShortcutsEdit() string { return In(i18n.Locale()).ShortcutsEdit() }
+
+// ShortcutsEdit says "Edit Prompt Shortcut"
+// in the language of msgs.
+func (msgs Messages) ShortcutsEdit() string {
+	return Catalog.Format(msgs.locale, "shortcutsEdit", nil)
+}
+
+// ShortcutsNone says "No Prompt Shortcuts yet. Save a prompt you write often and send it with /."
+// in the language the app shows.
+func ShortcutsNone() string { return In(i18n.Locale()).ShortcutsNone() }
+
+// ShortcutsNone says "No Prompt Shortcuts yet. Save a prompt you write often and send it with /."
+// in the language of msgs.
+func (msgs Messages) ShortcutsNone() string {
+	return Catalog.Format(msgs.locale, "shortcutsNone", nil)
+}
+
+// ShortcutsPrivate says "Private"
+// in the language the app shows.
+func ShortcutsPrivate() string { return In(i18n.Locale()).ShortcutsPrivate() }
+
+// ShortcutsPrivate says "Private"
+// in the language of msgs.
+func (msgs Messages) ShortcutsPrivate() string {
+	return Catalog.Format(msgs.locale, "shortcutsPrivate", nil)
+}
+
+// ShortcutsShared says "Shared"
+// in the language the app shows.
+func ShortcutsShared() string { return In(i18n.Locale()).ShortcutsShared() }
+
+// ShortcutsShared says "Shared"
+// in the language of msgs.
+func (msgs Messages) ShortcutsShared() string {
+	return Catalog.Format(msgs.locale, "shortcutsShared", nil)
+}
+
+// ShortcutsDeleteTitle says "Delete {name}?"
+// in the language the app shows.
+func ShortcutsDeleteTitle(name string) string { return In(i18n.Locale()).ShortcutsDeleteTitle(name) }
+
+// ShortcutsDeleteTitle says "Delete {name}?"
+// in the language of msgs.
+func (msgs Messages) ShortcutsDeleteTitle(name string) string {
+	return Catalog.Format(msgs.locale, "shortcutsDeleteTitle", map[string]any{"name": name})
+}
+
+// ShortcutsDeleteBody says "It's removed for everyone who could use it."
+// in the language the app shows.
+func ShortcutsDeleteBody() string { return In(i18n.Locale()).ShortcutsDeleteBody() }
+
+// ShortcutsDeleteBody says "It's removed for everyone who could use it."
+// in the language of msgs.
+func (msgs Messages) ShortcutsDeleteBody() string {
+	return Catalog.Format(msgs.locale, "shortcutsDeleteBody", nil)
+}
+
+// ShortcutsDialogLead says "Saved in this workspace and sent as one message."
+// in the language the app shows.
+func ShortcutsDialogLead() string { return In(i18n.Locale()).ShortcutsDialogLead() }
+
+// ShortcutsDialogLead says "Saved in this workspace and sent as one message."
+// in the language of msgs.
+func (msgs Messages) ShortcutsDialogLead() string {
+	return Catalog.Format(msgs.locale, "shortcutsDialogLead", nil)
+}
+
+// ShortcutsEmoji says "Emoji"
+// in the language the app shows.
+func ShortcutsEmoji() string { return In(i18n.Locale()).ShortcutsEmoji() }
+
+// ShortcutsEmoji says "Emoji"
+// in the language of msgs.
+func (msgs Messages) ShortcutsEmoji() string {
+	return Catalog.Format(msgs.locale, "shortcutsEmoji", nil)
+}
+
+// ShortcutsName says "Name"
+// in the language the app shows.
+func ShortcutsName() string { return In(i18n.Locale()).ShortcutsName() }
+
+// ShortcutsName says "Name"
+// in the language of msgs.
+func (msgs Messages) ShortcutsName() string {
+	return Catalog.Format(msgs.locale, "shortcutsName", nil)
+}
+
+// ShortcutsSlug says "Command"
+// in the language the app shows.
+func ShortcutsSlug() string { return In(i18n.Locale()).ShortcutsSlug() }
+
+// ShortcutsSlug says "Command"
+// in the language of msgs.
+func (msgs Messages) ShortcutsSlug() string {
+	return Catalog.Format(msgs.locale, "shortcutsSlug", nil)
+}
+
+// ShortcutsDescription says "Description – shown in the / menu"
+// in the language the app shows.
+func ShortcutsDescription() string { return In(i18n.Locale()).ShortcutsDescription() }
+
+// ShortcutsDescription says "Description – shown in the / menu"
+// in the language of msgs.
+func (msgs Messages) ShortcutsDescription() string {
+	return Catalog.Format(msgs.locale, "shortcutsDescription", nil)
+}
+
+// ShortcutsPromptHint says "Sent as one message, anywhere in this workspace."
+// in the language the app shows.
+func ShortcutsPromptHint() string { return In(i18n.Locale()).ShortcutsPromptHint() }
+
+// ShortcutsPromptHint says "Sent as one message, anywhere in this workspace."
+// in the language of msgs.
+func (msgs Messages) ShortcutsPromptHint() string {
+	return Catalog.Format(msgs.locale, "shortcutsPromptHint", nil)
+}
+
+// ShortcutsPromptPlaceholder says "The prompt you keep typing."
+// in the language the app shows.
+func ShortcutsPromptPlaceholder() string { return In(i18n.Locale()).ShortcutsPromptPlaceholder() }
+
+// ShortcutsPromptPlaceholder says "The prompt you keep typing."
+// in the language of msgs.
+func (msgs Messages) ShortcutsPromptPlaceholder() string {
+	return Catalog.Format(msgs.locale, "shortcutsPromptPlaceholder", nil)
+}
+
+// ShortcutsShare says "Share with the workspace"
+// in the language the app shows.
+func ShortcutsShare() string { return In(i18n.Locale()).ShortcutsShare() }
+
+// ShortcutsShare says "Share with the workspace"
+// in the language of msgs.
+func (msgs Messages) ShortcutsShare() string {
+	return Catalog.Format(msgs.locale, "shortcutsShare", nil)
+}
+
+// ShortcutsShareHint says "Off by default. Sharing and scope are separate things."
+// in the language the app shows.
+func ShortcutsShareHint() string { return In(i18n.Locale()).ShortcutsShareHint() }
+
+// ShortcutsShareHint says "Off by default. Sharing and scope are separate things."
+// in the language of msgs.
+func (msgs Messages) ShortcutsShareHint() string {
+	return Catalog.Format(msgs.locale, "shortcutsShareHint", nil)
+}
+
+// RolesLead says "Named setups of an agent: its prompt, model and machines. Mention one with @ to hand it a task."
+// in the language the app shows.
+func RolesLead() string { return In(i18n.Locale()).RolesLead() }
+
+// RolesLead says "Named setups of an agent: its prompt, model and machines. Mention one with @ to hand it a task."
+// in the language of msgs.
+func (msgs Messages) RolesLead() string {
+	return Catalog.Format(msgs.locale, "rolesLead", nil)
+}
+
+// RolesNew says "New role on lody.ai"
+// in the language the app shows.
+func RolesNew() string { return In(i18n.Locale()).RolesNew() }
+
+// RolesNew says "New role on lody.ai"
+// in the language of msgs.
+func (msgs Messages) RolesNew() string {
+	return Catalog.Format(msgs.locale, "rolesNew", nil)
+}
+
+// RolesNone says "No agent roles yet."
+// in the language the app shows.
+func RolesNone() string { return In(i18n.Locale()).RolesNone() }
+
+// RolesNone says "No agent roles yet."
+// in the language of msgs.
+func (msgs Messages) RolesNone() string {
+	return Catalog.Format(msgs.locale, "rolesNone", nil)
+}
+
+// RolesDeleteTitle says "Delete {name}?"
+// in the language the app shows.
+func RolesDeleteTitle(name string) string { return In(i18n.Locale()).RolesDeleteTitle(name) }
+
+// RolesDeleteTitle says "Delete {name}?"
+// in the language of msgs.
+func (msgs Messages) RolesDeleteTitle(name string) string {
+	return Catalog.Format(msgs.locale, "rolesDeleteTitle", map[string]any{"name": name})
+}
+
+// RolesDeleteBody says "Chats can no longer mention it."
+// in the language the app shows.
+func RolesDeleteBody() string { return In(i18n.Locale()).RolesDeleteBody() }
+
+// RolesDeleteBody says "Chats can no longer mention it."
+// in the language of msgs.
+func (msgs Messages) RolesDeleteBody() string {
+	return Catalog.Format(msgs.locale, "rolesDeleteBody", nil)
+}

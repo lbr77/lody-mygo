@@ -1242,5 +1242,41 @@
     }
   },
   "projectRemoving": "Removing…",
-  "projectWaitingDevice": "Waiting for the machine…"
+  "projectWaitingDevice": "Waiting for the machine…",
+  "shortcutsLead": "Save prompts to send with a slash command. Each says where it applies; with none set it works anywhere in this workspace. Private unless you share it.",
+  "shortcutsNew": "New Prompt Shortcut",
+  "shortcutsEdit": "Edit Prompt Shortcut",
+  "shortcutsNone": "No Prompt Shortcuts yet. Save a prompt you write often and send it with /.",
+  "shortcutsPrivate": "Private",
+  "shortcutsShared": "Shared",
+  "shortcutsDeleteTitle": "Delete {name}?",
+  "@shortcutsDeleteTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "shortcutsDeleteBody": "It's removed for everyone who could use it.",
+  "shortcutsDialogLead": "Saved in this workspace and sent as one message.",
+  "shortcutsEmoji": "Emoji",
+  "shortcutsName": "Name",
+  "shortcutsSlug": "Command",
+  "shortcutsDescription": "Description – shown in the / menu",
+  "shortcutsPromptHint": "Sent as one message, anywhere in this workspace.",
+  "shortcutsPromptPlaceholder": "The prompt you keep typing.",
+  "shortcutsShare": "Share with the workspace",
+  "shortcutsShareHint": "Off by default. Sharing and scope are separate things.",
+  "rolesLead": "Named setups of an agent: its prompt, model and machines. Mention one with @ to hand it a task.",
+  "rolesNew": "New role on lody.ai",
+  "rolesNone": "No agent roles yet.",
+  "rolesDeleteTitle": "Delete {name}?",
+  "@rolesDeleteTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "rolesDeleteBody": "Chats can no longer mention it."
 }

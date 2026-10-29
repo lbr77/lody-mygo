@@ -137,6 +137,7 @@ type App struct {
 	memoryMachine   string
 	memoryForm      memoryForm
 	addProject      addProjectForm
+	shortcut        shortcutForm
 	revoking        string // the share whose revoke awaits confirmation
 	taskOpen        bool   // a task's dialog
 	taskEntry       string // the turn and task it shows
@@ -538,6 +539,7 @@ func (a *App) send() {
 	r, sync, userID, workspace, conn := a.replica, a.sync, a.account.User.ID, a.conn.ID, a.conn
 	target := a.mentionTarget()
 	skills, sessions := a.mentionItems(target)
+	store := a.shortcutStore()
 	working := a.view != nil && a.view.Working || sess.Working()
 	turn := session.Turn{
 		Text:         text,
@@ -561,7 +563,7 @@ func (a *App) send() {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
 		defer cancel()
 		state := session.NotSent
-		turn.Text = expandMentions(ctx, conn, userID, target, text, skills, sessions)
+		turn.Text = expandMentions(ctx, conn, userID, target, text, skills, sessions, store)
 		blocks, err := a.upload(ctx, workspace, r.ID, files)
 		if err == nil {
 			turn.Attachments = blocks
@@ -679,6 +681,7 @@ func (a *App) startChat() {
 	sync, userID, workspace, conn := a.sync, a.account.User.ID, a.conn.ID, a.conn
 	target := a.mentionTarget()
 	skills, sessions := a.mentionItems(target)
+	store := a.shortcutStore()
 	model, mode := a.models[""], a.modes[""]
 	title := draftTitle(text)
 	if title == "" && len(files) > 0 {
@@ -715,7 +718,7 @@ func (a *App) startChat() {
 		if blocks, err = a.upload(ctx, workspace, id, files); err == nil {
 			if err = r.WaitReady(ctx); err == nil {
 				state, err = r.Send(ctx, session.Turn{
-					Text: expandMentions(ctx, conn, userID, target, text, skills, sessions), UserID: userID, MachineID: nc.machine, ModelID: model, ModeID: mode, Attachments: blocks,
+					Text: expandMentions(ctx, conn, userID, target, text, skills, sessions, store), UserID: userID, MachineID: nc.machine, ModelID: model, ModeID: mode, Attachments: blocks,
 					AgentType: agent.AgentType, CLIType: agent.CLIType, MarkDispatch: sync.MarkDispatch,
 				})
 			}

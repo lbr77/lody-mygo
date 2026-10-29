@@ -185,6 +185,10 @@ func (a *App) settingsPage(c *ui.Context, p *palette) {
 		a.mcpPage(c, p)
 	case "memory":
 		a.memoryPage(c, p)
+	case "prompt-shortcuts":
+		a.shortcutsPage(c, p)
+	case "agent-roles":
+		a.rolesPage(c, p)
 	case "about":
 		settingsTitle(c, p, locales.SettingsAbout())
 		settingRow(c, p, "Lody Native "+appVersion, locales.SettingsAboutDescription(), nil)

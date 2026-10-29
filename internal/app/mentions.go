@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"regexp"
 	"sort"
 	"strings"
 	"time"
@@ -14,6 +15,7 @@ import (
 
 	"github.com/lbr77/lody-mygo/internal/cloud"
 	"github.com/lbr77/lody-mygo/internal/mention"
+	"github.com/lbr77/lody-mygo/internal/shortcuts"
 	"github.com/lbr77/lody-mygo/locales"
 )
 
@@ -87,7 +89,7 @@ func (a *App) mentionSource(kind string, t mentionTarget) *mentionSource {
 	if src.loading || (!src.loaded.IsZero() && time.Since(src.loaded) < time.Minute) {
 		return src
 	}
-	if !a.presence.IsOnline(t.machine) {
+	if kind != mentionShortcut && !a.presence.IsOnline(t.machine) {
 		src.err = locales.MentionOffline(a.machineName(t.machine))
 		return src
 	}
@@ -95,15 +97,19 @@ func (a *App) mentionSource(kind string, t mentionTarget) *mentionSource {
 	if conn == nil {
 		return src
 	}
+	store := a.shortcutStore()
 	src.loading, src.err = true, ""
 	go func() {
 		ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 		defer cancel()
 		var items []mention.Item
 		var err error
-		if kind == mention.File {
+		switch kind {
+		case mention.File:
 			items, err = fetchFiles(ctx, conn, user, t)
-		} else {
+		case mentionShortcut:
+			items, err = fetchShortcuts(ctx, store)
+		default:
 			items, err = fetchSkills(ctx, conn, user, t)
 		}
 		a.update(func() {
@@ -262,7 +268,11 @@ func (a *App) mentionRows(t mentionTarget, tr mention.Trigger) (rows []mentionRo
 	case '$':
 		single(mention.Skill, tr.Query)
 	case '/':
+		// The agent's commands, then the workspace's prompt shortcuts.
 		single(mention.Command, tr.Query)
+		src := a.mentionSource(mentionShortcut, mentionTarget{})
+		add(mention.Match(src.items, tr.Query, 50))
+		loading = loading || src.loading
 	default:
 		q := tr.Query
 		if ns, rest, ok := strings.Cut(q, ":"); ok && (ns == mention.File || ns == mention.Skill || ns == mention.Session) {
@@ -488,9 +498,102 @@ func (a *App) mentionRowView(c *ui.Context, p *palette, row mentionRow, highligh
 	})
 }
 
-// expandMentions rewrites the skills and sessions text mentions into
-// what the agent reads, fetching the skills when they aren't at hand.
-func expandMentions(ctx context.Context, conn *cloud.Conn, user string, t mentionTarget, text string, skills, sessions []mention.Item) string {
+// mentionShortcut names the prompt shortcuts among the mention sources;
+// they belong to the workspace, not to a machine.
+const mentionShortcut = "shortcut"
+
+// fetchShortcuts lists the shortcuts the composer can send, those without
+// a scope, as /shortcut:slug.
+func fetchShortcuts(ctx context.Context, store *shortcuts.Store) ([]mention.Item, error) {
+	list, err := store.List(ctx)
+	if err != nil {
+		return nil, err
+	}
+	var items []mention.Item
+	for _, e := range list {
+		if e.Simple() {
+			items = append(items, mention.Item{Kind: mention.Command, Path: e.ID, Name: firstNonEmpty(e.Emoji, "📝") + " " + e.Name, Subtitle: e.Description, Insert: "/shortcut:" + e.Slug})
+		}
+	}
+	return items, nil
+}
+
+var shortcutSlug = regexp.MustCompile(`^[a-z0-9][a-z0-9-]{0,39}$`)
+
+// shortcutWords finds the /shortcut:slug words of text: their slugs and
+// where each starts and ends.
+func shortcutWords(text string) (slugs []string, spans [][2]int) {
+	space := func(b byte) bool { return b == ' ' || b == '\t' || b == '\n' || b == '\r' }
+	for i := 0; i < len(text); i++ {
+		if (i > 0 && !space(text[i-1])) || !strings.HasPrefix(text[i:], "/shortcut:") {
+			continue
+		}
+		end := i
+		for end < len(text) && !space(text[end]) {
+			end++
+		}
+		if slug := text[i+len("/shortcut:") : end]; shortcutSlug.MatchString(slug) {
+			slugs, spans = append(slugs, slug), append(spans, [2]int{i, end})
+		}
+		i = end
+	}
+	return slugs, spans
+}
+
+// replaceShortcuts puts the prompts of known slugs in their words' place.
+func replaceShortcuts(text string, prompts map[string]string) string {
+	slugs, spans := shortcutWords(text)
+	var b strings.Builder
+	last := 0
+	for i, sp := range spans {
+		prompt, ok := prompts[slugs[i]]
+		if !ok {
+			continue
+		}
+		b.WriteString(text[last:sp[0]])
+		b.WriteString(prompt)
+		last = sp[1]
+	}
+	b.WriteString(text[last:])
+	return b.String()
+}
+
+// expandShortcuts puts each /shortcut:slug's prompt in its place, as
+// lody-ios does as it sends; a slug it can't resolve stays as typed.
+func expandShortcuts(ctx context.Context, store *shortcuts.Store, text string) string {
+	slugs, _ := shortcutWords(text)
+	if store == nil || len(slugs) == 0 {
+		return text
+	}
+	list, err := store.List(ctx)
+	if err != nil {
+		return text
+	}
+	prompts := map[string]string{}
+	for _, slug := range slugs {
+		if _, done := prompts[slug]; done {
+			continue
+		}
+		var match []shortcuts.Entry
+		for _, e := range list {
+			if e.Slug == slug && e.Simple() {
+				match = append(match, e)
+			}
+		}
+		if len(match) != 1 {
+			continue
+		}
+		if sc, err := store.Read(ctx, match[0]); err == nil {
+			prompts[slug] = sc.Prompt
+		}
+	}
+	return replaceShortcuts(text, prompts)
+}
+
+// expandMentions rewrites the shortcuts, skills and sessions text
+// mentions into what the agent reads, fetching what isn't at hand.
+func expandMentions(ctx context.Context, conn *cloud.Conn, user string, t mentionTarget, text string, skills, sessions []mention.Item, store *shortcuts.Store) string {
+	text = expandShortcuts(ctx, store, text)
 	hasSkills, hasSessions := mention.Tokens(text)
 	if !hasSkills && !hasSessions {
 		return text
