@@ -1,6 +1,7 @@
 package app
 
 import (
+	"fmt"
 	"math"
 	"slices"
 	"time"
@@ -19,6 +20,58 @@ import (
 // Meanwhile the provider's row says how far it has got, its mark carrying
 // a ring that orbits every 1.4s; a failure offers Retry, and Delete cancels
 // it.
+
+// binaryProgress is the last a machine said of an agent runtime's
+// download, to this app: what the setup rows report, as Lody's do.
+type binaryProgress struct {
+	status  string // checking, downloading, verifying, extracting, publishing, installed or error
+	percent float64
+	known   bool // percent is measured
+	err     string
+}
+
+// noteBinary keeps what a machine said of a runtime's download.
+func (a *App) noteBinary(machine, agentType, status string, percent *float64, err string) {
+	if a.binaries == nil {
+		a.binaries = map[string]binaryProgress{}
+	}
+	bp := binaryProgress{status: status, err: err}
+	if percent != nil {
+		bp.percent, bp.known = *percent, true
+	}
+	a.binaries[machine+"/"+agentType] = bp
+}
+
+// runtimeProgress is what a setup's runtime download says, as Lody words it.
+func runtimeProgress(bp binaryProgress) string {
+	switch bp.status {
+	case "downloading":
+		if bp.known {
+			return locales.SetupDownloadingPercent(int(math.Round(bp.percent)))
+		}
+	case "verifying":
+		return locales.SetupVerifyingRuntime()
+	case "extracting":
+		return locales.SetupExtractingRuntime()
+	case "publishing":
+		return locales.SetupInstallingRuntime()
+	case "installed":
+		return locales.SetupRuntimeReady()
+	case "error":
+		return firstNonEmpty(bp.err, locales.SetupRuntimeInstallFailed())
+	}
+	return locales.SetupPreparingRuntime()
+}
+
+// setupPercent is how much of a setup's runtime has downloaded, -1 when
+// it can't be told.
+func (a *App) setupPercent(st catalog.ProviderSetup) float32 {
+	bp, ok := a.binaries[st.MachineID+"/"+str(st.Config["agentType"])]
+	if !ok || st.Status != "preparing-runtime" || bp.status != "downloading" || !bp.known {
+		return -1
+	}
+	return float32(min(100, max(0, math.Round(bp.percent))))
+}
 
 // supportsSetup is whether a built-in agent type can be set up in the
 // background.
@@ -115,6 +168,9 @@ func (a *App) setupStatus(st catalog.ProviderSetup) string {
 		}
 		return locales.SetupQueued()
 	case "preparing-runtime":
+		if bp, ok := a.binaries[st.MachineID+"/"+agentType]; ok {
+			return runtimeProgress(bp)
+		}
 		return locales.SetupPreparingRuntime()
 	case "verifying":
 		return locales.SetupVerifying()
@@ -168,7 +224,8 @@ func (a *App) providerSetupRow(c *ui.Context, p *palette, st catalog.ProviderSet
 	status := a.setupStatus(st)
 	ui.Column(c.Key("setup/" + st.ID)).FillWidth().MinWidth(0).Children(func() {
 		ui.Row(c).FillWidth().Gap(12).AlignItems(ui.Center).Padding(12, 0, 12, 12).Children(func() {
-			agentReadinessMark(c, p, cliType, a.setupReadiness(st), -1)
+			percent := a.setupPercent(st)
+			agentReadinessMark(c, p, cliType, a.setupReadiness(st), percent)
 			ui.Column(c).Grow(1).MinWidth(0).Children(func() {
 				ui.Text(c, name).FontSize(sizeFoot).TextColor(p.Text).SingleLine()
 				ui.Text(c, agentKindLabel(cliType, agentType)).FontSize(sizeFoot).TextColor(p.Secondary).SingleLine()
@@ -180,10 +237,20 @@ func (a *App) providerSetupRow(c *ui.Context, p *palette, st catalog.ProviderSet
 					switch {
 					case setupActive(st):
 						label := locales.SetupWorking()
-						if st.Status == "queued" {
+						switch {
+						case percent >= 0:
+							label = fmt.Sprintf("%d%%", int(percent))
+						case st.Status == "queued":
 							label = locales.SetupWaiting()
 						}
-						ui.Row(c.Key("progress")).FillWidth().Height(28).Radius(8).Center().Background(p.Text.Alpha(0.06)).Label(status).Children(func() {
+						pill := ui.Row(c.Key("progress")).FillWidth().Height(28).Radius(8).Center().Background(p.Text.Alpha(0.06)).Clip().Label(status)
+						pill.Children(func() {
+							if percent >= 0 {
+								// Work in flight: a film of the accent, no edge, the
+								// width easing over 320ms.
+								w := pill.AnimateWith("fill", percent, durSlow, easeStandard)
+								ui.Box(c.Key("fill")).Absolute().Left(0).Top(0).Bottom(0).WidthPercent(w).Background(p.Primary.Alpha(0.2))
+							}
 							ui.Text(c, label).FontSize(sizeFoot).FontWeight(500).TextColor(p.Secondary).FontFeatures("tnum")
 						})
 					case st.Status == "failed":

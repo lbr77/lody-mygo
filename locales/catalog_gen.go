@@ -18332,3 +18332,43 @@ func ShareImgExportFailed() string { return In(i18n.Locale()).ShareImgExportFail
 func (msgs Messages) ShareImgExportFailed() string {
 	return Catalog.Format(msgs.locale, "shareImgExportFailed", nil)
 }
+
+// SetupVerifyingRuntime says "Verifying the agent runtime…"
+// in the language the app shows.
+func SetupVerifyingRuntime() string { return In(i18n.Locale()).SetupVerifyingRuntime() }
+
+// SetupVerifyingRuntime says "Verifying the agent runtime…"
+// in the language of msgs.
+func (msgs Messages) SetupVerifyingRuntime() string {
+	return Catalog.Format(msgs.locale, "setupVerifyingRuntime", nil)
+}
+
+// SetupExtractingRuntime says "Extracting the agent runtime…"
+// in the language the app shows.
+func SetupExtractingRuntime() string { return In(i18n.Locale()).SetupExtractingRuntime() }
+
+// SetupExtractingRuntime says "Extracting the agent runtime…"
+// in the language of msgs.
+func (msgs Messages) SetupExtractingRuntime() string {
+	return Catalog.Format(msgs.locale, "setupExtractingRuntime", nil)
+}
+
+// SetupInstallingRuntime says "Installing the agent runtime…"
+// in the language the app shows.
+func SetupInstallingRuntime() string { return In(i18n.Locale()).SetupInstallingRuntime() }
+
+// SetupInstallingRuntime says "Installing the agent runtime…"
+// in the language of msgs.
+func (msgs Messages) SetupInstallingRuntime() string {
+	return Catalog.Format(msgs.locale, "setupInstallingRuntime", nil)
+}
+
+// SetupRuntimeReady says "Agent runtime ready; checking provider access…"
+// in the language the app shows.
+func SetupRuntimeReady() string { return In(i18n.Locale()).SetupRuntimeReady() }
+
+// SetupRuntimeReady says "Agent runtime ready; checking provider access…"
+// in the language of msgs.
+func (msgs Messages) SetupRuntimeReady() string {
+	return Catalog.Format(msgs.locale, "setupRuntimeReady", nil)
+}

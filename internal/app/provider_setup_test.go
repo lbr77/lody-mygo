@@ -33,6 +33,16 @@ func TestProviderSetupRows(t *testing.T) {
 	if got := a.setupReadiness(a.catalog.ProviderSetups["m1"][1]); got != "cold" {
 		t.Fatalf("readiness of a failure %q", got)
 	}
+	// What the machine said of the runtime's download shows, measured.
+	pct := 42.0
+	a.noteBinary("m1", "kimi", "downloading", &pct, "")
+	tt.Frame()
+	tt.Advance(400 * time.Millisecond)
+	tt.Frame()
+	snapFrame(t, tt, "provider-setup-percent")
+	if !tt.HasText("42%") || !tt.HasText("Downloading the agent runtime… 42%") {
+		t.Fatalf("no progress in %q", tt.Texts())
+	}
 	// A new managed built-in on such a machine is set up in the background;
 	// on one without the protocol, it is written at once.
 	a.openProvider("m1", nil)

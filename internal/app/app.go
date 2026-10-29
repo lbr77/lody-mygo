@@ -74,16 +74,17 @@ type App struct {
 	// schedSendDlg the picker.
 	schedSends   map[string]*schedSendDraft
 	schedSendDlg schedSendDialog
-	capRetries   map[string]*capRetry // capacity retries, by chat
-	stuck        stuckState           // a connection that has been connecting too long
-	card         hoverCard            // the sidebar's info card
-	outline      outlineRail          // the conversation's outline rail
-	access       accessPanel          // the header's access panel
-	hmenu        menuState            // the header's session menu
-	shareImg     shareImage           // "Share as image…": the messages picked, then their preview
-	attachPrev   attachPreview        // a text file's preview
-	downloads    map[string]bool      // the files downloading
-	notifyAsk    notifyAsk            // the prompt to turn notifications on
+	capRetries   map[string]*capRetry      // capacity retries, by chat
+	stuck        stuckState                // a connection that has been connecting too long
+	card         hoverCard                 // the sidebar's info card
+	outline      outlineRail               // the conversation's outline rail
+	access       accessPanel               // the header's access panel
+	hmenu        menuState                 // the header's session menu
+	shareImg     shareImage                // "Share as image…": the messages picked, then their preview
+	binaries     map[string]binaryProgress // what machines said of runtime downloads, by machine/agent
+	attachPrev   attachPreview             // a text file's preview
+	downloads    map[string]bool           // the files downloading
+	notifyAsk    notifyAsk                 // the prompt to turn notifications on
 	// sendingFiles are a message's attachments as they upload, and
 	// fileProgress how far each has gone, 0 to 100, by path.
 	sendingFiles  []pendingFile

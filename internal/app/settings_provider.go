@@ -329,9 +329,18 @@ func (a *App) checkBinary(st *binaryState, machine, agentType string) {
 		a.update(func() {
 			if err != nil {
 				st.status, st.err = "error", err.Error()
+				a.noteBinary(machine, agentType, "error", nil, st.err)
 				return
 			}
 			st.status, st.err = res.Status, res.Error
+			switch {
+			case !res.Success || res.Status == "error":
+				a.noteBinary(machine, agentType, "error", nil, res.Error)
+			case res.Status == "not-applicable":
+				a.noteBinary(machine, agentType, "installed", nil, "")
+			default:
+				a.noteBinary(machine, agentType, res.Status, nil, "")
+			}
 		})
 	}()
 }
@@ -356,6 +365,7 @@ func (a *App) installBinary(st *binaryState, machine, agentType string) {
 				if pr.Percent != nil {
 					st.percent = *pr.Percent
 				}
+				a.noteBinary(machine, agentType, pr.Status, pr.Percent, "")
 			})
 		})
 		var res struct {
@@ -374,6 +384,7 @@ func (a *App) installBinary(st *binaryState, machine, agentType string) {
 			default:
 				st.status = "installed"
 			}
+			a.noteBinary(machine, agentType, st.status, nil, st.err)
 		})
 	}()
 }

@@ -3610,5 +3610,9 @@
   "shareImgCopied": "Image copied to clipboard",
   "shareImgExportPng": "Export PNG",
   "shareImgExporting": "Exporting...",
-  "shareImgExportFailed": "Could not complete the image action. Please try again."
+  "shareImgExportFailed": "Could not complete the image action. Please try again.",
+  "setupVerifyingRuntime": "Verifying the agent runtime…",
+  "setupExtractingRuntime": "Extracting the agent runtime…",
+  "setupInstallingRuntime": "Installing the agent runtime…",
+  "setupRuntimeReady": "Agent runtime ready; checking provider access…"
 }

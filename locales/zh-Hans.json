@@ -1818,5 +1818,9 @@
   "shareImgCopied": "图片已复制到剪贴板",
   "shareImgExportPng": "导出 PNG",
   "shareImgExporting": "正在导出...",
-  "shareImgExportFailed": "图片操作失败，请重试。"
+  "shareImgExportFailed": "图片操作失败，请重试。",
+  "setupVerifyingRuntime": "正在校验 Agent 运行时…",
+  "setupExtractingRuntime": "正在解压 Agent 运行时…",
+  "setupInstallingRuntime": "正在安装 Agent 运行时…",
+  "setupRuntimeReady": "Agent 运行时已就绪，正在检查 Provider 访问权限…"
 }
