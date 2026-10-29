@@ -88,6 +88,14 @@ func snap(t *testing.T, a *App, name string, dark bool, setup func(tt *ui.Tester
 		setup(tt)
 	}
 	tt.Frame()
+	snapFrame(t, tt, name)
+	return tt
+}
+
+// snapFrame writes the tester's frame out when LODY_SNAPSHOTS names a
+// folder.
+func snapFrame(t *testing.T, tt *ui.Tester, name string) {
+	t.Helper()
 	if dir := os.Getenv("LODY_SNAPSHOTS"); dir != "" {
 		f, err := os.Create(filepath.Join(dir, name+".png"))
 		if err != nil {
@@ -98,7 +106,6 @@ func snap(t *testing.T, a *App, name string, dark bool, setup func(tt *ui.Tester
 			t.Fatal(err)
 		}
 	}
-	return tt
 }
 
 func TestSignIn(t *testing.T) {

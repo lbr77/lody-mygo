@@ -416,12 +416,12 @@ const archiveArmed = 3500 * time.Millisecond
 // fades out over 100ms as the archive button fades in over it, which asks
 // to be clicked again to archive, as Lody's sidebar does.
 func (a *App) rowEnd(c *ui.Context, p *palette, s *catalog.Session, age, hovered bool) {
-	armed := a.archiveArm == s.ID && time.Since(a.archiveArmAt) < archiveArmed
+	armed := a.archiveArm == s.ID && c.Now().Sub(a.archiveArmAt) < archiveArmed
 	if a.archiveArm == s.ID && !armed {
 		a.archiveArm = ""
 	}
 	if armed {
-		c.After(archiveArmed - time.Since(a.archiveArmAt))
+		c.After(archiveArmed - c.Now().Sub(a.archiveArmAt))
 	}
 	show := (hovered || armed) && !s.Archived
 	slot := ui.Row(c.Key("end")).Height(20).MinWidth(20).Shrink(0).Justify(ui.End).AlignItems(ui.Center)
@@ -462,7 +462,8 @@ func (a *App) rowEnd(c *ui.Context, p *palette, s *catalog.Session, age, hovered
 		if b.Hovered() {
 			ink = p.SideRow
 		}
-		b.OnClick(func() { a.archiveArm, a.archiveArmAt = id, time.Now() })
+		now := c.Now()
+		b.OnClick(func() { a.archiveArm, a.archiveArmAt = id, now })
 		b.Children(func() { ui.Icon(c, iconArchive).Size(14, 14).TextColor(ink) })
 	})
 }
@@ -473,10 +474,7 @@ func (a *App) statusMark(c *ui.Context, p *palette, s *catalog.Session, age bool
 	switch {
 	case s.Waiting():
 		ui.Icon(c, iconHand).Size(12, 12).TextColor(p.Primary).Tooltip(locales.StatusWaiting())
-	case s.Working():
-		workingGrid(c, p, 12)
-	case s.Unread() && a.selected != s.ID:
-		ui.Box(c).Size(8, 8).Radius(4).Background(p.Primary).Margin(0, 2)
+	case a.workingMark(c, p, s.ID, s.Working(), s.Unread() && a.selected != s.ID):
 	case age:
 		if t := relativeTime(time.UnixMilli(int64(activity(*s)))); t != "" {
 			ui.Text(c, t).FontSize(sizeFoot).TextColor(p.SideMuted).Shrink(0)

@@ -169,11 +169,12 @@ type App struct {
 	usageDay         float64 // the usage day opened, its start in ms
 	usageDayShown    float64 // the day the panel shows, as it folds away too
 	share            shareDialog
-	resetting        string    // the share whose link is being reset, in settings
-	archiveArm       string    // the row whose archive button asks to be clicked again
-	archiveArmAt     time.Time // since when
-	membershipSeen   string    // user|fingerprint of the workspaces they belong to
-	membershipAt     time.Time // when it was last asked
+	resetting        string                // the share whose link is being reset, in settings
+	archiveArm       string                // the row whose archive button asks to be clicked again
+	archiveArmAt     time.Time             // since when
+	marks            map[string]*markState // the rows' working marks, by session
+	membershipSeen   string                // user|fingerprint of the workspaces they belong to
+	membershipAt     time.Time             // when it was last asked
 	membershipAsking bool
 	userNames        map[string]string    // people outside the members list, by id
 	shareJobs        map[string]*shareJob // an agent's share requests being answered, by request

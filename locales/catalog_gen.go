@@ -11062,3 +11062,13 @@ func ArchiveConfirmLabel() string { return In(i18n.Locale()).ArchiveConfirmLabel
 func (msgs Messages) ArchiveConfirmLabel() string {
 	return Catalog.Format(msgs.locale, "archiveConfirmLabel", nil)
 }
+
+// StatusUnread says "Unread"
+// in the language the app shows.
+func StatusUnread() string { return In(i18n.Locale()).StatusUnread() }
+
+// StatusUnread says "Unread"
+// in the language of msgs.
+func (msgs Messages) StatusUnread() string {
+	return Catalog.Format(msgs.locale, "statusUnread", nil)
+}

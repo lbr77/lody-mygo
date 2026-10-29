@@ -57,3 +57,31 @@ func TestWorkingGridDraws(t *testing.T) {
 		tt.Advance(450 * time.Millisecond)
 	}
 }
+
+func TestWorkingHandOver(t *testing.T) {
+	a := fixture()
+	tt := snap(t, a, "handover-working", false, nil)
+	if !tt.HasText("Working") {
+		t.Fatal("working mark")
+	}
+	// Work stops before the unread write lands: the grid holds.
+	a.catalog.Sessions[0].Status = "idle"
+	a.selected = "s4"
+	tt.Frame()
+	if m := a.marks["s1"]; m == nil || m.holdUntil.IsZero() || !m.drawn {
+		t.Fatalf("no hold: %+v", m)
+	}
+	// The unread write lands: the done transition plays.
+	a.catalog.Sessions[0].LastMessageAt, a.catalog.Sessions[0].LastReadAt = 20, 1
+	tt.Frame()
+	m := a.marks["s1"]
+	if m.drawn || m.finishAt.IsZero() || !tt.HasText("Unread") {
+		t.Fatalf("no transition: %+v %q", m, tt.Texts())
+	}
+	snapFrame(t, tt, "handover-collapse")
+	tt.Advance(collapseTotal + 50*time.Millisecond)
+	tt.Frame()
+	if tt.HasText("Unread") {
+		t.Fatal("the transition outlived itself")
+	}
+}

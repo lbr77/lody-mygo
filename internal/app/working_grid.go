@@ -2,6 +2,7 @@ package app
 
 import (
 	"math"
+	"time"
 
 	"github.com/egoist/mygo/ui"
 
@@ -101,4 +102,158 @@ func workingGrid(c *ui.Context, p *palette, size float32) {
 		}
 		pt.AnimationFrameRate(30)
 	})
+}
+
+// The done transition, as Lody's WorkingGridCollapse plays it when a
+// session stops working with replies unread: the grid turns 135° as its
+// tiles fall into the centre and fade, then the unread dot pops past its
+// size and settles with two bounces.
+const (
+	collapseGather   = 480 * time.Millisecond
+	collapseDotStart = 400 * time.Millisecond
+	collapseDot      = 620 * time.Millisecond
+	collapseTotal    = collapseDotStart + collapseDot
+	// workingHandOver is how long a finished row keeps its grid while the
+	// unread write is on its way.
+	workingHandOver = 1500 * time.Millisecond
+)
+
+var (
+	collapseIn  = ui.CubicBezier(0.45, 0, 0.7, 0.2)
+	collapseOut = ui.CubicBezier(0.2, 0.7, 0.3, 1)
+)
+
+// lerpKeys interpolates values at offsets, linearly between them.
+func lerpKeys(e float64, offsets, values []float64) float64 {
+	if e <= offsets[0] {
+		return values[0]
+	}
+	for i := 1; i < len(offsets); i++ {
+		if e <= offsets[i] {
+			f := (e - offsets[i-1]) / (offsets[i] - offsets[i-1])
+			return values[i-1] + (values[i]-values[i-1])*f
+		}
+	}
+	return values[len(values)-1]
+}
+
+// roundSquare is a square's outline, rounded by r, turned by angle around
+// (cx, cy).
+func roundSquare(cx, cy, half, r, angle float64) *ui.Path {
+	path := new(ui.Path)
+	sin, cos := math.Sincos(angle)
+	put := func(x, y float64, first bool) {
+		px, py := cx+x*cos-y*sin, cy+x*sin+y*cos
+		if first {
+			path.MoveTo(float32(px), float32(py))
+		} else {
+			path.LineTo(float32(px), float32(py))
+		}
+	}
+	corners := [4][2]float64{{half - r, half - r}, {-(half - r), half - r}, {-(half - r), -(half - r)}, {half - r, -(half - r)}}
+	first := true
+	for i, k := range corners {
+		for s := 0; s <= 4; s++ {
+			a := float64(i)*math.Pi/2 + float64(s)*math.Pi/8
+			put(k[0]+r*math.Cos(a), k[1]+r*math.Sin(a), first)
+			first = false
+		}
+	}
+	return path.Close()
+}
+
+// workingCollapse draws the done transition begun at start, size points
+// square, the dot 8 across.
+func workingCollapse(c *ui.Context, p *palette, size float32, start time.Time) {
+	color := p.Primary
+	ui.Box(c.Key("collapse")).Size(size, size).Shrink(0).Label(locales.StatusUnread()).Draw(func(pt *ui.Painter, r ui.Rect) {
+		t := pt.Now().Sub(start)
+		grid := float64(r.W)
+		cell := grid / (3 + 2*gridGap)
+		pitch := cell * (1 + gridGap)
+		tile := cell * 0.9
+		cx, cy := float64(r.X)+grid/2, float64(r.Y)+grid/2
+		if t < collapseGather {
+			e := float64(collapseIn(float32(t) / float32(collapseGather)))
+			angle := 135 * math.Pi / 180 * e
+			gather := lerpKeys(e, []float64{0, 0.8, 1}, []float64{0, 1, 1})
+			scale := lerpKeys(e, []float64{0, 0.8, 1}, []float64{1, 0.55, 0.4})
+			alpha := lerpKeys(e, []float64{0, 0.8, 1}, []float64{1, 1, 0})
+			for row := range 3 {
+				for col := range 3 {
+					dx, dy := float64(col-1)*pitch, float64(row-1)*pitch
+					x, y := dx*(1-gather), dy*(1-gather)
+					sin, cos := math.Sincos(angle)
+					px, py := cx+x*cos-y*sin, cy+x*sin+y*cos
+					half := tile * scale / 2
+					pt.FillPath(roundSquare(px, py, half, half*0.8, angle), color.Alpha(float32(alpha)))
+				}
+			}
+		}
+		if dt := t - collapseDotStart; dt >= 0 {
+			e := float64(collapseOut(min(1, float32(dt)/float32(collapseDot))))
+			offsets := []float64{0, 0.25, 0.45, 0.62, 0.78, 0.9, 1}
+			scale := lerpKeys(e, offsets, []float64{0.35, 1.75, 0.72, 1.3, 0.88, 1.06, 1})
+			alpha := lerpKeys(e, offsets, []float64{0, 1, 1, 1, 1, 1, 1})
+			radius := float32(4 * scale)
+			pt.Fill(ui.Rect{X: float32(cx) - radius, Y: float32(cy) - radius, W: 2 * radius, H: 2 * radius}, color.Alpha(float32(alpha)), radius)
+		}
+		if t < collapseTotal {
+			pt.AnimationFrame()
+		}
+	})
+}
+
+// markState follows a row's working mark from frame to frame.
+type markState struct {
+	working   bool      // as last seen
+	holdUntil time.Time // the grid kept after work stopped, for the unread write
+	drawn     bool      // whether the grid was drawn
+	finishAt  time.Time // when the done transition began
+}
+
+// workingMark is a session's working or unread mark, with Lody's
+// hand-over between them; it reports whether it drew anything.
+func (a *App) workingMark(c *ui.Context, p *palette, id string, working, unread bool) bool {
+	if a.marks == nil {
+		a.marks = map[string]*markState{}
+	}
+	m := a.marks[id]
+	if m == nil {
+		m = &markState{working: working, drawn: working}
+		a.marks[id] = m
+	}
+	now := c.Now()
+	if m.working != working {
+		if m.working && !working && !unread {
+			m.holdUntil = now.Add(workingHandOver)
+		} else {
+			m.holdUntil = time.Time{}
+		}
+		m.working = working
+	} else if unread {
+		m.holdUntil = time.Time{}
+	}
+	holding := now.Before(m.holdUntil)
+	if holding {
+		c.After(m.holdUntil.Sub(now))
+	}
+	draw := working || holding
+	if m.drawn != draw {
+		if m.drawn && !draw && unread {
+			m.finishAt = now
+		}
+		m.drawn = draw
+	}
+	switch {
+	case draw:
+		workingGrid(c, p, 12)
+	case unread && now.Sub(m.finishAt) < collapseTotal:
+		workingCollapse(c, p, 12, m.finishAt)
+	case unread:
+		ui.Box(c.Key("unread")).Size(8, 8).Radius(4).Background(p.Primary).Margin(0, 2)
+	default:
+		return false
+	}
+	return true
 }

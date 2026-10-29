@@ -2247,5 +2247,6 @@
   "projectPageFilesLead": "The project's folder on its machine, read only.",
   "workspaceLinkNotMember": "You're not a member of this workspace. Ask its owner for an invitation or a join link.",
   "archiveConfirm": "Confirm",
-  "archiveConfirmLabel": "Confirm Archive session"
+  "archiveConfirmLabel": "Confirm Archive session",
+  "statusUnread": "Unread"
 }
