@@ -414,7 +414,7 @@ func (a *App) mentionPanel(c *ui.Context, p *palette, box, input ui.Element) {
 	ui.Overlay(c, func() {
 		panel := ui.Column(c.Key("mentions")).AttachTo(box, ui.AnchorTopStart, ui.AnchorBottomStart).Margin(6, 0, 0, 0).
 			Width(460).Radius(12).Border(0.5, p.CardRim).Background(p.Popover).KeepFocus().Clip().
-			Shadow(0, 12, 32, -8, ui.RGBA(0, 0, 0, 0.18))
+			Shadow(0, 12, 32, -8, ui.RGBA(0, 0, 0, 0.18)).Transition(popIn)
 		panel.Children(func() {
 			ui.Scroll(c).MaxHeight(320).Padding(4).Gap(1).Children(func() {
 				for i, row := range rows {
@@ -444,7 +444,7 @@ func (a *App) mentionRowView(c *ui.Context, p *palette, row mentionRow, highligh
 	if row.category == "" {
 		label = row.item.Name
 	}
-	r := ui.Row(c).Height(32).Padding(0, 8).Radius(8).Gap(8).AlignItems(ui.Center).Cursor(ui.CursorPointer).Label(label)
+	r := ui.Row(c).Height(32).Padding(0, 8).Radius(8).Gap(8).AlignItems(ui.Center).Cursor(ui.CursorPointer).Label(label).Transition(colorFade)
 	switch {
 	case highlighted:
 		r.Background(p.Text.Alpha(0.07))

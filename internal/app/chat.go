@@ -25,28 +25,35 @@ func (a *App) mainView(c *ui.Context, p *palette) {
 	c.OnShortcut(ui.Cmd, ui.KeyBackslash, func() { a.sidebarHidden = !a.sidebarHidden })
 	c.OnShortcut(ui.Cmd, ui.KeyJ, a.toggleTerminal)
 	c.OnShortcut(ui.Ctrl, ui.KeyBackquote, a.toggleTerminal)
-	ui.Row(c).Fill().AlignItems(ui.Stretch).Background(p.Ground).Children(func() {
-		if !a.sidebarHidden {
-			a.sidebar(c, p)
-			a.sidebarHandle(c, p)
+	shell := ui.Row(c.Key("main")).Fill().AlignItems(ui.Stretch).Background(p.Ground).Transition(windowIn)
+	// The sidebar slides in and out as it shows and hides; the card grows
+	// into its room.
+	a.sideOut = shell.AnimateTo("sidebar", b2f(!a.sidebarHidden), slideSpring)
+	shell.Children(func() {
+		if out := a.sideOut; out > 0 {
+			w := a.sidebarW()
+			ui.Row(c).Width(w * out).Shrink(0).ClipX().Children(func() {
+				a.sidebar(c, p).Translate(-w*(1-out), 0)
+			})
+			if out == 1 {
+				a.sidebarHandle(c, p)
+			}
 		}
-		left := float32(0)
-		if a.sidebarHidden {
-			left = 4
-		}
-		card := ui.Column(c).Grow(1).MinWidth(0).Margin(4, 4, 4, left).Radius(14).Border(0.5, p.CardRim).Background(p.Canvas).Clip()
+		// Keyed, as the sidebar before it comes and goes.
+		card := ui.Column(c.Key("card")).Grow(1).MinWidth(0).Margin(4, 4, 4, 4*(1-a.sideOut)).Radius(14).Border(0.5, p.CardRim).Background(p.Canvas).Clip()
 		if !p.Dark {
 			card.Shadow(0, 1, 2, 0, ui.RGBA(0, 0, 0, 0.03))
 		}
 		card.Children(func() {
+			page, key := a.sessionView, "session"
 			switch {
 			case a.page == "archive":
-				a.archiveView(c, p)
+				page, key = a.archiveView, "archive"
 			case a.selected == "":
-				a.homeView(c, p)
-			default:
-				a.sessionView(c, p)
+				page, key = a.homeView, "home"
 			}
+			// Each page fades in where the last was.
+			ui.Column(c.Key(key)).Fill().Transition(pageIn).Children(func() { page(c, p) })
 		})
 	})
 	a.settingsDialog(c, p)
@@ -55,10 +62,7 @@ func (a *App) mainView(c *ui.Context, p *palette) {
 // tabBar is the 44px bar over the conversation: the session's tab, New
 // chat, and the session's actions. Its empty part drags the window.
 func (a *App) tabBar(c *ui.Context, p *palette, sess *catalog.Session) {
-	left := float32(3)
-	if a.sidebarHidden {
-		left = 76 // clear the traffic lights
-	}
+	left := a.barInset(3)
 	ui.Row(c).Height(titleBarHeight).Shrink(0).AlignItems(ui.Center).Padding(0, 8, 0, left).Gap(4).DragWindow().Children(func() {
 		if a.sidebarHidden {
 			iconButton(c, p, iconSidebar, locales.SidebarToggle(), p.Hover).OnClick(func() { a.sidebarHidden = false })
@@ -151,7 +155,9 @@ func (a *App) sessionMain(c *ui.Context, p *palette) {
 func (a *App) conversation(c *ui.Context, p *palette, sess *catalog.Session) {
 	v := a.view
 	if v == nil || (v.Status != "live" && len(v.Entries) == 0) {
-		ui.Column(c).Grow(1).Center().Gap(10).Children(func() {
+		// The spinner fades in only for a slow load, so that switching to
+		// a session that loads at once shows no flash of it.
+		ui.Column(c.Key("loading")).Grow(1).Center().Gap(10).Transition(lateIn).Children(func() {
 			ui.Spinner(c).Size(18, 18)
 			msg := locales.LoadingConversation()
 			if v != nil && v.Reason != "" {
@@ -171,13 +177,14 @@ func (a *App) conversation(c *ui.Context, p *palette, sess *catalog.Session) {
 		return i
 	}
 	a.chatList.FollowEnd = true
-	ui.List(c, &a.chatList, len(entries)+1, func(i int) {
+	// Keyed by session, so that each conversation fades in as it opens.
+	ui.List(c.Key("chat/"+a.selected), &a.chatList, len(entries)+1, func(i int) {
 		if i == len(entries) {
 			a.liveStatus(c, p, v)
 			return
 		}
 		a.entry(c, p, entries, i)
-	}).Grow(1).MinHeight(0).Padding(16, 0, 24, 0).Children(func() {
+	}).Grow(1).MinHeight(0).Padding(16, 0, 24, 0).Transition(pageIn).Children(func() {
 		ui.Text(c, locales.SendToStart()).FontSize(sizeSub).TextColor(p.Secondary).Margin(ui.Auto)
 	})
 	a.bottom(c, p, sess, v)

@@ -52,6 +52,7 @@ func (a *App) settingsDialog(c *ui.Context, p *palette) {
 	a.syncMonitors()
 	w, h := c.Size()
 	ui.DialogBase(c, &a.settingsOpen, func(backdrop, panel ui.Element) {
+		sheetIn(backdrop, panel)
 		backdrop.Background(ui.RGBA(0, 0, 0, 0.28))
 		panel.Size(min(1100, w-80), min(950, h-48)).Radius(14).Border(0.5, p.CardRim).Background(p.Popover).Clip().
 			Shadow(0, 22, 70, 0, ui.RGBA(0, 0, 0, 0.25))
@@ -59,7 +60,8 @@ func (a *App) settingsDialog(c *ui.Context, p *palette) {
 			a.settingsNav(c, p)
 			ui.Box(c).Grow(1).MinWidth(0).Children(func() {
 				ui.Scroll(c).Fill().Padding(36, 56, 40, 56).Children(func() {
-					ui.Column(c).FillWidth().MaxWidth(728).Gap(12).Children(func() {
+					// Keyed by tab, so that each page fades in as it's chosen.
+					ui.Column(c.Key(firstNonEmpty(a.settingsTab, "account"))).FillWidth().MaxWidth(728).Gap(12).Transition(pageIn).Children(func() {
 						a.settingsPage(c, p)
 						a.confirmDialog(c, p)
 					})
@@ -82,7 +84,7 @@ func (a *App) settingsNav(c *ui.Context, p *palette) {
 				}
 				selected := current == t.id
 				row := ui.ButtonBase(c.Key(t.id)).Height(32).Padding(0, 8).Radius(8).Gap(8).Justify(ui.Start).Cursor(ui.CursorPointer).
-					OnClick(func() { a.settingsTab = t.id })
+					OnClick(func() { a.settingsTab = t.id }).Transition(colorFade)
 				switch {
 				case selected:
 					row.Background(p.SideSelect)
@@ -108,7 +110,7 @@ func (a *App) settingsNav(c *ui.Context, p *palette) {
 		}
 		ui.Spacer(c)
 		bug := ui.ButtonBase(c).Height(32).Padding(0, 8).Radius(8).Gap(8).Justify(ui.Start).Cursor(ui.CursorPointer).Label(locales.ReportBug()).
-			OnClick(func() { mygo.Shell.OpenExternal("https://github.com/lbr77/lody-mygo/issues") })
+			OnClick(func() { mygo.Shell.OpenExternal("https://github.com/lbr77/lody-mygo/issues") }).Transition(colorFade)
 		if bug.Hovered() {
 			bug.Background(p.SideHover)
 		}

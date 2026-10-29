@@ -234,7 +234,8 @@ func (a *App) composerBox(c *ui.Context, p *palette, o composerOptions) {
 // sendDisc is the round ink button; without an icon it is Stop's rounded
 // square.
 func sendDisc(c *ui.Context, p *palette, icon *ui.SVG, label string, enabled bool, size float32) ui.Element {
-	b := ui.ButtonBase(c).Size(size, size).Radius(size / 2).Background(p.Text).Cursor(ui.CursorPointer).Label(label).Tooltip(label).Disabled(!enabled)
+	b := ui.ButtonBase(c).Size(size, size).Radius(size / 2).Background(p.Text).Cursor(ui.CursorPointer).Label(label).Tooltip(label).Disabled(!enabled).Transition(colorFade)
+	pressable(b, 0.9)
 	if !p.Dark {
 		b.Shadow(0, 1, 2, 0, ui.RGBA(0, 0, 0, 0.08))
 	}
@@ -290,7 +291,8 @@ type option struct{ id, label string }
 // without options it is a plain label.
 func (a *App) picker(c *ui.Context, p *palette, key string, icon *ui.SVG, label string, options []option, pick func(string)) {
 	open := a.popover(key)
-	b := ui.ButtonBase(c.Key(key)).Height(28).Padding(0, 8).Radius(8).Gap(6).Label(label)
+	b := ui.ButtonBase(c.Key(key)).Height(28).Padding(0, 8).Radius(8).Gap(6).Label(label).Transition(colorFade)
+	pressable(b, 0.96)
 	if len(options) > 0 {
 		b.Cursor(ui.CursorPointer).OnClick(func() { *open = !*open })
 		if b.Hovered() || *open {
@@ -345,7 +347,8 @@ func (a *App) modeButton(c *ui.Context, p *palette, key string, modes []catalog.
 	icon, warning, auto := modeFace(current)
 	open := a.popover(key)
 	b := ui.ButtonBase(c.Key(key)).Height(28).MinWidth(28).Padding(0, 6).Radius(8).Cursor(ui.CursorPointer).
-		Label(locales.PermissionMode(name)).Tooltip(name).OnClick(func() { *open = !*open })
+		Label(locales.PermissionMode(name)).Tooltip(name).OnClick(func() { *open = !*open }).Transition(colorFade)
+	pressable(b, 0.94)
 	if b.Hovered() || *open {
 		b.Background(p.Text.Alpha(0.06))
 	}
@@ -381,7 +384,7 @@ func (a *App) popover(key string) *bool {
 }
 
 func (a *App) optionList(c *ui.Context, p *palette, anchor ui.Element, open *bool, options []option, selected string, pick func(string)) {
-	ui.Popover(c, anchor, open, func() {
+	popup(c, anchor, open, func() {
 		// Long lists, as an agent's models, scroll within the popover.
 		ui.Scroll(c).MinWidth(200).MaxHeight(320).Gap(1).Children(func() {
 			for _, o := range options {
@@ -429,7 +432,8 @@ func (a *App) permissionCard(c *ui.Context, p *palette, e session.Entry, it sess
 	card.Children(func() {
 		ui.Row(c).Gap(8).AlignItems(ui.Start).Children(func() {
 			ui.Text(c, question).FontSize(sizeBody).LineHeight(20.0 / 14).FontWeight(600).TextColor(p.Strong).Grow(1).MinWidth(0)
-			stop := ui.ButtonBase(c).Height(24).Padding(0, 6).Radius(6).Gap(4).Cursor(ui.CursorPointer).Label(locales.StopAgent()).OnClick(a.stop)
+			stop := ui.ButtonBase(c).Height(24).Padding(0, 6).Radius(6).Gap(4).Cursor(ui.CursorPointer).Label(locales.StopAgent()).OnClick(a.stop).Transition(colorFade)
+			pressable(stop, 0.96)
 			if stop.Hovered() {
 				stop.Background(p.Text.Alpha(0.06))
 			}
@@ -470,7 +474,7 @@ func (a *App) choiceButton(c *ui.Context, p *palette, label string, suggested bo
 		fill, ink, border = p.Text, p.Canvas, p.Text
 	}
 	ui.Row(c).Height(28).Radius(8).Border(1, border).Background(fill).AlignItems(ui.Stretch).Clip().Children(func() {
-		main := ui.ButtonBase(c).Padding(0, 12).Cursor(ui.CursorPointer).Label(label).OnClick(choose)
+		main := ui.ButtonBase(c).Padding(0, 12).Cursor(ui.CursorPointer).Label(label).OnClick(choose).Transition(colorFade)
 		if main.Hovered() {
 			main.Background(ink.Alpha(0.08))
 		}
@@ -479,7 +483,7 @@ func (a *App) choiceButton(c *ui.Context, p *palette, label string, suggested bo
 			return
 		}
 		ui.Box(c).Width(1).Background(ink.Alpha(0.2))
-		chevron := ui.ButtonBase(c).Width(24).Cursor(ui.CursorPointer).Label(locales.MoreOptions())
+		chevron := ui.ButtonBase(c).Width(24).Cursor(ui.CursorPointer).Label(locales.MoreOptions()).Transition(colorFade)
 		if chevron.Hovered() {
 			chevron.Background(ink.Alpha(0.08))
 		}

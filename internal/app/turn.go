@@ -74,8 +74,9 @@ func (a *App) assistantMessage(c *ui.Context, p *palette, e session.Entry) {
 			case b.text || prevText:
 				top = 12
 			}
-			ui.Column(c.Key("b/"+b.key)).FillWidth().Margin(top, 0, 0, 0).Children(el)
+			// Before el, which places the blocks a group folds.
 			prevText, first = b.text, false
+			ui.Column(c.Key("b/"+b.key)).FillWidth().Margin(top, 0, 0, 0).Children(el)
 		}
 		tasks := collectTasks(e.Items)
 		taskCard := func() {
@@ -100,13 +101,13 @@ func (a *App) assistantMessage(c *ui.Context, p *palette, e session.Entry) {
 				label = locales.WorkedFor(formatDuration(d))
 			}
 			place(block{key: "work"}, func() {
-				disclosure(c.Key(key), p, label, open, false, func() { a.expanded[key] = !a.expanded[key] })
+				shown := disclosure(c.Key(key), p, label, open, false, func() { a.expanded[key] = !a.expanded[key] })
+				unfold(c, shown, open, func() {
+					for _, b := range bs[:k] {
+						place(b, func() { a.block(c, p, e, b, false) })
+					}
+				})
 			})
-			if open {
-				for _, b := range bs[:k] {
-					place(b, func() { a.block(c, p, e, b, false) })
-				}
-			}
 		}
 		for _, b := range bs[k:] {
 			place(b, func() { a.block(c, p, e, b, false) })
@@ -135,9 +136,11 @@ func (a *App) block(c *ui.Context, p *palette, e session.Entry, b block, last bo
 }
 
 // disclosure is a text row that folds what follows it, its chevron showing
-// on hover.
-func disclosure(c *ui.Context, p *palette, label string, open, live bool, toggle func()) {
+// on hover and turning as it opens. It returns how far it is open, for
+// unfold.
+func disclosure(c *ui.Context, p *palette, label string, open, live bool, toggle func()) float32 {
 	head := ui.Row(c).MinHeight(24).Gap(6).AlignItems(ui.Center).Cursor(ui.CursorPointer).Label(label).OnClick(toggle)
+	shown := head.AnimateWith("open", b2f(open), foldTime, easeStandard)
 	hovered := head.Hovered()
 	head.Children(func() {
 		ink := p.Secondary
@@ -149,13 +152,10 @@ func disclosure(c *ui.Context, p *palette, label string, open, live bool, toggle
 			shimmer(c, text)
 		}
 		if hovered {
-			icon := iconChevronRight
-			if open {
-				icon = iconChevronDown
-			}
-			ui.Icon(c, icon).Size(13, 13).TextColor(ink)
+			ui.Icon(c, iconChevronRight).Size(13, 13).TextColor(ink).Rotate(90 * shown)
 		}
 	})
+	return shown
 }
 
 // shimmer pulses text that is in progress, as Lody's shimmering labels.
@@ -177,12 +177,12 @@ func (a *App) thought(c *ui.Context, p *palette, key string, it session.Item, li
 		label = locales.ThoughtFor(formatDuration(it.ThoughtFor))
 	}
 	ui.Column(c).FillWidth().Gap(2).Padding(0, 4).Children(func() {
-		disclosure(c.Key(key), p, label, open, live, func() { a.expanded[key] = !a.expanded[key] })
-		if open {
+		shown := disclosure(c.Key(key), p, label, open, live, func() { a.expanded[key] = !a.expanded[key] })
+		unfold(c, shown, open, func() {
 			ui.Column(c).Padding(0, 0, 4, 0).Children(func() {
 				markdown.View(c.Key(it.ID), it.Text, &a.mdMuted)
 			})
-		}
+		})
 	})
 }
 
@@ -196,17 +196,18 @@ func (a *App) activity(c *ui.Context, p *palette, e session.Entry, b block, live
 		c.After(time.Second)
 	}
 	ui.Column(c).FillWidth().Gap(2).Children(func() {
-		disclosure(c.Key(key), p, label, open, live, func() { a.expanded[key] = !a.expanded[key] })
-		if !open {
-			return
-		}
-		for i, it := range b.items {
-			if it.Type == "thought" {
-				a.thought(c.Key(it.ID), p, key+"/"+it.ID, it, live && i == len(b.items)-1)
-				continue
-			}
-			a.step(c.Key(it.ID), p, key+"/"+it.ID, it)
-		}
+		shown := disclosure(c.Key(key), p, label, open, live, func() { a.expanded[key] = !a.expanded[key] })
+		unfold(c, shown, open, func() {
+			ui.Column(c).FillWidth().Gap(2).Children(func() {
+				for i, it := range b.items {
+					if it.Type == "thought" {
+						a.thought(c.Key(it.ID), p, key+"/"+it.ID, it, live && i == len(b.items)-1)
+						continue
+					}
+					a.step(c.Key(it.ID), p, key+"/"+it.ID, it)
+				}
+			})
+		})
 	})
 }
 
@@ -245,6 +246,7 @@ func (a *App) step(c *ui.Context, p *palette, key string, it session.Item) {
 	case "tool_call":
 		open := a.expanded[key]
 		row := ui.Row(c).MinHeight(24).Padding(2, 4).Gap(8).AlignItems(ui.Center).Radius(5)
+		shown := row.AnimateWith("open", b2f(open), foldTime, easeStandard)
 		hovered := false
 		if it.HasDetail {
 			row.Cursor(ui.CursorPointer).Label(locales.ShowDetails()).OnClick(func() { a.expanded[key] = !a.expanded[key] })
@@ -269,16 +271,10 @@ func (a *App) step(c *ui.Context, p *palette, key string, it session.Item) {
 				ui.Icon(c, iconCircleAlert).Size(12, 12).TextColor(p.Danger)
 			}
 			if hovered {
-				icon := iconChevronRight
-				if open {
-					icon = iconChevronDown
-				}
-				ui.Icon(c, icon).Size(13, 13).TextColor(ink)
+				ui.Icon(c, iconChevronRight).Size(13, 13).TextColor(ink).Rotate(90 * shown)
 			}
 		})
-		if open {
-			a.toolDetail(c, p, key, it)
-		}
+		unfold(c, shown, open, func() { a.toolDetail(c, p, key, it) })
 	default:
 		ui.Text(c, it.Type).FontSize(sizeSub).TextColor(p.Tertiary).Padding(2, 4)
 	}

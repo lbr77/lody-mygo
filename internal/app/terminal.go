@@ -263,7 +263,8 @@ func (a *App) terminalDock(c *ui.Context, p *palette, sess *catalog.Session) {
 				}
 				if local && a.term.client != nil {
 					add := ui.ButtonBase(c).Size(20, 20).Radius(5).Center().Cursor(ui.CursorPointer).Label(locales.TerminalNew()).Tooltip(locales.TerminalNew()).
-						Disabled(len(ts.tabs) >= localterm.MaxPerSession)
+						Disabled(len(ts.tabs) >= localterm.MaxPerSession).Transition(colorFade)
+					pressable(add, 0.9)
 					if add.Hovered() {
 						add.Background(p.Hover)
 					}
@@ -303,7 +304,7 @@ func (a *App) terminalDock(c *ui.Context, p *palette, sess *catalog.Session) {
 
 func (a *App) terminalTab(c *ui.Context, p *palette, ts *termSession, tab *termTab, active bool) {
 	title := firstNonEmpty(tab.title, "shell")
-	row := ui.Row(c).Height(32).Gap(4).AlignItems(ui.Center).Cursor(ui.CursorPointer).Label(title).Shrink(1).MinWidth(0)
+	row := ui.Row(c).Height(32).Gap(4).AlignItems(ui.Center).Cursor(ui.CursorPointer).Label(title).Shrink(1).MinWidth(0).Transition(colorFade)
 	ink := p.Tertiary
 	if active || row.Hovered() {
 		ink = p.Text
@@ -316,7 +317,7 @@ func (a *App) terminalTab(c *ui.Context, p *palette, ts *termSession, tab *termT
 	row.Children(func() {
 		ui.Icon(c, iconSquareTerminal).Size(12, 12).TextColor(ink).Opacity(0.8)
 		ui.Text(c, title).FontSize(11).TextColor(ink).SingleLine().MinWidth(0).MaxWidth(160)
-		x := ui.ButtonBase(c).Size(16, 16).Radius(4).Center().Cursor(ui.CursorPointer).Label(locales.TerminalClose(title))
+		x := ui.ButtonBase(c).Size(16, 16).Radius(4).Center().Cursor(ui.CursorPointer).Label(locales.TerminalClose(title)).Transition(colorFade)
 		if x.Hovered() {
 			x.Background(p.Hover)
 		}

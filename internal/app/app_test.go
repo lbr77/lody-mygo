@@ -153,19 +153,19 @@ func TestThinkingCollapsed(t *testing.T) {
 	if err := tt.Click("Worked for 1m 12s"); err != nil {
 		t.Fatal(err)
 	}
-	tt.Frame()
+	tt.Advance(foldTime) // the group unfolds
 	// Thinking and tool calls fold into one row.
 	if err := tt.Click("Thought · Ran 1 command · Read 1 file"); err != nil {
 		t.Fatalf("%v: %q", err, tt.Texts())
 	}
-	tt.Frame()
+	tt.Advance(foldTime) // the group unfolds
 	if tt.HasText("The snapshot format is only in the wasm build.") {
 		t.Fatal("thinking shows before it is clicked")
 	}
 	if err := tt.Click("Thought"); err != nil {
 		t.Fatal(err)
 	}
-	tt.Frame()
+	tt.Advance(foldTime) // the group unfolds
 	if !tt.HasText("The snapshot format is only in the wasm build.") {
 		t.Fatalf("thinking not shown after the click: %q", tt.Texts())
 	}
@@ -225,11 +225,11 @@ func TestToolDetail(t *testing.T) {
 		if err := tt.Click("Worked for 1m 12s"); err != nil {
 			t.Fatal(err)
 		}
-		tt.Frame()
+		tt.Advance(foldTime) // the group unfolds
 		if err := tt.Click("Edited 1 file"); err != nil {
 			t.Fatal(err)
 		}
-		tt.Frame()
+		tt.Advance(foldTime) // the group unfolds
 		if err := tt.Click("Edited internal/catalog/sync.go"); err != nil {
 			t.Fatalf("%v: %q", err, tt.Texts())
 		}

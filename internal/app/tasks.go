@@ -207,7 +207,7 @@ func (a *App) taskPanel(c *ui.Context, p *palette, e session.Entry, tasks []*ses
 
 func (a *App) taskRow(c *ui.Context, p *palette, e session.Entry, t *session.Subagent, depth int) {
 	row := ui.Column(c).FillWidth().Padding(7, 12, 7, 12+float32(depth)*18).Gap(2).Cursor(ui.CursorPointer).
-		Label(taskActor(t) + " · " + t.Description)
+		Label(taskActor(t) + " · " + t.Description).Transition(colorFade)
 	if row.Hovered() {
 		row.Background(p.Hover)
 	}
@@ -284,6 +284,7 @@ func (a *App) taskDialog(c *ui.Context, p *palette) {
 	}
 	w, h := c.Size()
 	ui.DialogBase(c, &a.taskOpen, func(backdrop, panel ui.Element) {
+		sheetIn(backdrop, panel)
 		backdrop.Background(ui.RGBA(0, 0, 0, 0.28))
 		panel.Size(min(720, w-80), min(720, h-80)).Radius(14).Border(0.5, p.CardRim).Background(p.Popover).Clip().
 			Shadow(0, 22, 70, 0, ui.RGBA(0, 0, 0, 0.25))

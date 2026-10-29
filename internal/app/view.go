@@ -13,9 +13,12 @@ const titleBarHeight = 44
 
 func (a *App) render(c *ui.Context) {
 	p := applyTheme(c)
+	// The overlay layer stays built while nothing is in it, so that what
+	// leaves it, as a dialog closing, fades out rather than vanishing.
+	ui.Overlay(c, func() {})
 	switch a.phase {
 	case phaseLoading:
-		ui.Column(c).Fill().Center().Background(p.Ground).DragWindow().Children(func() {
+		ui.Column(c.Key("loading")).Fill().Center().Background(p.Ground).DragWindow().Children(func() {
 			ui.Spinner(c).Label(locales.Loading())
 		})
 	case phaseSignedOut:
@@ -28,7 +31,7 @@ func (a *App) render(c *ui.Context) {
 // signInView follows Lody's login page: a visual panel beside a form
 // column whose content sits at the bottom.
 func (a *App) signInView(c *ui.Context, p *palette) {
-	ui.Row(c).Fill().Padding(12).Gap(12).AlignItems(ui.Stretch).Background(p.Canvas).Children(func() {
+	ui.Row(c.Key("signin")).Fill().Padding(12).Gap(12).AlignItems(ui.Stretch).Background(p.Canvas).Transition(windowIn).Children(func() {
 		a.dither.view(c, p).DragWindow()
 		ui.Column(c).Width(440).Shrink(0).Padding(28, 40, 36, 52).Children(func() {
 			ui.Spacer(c).DragWindow()
@@ -80,12 +83,13 @@ func (a *App) deviceCodeCard(c *ui.Context, p *palette) {
 
 // inkButton is Lody's primary button: ink fill, page-colored text.
 func inkButton(c *ui.Context, p *palette, label string, icon *ui.SVG, height float32) ui.Element {
-	b := ui.ButtonBase(c).Height(height).Radius(10).Padding(0, 16).Gap(10).Background(p.Text).Cursor(ui.CursorPointer).Label(label)
+	b := ui.ButtonBase(c).Height(height).Radius(10).Padding(0, 16).Gap(10).Background(p.Text).Cursor(ui.CursorPointer).Label(label).Transition(colorFade)
 	if b.Pressed() {
 		b.Background(p.Text.Alpha(0.8))
 	} else if b.Hovered() {
 		b.Background(p.Text.Alpha(0.9))
 	}
+	pressable(b, 0.98)
 	b.Children(func() {
 		ui.Text(c, label).FontSize(sizeBody).FontWeight(500).TextColor(p.Canvas)
 		if icon != nil {
@@ -97,10 +101,11 @@ func inkButton(c *ui.Context, p *palette, label string, icon *ui.SVG, height flo
 
 // ghostButton is a transparent text button that fills on hover.
 func ghostButton(c *ui.Context, p *palette, label string) ui.Element {
-	b := ui.ButtonBase(c).Height(28).Radius(8).Padding(0, 8).Cursor(ui.CursorPointer).Label(label)
+	b := ui.ButtonBase(c).Height(28).Radius(8).Padding(0, 8).Cursor(ui.CursorPointer).Label(label).Transition(colorFade)
 	if b.Hovered() {
 		b.Background(p.Text.Alpha(0.06))
 	}
+	pressable(b, 0.97)
 	b.Children(func() {
 		ui.Text(c, label).FontSize(sizeSub).FontWeight(500).TextColor(p.Secondary)
 	})
@@ -109,12 +114,13 @@ func ghostButton(c *ui.Context, p *palette, label string) ui.Element {
 
 // iconButton is a 28px square icon button, muted at rest.
 func iconButton(c *ui.Context, p *palette, icon *ui.SVG, label string, hover ui.Color) ui.Element {
-	b := ui.ButtonBase(c).Size(28, 28).Radius(8).Cursor(ui.CursorPointer).Label(label).Tooltip(label)
+	b := ui.ButtonBase(c).Size(28, 28).Radius(8).Cursor(ui.CursorPointer).Label(label).Tooltip(label).Transition(colorFade)
 	color := p.SideMuted
 	if b.Hovered() {
 		b.Background(hover)
 		color = p.Text
 	}
+	pressable(b, 0.92)
 	b.Children(func() { ui.Icon(c, icon).Size(16, 16).TextColor(color) })
 	return b
 }

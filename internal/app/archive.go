@@ -17,10 +17,7 @@ import (
 // sessions, grouped by project in cards, each row restored or deleted from
 // its hover actions.
 func (a *App) archiveView(c *ui.Context, p *palette) {
-	left := float32(16)
-	if a.sidebarHidden {
-		left = 76
-	}
+	left := a.barInset(16)
 	ui.Row(c).Height(titleBarHeight).Shrink(0).AlignItems(ui.Center).Padding(0, 12, 0, left).Gap(8).DragWindow().Children(func() {
 		if a.sidebarHidden {
 			iconButton(c, p, iconSidebar, locales.SidebarToggle(), p.Hover).OnClick(func() { a.sidebarHidden = false })
@@ -169,7 +166,7 @@ func (a *App) archiveGroups(sessions []catalog.Session) []archiveGroup {
 }
 
 func (a *App) archivedRow(c *ui.Context, p *palette, s catalog.Session) {
-	row := ui.Row(c).Height(36).Padding(0, 8, 0, 12).Gap(10).AlignItems(ui.Center).Cursor(ui.CursorPointer).Label(s.Title)
+	row := ui.Row(c).Height(36).Padding(0, 8, 0, 12).Gap(10).AlignItems(ui.Center).Cursor(ui.CursorPointer).Label(s.Title).Transition(colorFade)
 	hovered := row.Hovered()
 	if hovered {
 		row.Background(p.Hover)
@@ -222,6 +219,7 @@ func (a *App) deleteDialog(c *ui.Context, p *palette) {
 	}
 	s := *a.deleting
 	ui.DialogBase(c, &a.deleteOpen, func(backdrop, panel ui.Element) {
+		sheetIn(backdrop, panel)
 		backdrop.Background(ui.RGBA(0, 0, 0, 0.28))
 		panel.Width(400).Radius(14).Border(0.5, p.CardRim).Background(p.Popover).Padding(20).Gap(12).Shadow(0, 22, 70, 0, ui.RGBA(0, 0, 0, 0.25))
 		ui.Text(c, locales.ArchiveDeleteTitle()).FontSize(16).FontWeight(600).TextColor(p.Strong)
@@ -251,7 +249,8 @@ func (a *App) deleteDialog(c *ui.Context, p *palette) {
 func (a *App) toolbarPicker(c *ui.Context, p *palette, key string, icon *ui.SVG, label string, options []option, selected string, pick func(string)) {
 	open := a.popover(key)
 	b := ui.ButtonBase(c.Key(key)).Height(28).Padding(0, 8).Radius(8).Gap(6).Cursor(ui.CursorPointer).Label(label).
-		OnClick(func() { *open = !*open })
+		OnClick(func() { *open = !*open }).Transition(colorFade)
+	pressable(b, 0.96)
 	if b.Hovered() || *open {
 		b.Background(p.Text.Alpha(0.06))
 	}

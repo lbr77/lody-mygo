@@ -11,10 +11,7 @@ import (
 // homeView is New chat: a heading over the composer, the machine and
 // project to run on just above it, and the agent and model in its footer.
 func (a *App) homeView(c *ui.Context, p *palette) {
-	left := float32(8)
-	if a.sidebarHidden {
-		left = 76
-	}
+	left := a.barInset(8)
 	ui.Row(c).Height(titleBarHeight).Shrink(0).AlignItems(ui.Center).Padding(0, 8, 0, left).DragWindow().Children(func() {
 		if a.sidebarHidden {
 			iconButton(c, p, iconSidebar, locales.SidebarToggle(), p.Hover).OnClick(func() { a.sidebarHidden = false })
@@ -76,7 +73,8 @@ func (a *App) homeTargets(c *ui.Context, p *palette) {
 	ui.Row(c).Gap(4).AlignItems(ui.Center).Padding(0, 2).Children(func() {
 		open := a.popover("machine")
 		machine := ui.ButtonBase(c).Height(24).Padding(0, 8).Radius(6).Gap(4).Border(1, p.Border).Background(p.Composer).Cursor(ui.CursorPointer).
-			Label(locales.HomeMachine()).OnClick(func() { *open = !*open })
+			Label(locales.HomeMachine()).OnClick(func() { *open = !*open }).Transition(colorFade)
+		pressable(machine, 0.97)
 		if machine.Hovered() {
 			machine.Background(p.Hover)
 		}
@@ -98,7 +96,8 @@ func (a *App) homeTargets(c *ui.Context, p *palette) {
 			label = pr.Name
 		}
 		project := ui.ButtonBase(c).Height(24).Padding(0, 8).Radius(12).Gap(4).Cursor(ui.CursorPointer).
-			Label(locales.HomeProject()).OnClick(func() { *openProject = !*openProject })
+			Label(locales.HomeProject()).OnClick(func() { *openProject = !*openProject }).Transition(colorFade)
+		pressable(project, 0.97)
 		if project.Hovered() {
 			project.Background(p.Text.Alpha(0.06))
 		}

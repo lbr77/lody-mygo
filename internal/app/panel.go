@@ -167,16 +167,19 @@ func (a *App) inspector(c *ui.Context, p *palette) {
 			}
 			iconButton(c, p, iconPanelRight, locales.PanelHide(), p.Hover).OnClick(func() { a.panelOpen = false })
 		})
-		switch in.tab {
-		case tabFiles:
-			a.filesTab(c, p, in)
-		case tabChanges:
-			a.changesTab(c, p, in)
-		case tabPreview:
-			a.previewTab(c, p)
-		default:
-			a.panelChooser(c, p, in)
-		}
+		// Keyed by tab, so that each panel fades in as it's chosen.
+		ui.Column(c.Key(in.tab)).FillWidth().Grow(1).MinHeight(0).Transition(pageIn).Children(func() {
+			switch in.tab {
+			case tabFiles:
+				a.filesTab(c, p, in)
+			case tabChanges:
+				a.changesTab(c, p, in)
+			case tabPreview:
+				a.previewTab(c, p)
+			default:
+				a.panelChooser(c, p, in)
+			}
+		})
 	})
 }
 
@@ -198,7 +201,8 @@ func (a *App) panelChooser(c *ui.Context, p *palette, in *inspectState) {
 							}
 							o := options[j]
 							b := ui.ButtonBase(c).FillWidth().Height(40).Padding(0, 12).Radius(8).Gap(8).Justify(ui.Start).AlignItems(ui.Center).
-								Border(1, p.Border).Cursor(ui.CursorPointer).Label(o.label).OnClick(func() { in.openPanel(o.id) })
+								Border(1, p.Border).Cursor(ui.CursorPointer).Label(o.label).OnClick(func() { in.openPanel(o.id) }).Transition(colorFade)
+							pressable(b, 0.98)
 							if b.Hovered() {
 								b.Background(p.Hover)
 							}
@@ -215,7 +219,7 @@ func (a *App) panelChooser(c *ui.Context, p *palette, in *inspectState) {
 }
 
 func panelTab(c *ui.Context, p *palette, label string, active bool, close func()) ui.Element {
-	tab := ui.ButtonBase(c.Key(label)).Height(28).Padding(0, 4, 0, 10).Radius(8).Gap(4).AlignItems(ui.Center).Cursor(ui.CursorPointer).Label(label)
+	tab := ui.ButtonBase(c.Key(label)).Height(28).Padding(0, 4, 0, 10).Radius(8).Gap(4).AlignItems(ui.Center).Cursor(ui.CursorPointer).Label(label).Transition(colorFade)
 	ink := p.Secondary
 	switch {
 	case active:
@@ -227,7 +231,7 @@ func panelTab(c *ui.Context, p *palette, label string, active bool, close func()
 	shown := active || tab.Hovered()
 	tab.Children(func() {
 		ui.Text(c, label).FontSize(sizeSub).FontWeight(500).TextColor(ink).SingleLine()
-		x := ui.ButtonBase(c).Size(18, 18).Radius(5).Center().Cursor(ui.CursorPointer).Label(locales.Close() + " " + label).OnClick(close)
+		x := ui.ButtonBase(c).Size(18, 18).Radius(5).Center().Cursor(ui.CursorPointer).Label(locales.Close() + " " + label).OnClick(close).Transition(colorFade)
 		if x.Hovered() {
 			x.Background(p.Text.Alpha(0.08))
 		}
@@ -339,7 +343,7 @@ func (a *App) changesTab(c *ui.Context, p *palette, in *inspectState) {
 // changeRow is a changed file: its name over its folder, and its counts.
 func changeRow(c *ui.Context, p *palette, file, kind string, add, del int) ui.Element {
 	dir, name := path.Split(file)
-	row := ui.Row(c).MinHeight(36).Padding(4, 8).Radius(6).Gap(8).AlignItems(ui.Center).Cursor(ui.CursorPointer).Label(file)
+	row := ui.Row(c).MinHeight(36).Padding(4, 8).Radius(6).Gap(8).AlignItems(ui.Center).Cursor(ui.CursorPointer).Label(file).Transition(colorFade)
 	if row.Hovered() {
 		row.Background(p.Hover)
 	}

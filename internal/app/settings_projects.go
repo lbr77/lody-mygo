@@ -291,7 +291,7 @@ func (a *App) addProjectDialog(c *ui.Context, p *palette) {
 					continue
 				}
 				entry := e
-				row := ui.Row(c.Key(e.AbsolutePath)).FillWidth().Height(32).Padding(0, 8).Radius(6).Gap(8).AlignItems(ui.Center).Label(e.Name)
+				row := ui.Row(c.Key(e.AbsolutePath)).FillWidth().Height(32).Padding(0, 8).Radius(6).Gap(8).AlignItems(ui.Center).Label(e.Name).Transition(colorFade)
 				if e.Error == "" {
 					row.Cursor(ui.CursorPointer).OnClick(func() { a.browseFolder(entry.AbsolutePath) })
 					if row.Hovered() {

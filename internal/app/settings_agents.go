@@ -516,6 +516,7 @@ func (a *App) providerDialog(c *ui.Context, p *palette) {
 	}
 	w, h := c.Size()
 	ui.DialogBase(c, &f.open, func(backdrop, panel ui.Element) {
+		sheetIn(backdrop, panel)
 		backdrop.Background(ui.RGBA(0, 0, 0, 0.22))
 		panel.Size(min(1040, w-80), min(680, h-80)).Radius(14).Border(0.5, p.CardRim).Background(p.Popover).Clip().
 			Shadow(0, 22, 70, 0, ui.RGBA(0, 0, 0, 0.25))
@@ -547,7 +548,7 @@ func (a *App) providerRail(c *ui.Context, p *palette) {
 					}
 					kind := k
 					row := ui.Row(c.Key(k.value)).FillWidth().Height(34).Padding(0, 10).Radius(8).Gap(10).AlignItems(ui.Center).Cursor(ui.CursorPointer).
-						Label(k.label()).OnClick(func() {
+						Label(k.label()).Transition(colorFade).OnClick(func() {
 						f.kind, f.endpoint, f.baseURL, f.testErr, f.tested = kind, "", "", "", ""
 					})
 					selected := f.kind.value == k.value

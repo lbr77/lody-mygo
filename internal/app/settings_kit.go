@@ -71,7 +71,8 @@ func pageHeader(c *ui.Context, p *palette, title, lead string, actions func()) {
 // outlineButton is a bordered button with an icon, as Lody's page actions.
 func outlineButton(c *ui.Context, p *palette, icon *ui.SVG, label string) ui.Element {
 	b := ui.ButtonBase(c.Key(label)).Height(30).Padding(0, 10).Radius(8).Gap(6).AlignItems(ui.Center).Border(1, p.Border).
-		Background(p.Canvas).Cursor(ui.CursorPointer).Label(label)
+		Background(p.Canvas).Cursor(ui.CursorPointer).Label(label).Transition(colorFade)
+	pressable(b, 0.97)
 	if b.Hovered() {
 		b.Background(p.Hover)
 	}
@@ -123,6 +124,7 @@ func area(c *ui.Context, p *palette, value *string, placeholder, label string, l
 func sheet(c *ui.Context, p *palette, open *bool, width float32, fn func()) {
 	w, h := c.Size()
 	ui.DialogBase(c, open, func(backdrop, panel ui.Element) {
+		sheetIn(backdrop, panel)
 		backdrop.Background(ui.RGBA(0, 0, 0, 0.22))
 		panel.Width(min(width, w-80)).MaxHeight(h-80).Radius(14).Border(0.5, p.CardRim).Background(p.Popover).Clip().
 			Shadow(0, 22, 70, 0, ui.RGBA(0, 0, 0, 0.25))
@@ -146,6 +148,7 @@ func sheetHeader(c *ui.Context, p *palette, title, lead string, close func()) {
 // primaryButton is the ink button of a dialog's footer.
 func primaryButton(c *ui.Context, p *palette, label string, enabled bool) ui.Element {
 	b := ui.ButtonBase(c.Key(label)).Height(30).Padding(0, 14).Radius(8).Background(p.Text).Cursor(ui.CursorPointer).Label(label).Disabled(!enabled)
+	pressable(b, 0.97)
 	if !enabled {
 		b.Opacity(0.4)
 	}
@@ -171,6 +174,7 @@ func (a *App) confirmDialog(c *ui.Context, p *palette) {
 		return
 	}
 	ui.DialogBase(c, &cf.open, func(backdrop, panel ui.Element) {
+		sheetIn(backdrop, panel)
 		backdrop.Background(ui.RGBA(0, 0, 0, 0.22))
 		panel.Width(400).Radius(14).Border(0.5, p.CardRim).Background(p.Popover).Padding(20).Gap(12).Shadow(0, 22, 70, 0, ui.RGBA(0, 0, 0, 0.25))
 		ui.Text(c, cf.title).FontSize(16).FontWeight(600).TextColor(p.Strong)
@@ -180,6 +184,7 @@ func (a *App) confirmDialog(c *ui.Context, p *palette) {
 		ui.Row(c).Gap(8).Justify(ui.End).Padding(8, 0, 0, 0).Children(func() {
 			ghostButton(c, p, locales.Cancel()).Border(1, p.Border).OnClick(func() { cf.open = false })
 			b := ui.ButtonBase(c).Height(28).Padding(0, 12).Radius(8).Background(p.Danger).Cursor(ui.CursorPointer).Label(cf.action)
+			pressable(b, 0.97)
 			run := cf.run
 			b.OnClick(func() {
 				cf.open = false

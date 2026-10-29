@@ -143,7 +143,7 @@ func (a *App) webBilling() {
 
 // webLink is a link-styled button that opens lody.ai.
 func webLink(c *ui.Context, p *palette, label string, open func()) {
-	b := ui.ButtonBase(c.Key(label)).Height(24).Padding(0, 4).Radius(6).Gap(4).AlignItems(ui.Center).Cursor(ui.CursorPointer).Label(label).OnClick(open)
+	b := ui.ButtonBase(c.Key(label)).Height(24).Padding(0, 4).Radius(6).Gap(4).AlignItems(ui.Center).Cursor(ui.CursorPointer).Label(label).OnClick(open).Transition(colorFade)
 	ink := p.Primary
 	if b.Hovered() {
 		b.Background(p.Hover)

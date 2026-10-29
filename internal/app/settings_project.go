@@ -81,6 +81,7 @@ func (a *App) projectWindow(c *ui.Context, p *palette) {
 	project := *pr
 	ww, hh := c.Size()
 	ui.DialogBase(c, &w.open, func(backdrop, panel ui.Element) {
+		sheetIn(backdrop, panel)
 		backdrop.Background(ui.RGBA(0, 0, 0, 0.22))
 		panel.Size(min(920, ww-80), min(640, hh-80)).Radius(14).Border(0.5, p.CardRim).Background(p.Popover).Clip().
 			Shadow(0, 22, 70, 0, ui.RGBA(0, 0, 0, 0.25))
@@ -97,7 +98,7 @@ func (a *App) projectWindow(c *ui.Context, p *palette) {
 				for _, pg := range projectWindowPages() {
 					page := pg
 					row := ui.ButtonBase(c.Key(pg.id)).Height(32).Padding(0, 10).Radius(8).Justify(ui.Start).Cursor(ui.CursorPointer).Label(pg.label).
-						OnClick(func() { w.page = page.id })
+						OnClick(func() { w.page = page.id }).Transition(colorFade)
 					switch {
 					case w.page == pg.id:
 						row.Background(p.SideSelect)

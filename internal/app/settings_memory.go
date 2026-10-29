@@ -166,6 +166,7 @@ func (a *App) memoryDialog(c *ui.Context, p *palette, machine string) {
 	}
 	w, h := c.Size()
 	ui.DialogBase(c, &f.open, func(backdrop, panel ui.Element) {
+		sheetIn(backdrop, panel)
 		backdrop.Background(ui.RGBA(0, 0, 0, 0.22))
 		panel.Size(min(900, w-80), min(600, h-80)).Radius(14).Border(0.5, p.CardRim).Background(p.Popover).Clip().
 			Shadow(0, 22, 70, 0, ui.RGBA(0, 0, 0, 0.25))

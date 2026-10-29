@@ -148,8 +148,8 @@ func (a *App) sideRows() []sideRow {
 	return rows
 }
 
-func (a *App) sidebar(c *ui.Context, p *palette) {
-	ui.Column(c).Width(a.sidebarW()).Shrink(0).Children(func() {
+func (a *App) sidebar(c *ui.Context, p *palette) ui.Element {
+	return ui.Column(c).Width(a.sidebarW()).Shrink(0).Children(func() {
 		// The traffic lights sit on the left of this row.
 		ui.Row(c).Height(titleBarHeight).Shrink(0).AlignItems(ui.Center).Justify(ui.End).Padding(0, 6).Gap(2).DragWindow().Children(func() {
 			iconButton(c, p, iconSidebar, locales.SidebarToggle(), p.SideHover).OnClick(func() { a.sidebarHidden = true })
@@ -171,7 +171,7 @@ func (a *App) sidebar(c *ui.Context, p *palette) {
 			search := navRow(c, p, iconSearch, locales.Search(), a.searchOpen).OnClick(func() {
 				a.searchOpen, a.searchText = !a.searchOpen, ""
 			})
-			ui.Popover(c, search, &a.searchOpen, func() { a.searchPanel(c, p) })
+			popup(c, search, &a.searchOpen, func() { a.searchPanel(c, p) })
 		})
 		rows := a.sideRows()
 		a.sessionList.Key = func(i int) any {
@@ -216,7 +216,7 @@ func (a *App) sidebar(c *ui.Context, p *palette) {
 
 // navRow is a 28px sidebar navigation row.
 func navRow(c *ui.Context, p *palette, icon *ui.SVG, label string, selected bool) ui.Element {
-	row := ui.ButtonBase(c).Height(28).Padding(4, 9).Radius(8).Gap(6).Justify(ui.Start).Cursor(ui.CursorPointer).Label(label)
+	row := ui.ButtonBase(c).Height(28).Padding(4, 9).Radius(8).Gap(6).Justify(ui.Start).Cursor(ui.CursorPointer).Label(label).Transition(colorFade)
 	ink, iconInk := p.SideRow, p.SideMuted
 	switch {
 	case selected:
@@ -265,7 +265,7 @@ func (a *App) projectRow(c *ui.Context, p *palette, r sideRow) {
 	collapsed := a.collapsed[r.group]
 	selected := a.newChat.project == r.project && a.selected == ""
 	row := ui.Row(c.Key(r.key)).Height(30).Padding(4, 8).Border(1, ui.Transparent).Radius(6).Gap(8).AlignItems(ui.Center).
-		Cursor(ui.CursorPointer).Label(r.label).
+		Cursor(ui.CursorPointer).Label(r.label).Transition(colorFade).
 		OnClick(func() {
 			a.collapsed[r.group] = !a.collapsed[r.group]
 			a.savePrefs()
@@ -291,7 +291,8 @@ func (a *App) projectRow(c *ui.Context, p *palette, r sideRow) {
 		ui.Box(c).Size(14, 16).Center().Shrink(0).Children(func() { ui.Icon(c, icon).Size(16, 16).TextColor(p.SideMuted) })
 		ui.Text(c, r.label).FontSize(sizeSub).TextColor(p.SideRow).SingleLine().Grow(1).MinWidth(0)
 		if hovered {
-			b := ui.ButtonBase(c).Size(20, 20).Radius(4).Cursor(ui.CursorPointer).Label(locales.NewChatIn(r.label)).Tooltip(locales.NewChat())
+			b := ui.ButtonBase(c).Size(20, 20).Radius(4).Cursor(ui.CursorPointer).Label(locales.NewChatIn(r.label)).Tooltip(locales.NewChat()).Transition(colorFade)
+			pressable(b, 0.9)
 			if b.Hovered() {
 				b.Background(p.Text.Alpha(0.08))
 			}
@@ -307,7 +308,7 @@ func (a *App) projectRow(c *ui.Context, p *palette, r sideRow) {
 
 func (a *App) moreRow(c *ui.Context, p *palette, r sideRow) {
 	row := ui.Row(c.Key(r.key)).Height(28).Padding(4, 8, 4, 37).Radius(6).AlignItems(ui.Center).Cursor(ui.CursorPointer).
-		Label(locales.SidebarShowAll(r.count)).OnClick(func() { a.showAll[r.group] = true })
+		Label(locales.SidebarShowAll(r.count)).OnClick(func() { a.showAll[r.group] = true }).Transition(colorFade)
 	if row.Hovered() {
 		row.Background(p.SideHover)
 	}
@@ -319,7 +320,7 @@ func (a *App) moreRow(c *ui.Context, p *palette, r sideRow) {
 func (a *App) sessionRow(c *ui.Context, p *palette, r sideRow) {
 	s := r.session
 	selected := a.selected == s.ID
-	row := ui.Row(c.Key(r.key)).Border(1, ui.Transparent).Gap(8).AlignItems(ui.Center).Cursor(ui.CursorPointer).Label(s.Title).Margin(r.top, 0, 0, 0)
+	row := ui.Row(c.Key(r.key)).Border(1, ui.Transparent).Gap(8).AlignItems(ui.Center).Cursor(ui.CursorPointer).Label(s.Title).Margin(r.top, 0, 0, 0).Transition(colorFade)
 	if r.nested {
 		row.Height(30).Padding(4, 8).Radius(6)
 	} else {
@@ -460,7 +461,7 @@ func (a *App) footer(c *ui.Context, p *palette) {
 		name = ws.Name
 	}
 	ui.Row(c).Shrink(0).Padding(6, 10).Gap(4).AlignItems(ui.Center).Children(func() {
-		switcher := ui.ButtonBase(c).Height(28).Padding(0, 6).Radius(8).Gap(6).Grow(1).MinWidth(0).Justify(ui.Start).Cursor(ui.CursorPointer).Label(locales.WorkspaceSwitch())
+		switcher := ui.ButtonBase(c).Height(28).Padding(0, 6).Radius(8).Gap(6).Grow(1).MinWidth(0).Justify(ui.Start).Cursor(ui.CursorPointer).Label(locales.WorkspaceSwitch()).Transition(colorFade)
 		if switcher.Hovered() || a.workspacesOpen {
 			switcher.Background(p.Text.Alpha(0.06))
 		}
@@ -476,7 +477,7 @@ func (a *App) footer(c *ui.Context, p *palette) {
 				ui.Text(c, label).FontSize(10).FontWeight(500).TextColor(color).Padding(1, 5).Radius(5).Background(color.Alpha(0.14)).Shrink(0)
 			}
 		})
-		ui.Popover(c, switcher, &a.workspacesOpen, func() { a.workspaceMenu(c, p) })
+		popup(c, switcher, &a.workspacesOpen, func() { a.workspaceMenu(c, p) })
 		iconButton(c, p, iconHelp, locales.Help(), p.SideHover).Menu(func(m *ui.Menu) {
 			for _, link := range []struct{ label, url string }{
 				{locales.HelpDocs(), "https://lody.ai/docs"},
@@ -594,7 +595,7 @@ func (a *App) workspaceMenu(c *ui.Context, p *palette) {
 }
 
 func menuRow(c *ui.Context, p *palette, label string) ui.Element {
-	row := ui.ButtonBase(c).Height(30).Padding(0, 8).Radius(6).Gap(8).Justify(ui.Start).Cursor(ui.CursorPointer).Label(label)
+	row := ui.ButtonBase(c).Height(30).Padding(0, 8).Radius(6).Gap(8).Justify(ui.Start).Cursor(ui.CursorPointer).Label(label).Transition(colorFade)
 	if row.Hovered() {
 		row.Background(p.Hover)
 	}
@@ -617,6 +618,12 @@ const (
 	sidebarMin = 220
 	sidebarMax = 480
 )
+
+// barInset is the left padding of a title bar over the card, base beside
+// the sidebar, clearing the traffic lights as the sidebar slides away.
+func (a *App) barInset(base float32) float32 {
+	return base + (76-base)*(1-a.sideOut)
+}
 
 func (a *App) sidebarW() float32 {
 	if a.sidebarWidth == 0 {

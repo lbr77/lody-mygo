@@ -595,7 +595,8 @@ func (a *App) machineActions(c *ui.Context, p *palette, id string, m visibleMach
 			ui.TextInput(c, &a.machineDraft).Width(220).FontSize(sizeSub).AutoFocus().Label(locales.MachinesRename()).OnSubmit(save)
 		} else {
 			b := ui.ButtonBase(c).Height(28).Padding(0, 8).Radius(8).Gap(6).AlignItems(ui.Center).Cursor(ui.CursorPointer).Label(locales.MachinesRename()).
-				OnClick(func() { a.renamingMachine, a.machineDraft = id, a.machineName(id) })
+				OnClick(func() { a.renamingMachine, a.machineDraft = id, a.machineName(id) }).Transition(colorFade)
+			pressable(b, 0.97)
 			if b.Hovered() {
 				b.Background(p.Hover)
 			}

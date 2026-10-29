@@ -78,6 +78,7 @@ type App struct {
 	}
 
 	sidebarHidden   bool
+	sideOut         float32 // how far the sidebar is out as it slides, 1 shown
 	collapsed       map[string]bool
 	expanded        map[string]bool // activity groups in the conversation
 	workspacesOpen  bool

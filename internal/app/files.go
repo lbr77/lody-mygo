@@ -248,7 +248,7 @@ func (a *App) filesTab(c *ui.Context, p *palette, in *inspectState) {
 				return
 			}
 			row := ui.Row(c.Key(r.path)).Height(24).Padding(0, 8, 0, indent).Radius(6).Gap(4).AlignItems(ui.Center).Cursor(ui.CursorPointer).
-				Label(r.path).Tooltip(r.path)
+				Label(r.path).Tooltip(r.path).Transition(colorFade)
 			if row.Hovered() {
 				row.Background(p.Hover)
 			}
