@@ -1670,3 +1670,13 @@ func TestSidebarRowArchive(t *testing.T) {
 		t.Fatal("the confirmation outlives 3.5s")
 	}
 }
+
+func TestNoMachineHint(t *testing.T) {
+	a := fixture()
+	a.catalog.MachineIDs = nil
+	a.selected = ""
+	tt := snap(t, a, "no-machine", false, func(tt *ui.Tester) { tt.Advance(2300 * time.Millisecond) })
+	if !(tt.HasText("Nothing's plugged in yet") || tt.HasText("Plugging in…")) || !tt.HasText("Discord") {
+		t.Fatalf("hint: %q", tt.Texts())
+	}
+}

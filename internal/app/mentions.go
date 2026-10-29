@@ -72,6 +72,20 @@ type mentionState struct {
 	dismissed string // the trigger Escape closed, until it changes
 	moveCaret bool   // put the caret at caretTo in the next frame
 	caretTo   int
+	// The level shown: the category and folder narrowed to. A change
+	// slides the list 12px from the side it goes to.
+	level    string
+	levelDir float32
+	levelRun uint64
+}
+
+// mentionLevel is how deep a query has narrowed: to a category, then to
+// folders within it.
+func mentionLevel(query string) string {
+	if i := strings.LastIndexAny(query, ":/"); i >= 0 {
+		return query[:i+1]
+	}
+	return ""
 }
 
 // mentionSource returns a list for target, fetching it when it is missing
@@ -411,12 +425,24 @@ func (a *App) mentionPanel(c *ui.Context, p *palette, box, input ui.Element) {
 		// A message that starts with a path, not a command.
 		return
 	}
+	if level := mentionLevel(tr.Query); level != m.level {
+		m.levelDir = 1
+		if len(level) < len(m.level) {
+			m.levelDir = -1
+		}
+		m.level = level
+		m.levelRun++
+	}
 	ui.Overlay(c, func() {
 		panel := ui.Column(c.Key("mentions")).AttachTo(box, ui.AnchorTopStart, ui.AnchorBottomStart).Margin(6, 0, 0, 0).
 			Width(460).Radius(12).Border(0.5, p.CardRim).Background(p.Popover).KeepFocus().Clip().
 			Shadow(0, 12, 32, -8, ui.RGBA(0, 0, 0, 0.18)).Transition(popIn)
 		panel.Children(func() {
-			ui.Scroll(c).MaxHeight(320).Padding(4).Gap(1).Children(func() {
+			list := ui.Scroll(c).MaxHeight(320).Padding(4).Gap(1)
+			if k := list.Keyframes("level", []ui.Keyframe{{Value: 0}, {At: popTime, Value: 1, Ease: easeStandard}}, ui.KeyframeOptions{Run: m.levelRun}); m.levelRun > 1 && k < 1 {
+				list.Translate(12*m.levelDir*(1-k), 0).Opacity(k)
+			}
+			list.Children(func() {
 				for i, row := range rows {
 					a.mentionRowView(c.Key(row.category+"|"+row.item.Kind+"|"+row.item.Path), p, row, i == m.highlight)
 				}

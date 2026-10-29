@@ -2248,5 +2248,12 @@
   "workspaceLinkNotMember": "You're not a member of this workspace. Ask its owner for an invitation or a join link.",
   "archiveConfirm": "Confirm",
   "archiveConfirmLabel": "Confirm Archive session",
-  "statusUnread": "Unread"
+  "statusUnread": "Unread",
+  "noMachineTitle": "Nothing's plugged in yet",
+  "noMachineMessage": "Your agents run on the desktop client. Install and open it, and your machine will show up here.",
+  "daemonStartingTitle": "Plugging in…",
+  "daemonStartingMessage": "The local daemon doesn't seem to have finished starting yet. If you run into trouble, click the button below to report a bug to us.",
+  "hintReportBug": "Report a Bug",
+  "hintDownloadClient": "Download the client",
+  "hintDiscordMessage": "Have questions? Join our Discord community for help."
 }

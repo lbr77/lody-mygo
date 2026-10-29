@@ -19,17 +19,12 @@ func (a *App) homeView(c *ui.Context, p *palette) {
 	})
 	ui.Column(c).Grow(1).MinHeight(0).Justify(ui.Center).AlignItems(ui.Center).Padding(0, 24).Gap(20).Children(func() {
 		ui.Text(c, homeHeading(time.Now())).FontSize(36).LineHeight(40.0 / 36).FontWeight(600).LetterSpacing(-0.9).TextColor(p.Strong).TextAlign(ui.Center)
-		if len(a.catalog.MachineIDs) == 0 {
-			ui.Column(c).Gap(8).AlignItems(ui.Center).MaxWidth(420).Children(func() {
-				msg := locales.HomeSyncing()
-				if a.synced {
-					msg = locales.HomeNoMachine()
-				}
-				ui.Text(c, msg).FontSize(sizeBody).TextColor(p.Secondary).TextAlign(ui.Center)
-				if a.synced {
-					ui.Text(c, "npx lody daemon start").Font(fontMono).FontSize(sizeSub).TextColor(p.Text).Padding(6, 10).Radius(8).Background(p.CodeBg).Selectable()
-				}
-			})
+		switch {
+		case len(a.catalog.MachineIDs) > 0:
+		case a.synced:
+			a.noMachineHint(c, p)
+		default:
+			ui.Text(c, locales.HomeSyncing()).FontSize(sizeBody).TextColor(p.Secondary).TextAlign(ui.Center)
 		}
 	})
 	if len(a.catalog.MachineIDs) == 0 {

@@ -1097,5 +1097,12 @@
   "workspaceLinkNotMember": "你不是这个工作区的成员。请向其所有者索取邀请或加入链接。",
   "archiveConfirm": "确认",
   "archiveConfirmLabel": "确认归档会话",
-  "statusUnread": "未读"
+  "statusUnread": "未读",
+  "noMachineTitle": "还没有插上电",
+  "noMachineMessage": "智能体跑在桌面客户端上。装好并打开它，你的机器就会出现在这里。",
+  "daemonStartingTitle": "正在接通电源…",
+  "daemonStartingMessage": "守护进程好像还没有完成启动。如果你遇到问题，可以点击下方按钮向我们报告 Bug。",
+  "hintReportBug": "报告 Bug",
+  "hintDownloadClient": "下载客户端",
+  "hintDiscordMessage": "遇到问题？加入 Discord 社区获取帮助。"
 }

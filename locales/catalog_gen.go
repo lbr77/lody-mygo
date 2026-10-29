@@ -11072,3 +11072,73 @@ func StatusUnread() string { return In(i18n.Locale()).StatusUnread() }
 func (msgs Messages) StatusUnread() string {
 	return Catalog.Format(msgs.locale, "statusUnread", nil)
 }
+
+// NoMachineTitle says "Nothing's plugged in yet"
+// in the language the app shows.
+func NoMachineTitle() string { return In(i18n.Locale()).NoMachineTitle() }
+
+// NoMachineTitle says "Nothing's plugged in yet"
+// in the language of msgs.
+func (msgs Messages) NoMachineTitle() string {
+	return Catalog.Format(msgs.locale, "noMachineTitle", nil)
+}
+
+// NoMachineMessage says "Your agents run on the desktop client. Install and open it, and your machine will show up here."
+// in the language the app shows.
+func NoMachineMessage() string { return In(i18n.Locale()).NoMachineMessage() }
+
+// NoMachineMessage says "Your agents run on the desktop client. Install and open it, and your machine will show up here."
+// in the language of msgs.
+func (msgs Messages) NoMachineMessage() string {
+	return Catalog.Format(msgs.locale, "noMachineMessage", nil)
+}
+
+// DaemonStartingTitle says "Plugging in…"
+// in the language the app shows.
+func DaemonStartingTitle() string { return In(i18n.Locale()).DaemonStartingTitle() }
+
+// DaemonStartingTitle says "Plugging in…"
+// in the language of msgs.
+func (msgs Messages) DaemonStartingTitle() string {
+	return Catalog.Format(msgs.locale, "daemonStartingTitle", nil)
+}
+
+// DaemonStartingMessage says "The local daemon doesn't seem to have finished starting yet. If you run into trouble, click the button below to repor…"
+// in the language the app shows.
+func DaemonStartingMessage() string { return In(i18n.Locale()).DaemonStartingMessage() }
+
+// DaemonStartingMessage says "The local daemon doesn't seem to have finished starting yet. If you run into trouble, click the button below to repor…"
+// in the language of msgs.
+func (msgs Messages) DaemonStartingMessage() string {
+	return Catalog.Format(msgs.locale, "daemonStartingMessage", nil)
+}
+
+// HintReportBug says "Report a Bug"
+// in the language the app shows.
+func HintReportBug() string { return In(i18n.Locale()).HintReportBug() }
+
+// HintReportBug says "Report a Bug"
+// in the language of msgs.
+func (msgs Messages) HintReportBug() string {
+	return Catalog.Format(msgs.locale, "hintReportBug", nil)
+}
+
+// HintDownloadClient says "Download the client"
+// in the language the app shows.
+func HintDownloadClient() string { return In(i18n.Locale()).HintDownloadClient() }
+
+// HintDownloadClient says "Download the client"
+// in the language of msgs.
+func (msgs Messages) HintDownloadClient() string {
+	return Catalog.Format(msgs.locale, "hintDownloadClient", nil)
+}
+
+// HintDiscordMessage says "Have questions? Join our Discord community for help."
+// in the language the app shows.
+func HintDiscordMessage() string { return In(i18n.Locale()).HintDiscordMessage() }
+
+// HintDiscordMessage says "Have questions? Join our Discord community for help."
+// in the language of msgs.
+func (msgs Messages) HintDiscordMessage() string {
+	return Catalog.Format(msgs.locale, "hintDiscordMessage", nil)
+}

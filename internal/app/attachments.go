@@ -115,14 +115,21 @@ func (a *App) attachmentChips(c *ui.Context, p *palette) {
 			index := i
 			remove := func() { a.attachments = append(a.attachments[:index:index], a.attachments[index+1:]...) }
 			if f.Image {
-				ui.Box(c.Key(f.Path)).Size(56, 56).Radius(10).Clip().Background(p.Text.Alpha(0.05)).Children(func() {
-					if img := a.images["file:"+f.Path]; img != nil && img.bitmap != nil {
+				img := a.images["file:"+f.Path]
+				open := a.popover("peek/" + f.Path)
+				thumb := ui.ButtonBase(c.Key(f.Path)).Size(56, 56).Radius(10).Clip().Background(p.Text.Alpha(0.05)).Label(f.Name).Cursor(ui.CursorPointer)
+				thumb.OnClick(func() { *open = !*open })
+				thumb.Children(func() {
+					if img != nil && img.bitmap != nil {
 						ui.Image(c, img.bitmap).Size(56, 56).Fit(ui.Cover)
 					} else {
 						ui.Box(c).Size(56, 56).Center().Children(func() { ui.Icon(c, iconImage).Size(20, 20).TextColor(p.Secondary) })
 					}
 					removeButton(c, p, f.Name, remove)
 				})
+				if img != nil && img.bitmap != nil {
+					a.imagePeek(c, p, thumb, open, img.bitmap, f.Name)
+				}
 				continue
 			}
 			ui.Row(c.Key(f.Path)).Height(44).Padding(0, 28, 0, 10).Radius(10).Gap(8).AlignItems(ui.Center).Background(p.Text.Alpha(0.05)).MaxWidth(240).Children(func() {
@@ -135,6 +142,24 @@ func (a *App) attachmentChips(c *ui.Context, p *palette) {
 			})
 		}
 	})
+}
+
+// imagePeek is an attached image's preview: a card above its thumbnail,
+// growing out of it with a little overshoot, as Lody's composer peek, so
+// the draft stays in view while the image is checked.
+func (a *App) imagePeek(c *ui.Context, p *palette, thumb ui.Element, open *bool, bm *ui.Bitmap, name string) {
+	w, h := bm.Size()
+	scale := min(1, 480/float32(max(w, 1)), 360/float32(max(h, 1)))
+	ui.Popover(c, thumb, open, func() {
+		ui.Column(c).Gap(6).Padding(6).Children(func() {
+			ui.Image(c, bm).Size(float32(w)*scale, float32(h)*scale).Radius(9).Fit(ui.Contain)
+			ui.Row(c).FillWidth().Gap(8).Padding(0, 4, 2, 4).AlignItems(ui.Baseline).Children(func() {
+				ui.Text(c, name).FontSize(sizeCaption).TextColor(p.Text).SingleLine().Grow(1).MinWidth(0)
+				ui.Text(c, fmt.Sprintf("%d × %d", w, h)).FontSize(sizeCaption).TextColor(p.Secondary).FontFeatures("tnum").Shrink(0)
+			})
+		})
+	}).AttachTo(thumb, ui.AnchorTopStart, ui.AnchorBottomStart).Margin(0, 0, 8, 0).TransformOrigin(0, 1).
+		Transition(ui.ElementTransition{Animation: &peekSpring, Enter: &ui.Motion{Scale: 0.35}, Exit: &ui.Motion{Scale: 0.92}})
 }
 
 func removeButton(c *ui.Context, p *palette, name string, remove func()) {
