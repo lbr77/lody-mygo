@@ -528,3 +528,46 @@ func TestMermaidState(t *testing.T) {
 	a.view.Entries[1].Items = []session.Item{{ID: "m", Type: "text", Text: "```mermaid\nstateDiagram-v2\n  [*] --> Idle\n  Idle --> Working : send\n  Working --> Idle : done\n  Working --> [*]\n```"}}
 	snap(t, a, "mermaid-state", false, nil)
 }
+
+func TestMermaidClassERXY(t *testing.T) {
+	cls := "classDiagram\n  class Animal {\n    +String name\n    +move(int meters)\n  }\n  class Duck~T~\n  <<interface>> Swimmer\n  Animal <|-- Duck\n  Duck ..|> Swimmer : implements\n  Zoo \"1\" *-- \"many\" Animal : houses\n  Duck : +swim()"
+	fc, ok := parseClass(cls)
+	if !ok || len(fc.nodes) != 4 || len(fc.edges) != 3 {
+		t.Fatalf("class %+v %+v", fc, fc.edges)
+	}
+	if fc.byID["Animal"].members[1] != "+move(int meters)" || fc.byID["Duck"].label != "Duck<T>" || fc.byID["Duck"].members[0] != "+swim()" ||
+		!strings.HasPrefix(fc.byID["Swimmer"].label, "<<interface>>") {
+		t.Fatalf("boxes %+v %+v", fc.byID["Animal"], fc.byID["Duck"])
+	}
+	if e := fc.edges[0]; e.fromMark != "triangle" || e.dashed {
+		t.Fatalf("inheritance %+v", e)
+	}
+	if e := fc.edges[1]; e.toMark != "triangle" || !e.dashed || e.label != "implements" {
+		t.Fatalf("realization %+v", e)
+	}
+	if e := fc.edges[2]; e.fromMark != "diamond" || e.fromText != "1" || e.toText != "many" || e.label != "houses" {
+		t.Fatalf("composition %+v", e)
+	}
+	er := "erDiagram\n  CUSTOMER ||--o{ ORDER : places\n  ORDER ||--|{ LINE-ITEM : contains\n  CUSTOMER {\n    string name PK\n    string email \"login\"\n  }"
+	efc, ok := parseER(er)
+	if !ok || len(efc.nodes) != 3 || len(efc.edges) != 2 || efc.edges[0].fromMark != "one" || efc.edges[0].toMark != "zeromany" ||
+		efc.edges[1].toMark != "many" || efc.byID["CUSTOMER"].members[1] != "string email" {
+		t.Fatalf("er %+v %+v", efc.edges, efc.byID["CUSTOMER"])
+	}
+	xy := "xychart-beta\n  title \"Sales\"\n  x-axis [jan, feb, mar]\n  y-axis \"Revenue\" 0 --> 100\n  bar [20, 55, 80]\n  line [25, 50, 90]"
+	xc, ok := parseXYChart(xy)
+	if !ok || xc.title != "Sales" || len(xc.xLabels) != 3 || xc.yMax != 100 || xc.yLabel != "Revenue" || len(xc.bars) != 1 || len(xc.lines) != 1 {
+		t.Fatalf("xychart %+v", xc)
+	}
+	for src, kind := range map[string]string{"classDiagram\nA <|-- B": "class", "erDiagram\nA ||--o{ B : x": "er", "xychart-beta\nbar [1]": "xychart"} {
+		if got := mermaidKind(src); got != kind {
+			t.Errorf("%q: %q", src, got)
+		}
+	}
+	a := fixture()
+	a.view.Working = false
+	a.view.Entries = a.view.Entries[:2]
+	a.view.Entries[1].Items = []session.Item{{ID: "m", Type: "text", Text: "```mermaid\n" + cls + "\n```\n\n```mermaid\n" + er + "\n```\n\n```mermaid\n" + xy + "\n```"}}
+	tt := snap(t, a, "mermaid-class-er-xy", false, nil)
+	_ = tt
+}

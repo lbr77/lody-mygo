@@ -24,7 +24,8 @@ const (
 )
 
 type mmNode struct {
-	id, label, shape string // shape: rect, round, diamond, circle
+	id, label, shape string // shape: rect, round, diamond, circle, dot, or box: a class or entity
+	members          []string // a box's lines under its name
 	rank, order      int
 	x, y, w, h       float32
 }
@@ -32,6 +33,11 @@ type mmNode struct {
 type mmEdge struct {
 	from, to, label string
 	dashed, arrow   bool
+	// Marks at each end, for class and ER relationships: arrow, triangle,
+	// diamond, odiamond; one, zeroone, many, zeromany. fromText and toText
+	// are a class relationship's cardinalities.
+	fromMark, toMark string
+	fromText, toText string
 }
 
 type flowchart struct {
@@ -236,6 +242,10 @@ func (fc *flowchart) layout(size float32) (w, h float32) {
 		maxRank = max(maxRank, n.rank)
 		tw, th := ui.ShapeText(n.label, ui.Font{Family: fontUI, Size: size}, 220).Size()
 		n.w, n.h = max(tw+size*1.6, size*3), th+size
+		if n.shape == "box" {
+			mw, mh := boxMembers(n.members, size)
+			n.w, n.h = max(n.w, mw+size*1.6), n.h+mh
+		}
 		if n.shape == "diamond" {
 			n.w, n.h = n.w*1.4, n.h*1.6
 		}
@@ -248,6 +258,13 @@ func (fc *flowchart) layout(size float32) (w, h float32) {
 		}
 	}
 	gapMain, gapCross := size*3, size*1.5
+	for _, n := range fc.nodes {
+		if n.shape == "box" {
+			// Classes and entities leave room for marks and cardinalities.
+			gapMain, gapCross = size*5, size*2.5
+			break
+		}
+	}
 	// Place rank by rank: along the direction, ranks; across, each rank
 	// centered on the widest.
 	var cross []float32
@@ -333,7 +350,7 @@ func (fc *flowchart) draw(p *ui.Painter, ox, oy, size float32, ink, line, fill u
 		if e.dashed {
 			dashLine(p, x0, y0, x1, y1, 1.2, line)
 		} else {
-			p.Line(x0, y0, x1, y1, 1.2, line)
+			seg(p, x0, y0, x1, y1, 1.2, line)
 		}
 		if e.arrow {
 			ang := math.Atan2(float64(y1-y0), float64(x1-x0))
@@ -350,6 +367,9 @@ func (fc *flowchart) draw(p *ui.Painter, ox, oy, size float32, ink, line, fill u
 			p.Fill(ui.Rect{X: mx - w/2 - 4, Y: my - h/2 - 2, W: w + 8, H: h + 4}, fill, 4)
 			p.TextLayout(layout, mx-w/2, my-h/2, ink)
 		}
+		// Over the label's ground: a relationship's ends and cardinalities.
+		endMark(p, e.toMark, e.toText, x1, y1, x0, y0, size, ink, line, fill)
+		endMark(p, e.fromMark, e.fromText, x0, y0, x1, y1, size, ink, line, fill)
 	}
 	for _, n := range fc.nodes {
 		r := ui.Rect{X: n.x + ox, Y: n.y + oy, W: n.w, H: n.h}
@@ -369,6 +389,9 @@ func (fc *flowchart) draw(p *ui.Painter, ox, oy, size float32, ink, line, fill u
 				p.Stroke(ui.Rect{X: r.X - 3, Y: r.Y - 3, W: r.W + 6, H: r.H + 6}, ink, r.W/2+3, 1.2)
 			}
 			continue
+		case "box":
+			drawBox(p, n, r, size, ink, line, fill)
+			continue
 		default:
 			radius := float32(4)
 			switch n.shape {
@@ -384,6 +407,12 @@ func (fc *flowchart) draw(p *ui.Painter, ox, oy, size float32, ink, line, fill u
 		w, h := layout.Size()
 		p.TextLayout(layout, r.X+(r.W-w)/2, r.Y+(r.H-h)/2, ink)
 	}
+}
+
+// seg draws a straight line at any angle; Painter.Line draws only level
+// and upright ones.
+func seg(p *ui.Painter, x0, y0, x1, y1, width float32, c ui.Color) {
+	p.StrokePolyline([][2]float32{{x0, y0}, {x1, y1}}, width, c)
 }
 
 func arrowHead(x, y float32, ang, l float64) *ui.Path {
@@ -403,7 +432,7 @@ func dashLine(p *ui.Painter, x0, y0, x1, y1, width float32, c ui.Color) {
 	}
 	for t := float32(0); t < n; t += 8 {
 		e := min(t+4, n)
-		p.Line(x0+dx*t/n, y0+dy*t/n, x0+dx*e/n, y0+dy*e/n, width, c)
+		seg(p, x0+dx*t/n, y0+dy*t/n, x0+dx*e/n, y0+dy*e/n, width, c)
 	}
 }
 
@@ -514,7 +543,7 @@ func (sq *sequence) draw(p *ui.Painter, ox, oy, size float32, ink, line, fill ui
 			if m.dashed {
 				dashLine(p, x0, y, x1, y, 1.2, line)
 			} else {
-				p.Line(x0, y, x1, y, 1.2, line)
+				seg(p, x0, y, x1, y, 1.2, line)
 			}
 			ang := 0.0
 			if x1 < x0 {
@@ -545,6 +574,12 @@ func mermaidKind(src string) string {
 			return "sequence"
 		case "statediagram", "statediagram-v2":
 			return "state"
+		case "classdiagram", "classdiagram-v2":
+			return "class"
+		case "erdiagram":
+			return "er"
+		case "xychart-beta", "xychart":
+			return "xychart"
 		}
 		return ""
 	}
@@ -573,6 +608,21 @@ func (a *App) registerMermaid(o *markdown.Options) {
 			if fc, ok := parseState(src); ok {
 				w, h = fc.layout(size)
 				draw = func(p *ui.Painter, x, y float32) { fc.draw(p, x, y, size, ink, line, fill) }
+			}
+		case kind == "class" || kind == "er":
+			parse := parseClass
+			if kind == "er" {
+				parse = parseER
+			}
+			if fc, ok := parse(src); ok {
+				w, h = fc.layout(size)
+				draw = func(p *ui.Painter, x, y float32) { fc.draw(p, x, y, size, ink, line, fill) }
+			}
+		case kind == "xychart":
+			if xc, ok := parseXYChart(src); ok {
+				w, h = xc.size(size)
+				accent := o.Theme.Link
+				draw = func(p *ui.Painter, x, y float32) { xc.draw(p, x, y, size, ink, line, accent) }
 			}
 		case kind == "sequence":
 			if sq, ok := parseSequence(src); ok {
