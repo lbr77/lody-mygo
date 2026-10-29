@@ -11668,3 +11668,639 @@ func E2eeModeFailedHelp() string { return In(i18n.Locale()).E2eeModeFailedHelp()
 func (msgs Messages) E2eeModeFailedHelp() string {
 	return Catalog.Format(msgs.locale, "e2eeModeFailedHelp", nil)
 }
+
+// PrTabTitle says "Pull request"
+// in the language the app shows.
+func PrTabTitle() string { return In(i18n.Locale()).PrTabTitle() }
+
+// PrTabTitle says "Pull request"
+// in the language of msgs.
+func (msgs Messages) PrTabTitle() string {
+	return Catalog.Format(msgs.locale, "prTabTitle", nil)
+}
+
+// PrTabConversation says "Conversation"
+// in the language the app shows.
+func PrTabConversation() string { return In(i18n.Locale()).PrTabConversation() }
+
+// PrTabConversation says "Conversation"
+// in the language of msgs.
+func (msgs Messages) PrTabConversation() string {
+	return Catalog.Format(msgs.locale, "prTabConversation", nil)
+}
+
+// PrTabChangesCount says "{count, plural, one {# file} other {# files}}"
+// in the language the app shows.
+func PrTabChangesCount(count int) string { return In(i18n.Locale()).PrTabChangesCount(count) }
+
+// PrTabChangesCount says "{count, plural, one {# file} other {# files}}"
+// in the language of msgs.
+func (msgs Messages) PrTabChangesCount(count int) string {
+	return Catalog.Format(msgs.locale, "prTabChangesCount", map[string]any{"count": count})
+}
+
+// PrTabChangesError says "Failed to load changes."
+// in the language the app shows.
+func PrTabChangesError() string { return In(i18n.Locale()).PrTabChangesError() }
+
+// PrTabChangesError says "Failed to load changes."
+// in the language of msgs.
+func (msgs Messages) PrTabChangesError() string {
+	return Catalog.Format(msgs.locale, "prTabChangesError", nil)
+}
+
+// PrTabChecksPermissionTitle says "Can't read CI checks"
+// in the language the app shows.
+func PrTabChecksPermissionTitle() string { return In(i18n.Locale()).PrTabChecksPermissionTitle() }
+
+// PrTabChecksPermissionTitle says "Can't read CI checks"
+// in the language of msgs.
+func (msgs Messages) PrTabChecksPermissionTitle() string {
+	return Catalog.Format(msgs.locale, "prTabChecksPermissionTitle", nil)
+}
+
+// PrTabChecksPermissionBody says "The GitHub App installation is missing the Checks read permission. Update it to show CI status here."
+// in the language the app shows.
+func PrTabChecksPermissionBody() string { return In(i18n.Locale()).PrTabChecksPermissionBody() }
+
+// PrTabChecksPermissionBody says "The GitHub App installation is missing the Checks read permission. Update it to show CI status here."
+// in the language of msgs.
+func (msgs Messages) PrTabChecksPermissionBody() string {
+	return Catalog.Format(msgs.locale, "prTabChecksPermissionBody", nil)
+}
+
+// PrTabChecksPassed says "All checks passed"
+// in the language the app shows.
+func PrTabChecksPassed() string { return In(i18n.Locale()).PrTabChecksPassed() }
+
+// PrTabChecksPassed says "All checks passed"
+// in the language of msgs.
+func (msgs Messages) PrTabChecksPassed() string {
+	return Catalog.Format(msgs.locale, "prTabChecksPassed", nil)
+}
+
+// PrTabChecksFailedOf says "{failed} of {total} checks failed"
+// in the language the app shows.
+func PrTabChecksFailedOf(failed int, total int) string {
+	return In(i18n.Locale()).PrTabChecksFailedOf(failed, total)
+}
+
+// PrTabChecksFailedOf says "{failed} of {total} checks failed"
+// in the language of msgs.
+func (msgs Messages) PrTabChecksFailedOf(failed int, total int) string {
+	return Catalog.Format(msgs.locale, "prTabChecksFailedOf", map[string]any{"failed": failed, "total": total})
+}
+
+// PrTabChecksRunning says "Checks running"
+// in the language the app shows.
+func PrTabChecksRunning() string { return In(i18n.Locale()).PrTabChecksRunning() }
+
+// PrTabChecksRunning says "Checks running"
+// in the language of msgs.
+func (msgs Messages) PrTabChecksRunning() string {
+	return Catalog.Format(msgs.locale, "prTabChecksRunning", nil)
+}
+
+// PrTabChecksCount says "{count, plural, one {1 check} other {# checks}}"
+// in the language the app shows.
+func PrTabChecksCount(count int) string { return In(i18n.Locale()).PrTabChecksCount(count) }
+
+// PrTabChecksCount says "{count, plural, one {1 check} other {# checks}}"
+// in the language of msgs.
+func (msgs Messages) PrTabChecksCount(count int) string {
+	return Catalog.Format(msgs.locale, "prTabChecksCount", map[string]any{"count": count})
+}
+
+// PrTabOpenCheck says "Open check on GitHub"
+// in the language the app shows.
+func PrTabOpenCheck() string { return In(i18n.Locale()).PrTabOpenCheck() }
+
+// PrTabOpenCheck says "Open check on GitHub"
+// in the language of msgs.
+func (msgs Messages) PrTabOpenCheck() string {
+	return Catalog.Format(msgs.locale, "prTabOpenCheck", nil)
+}
+
+// PrTabNotFoundHint says "A 404 can also mean the Lody GitHub App can’t access this repository."
+// in the language the app shows.
+func PrTabNotFoundHint() string { return In(i18n.Locale()).PrTabNotFoundHint() }
+
+// PrTabNotFoundHint says "A 404 can also mean the Lody GitHub App can’t access this repository."
+// in the language of msgs.
+func (msgs Messages) PrTabNotFoundHint() string {
+	return Catalog.Format(msgs.locale, "prTabNotFoundHint", nil)
+}
+
+// PrTabLoadError says "Failed to load pull request"
+// in the language the app shows.
+func PrTabLoadError() string { return In(i18n.Locale()).PrTabLoadError() }
+
+// PrTabLoadError says "Failed to load pull request"
+// in the language of msgs.
+func (msgs Messages) PrTabLoadError() string {
+	return Catalog.Format(msgs.locale, "prTabLoadError", nil)
+}
+
+// PrTabRetry says "Retry"
+// in the language the app shows.
+func PrTabRetry() string { return In(i18n.Locale()).PrTabRetry() }
+
+// PrTabRetry says "Retry"
+// in the language of msgs.
+func (msgs Messages) PrTabRetry() string {
+	return Catalog.Format(msgs.locale, "prTabRetry", nil)
+}
+
+// PrTabOpenOnGitHub says "Open on GitHub"
+// in the language the app shows.
+func PrTabOpenOnGitHub() string { return In(i18n.Locale()).PrTabOpenOnGitHub() }
+
+// PrTabOpenOnGitHub says "Open on GitHub"
+// in the language of msgs.
+func (msgs Messages) PrTabOpenOnGitHub() string {
+	return Catalog.Format(msgs.locale, "prTabOpenOnGitHub", nil)
+}
+
+// PrTabRefresh says "Refresh"
+// in the language the app shows.
+func PrTabRefresh() string { return In(i18n.Locale()).PrTabRefresh() }
+
+// PrTabRefresh says "Refresh"
+// in the language of msgs.
+func (msgs Messages) PrTabRefresh() string {
+	return Catalog.Format(msgs.locale, "prTabRefresh", nil)
+}
+
+// PrTabMoreActions says "More actions"
+// in the language the app shows.
+func PrTabMoreActions() string { return In(i18n.Locale()).PrTabMoreActions() }
+
+// PrTabMoreActions says "More actions"
+// in the language of msgs.
+func (msgs Messages) PrTabMoreActions() string {
+	return Catalog.Format(msgs.locale, "prTabMoreActions", nil)
+}
+
+// PrTabCopyBranch says "Copy branch name"
+// in the language the app shows.
+func PrTabCopyBranch() string { return In(i18n.Locale()).PrTabCopyBranch() }
+
+// PrTabCopyBranch says "Copy branch name"
+// in the language of msgs.
+func (msgs Messages) PrTabCopyBranch() string {
+	return Catalog.Format(msgs.locale, "prTabCopyBranch", nil)
+}
+
+// PrTabCloseAction says "Close pull request"
+// in the language the app shows.
+func PrTabCloseAction() string { return In(i18n.Locale()).PrTabCloseAction() }
+
+// PrTabCloseAction says "Close pull request"
+// in the language of msgs.
+func (msgs Messages) PrTabCloseAction() string {
+	return Catalog.Format(msgs.locale, "prTabCloseAction", nil)
+}
+
+// PrTabCloseError says "Failed to close pull request"
+// in the language the app shows.
+func PrTabCloseError() string { return In(i18n.Locale()).PrTabCloseError() }
+
+// PrTabCloseError says "Failed to close pull request"
+// in the language of msgs.
+func (msgs Messages) PrTabCloseError() string {
+	return Catalog.Format(msgs.locale, "prTabCloseError", nil)
+}
+
+// PrTabReopenAction says "Reopen pull request"
+// in the language the app shows.
+func PrTabReopenAction() string { return In(i18n.Locale()).PrTabReopenAction() }
+
+// PrTabReopenAction says "Reopen pull request"
+// in the language of msgs.
+func (msgs Messages) PrTabReopenAction() string {
+	return Catalog.Format(msgs.locale, "prTabReopenAction", nil)
+}
+
+// PrTabReopenError says "Failed to reopen pull request"
+// in the language the app shows.
+func PrTabReopenError() string { return In(i18n.Locale()).PrTabReopenError() }
+
+// PrTabReopenError says "Failed to reopen pull request"
+// in the language of msgs.
+func (msgs Messages) PrTabReopenError() string {
+	return Catalog.Format(msgs.locale, "prTabReopenError", nil)
+}
+
+// PrTabDeleteBranch says "Delete branch"
+// in the language the app shows.
+func PrTabDeleteBranch() string { return In(i18n.Locale()).PrTabDeleteBranch() }
+
+// PrTabDeleteBranch says "Delete branch"
+// in the language of msgs.
+func (msgs Messages) PrTabDeleteBranch() string {
+	return Catalog.Format(msgs.locale, "prTabDeleteBranch", nil)
+}
+
+// PrTabDeleteBranchError says "Failed to delete branch"
+// in the language the app shows.
+func PrTabDeleteBranchError() string { return In(i18n.Locale()).PrTabDeleteBranchError() }
+
+// PrTabDeleteBranchError says "Failed to delete branch"
+// in the language of msgs.
+func (msgs Messages) PrTabDeleteBranchError() string {
+	return Catalog.Format(msgs.locale, "prTabDeleteBranchError", nil)
+}
+
+// PrTabOpened says "opened {when}"
+// in the language the app shows.
+func PrTabOpened(when string) string { return In(i18n.Locale()).PrTabOpened(when) }
+
+// PrTabOpened says "opened {when}"
+// in the language of msgs.
+func (msgs Messages) PrTabOpened(when string) string {
+	return Catalog.Format(msgs.locale, "prTabOpened", map[string]any{"when": when})
+}
+
+// PrTabCommitsSummary says "{count, plural, one {# commit} other {# commits}}"
+// in the language the app shows.
+func PrTabCommitsSummary(count int) string { return In(i18n.Locale()).PrTabCommitsSummary(count) }
+
+// PrTabCommitsSummary says "{count, plural, one {# commit} other {# commits}}"
+// in the language of msgs.
+func (msgs Messages) PrTabCommitsSummary(count int) string {
+	return Catalog.Format(msgs.locale, "prTabCommitsSummary", map[string]any{"count": count})
+}
+
+// PrTabFilesChanged says "{count, plural, one {# file} other {# files}}"
+// in the language the app shows.
+func PrTabFilesChanged(count int) string { return In(i18n.Locale()).PrTabFilesChanged(count) }
+
+// PrTabFilesChanged says "{count, plural, one {# file} other {# files}}"
+// in the language of msgs.
+func (msgs Messages) PrTabFilesChanged(count int) string {
+	return Catalog.Format(msgs.locale, "prTabFilesChanged", map[string]any{"count": count})
+}
+
+// PrTabTimeJustNow says "just now"
+// in the language the app shows.
+func PrTabTimeJustNow() string { return In(i18n.Locale()).PrTabTimeJustNow() }
+
+// PrTabTimeJustNow says "just now"
+// in the language of msgs.
+func (msgs Messages) PrTabTimeJustNow() string {
+	return Catalog.Format(msgs.locale, "prTabTimeJustNow", nil)
+}
+
+// PrTabTimeMinutesAgo says "{count}m ago"
+// in the language the app shows.
+func PrTabTimeMinutesAgo(count int) string { return In(i18n.Locale()).PrTabTimeMinutesAgo(count) }
+
+// PrTabTimeMinutesAgo says "{count}m ago"
+// in the language of msgs.
+func (msgs Messages) PrTabTimeMinutesAgo(count int) string {
+	return Catalog.Format(msgs.locale, "prTabTimeMinutesAgo", map[string]any{"count": count})
+}
+
+// PrTabTimeHoursAgo says "{count}h ago"
+// in the language the app shows.
+func PrTabTimeHoursAgo(count int) string { return In(i18n.Locale()).PrTabTimeHoursAgo(count) }
+
+// PrTabTimeHoursAgo says "{count}h ago"
+// in the language of msgs.
+func (msgs Messages) PrTabTimeHoursAgo(count int) string {
+	return Catalog.Format(msgs.locale, "prTabTimeHoursAgo", map[string]any{"count": count})
+}
+
+// PrTabTimeDaysAgo says "{count}d ago"
+// in the language the app shows.
+func PrTabTimeDaysAgo(count int) string { return In(i18n.Locale()).PrTabTimeDaysAgo(count) }
+
+// PrTabTimeDaysAgo says "{count}d ago"
+// in the language of msgs.
+func (msgs Messages) PrTabTimeDaysAgo(count int) string {
+	return Catalog.Format(msgs.locale, "prTabTimeDaysAgo", map[string]any{"count": count})
+}
+
+// PrTabSummary says "Summary"
+// in the language the app shows.
+func PrTabSummary() string { return In(i18n.Locale()).PrTabSummary() }
+
+// PrTabSummary says "Summary"
+// in the language of msgs.
+func (msgs Messages) PrTabSummary() string {
+	return Catalog.Format(msgs.locale, "prTabSummary", nil)
+}
+
+// PrTabNoDescription says "No description provided."
+// in the language the app shows.
+func PrTabNoDescription() string { return In(i18n.Locale()).PrTabNoDescription() }
+
+// PrTabNoDescription says "No description provided."
+// in the language of msgs.
+func (msgs Messages) PrTabNoDescription() string {
+	return Catalog.Format(msgs.locale, "prTabNoDescription", nil)
+}
+
+// PrTabMergedAlready says "Pull request merged"
+// in the language the app shows.
+func PrTabMergedAlready() string { return In(i18n.Locale()).PrTabMergedAlready() }
+
+// PrTabMergedAlready says "Pull request merged"
+// in the language of msgs.
+func (msgs Messages) PrTabMergedAlready() string {
+	return Catalog.Format(msgs.locale, "prTabMergedAlready", nil)
+}
+
+// PrTabClosed says "Closed without merging"
+// in the language the app shows.
+func PrTabClosed() string { return In(i18n.Locale()).PrTabClosed() }
+
+// PrTabClosed says "Closed without merging"
+// in the language of msgs.
+func (msgs Messages) PrTabClosed() string {
+	return Catalog.Format(msgs.locale, "prTabClosed", nil)
+}
+
+// PrTabReviewCommented says "commented"
+// in the language the app shows.
+func PrTabReviewCommented() string { return In(i18n.Locale()).PrTabReviewCommented() }
+
+// PrTabReviewCommented says "commented"
+// in the language of msgs.
+func (msgs Messages) PrTabReviewCommented() string {
+	return Catalog.Format(msgs.locale, "prTabReviewCommented", nil)
+}
+
+// PrTabReviewApproved says "approved"
+// in the language the app shows.
+func PrTabReviewApproved() string { return In(i18n.Locale()).PrTabReviewApproved() }
+
+// PrTabReviewApproved says "approved"
+// in the language of msgs.
+func (msgs Messages) PrTabReviewApproved() string {
+	return Catalog.Format(msgs.locale, "prTabReviewApproved", nil)
+}
+
+// PrTabReviewChangesRequested says "requested changes"
+// in the language the app shows.
+func PrTabReviewChangesRequested() string { return In(i18n.Locale()).PrTabReviewChangesRequested() }
+
+// PrTabReviewChangesRequested says "requested changes"
+// in the language of msgs.
+func (msgs Messages) PrTabReviewChangesRequested() string {
+	return Catalog.Format(msgs.locale, "prTabReviewChangesRequested", nil)
+}
+
+// PrTabReviewDismissed says "dismissed"
+// in the language the app shows.
+func PrTabReviewDismissed() string { return In(i18n.Locale()).PrTabReviewDismissed() }
+
+// PrTabReviewDismissed says "dismissed"
+// in the language of msgs.
+func (msgs Messages) PrTabReviewDismissed() string {
+	return Catalog.Format(msgs.locale, "prTabReviewDismissed", nil)
+}
+
+// PrTabCommented says "commented"
+// in the language the app shows.
+func PrTabCommented() string { return In(i18n.Locale()).PrTabCommented() }
+
+// PrTabCommented says "commented"
+// in the language of msgs.
+func (msgs Messages) PrTabCommented() string {
+	return Catalog.Format(msgs.locale, "prTabCommented", nil)
+}
+
+// PrTabComposerPlaceholder says "Leave a comment"
+// in the language the app shows.
+func PrTabComposerPlaceholder() string { return In(i18n.Locale()).PrTabComposerPlaceholder() }
+
+// PrTabComposerPlaceholder says "Leave a comment"
+// in the language of msgs.
+func (msgs Messages) PrTabComposerPlaceholder() string {
+	return Catalog.Format(msgs.locale, "prTabComposerPlaceholder", nil)
+}
+
+// PrTabComposerSubmit says "Comment"
+// in the language the app shows.
+func PrTabComposerSubmit() string { return In(i18n.Locale()).PrTabComposerSubmit() }
+
+// PrTabComposerSubmit says "Comment"
+// in the language of msgs.
+func (msgs Messages) PrTabComposerSubmit() string {
+	return Catalog.Format(msgs.locale, "prTabComposerSubmit", nil)
+}
+
+// PrTabPostCommentError says "Failed to post comment"
+// in the language the app shows.
+func PrTabPostCommentError() string { return In(i18n.Locale()).PrTabPostCommentError() }
+
+// PrTabPostCommentError says "Failed to post comment"
+// in the language of msgs.
+func (msgs Messages) PrTabPostCommentError() string {
+	return Catalog.Format(msgs.locale, "prTabPostCommentError", nil)
+}
+
+// PrTabVerdictReady says "Ready to merge"
+// in the language the app shows.
+func PrTabVerdictReady() string { return In(i18n.Locale()).PrTabVerdictReady() }
+
+// PrTabVerdictReady says "Ready to merge"
+// in the language of msgs.
+func (msgs Messages) PrTabVerdictReady() string {
+	return Catalog.Format(msgs.locale, "prTabVerdictReady", nil)
+}
+
+// PrTabVerdictDraft says "Draft — not ready for review"
+// in the language the app shows.
+func PrTabVerdictDraft() string { return In(i18n.Locale()).PrTabVerdictDraft() }
+
+// PrTabVerdictDraft says "Draft — not ready for review"
+// in the language of msgs.
+func (msgs Messages) PrTabVerdictDraft() string {
+	return Catalog.Format(msgs.locale, "prTabVerdictDraft", nil)
+}
+
+// PrTabVerdictConflict says "Conflicts with the base branch"
+// in the language the app shows.
+func PrTabVerdictConflict() string { return In(i18n.Locale()).PrTabVerdictConflict() }
+
+// PrTabVerdictConflict says "Conflicts with the base branch"
+// in the language of msgs.
+func (msgs Messages) PrTabVerdictConflict() string {
+	return Catalog.Format(msgs.locale, "prTabVerdictConflict", nil)
+}
+
+// PrTabVerdictBlocked says "Merging is blocked"
+// in the language the app shows.
+func PrTabVerdictBlocked() string { return In(i18n.Locale()).PrTabVerdictBlocked() }
+
+// PrTabVerdictBlocked says "Merging is blocked"
+// in the language of msgs.
+func (msgs Messages) PrTabVerdictBlocked() string {
+	return Catalog.Format(msgs.locale, "prTabVerdictBlocked", nil)
+}
+
+// PrTabVerdictChecksFailed says "{count, plural, one {1 check failed} other {# checks failed}}"
+// in the language the app shows.
+func PrTabVerdictChecksFailed(count int) string {
+	return In(i18n.Locale()).PrTabVerdictChecksFailed(count)
+}
+
+// PrTabVerdictChecksFailed says "{count, plural, one {1 check failed} other {# checks failed}}"
+// in the language of msgs.
+func (msgs Messages) PrTabVerdictChecksFailed(count int) string {
+	return Catalog.Format(msgs.locale, "prTabVerdictChecksFailed", map[string]any{"count": count})
+}
+
+// PrTabMergeChecking says "Checking if the branch can be merged…"
+// in the language the app shows.
+func PrTabMergeChecking() string { return In(i18n.Locale()).PrTabMergeChecking() }
+
+// PrTabMergeChecking says "Checking if the branch can be merged…"
+// in the language of msgs.
+func (msgs Messages) PrTabMergeChecking() string {
+	return Catalog.Format(msgs.locale, "prTabMergeChecking", nil)
+}
+
+// PrTabReadyForReview says "Ready for review"
+// in the language the app shows.
+func PrTabReadyForReview() string { return In(i18n.Locale()).PrTabReadyForReview() }
+
+// PrTabReadyForReview says "Ready for review"
+// in the language of msgs.
+func (msgs Messages) PrTabReadyForReview() string {
+	return Catalog.Format(msgs.locale, "prTabReadyForReview", nil)
+}
+
+// PrTabReadyForReviewError says "Failed to mark as ready for review"
+// in the language the app shows.
+func PrTabReadyForReviewError() string { return In(i18n.Locale()).PrTabReadyForReviewError() }
+
+// PrTabReadyForReviewError says "Failed to mark as ready for review"
+// in the language of msgs.
+func (msgs Messages) PrTabReadyForReviewError() string {
+	return Catalog.Format(msgs.locale, "prTabReadyForReviewError", nil)
+}
+
+// PrTabResolveConflicts says "Resolve conflicts"
+// in the language the app shows.
+func PrTabResolveConflicts() string { return In(i18n.Locale()).PrTabResolveConflicts() }
+
+// PrTabResolveConflicts says "Resolve conflicts"
+// in the language of msgs.
+func (msgs Messages) PrTabResolveConflicts() string {
+	return Catalog.Format(msgs.locale, "prTabResolveConflicts", nil)
+}
+
+// PrTabMergeShortMerge says "Merge"
+// in the language the app shows.
+func PrTabMergeShortMerge() string { return In(i18n.Locale()).PrTabMergeShortMerge() }
+
+// PrTabMergeShortMerge says "Merge"
+// in the language of msgs.
+func (msgs Messages) PrTabMergeShortMerge() string {
+	return Catalog.Format(msgs.locale, "prTabMergeShortMerge", nil)
+}
+
+// PrTabMergeShortSquash says "Squash"
+// in the language the app shows.
+func PrTabMergeShortSquash() string { return In(i18n.Locale()).PrTabMergeShortSquash() }
+
+// PrTabMergeShortSquash says "Squash"
+// in the language of msgs.
+func (msgs Messages) PrTabMergeShortSquash() string {
+	return Catalog.Format(msgs.locale, "prTabMergeShortSquash", nil)
+}
+
+// PrTabMergeShortRebase says "Rebase"
+// in the language the app shows.
+func PrTabMergeShortRebase() string { return In(i18n.Locale()).PrTabMergeShortRebase() }
+
+// PrTabMergeShortRebase says "Rebase"
+// in the language of msgs.
+func (msgs Messages) PrTabMergeShortRebase() string {
+	return Catalog.Format(msgs.locale, "prTabMergeShortRebase", nil)
+}
+
+// PrTabMergeAction says "Merge pull request"
+// in the language the app shows.
+func PrTabMergeAction() string { return In(i18n.Locale()).PrTabMergeAction() }
+
+// PrTabMergeAction says "Merge pull request"
+// in the language of msgs.
+func (msgs Messages) PrTabMergeAction() string {
+	return Catalog.Format(msgs.locale, "prTabMergeAction", nil)
+}
+
+// PrTabMergeSquashAction says "Squash and merge"
+// in the language the app shows.
+func PrTabMergeSquashAction() string { return In(i18n.Locale()).PrTabMergeSquashAction() }
+
+// PrTabMergeSquashAction says "Squash and merge"
+// in the language of msgs.
+func (msgs Messages) PrTabMergeSquashAction() string {
+	return Catalog.Format(msgs.locale, "prTabMergeSquashAction", nil)
+}
+
+// PrTabMergeRebaseAction says "Rebase and merge"
+// in the language the app shows.
+func PrTabMergeRebaseAction() string { return In(i18n.Locale()).PrTabMergeRebaseAction() }
+
+// PrTabMergeRebaseAction says "Rebase and merge"
+// in the language of msgs.
+func (msgs Messages) PrTabMergeRebaseAction() string {
+	return Catalog.Format(msgs.locale, "prTabMergeRebaseAction", nil)
+}
+
+// PrTabMerging says "Merging…"
+// in the language the app shows.
+func PrTabMerging() string { return In(i18n.Locale()).PrTabMerging() }
+
+// PrTabMerging says "Merging…"
+// in the language of msgs.
+func (msgs Messages) PrTabMerging() string {
+	return Catalog.Format(msgs.locale, "prTabMerging", nil)
+}
+
+// PrTabMergeError says "Failed to merge"
+// in the language the app shows.
+func PrTabMergeError() string { return In(i18n.Locale()).PrTabMergeError() }
+
+// PrTabMergeError says "Failed to merge"
+// in the language of msgs.
+func (msgs Messages) PrTabMergeError() string {
+	return Catalog.Format(msgs.locale, "prTabMergeError", nil)
+}
+
+// PrTabFileRenamed says "renamed from {path}"
+// in the language the app shows.
+func PrTabFileRenamed(path string) string { return In(i18n.Locale()).PrTabFileRenamed(path) }
+
+// PrTabFileRenamed says "renamed from {path}"
+// in the language of msgs.
+func (msgs Messages) PrTabFileRenamed(path string) string {
+	return Catalog.Format(msgs.locale, "prTabFileRenamed", map[string]any{"path": path})
+}
+
+// PrTabDiffUnavailable says "Diff content is unavailable."
+// in the language the app shows.
+func PrTabDiffUnavailable() string { return In(i18n.Locale()).PrTabDiffUnavailable() }
+
+// PrTabDiffUnavailable says "Diff content is unavailable."
+// in the language of msgs.
+func (msgs Messages) PrTabDiffUnavailable() string {
+	return Catalog.Format(msgs.locale, "prTabDiffUnavailable", nil)
+}
+
+// PrTabRepositoryIdentityUnresolved says "Cannot verify this session’s repository identity. GitHub operations are paused. Ask a workspace administrator to ch…"
+// in the language the app shows.
+func PrTabRepositoryIdentityUnresolved() string {
+	return In(i18n.Locale()).PrTabRepositoryIdentityUnresolved()
+}
+
+// PrTabRepositoryIdentityUnresolved says "Cannot verify this session’s repository identity. GitHub operations are paused. Ask a workspace administrator to ch…"
+// in the language of msgs.
+func (msgs Messages) PrTabRepositoryIdentityUnresolved() string {
+	return Catalog.Format(msgs.locale, "prTabRepositoryIdentityUnresolved", nil)
+}

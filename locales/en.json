@@ -2421,5 +2421,148 @@
   "e2eeWorkspaceTitle": "This workspace is end-to-end encrypted",
   "e2eeModeUpgradeHelp": "This workspace uses a mode this version of Lody does not support. Update Lody to open it.",
   "e2eeModeFailed": "Workspace mode could not be verified",
-  "e2eeModeFailedHelp": "No conversation data was opened. Retry the connection to verify this workspace’s persisted mode."
+  "e2eeModeFailedHelp": "No conversation data was opened. Retry the connection to verify this workspace’s persisted mode.",
+  "prTabTitle": "Pull request",
+  "prTabConversation": "Conversation",
+  "prTabChangesCount": "{count, plural, one {# file} other {# files}}",
+  "@prTabChangesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "prTabChangesError": "Failed to load changes.",
+  "prTabChecksPermissionTitle": "Can't read CI checks",
+  "prTabChecksPermissionBody": "The GitHub App installation is missing the Checks read permission. Update it to show CI status here.",
+  "prTabChecksPassed": "All checks passed",
+  "prTabChecksFailedOf": "{failed} of {total} checks failed",
+  "@prTabChecksFailedOf": {
+    "placeholders": {
+      "failed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "prTabChecksRunning": "Checks running",
+  "prTabChecksCount": "{count, plural, one {1 check} other {# checks}}",
+  "@prTabChecksCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "prTabOpenCheck": "Open check on GitHub",
+  "prTabNotFoundHint": "A 404 can also mean the Lody GitHub App can’t access this repository.",
+  "prTabLoadError": "Failed to load pull request",
+  "prTabRetry": "Retry",
+  "prTabOpenOnGitHub": "Open on GitHub",
+  "prTabRefresh": "Refresh",
+  "prTabMoreActions": "More actions",
+  "prTabCopyBranch": "Copy branch name",
+  "prTabCloseAction": "Close pull request",
+  "prTabCloseError": "Failed to close pull request",
+  "prTabReopenAction": "Reopen pull request",
+  "prTabReopenError": "Failed to reopen pull request",
+  "prTabDeleteBranch": "Delete branch",
+  "prTabDeleteBranchError": "Failed to delete branch",
+  "prTabOpened": "opened {when}",
+  "@prTabOpened": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "prTabCommitsSummary": "{count, plural, one {# commit} other {# commits}}",
+  "@prTabCommitsSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "prTabFilesChanged": "{count, plural, one {# file} other {# files}}",
+  "@prTabFilesChanged": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "prTabTimeJustNow": "just now",
+  "prTabTimeMinutesAgo": "{count}m ago",
+  "@prTabTimeMinutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "prTabTimeHoursAgo": "{count}h ago",
+  "@prTabTimeHoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "prTabTimeDaysAgo": "{count}d ago",
+  "@prTabTimeDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "prTabSummary": "Summary",
+  "prTabNoDescription": "No description provided.",
+  "prTabMergedAlready": "Pull request merged",
+  "prTabClosed": "Closed without merging",
+  "prTabReviewCommented": "commented",
+  "prTabReviewApproved": "approved",
+  "prTabReviewChangesRequested": "requested changes",
+  "prTabReviewDismissed": "dismissed",
+  "prTabCommented": "commented",
+  "prTabComposerPlaceholder": "Leave a comment",
+  "prTabComposerSubmit": "Comment",
+  "prTabPostCommentError": "Failed to post comment",
+  "prTabVerdictReady": "Ready to merge",
+  "prTabVerdictDraft": "Draft — not ready for review",
+  "prTabVerdictConflict": "Conflicts with the base branch",
+  "prTabVerdictBlocked": "Merging is blocked",
+  "prTabVerdictChecksFailed": "{count, plural, one {1 check failed} other {# checks failed}}",
+  "@prTabVerdictChecksFailed": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "prTabMergeChecking": "Checking if the branch can be merged…",
+  "prTabReadyForReview": "Ready for review",
+  "prTabReadyForReviewError": "Failed to mark as ready for review",
+  "prTabResolveConflicts": "Resolve conflicts",
+  "prTabMergeShortMerge": "Merge",
+  "prTabMergeShortSquash": "Squash",
+  "prTabMergeShortRebase": "Rebase",
+  "prTabMergeAction": "Merge pull request",
+  "prTabMergeSquashAction": "Squash and merge",
+  "prTabMergeRebaseAction": "Rebase and merge",
+  "prTabMerging": "Merging…",
+  "prTabMergeError": "Failed to merge",
+  "prTabFileRenamed": "renamed from {path}",
+  "@prTabFileRenamed": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "prTabDiffUnavailable": "Diff content is unavailable.",
+  "prTabRepositoryIdentityUnresolved": "Cannot verify this session’s repository identity. GitHub operations are paused. Ask a workspace administrator to check Settings > GitHub, the active GitHub App installation, repository access and the original PR association."
 }

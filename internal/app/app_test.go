@@ -20,6 +20,7 @@ import (
 	"github.com/lbr77/lody-mygo/internal/catalog"
 	"github.com/lbr77/lody-mygo/internal/cloud"
 	"github.com/lbr77/lody-mygo/internal/collab"
+	"github.com/lbr77/lody-mygo/internal/github"
 	"github.com/lbr77/lody-mygo/internal/mention"
 	"github.com/lbr77/lody-mygo/internal/presence"
 	"github.com/lbr77/lody-mygo/internal/session"
@@ -1829,5 +1830,35 @@ func TestWorkspaceModeGate(t *testing.T) {
 	a.fetches["w1|mode"] = &fetched{value: map[string]any{"workspaceId": "w1", "contentMode": "quantum"}}
 	if tt = snap(t, a, "mode-unknown", false, nil); !tt.HasText("Workspace mode could not be verified") {
 		t.Fatalf("unknown mode not gated: %q", tt.Texts())
+	}
+}
+
+func TestPRPanel(t *testing.T) {
+	a := fixture()
+	s := &a.catalog.Sessions[0]
+	s.PullRequests = []catalog.PullRequest{{URL: "https://github.com/lbr77/lody-mygo/pull/12", Status: "open"}}
+	in := a.inspectFor("s1")
+	in.openPanel(tabPR)
+	a.panelOpen = true
+	st := a.prPanelFor(s)
+	mergeable := true
+	st.pr = &github.PullRequest{Number: 12, Title: "Port the Flock runtime", Body: "Moves **Flock** to wazero.", State: "open", Mergeable: &mergeable, MergeableState: "clean",
+		HTMLURL: "https://github.com/lbr77/lody-mygo/pull/12", User: github.User{Login: "ada"}, CreatedAt: time.Now().Add(-2 * time.Hour), Additions: 120, Deletions: 4, ChangedFiles: 1, Commits: 3}
+	st.pr.Head.Ref, st.pr.Base.Ref = "flock-go", "main"
+	st.checks = []github.CheckRun{{ID: 1, Name: "test", Status: "completed", Conclusion: "success"}, {ID: 2, Name: "lint", Status: "in_progress"}}
+	st.reviews = []github.Review{{ID: 9, User: github.User{Login: "grace"}, State: "APPROVED", SubmittedAt: time.Now().Add(-time.Hour)}}
+	st.comments = []github.Comment{{ID: 5, User: github.User{Login: "ada"}, Body: "Ready for a look.", CreatedAt: time.Now().Add(-90 * time.Minute)}}
+	st.files = []github.File{{Filename: "internal/flock/flock.go", Status: "modified", Additions: 120, Deletions: 4, Patch: "@@ -1,2 +1,3 @@\n package flock\n+// wazero\n-old"}}
+	tt := snap(t, a, "pr-panel", false, nil)
+	for _, want := range []string{"Pull request", "Open", "Port the Flock runtime", " #12", "flock-go", "main", "3 commits", "Checks running", "2 checks", "grace", "approved", "Ready for a look.", "Ready to merge", "Merge pull request", "Leave a comment"} {
+		if !tt.HasText(want) {
+			t.Fatalf("no %q in %q", want, tt.Texts())
+		}
+	}
+	st.view = "changes"
+	st.open["file/internal/flock/flock.go"] = true
+	tt.Frame()
+	if !tt.HasText("internal/flock/flock.go") || !tt.HasText("+// wazero") {
+		t.Fatalf("changes: %q", tt.Texts())
 	}
 }

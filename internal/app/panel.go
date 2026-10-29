@@ -108,13 +108,18 @@ type panelOption struct {
 	icon      *ui.SVG
 }
 
-// panelOptions are the panels Lody offers beside a session.
-func panelOptions() []panelOption {
-	return []panelOption{
+// panelOptions are the panels Lody offers beside a session, the pull
+// request's when the session has one.
+func (a *App) panelOptions() []panelOption {
+	options := []panelOption{
 		{tabFiles, locales.PanelFiles(), iconFiles},
 		{tabChanges, locales.PanelAllChanges(), iconFileDiff},
 		{tabPreview, locales.PanelBrowser(), iconMonitorPlay},
 	}
+	if s := a.catalog.Session(a.selected); s != nil && s.LatestPR() != nil {
+		options = append(options, panelOption{tabPR, locales.PrTabTitle(), iconGitPR})
+	}
+	return options
 }
 
 // openPanel shows a panel, as a tab of its own.
@@ -148,7 +153,7 @@ func (a *App) inspector(c *ui.Context, p *palette) {
 		ui.Row(c).Height(titleBarHeight).Shrink(0).Padding(0, 8, 0, 8).Gap(2).AlignItems(ui.Center).DragWindow().
 			BorderWidth(0, 0, 1, 0).BorderColor(p.Border).Children(func() {
 			ui.Row(c).Grow(1).MinWidth(0).Gap(2).AlignItems(ui.Center).Children(func() {
-				for _, o := range panelOptions() {
+				for _, o := range a.panelOptions() {
 					if slices.Contains(in.tabs, o.id) {
 						id := o.id
 						panelTab(c, p, o.label, in.tab == id, func() { in.closePanel(id) }).OnClick(func() { in.tab = id })
@@ -158,9 +163,9 @@ func (a *App) inspector(c *ui.Context, p *palette) {
 			if in.tab == tabFiles || in.tab == tabChanges {
 				iconButton(c, p, iconRefresh, locales.Refresh(), p.Hover).OnClick(func() { a.refreshInspector(in) })
 			}
-			if len(in.tabs) < len(panelOptions()) {
+			if len(in.tabs) < len(a.panelOptions()) {
 				iconButton(c, p, iconPlus, locales.PanelAdd(), p.Hover).Menu(func(m *ui.Menu) {
-					for _, o := range panelOptions() {
+					for _, o := range a.panelOptions() {
 						if !slices.Contains(in.tabs, o.id) && m.Item(o.label).Chosen() {
 							in.openPanel(o.id)
 						}
@@ -178,6 +183,8 @@ func (a *App) inspector(c *ui.Context, p *palette) {
 				a.changesTab(c, p, in)
 			case tabPreview:
 				a.previewTab(c, p)
+			case tabPR:
+				a.prTab(c, p)
 			default:
 				a.panelChooser(c, p, in)
 			}
@@ -190,7 +197,7 @@ func (a *App) inspector(c *ui.Context, p *palette) {
 func (a *App) panelChooser(c *ui.Context, p *palette, in *inspectState) {
 	ui.Column(c).Grow(1).Justify(ui.Center).AlignItems(ui.Center).Padding(24, 12).Gap(14).Children(func() {
 		ui.Text(c, locales.PanelOpenTitle()).FontSize(sizeSub).FontWeight(600).TextColor(p.Text)
-		options := panelOptions()
+		options := a.panelOptions()
 		ui.Column(c).FillWidth().MaxWidth(328).Gap(8).Children(func() {
 			for i := 0; i < len(options); i += 2 {
 				ui.Row(c.Key(i)).FillWidth().Children(func() {

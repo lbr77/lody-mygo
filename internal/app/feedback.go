@@ -139,12 +139,14 @@ func copyButton(c *ui.Context, p *palette, key string, copiedAt *time.Time, labe
 // 120ms. An invisible copy of the tabs sizes the track; the pill, then
 // the tabs, lie over it, as what is placed absolutely lies above what
 // flows.
-func segmented(c *ui.Context, p *palette, key string, options []option, selected string, pick func(string)) {
+func segmented(c *ui.Context, p *palette, key string, options []option, selected string, pick func(string), icon ...*ui.SVG) {
 	tabLook := func(e ui.Element) ui.Element {
 		return e.Height(24).Padding(0, 10).Radius(6).Gap(6).AlignItems(ui.Center)
 	}
 	content := func(label string, ink ui.Color) {
-		ui.Icon(c, iconTerminal).Size(13, 13).TextColor(ink)
+		if len(icon) > 0 && icon[0] != nil {
+			ui.Icon(c, icon[0]).Size(13, 13).TextColor(ink)
+		}
 		ui.Text(c, label).FontSize(sizeFoot).FontWeight(500).TextColor(ink)
 	}
 	track := ui.Row(c.Key("seg-" + key)).Padding(2).Radius(8).Background(p.Text.Alpha(0.05)).AlignSelf(ui.Start)

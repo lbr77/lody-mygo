@@ -253,7 +253,7 @@ func (a *App) githubScriptsEditor(c *ui.Context, p *palette, repo workspaceRepo,
 			})
 			ui.Text(c, lead).FontSize(sizeFoot).TextColor(p.Secondary)
 		})
-		segmented(c, p, phase+"-shell", []option{{"bash", "Bash"}, {"powershell", "PowerShell"}}, e.shell, func(s string) { e.shell = s })
+		segmented(c, p, phase+"-shell", []option{{"bash", "Bash"}, {"powershell", "PowerShell"}}, e.shell, func(s string) { e.shell = s }, iconTerminal)
 		value, placeholder := &e.bash, "cp .env.example .env\npnpm install"
 		switch {
 		case e.shell == "powershell" && phase == "cleanup":

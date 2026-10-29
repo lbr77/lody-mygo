@@ -86,6 +86,7 @@ type App struct {
 	homeBoard      string               // the home board open: now, week or none
 	homeBoardShown string               // the board shown, as it folds away too
 	homeNowOpen    string               // the now list shown whole
+	prPanels       map[string]*prPanel  // pull request panels, by session and PR
 	plusLevel      string               // the "+" menu's level: "" or "mcp"
 	gitStates      map[string]*gitState // projects' Git, by project
 	quotaAsked     map[string]time.Time // when each provider's quota was last asked for
