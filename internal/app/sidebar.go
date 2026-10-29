@@ -562,12 +562,23 @@ func (a *App) footer(c *ui.Context, p *palette) {
 				}
 				ui.Text(c, label).FontSize(10).FontWeight(500).TextColor(color).Padding(1, 5).Radius(5).Background(color.Alpha(0.14)).Shrink(0).
 					Tooltip(firstNonEmpty(a.syncState.Reason, locales.PrefLocalOnly()))
-			case !a.syncState.Live && a.sync != nil:
-				label, color := locales.ConnectionSyncing(), p.SideMuted
-				if a.syncState.Reason != "" {
-					label, color = locales.Offline(), p.Danger
+			case a.sync != nil && (!a.syncState.Live || !a.synced):
+				// Lody's connection badge: connecting, reconnecting after a
+				// drop, or syncing once connected, each with the working
+				// grid turning in it.
+				label := locales.ConnLoading()
+				switch {
+				case a.syncState.Live:
+					label = locales.ConnSyncing()
+				case a.syncState.Reason != "":
+					label = locales.ConnReconnecting()
 				}
-				ui.Text(c, label).FontSize(10).FontWeight(500).TextColor(color).Padding(1, 5).Radius(5).Background(color.Alpha(0.14)).Shrink(0)
+				ink := p.Primary.Mix(p.Text, 0.5)
+				ui.Row(c.Key("conn")).Height(20).Padding(0, 6).Gap(4).Radius(5).AlignItems(ui.Center).Background(p.Primary.Alpha(0.14)).Shrink(0).
+					Label(label).Children(func() {
+					workingGrid(c, p, 12)
+					ui.Text(c, label).FontSize(sizeCaption).FontWeight(500).TextColor(ink).SingleLine()
+				})
 			}
 		})
 		popup(c, switcher, &a.workspacesOpen, func() { a.workspaceMenu(c, p) })

@@ -1829,5 +1829,8 @@
   "ctxArchive": "归档会话",
   "ctxMarkUnread": "标记为未读",
   "ctxCopyURL": "复制会话链接",
-  "ctxGoToOpener": "跳转到发起会话"
+  "ctxGoToOpener": "跳转到发起会话",
+  "connLoading": "连接中…",
+  "connReconnecting": "正在重连…",
+  "connSyncing": "正在同步工作区…"
 }

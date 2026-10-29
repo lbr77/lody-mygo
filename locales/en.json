@@ -3621,5 +3621,8 @@
   "ctxArchive": "Archive Session",
   "ctxMarkUnread": "Mark as unread",
   "ctxCopyURL": "Copy Session URL",
-  "ctxGoToOpener": "Go to Opener Session"
+  "ctxGoToOpener": "Go to Opener Session",
+  "connLoading": "Connecting…",
+  "connReconnecting": "Reconnecting…",
+  "connSyncing": "Syncing workspace…"
 }

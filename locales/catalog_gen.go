@@ -18442,3 +18442,33 @@ func CtxGoToOpener() string { return In(i18n.Locale()).CtxGoToOpener() }
 func (msgs Messages) CtxGoToOpener() string {
 	return Catalog.Format(msgs.locale, "ctxGoToOpener", nil)
 }
+
+// ConnLoading says "Connecting…"
+// in the language the app shows.
+func ConnLoading() string { return In(i18n.Locale()).ConnLoading() }
+
+// ConnLoading says "Connecting…"
+// in the language of msgs.
+func (msgs Messages) ConnLoading() string {
+	return Catalog.Format(msgs.locale, "connLoading", nil)
+}
+
+// ConnReconnecting says "Reconnecting…"
+// in the language the app shows.
+func ConnReconnecting() string { return In(i18n.Locale()).ConnReconnecting() }
+
+// ConnReconnecting says "Reconnecting…"
+// in the language of msgs.
+func (msgs Messages) ConnReconnecting() string {
+	return Catalog.Format(msgs.locale, "connReconnecting", nil)
+}
+
+// ConnSyncing says "Syncing workspace…"
+// in the language the app shows.
+func ConnSyncing() string { return In(i18n.Locale()).ConnSyncing() }
+
+// ConnSyncing says "Syncing workspace…"
+// in the language of msgs.
+func (msgs Messages) ConnSyncing() string {
+	return Catalog.Format(msgs.locale, "connSyncing", nil)
+}
