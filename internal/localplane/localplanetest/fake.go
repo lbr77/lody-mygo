@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/lbr77/lody-mygo/internal/localplane"
 )
@@ -145,6 +146,22 @@ func (d *Daemon) Updates(room localplane.Room) []Message {
 		}
 	}
 	return out
+}
+
+// WaitUpdates waits until peers sent at least n updates of a room, which
+// arrive after the sender's write returns.
+func (d *Daemon) WaitUpdates(t testing.TB, room localplane.Room, n int) []Message {
+	t.Helper()
+	deadline := time.Now().Add(5 * time.Second)
+	for {
+		if got := d.Updates(room); len(got) >= n {
+			return got
+		}
+		if time.Now().After(deadline) {
+			t.Fatalf("localplanetest: %d updates of %+v, want %d", len(d.Updates(room)), room, n)
+		}
+		time.Sleep(5 * time.Millisecond)
+	}
 }
 
 // Drop closes every connection, as a daemon going away does.

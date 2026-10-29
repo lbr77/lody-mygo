@@ -69,6 +69,7 @@ type App struct {
 	// localOnly syncs with this machine's daemon alone, never the cloud;
 	// local is its data plane connection while the daemon is up.
 	localOnly bool
+	sched     schedState // the Schedules page
 	local     *localplane.Conn
 	stopLocal context.CancelFunc
 
@@ -515,6 +516,7 @@ func (a *App) startSync(id string, local *localplane.Conn) {
 	}
 	a.sync = sync
 	sync.Start()
+	a.startSchedules(id, local)
 }
 
 func (a *App) disconnect() {
@@ -531,6 +533,8 @@ func (a *App) disconnect() {
 		a.stopLocal()
 		a.stopLocal = nil
 	}
+	a.stopSchedules()
+	a.closeSchedule()
 	a.local = nil
 	a.presence = presence.State{}
 	a.selected = ""

@@ -107,6 +107,7 @@ func (a *App) detachLocal() {
 		a.replica.Close()
 		a.replica = nil
 	}
+	a.stopSchedules()
 	a.presence = presence.State{Live: true}
 	a.syncState = catalog.State{Reason: locales.LocalDaemonAway()}
 }

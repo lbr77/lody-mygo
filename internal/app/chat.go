@@ -58,6 +58,8 @@ func (a *App) mainView(c *ui.Context, p *palette) {
 				page, key = a.archiveView, "archive"
 			case a.page == "inbox":
 				page, key = a.inboxPage, "inbox"
+			case a.page == "schedules":
+				page, key = a.schedulesPage, "schedules"
 			case a.selected == "":
 				page, key = a.homeView, "home"
 			}

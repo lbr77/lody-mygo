@@ -2840,5 +2840,282 @@
   "localDaemonAway": "Lody isn't running on this computer",
   "localChip": "Local",
   "prefLocalOnly": "Connect only to this computer's Lody",
-  "prefLocalOnlyHelp": "Sync with the Lody daemon on this computer instead of the cloud, so the app works without a network. Other machines, billing and GitHub need the cloud."
+  "prefLocalOnlyHelp": "Sync with the Lody daemon on this computer instead of the cloud, so the app works without a network. Other machines, billing and GitHub need the cloud.",
+  "schedTitle": "Schedules",
+  "schedNew": "New schedule",
+  "schedEmpty": "No schedules yet",
+  "schedEmptyHelp": "Choose a prompt and a time. Your machine will start a new chat for each run.",
+  "schedSearch": "Search schedules",
+  "schedSectionTasks": "Scheduled tasks",
+  "schedSectionMessages": "Scheduled messages",
+  "schedKindTask": "Scheduled task",
+  "schedKindMessage": "Scheduled message",
+  "schedColName": "Name",
+  "schedColResults": "Results go to",
+  "schedColSendsTo": "Sends to",
+  "schedColStatus": "Status",
+  "schedRunNow": "Run now",
+  "schedPause": "Pause",
+  "schedResume": "Resume",
+  "schedDelete": "Delete",
+  "schedOpen": "Open",
+  "schedLastRun": "Last run",
+  "schedMore": "More actions",
+  "schedSave": "Save schedule",
+  "schedSaving": "Saving…",
+  "schedDeleteTitle": "Delete “{title}”?",
+  "@schedDeleteTitle": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "schedDeleteHelp": "Future runs stop and the schedule is removed. Chats it already started are kept.",
+  "schedRunStarted": "Run requested for “{title}”.",
+  "@schedRunStarted": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "schedName": "Name",
+  "schedNamePlaceholder": "Name this scheduled task",
+  "schedPrompt": "What should the Agent do?",
+  "schedPromptPlaceholder": "What should the agent do on every run? For example: review yesterday’s commits and summarise anything that looks risky.",
+  "schedTrigger": "Trigger",
+  "schedTimed": "On a schedule",
+  "schedManual": "Manual",
+  "schedManualHelp": "Runs only when you press Run. Keep the prompt and target ready for whenever you need it.",
+  "schedRepeat": "Repeat",
+  "schedRepeatDaily": "Every day",
+  "schedRepeatWeekdays": "Every weekday",
+  "schedRepeatWeekly": "Every week",
+  "schedRepeatMonthly": "Every month",
+  "schedRepeatHours": "Every few hours",
+  "schedRepeatMinutes": "Every few minutes",
+  "schedRepeatOnce": "Once",
+  "schedEvery": "Every",
+  "schedOn": "On",
+  "schedOnDays": "On days",
+  "schedAt": "At",
+  "schedRunAt": "Run at",
+  "schedReplace": "Replace",
+  "schedUnsupportedHint": "This rule was created with an older version and can no longer be edited here. Replace it to change it.",
+  "schedNextRuns": "Next runs",
+  "schedNoFuture": "No future run under this rule.",
+  "schedMachineClock": "{machine} time",
+  "@schedMachineClock": {
+    "placeholders": {
+      "machine": {
+        "type": "String"
+      }
+    }
+  },
+  "schedInvalidTime": "Check the time rule and time zone.",
+  "schedRequireName": "Enter a schedule name.",
+  "schedRequirePrompt": "Describe what the Agent should do.",
+  "schedRequireWeekday": "Choose at least one day of the week.",
+  "schedRequireMonthDay": "Choose at least one day of the month.",
+  "schedRequireAgent": "Choose a machine and an Agent.",
+  "schedFixMarked": "Fix the marked items to save.",
+  "schedSumDaily": "Every day at {time}",
+  "@schedSumDaily": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "schedSumWeekdays": "Every weekday at {time}",
+  "@schedSumWeekdays": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "schedSumWeekly": "Every {days} at {time}",
+  "@schedSumWeekly": {
+    "placeholders": {
+      "days": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "schedSumMonthly": "Day {day} of every month at {time}",
+  "@schedSumMonthly": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "schedSumInterval": "Every {duration}",
+  "@schedSumInterval": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "schedSumOnce": "Once, on {time}",
+  "@schedSumOnce": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "schedSumUnsupported": "Advanced rule ({rule})",
+  "@schedSumUnsupported": {
+    "placeholders": {
+      "rule": {
+        "type": "String"
+      }
+    }
+  },
+  "schedMinutes": "{count} minutes",
+  "@schedMinutes": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "schedMinute": "{count} minute",
+  "@schedMinute": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "schedHours": "{count} hours",
+  "@schedHours": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "schedHour": "{count} hour",
+  "@schedHour": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "schedDestNew": "New chat each run",
+  "schedDestOwn": "One chat for this task",
+  "schedDestExisting": "An existing chat",
+  "schedDestStartNew": "Start a new chat",
+  "schedDestNotCreated": "Not created yet",
+  "schedDestChoose": "Choose a chat",
+  "schedDestNoChats": "No chats found",
+  "schedSendTo": "Send to",
+  "schedChatOnly": "Chat only",
+  "schedPaused": "Paused",
+  "schedEnabled": "Enabled",
+  "schedRunsAt": "Runs {time}",
+  "@schedRunsAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "schedRunManually": "Run manually",
+  "schedLastRan": "Last ran {time}",
+  "@schedLastRan": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "schedDone": "Done",
+  "schedSent": "Sent",
+  "schedCancelled": "Cancelled",
+  "schedNotSent": "Not sent",
+  "schedSendsAt": "Sends {time}",
+  "@schedSendsAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "schedCancelling": "Cancelling…",
+  "schedStateDue": "Due",
+  "schedStateWaiting": "Waiting for Agent",
+  "schedStateBlocked": "Needs attention",
+  "schedStateRetrying": "Retrying dispatch",
+  "schedNotScheduled": "Not scheduled yet",
+  "schedAwaitingMachine": "Waiting for the machine to check the schedule",
+  "schedHistory": "Run history",
+  "schedTabSettings": "Settings",
+  "schedRunNumber": "Run {count}",
+  "@schedRunNumber": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "schedHistoryEmpty": "No runs yet. Each run will appear here.",
+  "schedAllInChat": "Every run goes to",
+  "schedOpenChatPlain": "Open chat",
+  "schedCountChats": "{count} chats",
+  "@schedCountChats": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "schedMachineOffline": "{machine} offline",
+  "@schedMachineOffline": {
+    "placeholders": {
+      "machine": {
+        "type": "String"
+      }
+    }
+  },
+  "schedOpenChat": "Open chat “{title}”",
+  "@schedOpenChat": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "schedOwnerOnly": "Only the schedule owner can save changes.",
+  "schedErrNotCommitted": "Waiting for the schedule configuration to finish syncing.",
+  "schedFilterProject": "Project",
+  "schedFilterStatus": "Status",
+  "schedAllProjects": "All projects",
+  "schedNoProject": "No project (chat only)",
+  "schedAllStatuses": "All statuses",
+  "schedFilterActive": "Active",
+  "schedFilterEnded": "Finished",
+  "schedSortNext": "Next run",
+  "schedSortRecent": "Last run",
+  "schedSortName": "Name",
+  "schedSortNewest": "Newest",
+  "schedRunning": "Running",
+  "schedOpenRun": "Open run",
+  "schedLoadError": "Schedules could not be loaded.",
+  "schedSyncError": "Schedules could not be synced. Showing saved tasks.",
+  "schedAgent": "Agent",
+  "schedProject": "Project",
+  "schedWorktree": "Use a worktree"
 }

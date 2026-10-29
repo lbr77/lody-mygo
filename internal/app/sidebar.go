@@ -188,6 +188,8 @@ func (a *App) sidebar(c *ui.Context, p *palette) ui.Element {
 			if navRow(c, p, iconNewChat, locales.NewChat(), a.selected == "" && a.page == "").Clicked() {
 				a.open("")
 			}
+			// Schedules sits under New chat, as Lody's.
+			navRow(c, p, iconListTodo, locales.SchedTitle(), a.page == "schedules").OnClick(func() { a.page = "schedules" })
 			// Search opens the ⌘K palette, as Lody's.
 			navRow(c, p, iconSearch, locales.Search(), a.palette.open).OnClick(func() { a.setPaletteOpen(true) })
 			navRowCount(c, p, iconInbox, locales.Inbox(), a.page == "inbox", a.inboxUnread()).OnClick(func() {

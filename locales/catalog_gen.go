@@ -14280,3 +14280,1249 @@ func PrefLocalOnlyHelp() string { return In(i18n.Locale()).PrefLocalOnlyHelp() }
 func (msgs Messages) PrefLocalOnlyHelp() string {
 	return Catalog.Format(msgs.locale, "prefLocalOnlyHelp", nil)
 }
+
+// SchedTitle says "Schedules"
+// in the language the app shows.
+func SchedTitle() string { return In(i18n.Locale()).SchedTitle() }
+
+// SchedTitle says "Schedules"
+// in the language of msgs.
+func (msgs Messages) SchedTitle() string {
+	return Catalog.Format(msgs.locale, "schedTitle", nil)
+}
+
+// SchedNew says "New schedule"
+// in the language the app shows.
+func SchedNew() string { return In(i18n.Locale()).SchedNew() }
+
+// SchedNew says "New schedule"
+// in the language of msgs.
+func (msgs Messages) SchedNew() string {
+	return Catalog.Format(msgs.locale, "schedNew", nil)
+}
+
+// SchedEmpty says "No schedules yet"
+// in the language the app shows.
+func SchedEmpty() string { return In(i18n.Locale()).SchedEmpty() }
+
+// SchedEmpty says "No schedules yet"
+// in the language of msgs.
+func (msgs Messages) SchedEmpty() string {
+	return Catalog.Format(msgs.locale, "schedEmpty", nil)
+}
+
+// SchedEmptyHelp says "Choose a prompt and a time. Your machine will start a new chat for each run."
+// in the language the app shows.
+func SchedEmptyHelp() string { return In(i18n.Locale()).SchedEmptyHelp() }
+
+// SchedEmptyHelp says "Choose a prompt and a time. Your machine will start a new chat for each run."
+// in the language of msgs.
+func (msgs Messages) SchedEmptyHelp() string {
+	return Catalog.Format(msgs.locale, "schedEmptyHelp", nil)
+}
+
+// SchedSearch says "Search schedules"
+// in the language the app shows.
+func SchedSearch() string { return In(i18n.Locale()).SchedSearch() }
+
+// SchedSearch says "Search schedules"
+// in the language of msgs.
+func (msgs Messages) SchedSearch() string {
+	return Catalog.Format(msgs.locale, "schedSearch", nil)
+}
+
+// SchedSectionTasks says "Scheduled tasks"
+// in the language the app shows.
+func SchedSectionTasks() string { return In(i18n.Locale()).SchedSectionTasks() }
+
+// SchedSectionTasks says "Scheduled tasks"
+// in the language of msgs.
+func (msgs Messages) SchedSectionTasks() string {
+	return Catalog.Format(msgs.locale, "schedSectionTasks", nil)
+}
+
+// SchedSectionMessages says "Scheduled messages"
+// in the language the app shows.
+func SchedSectionMessages() string { return In(i18n.Locale()).SchedSectionMessages() }
+
+// SchedSectionMessages says "Scheduled messages"
+// in the language of msgs.
+func (msgs Messages) SchedSectionMessages() string {
+	return Catalog.Format(msgs.locale, "schedSectionMessages", nil)
+}
+
+// SchedKindTask says "Scheduled task"
+// in the language the app shows.
+func SchedKindTask() string { return In(i18n.Locale()).SchedKindTask() }
+
+// SchedKindTask says "Scheduled task"
+// in the language of msgs.
+func (msgs Messages) SchedKindTask() string {
+	return Catalog.Format(msgs.locale, "schedKindTask", nil)
+}
+
+// SchedKindMessage says "Scheduled message"
+// in the language the app shows.
+func SchedKindMessage() string { return In(i18n.Locale()).SchedKindMessage() }
+
+// SchedKindMessage says "Scheduled message"
+// in the language of msgs.
+func (msgs Messages) SchedKindMessage() string {
+	return Catalog.Format(msgs.locale, "schedKindMessage", nil)
+}
+
+// SchedColName says "Name"
+// in the language the app shows.
+func SchedColName() string { return In(i18n.Locale()).SchedColName() }
+
+// SchedColName says "Name"
+// in the language of msgs.
+func (msgs Messages) SchedColName() string {
+	return Catalog.Format(msgs.locale, "schedColName", nil)
+}
+
+// SchedColResults says "Results go to"
+// in the language the app shows.
+func SchedColResults() string { return In(i18n.Locale()).SchedColResults() }
+
+// SchedColResults says "Results go to"
+// in the language of msgs.
+func (msgs Messages) SchedColResults() string {
+	return Catalog.Format(msgs.locale, "schedColResults", nil)
+}
+
+// SchedColSendsTo says "Sends to"
+// in the language the app shows.
+func SchedColSendsTo() string { return In(i18n.Locale()).SchedColSendsTo() }
+
+// SchedColSendsTo says "Sends to"
+// in the language of msgs.
+func (msgs Messages) SchedColSendsTo() string {
+	return Catalog.Format(msgs.locale, "schedColSendsTo", nil)
+}
+
+// SchedColStatus says "Status"
+// in the language the app shows.
+func SchedColStatus() string { return In(i18n.Locale()).SchedColStatus() }
+
+// SchedColStatus says "Status"
+// in the language of msgs.
+func (msgs Messages) SchedColStatus() string {
+	return Catalog.Format(msgs.locale, "schedColStatus", nil)
+}
+
+// SchedRunNow says "Run now"
+// in the language the app shows.
+func SchedRunNow() string { return In(i18n.Locale()).SchedRunNow() }
+
+// SchedRunNow says "Run now"
+// in the language of msgs.
+func (msgs Messages) SchedRunNow() string {
+	return Catalog.Format(msgs.locale, "schedRunNow", nil)
+}
+
+// SchedPause says "Pause"
+// in the language the app shows.
+func SchedPause() string { return In(i18n.Locale()).SchedPause() }
+
+// SchedPause says "Pause"
+// in the language of msgs.
+func (msgs Messages) SchedPause() string {
+	return Catalog.Format(msgs.locale, "schedPause", nil)
+}
+
+// SchedResume says "Resume"
+// in the language the app shows.
+func SchedResume() string { return In(i18n.Locale()).SchedResume() }
+
+// SchedResume says "Resume"
+// in the language of msgs.
+func (msgs Messages) SchedResume() string {
+	return Catalog.Format(msgs.locale, "schedResume", nil)
+}
+
+// SchedDelete says "Delete"
+// in the language the app shows.
+func SchedDelete() string { return In(i18n.Locale()).SchedDelete() }
+
+// SchedDelete says "Delete"
+// in the language of msgs.
+func (msgs Messages) SchedDelete() string {
+	return Catalog.Format(msgs.locale, "schedDelete", nil)
+}
+
+// SchedOpen says "Open"
+// in the language the app shows.
+func SchedOpen() string { return In(i18n.Locale()).SchedOpen() }
+
+// SchedOpen says "Open"
+// in the language of msgs.
+func (msgs Messages) SchedOpen() string {
+	return Catalog.Format(msgs.locale, "schedOpen", nil)
+}
+
+// SchedLastRun says "Last run"
+// in the language the app shows.
+func SchedLastRun() string { return In(i18n.Locale()).SchedLastRun() }
+
+// SchedLastRun says "Last run"
+// in the language of msgs.
+func (msgs Messages) SchedLastRun() string {
+	return Catalog.Format(msgs.locale, "schedLastRun", nil)
+}
+
+// SchedMore says "More actions"
+// in the language the app shows.
+func SchedMore() string { return In(i18n.Locale()).SchedMore() }
+
+// SchedMore says "More actions"
+// in the language of msgs.
+func (msgs Messages) SchedMore() string {
+	return Catalog.Format(msgs.locale, "schedMore", nil)
+}
+
+// SchedSave says "Save schedule"
+// in the language the app shows.
+func SchedSave() string { return In(i18n.Locale()).SchedSave() }
+
+// SchedSave says "Save schedule"
+// in the language of msgs.
+func (msgs Messages) SchedSave() string {
+	return Catalog.Format(msgs.locale, "schedSave", nil)
+}
+
+// SchedSaving says "Saving…"
+// in the language the app shows.
+func SchedSaving() string { return In(i18n.Locale()).SchedSaving() }
+
+// SchedSaving says "Saving…"
+// in the language of msgs.
+func (msgs Messages) SchedSaving() string {
+	return Catalog.Format(msgs.locale, "schedSaving", nil)
+}
+
+// SchedDeleteTitle says "Delete “{title}”?"
+// in the language the app shows.
+func SchedDeleteTitle(title string) string { return In(i18n.Locale()).SchedDeleteTitle(title) }
+
+// SchedDeleteTitle says "Delete “{title}”?"
+// in the language of msgs.
+func (msgs Messages) SchedDeleteTitle(title string) string {
+	return Catalog.Format(msgs.locale, "schedDeleteTitle", map[string]any{"title": title})
+}
+
+// SchedDeleteHelp says "Future runs stop and the schedule is removed. Chats it already started are kept."
+// in the language the app shows.
+func SchedDeleteHelp() string { return In(i18n.Locale()).SchedDeleteHelp() }
+
+// SchedDeleteHelp says "Future runs stop and the schedule is removed. Chats it already started are kept."
+// in the language of msgs.
+func (msgs Messages) SchedDeleteHelp() string {
+	return Catalog.Format(msgs.locale, "schedDeleteHelp", nil)
+}
+
+// SchedRunStarted says "Run requested for “{title}”."
+// in the language the app shows.
+func SchedRunStarted(title string) string { return In(i18n.Locale()).SchedRunStarted(title) }
+
+// SchedRunStarted says "Run requested for “{title}”."
+// in the language of msgs.
+func (msgs Messages) SchedRunStarted(title string) string {
+	return Catalog.Format(msgs.locale, "schedRunStarted", map[string]any{"title": title})
+}
+
+// SchedName says "Name"
+// in the language the app shows.
+func SchedName() string { return In(i18n.Locale()).SchedName() }
+
+// SchedName says "Name"
+// in the language of msgs.
+func (msgs Messages) SchedName() string {
+	return Catalog.Format(msgs.locale, "schedName", nil)
+}
+
+// SchedNamePlaceholder says "Name this scheduled task"
+// in the language the app shows.
+func SchedNamePlaceholder() string { return In(i18n.Locale()).SchedNamePlaceholder() }
+
+// SchedNamePlaceholder says "Name this scheduled task"
+// in the language of msgs.
+func (msgs Messages) SchedNamePlaceholder() string {
+	return Catalog.Format(msgs.locale, "schedNamePlaceholder", nil)
+}
+
+// SchedPrompt says "What should the Agent do?"
+// in the language the app shows.
+func SchedPrompt() string { return In(i18n.Locale()).SchedPrompt() }
+
+// SchedPrompt says "What should the Agent do?"
+// in the language of msgs.
+func (msgs Messages) SchedPrompt() string {
+	return Catalog.Format(msgs.locale, "schedPrompt", nil)
+}
+
+// SchedPromptPlaceholder says "What should the agent do on every run? For example: review yesterday’s commits and summarise anything that looks ri…"
+// in the language the app shows.
+func SchedPromptPlaceholder() string { return In(i18n.Locale()).SchedPromptPlaceholder() }
+
+// SchedPromptPlaceholder says "What should the agent do on every run? For example: review yesterday’s commits and summarise anything that looks ri…"
+// in the language of msgs.
+func (msgs Messages) SchedPromptPlaceholder() string {
+	return Catalog.Format(msgs.locale, "schedPromptPlaceholder", nil)
+}
+
+// SchedTrigger says "Trigger"
+// in the language the app shows.
+func SchedTrigger() string { return In(i18n.Locale()).SchedTrigger() }
+
+// SchedTrigger says "Trigger"
+// in the language of msgs.
+func (msgs Messages) SchedTrigger() string {
+	return Catalog.Format(msgs.locale, "schedTrigger", nil)
+}
+
+// SchedTimed says "On a schedule"
+// in the language the app shows.
+func SchedTimed() string { return In(i18n.Locale()).SchedTimed() }
+
+// SchedTimed says "On a schedule"
+// in the language of msgs.
+func (msgs Messages) SchedTimed() string {
+	return Catalog.Format(msgs.locale, "schedTimed", nil)
+}
+
+// SchedManual says "Manual"
+// in the language the app shows.
+func SchedManual() string { return In(i18n.Locale()).SchedManual() }
+
+// SchedManual says "Manual"
+// in the language of msgs.
+func (msgs Messages) SchedManual() string {
+	return Catalog.Format(msgs.locale, "schedManual", nil)
+}
+
+// SchedManualHelp says "Runs only when you press Run. Keep the prompt and target ready for whenever you need it."
+// in the language the app shows.
+func SchedManualHelp() string { return In(i18n.Locale()).SchedManualHelp() }
+
+// SchedManualHelp says "Runs only when you press Run. Keep the prompt and target ready for whenever you need it."
+// in the language of msgs.
+func (msgs Messages) SchedManualHelp() string {
+	return Catalog.Format(msgs.locale, "schedManualHelp", nil)
+}
+
+// SchedRepeat says "Repeat"
+// in the language the app shows.
+func SchedRepeat() string { return In(i18n.Locale()).SchedRepeat() }
+
+// SchedRepeat says "Repeat"
+// in the language of msgs.
+func (msgs Messages) SchedRepeat() string {
+	return Catalog.Format(msgs.locale, "schedRepeat", nil)
+}
+
+// SchedRepeatDaily says "Every day"
+// in the language the app shows.
+func SchedRepeatDaily() string { return In(i18n.Locale()).SchedRepeatDaily() }
+
+// SchedRepeatDaily says "Every day"
+// in the language of msgs.
+func (msgs Messages) SchedRepeatDaily() string {
+	return Catalog.Format(msgs.locale, "schedRepeatDaily", nil)
+}
+
+// SchedRepeatWeekdays says "Every weekday"
+// in the language the app shows.
+func SchedRepeatWeekdays() string { return In(i18n.Locale()).SchedRepeatWeekdays() }
+
+// SchedRepeatWeekdays says "Every weekday"
+// in the language of msgs.
+func (msgs Messages) SchedRepeatWeekdays() string {
+	return Catalog.Format(msgs.locale, "schedRepeatWeekdays", nil)
+}
+
+// SchedRepeatWeekly says "Every week"
+// in the language the app shows.
+func SchedRepeatWeekly() string { return In(i18n.Locale()).SchedRepeatWeekly() }
+
+// SchedRepeatWeekly says "Every week"
+// in the language of msgs.
+func (msgs Messages) SchedRepeatWeekly() string {
+	return Catalog.Format(msgs.locale, "schedRepeatWeekly", nil)
+}
+
+// SchedRepeatMonthly says "Every month"
+// in the language the app shows.
+func SchedRepeatMonthly() string { return In(i18n.Locale()).SchedRepeatMonthly() }
+
+// SchedRepeatMonthly says "Every month"
+// in the language of msgs.
+func (msgs Messages) SchedRepeatMonthly() string {
+	return Catalog.Format(msgs.locale, "schedRepeatMonthly", nil)
+}
+
+// SchedRepeatHours says "Every few hours"
+// in the language the app shows.
+func SchedRepeatHours() string { return In(i18n.Locale()).SchedRepeatHours() }
+
+// SchedRepeatHours says "Every few hours"
+// in the language of msgs.
+func (msgs Messages) SchedRepeatHours() string {
+	return Catalog.Format(msgs.locale, "schedRepeatHours", nil)
+}
+
+// SchedRepeatMinutes says "Every few minutes"
+// in the language the app shows.
+func SchedRepeatMinutes() string { return In(i18n.Locale()).SchedRepeatMinutes() }
+
+// SchedRepeatMinutes says "Every few minutes"
+// in the language of msgs.
+func (msgs Messages) SchedRepeatMinutes() string {
+	return Catalog.Format(msgs.locale, "schedRepeatMinutes", nil)
+}
+
+// SchedRepeatOnce says "Once"
+// in the language the app shows.
+func SchedRepeatOnce() string { return In(i18n.Locale()).SchedRepeatOnce() }
+
+// SchedRepeatOnce says "Once"
+// in the language of msgs.
+func (msgs Messages) SchedRepeatOnce() string {
+	return Catalog.Format(msgs.locale, "schedRepeatOnce", nil)
+}
+
+// SchedEvery says "Every"
+// in the language the app shows.
+func SchedEvery() string { return In(i18n.Locale()).SchedEvery() }
+
+// SchedEvery says "Every"
+// in the language of msgs.
+func (msgs Messages) SchedEvery() string {
+	return Catalog.Format(msgs.locale, "schedEvery", nil)
+}
+
+// SchedOn says "On"
+// in the language the app shows.
+func SchedOn() string { return In(i18n.Locale()).SchedOn() }
+
+// SchedOn says "On"
+// in the language of msgs.
+func (msgs Messages) SchedOn() string {
+	return Catalog.Format(msgs.locale, "schedOn", nil)
+}
+
+// SchedOnDays says "On days"
+// in the language the app shows.
+func SchedOnDays() string { return In(i18n.Locale()).SchedOnDays() }
+
+// SchedOnDays says "On days"
+// in the language of msgs.
+func (msgs Messages) SchedOnDays() string {
+	return Catalog.Format(msgs.locale, "schedOnDays", nil)
+}
+
+// SchedAt says "At"
+// in the language the app shows.
+func SchedAt() string { return In(i18n.Locale()).SchedAt() }
+
+// SchedAt says "At"
+// in the language of msgs.
+func (msgs Messages) SchedAt() string {
+	return Catalog.Format(msgs.locale, "schedAt", nil)
+}
+
+// SchedRunAt says "Run at"
+// in the language the app shows.
+func SchedRunAt() string { return In(i18n.Locale()).SchedRunAt() }
+
+// SchedRunAt says "Run at"
+// in the language of msgs.
+func (msgs Messages) SchedRunAt() string {
+	return Catalog.Format(msgs.locale, "schedRunAt", nil)
+}
+
+// SchedReplace says "Replace"
+// in the language the app shows.
+func SchedReplace() string { return In(i18n.Locale()).SchedReplace() }
+
+// SchedReplace says "Replace"
+// in the language of msgs.
+func (msgs Messages) SchedReplace() string {
+	return Catalog.Format(msgs.locale, "schedReplace", nil)
+}
+
+// SchedUnsupportedHint says "This rule was created with an older version and can no longer be edited here. Replace it to change it."
+// in the language the app shows.
+func SchedUnsupportedHint() string { return In(i18n.Locale()).SchedUnsupportedHint() }
+
+// SchedUnsupportedHint says "This rule was created with an older version and can no longer be edited here. Replace it to change it."
+// in the language of msgs.
+func (msgs Messages) SchedUnsupportedHint() string {
+	return Catalog.Format(msgs.locale, "schedUnsupportedHint", nil)
+}
+
+// SchedNextRuns says "Next runs"
+// in the language the app shows.
+func SchedNextRuns() string { return In(i18n.Locale()).SchedNextRuns() }
+
+// SchedNextRuns says "Next runs"
+// in the language of msgs.
+func (msgs Messages) SchedNextRuns() string {
+	return Catalog.Format(msgs.locale, "schedNextRuns", nil)
+}
+
+// SchedNoFuture says "No future run under this rule."
+// in the language the app shows.
+func SchedNoFuture() string { return In(i18n.Locale()).SchedNoFuture() }
+
+// SchedNoFuture says "No future run under this rule."
+// in the language of msgs.
+func (msgs Messages) SchedNoFuture() string {
+	return Catalog.Format(msgs.locale, "schedNoFuture", nil)
+}
+
+// SchedMachineClock says "{machine} time"
+// in the language the app shows.
+func SchedMachineClock(machine string) string { return In(i18n.Locale()).SchedMachineClock(machine) }
+
+// SchedMachineClock says "{machine} time"
+// in the language of msgs.
+func (msgs Messages) SchedMachineClock(machine string) string {
+	return Catalog.Format(msgs.locale, "schedMachineClock", map[string]any{"machine": machine})
+}
+
+// SchedInvalidTime says "Check the time rule and time zone."
+// in the language the app shows.
+func SchedInvalidTime() string { return In(i18n.Locale()).SchedInvalidTime() }
+
+// SchedInvalidTime says "Check the time rule and time zone."
+// in the language of msgs.
+func (msgs Messages) SchedInvalidTime() string {
+	return Catalog.Format(msgs.locale, "schedInvalidTime", nil)
+}
+
+// SchedRequireName says "Enter a schedule name."
+// in the language the app shows.
+func SchedRequireName() string { return In(i18n.Locale()).SchedRequireName() }
+
+// SchedRequireName says "Enter a schedule name."
+// in the language of msgs.
+func (msgs Messages) SchedRequireName() string {
+	return Catalog.Format(msgs.locale, "schedRequireName", nil)
+}
+
+// SchedRequirePrompt says "Describe what the Agent should do."
+// in the language the app shows.
+func SchedRequirePrompt() string { return In(i18n.Locale()).SchedRequirePrompt() }
+
+// SchedRequirePrompt says "Describe what the Agent should do."
+// in the language of msgs.
+func (msgs Messages) SchedRequirePrompt() string {
+	return Catalog.Format(msgs.locale, "schedRequirePrompt", nil)
+}
+
+// SchedRequireWeekday says "Choose at least one day of the week."
+// in the language the app shows.
+func SchedRequireWeekday() string { return In(i18n.Locale()).SchedRequireWeekday() }
+
+// SchedRequireWeekday says "Choose at least one day of the week."
+// in the language of msgs.
+func (msgs Messages) SchedRequireWeekday() string {
+	return Catalog.Format(msgs.locale, "schedRequireWeekday", nil)
+}
+
+// SchedRequireMonthDay says "Choose at least one day of the month."
+// in the language the app shows.
+func SchedRequireMonthDay() string { return In(i18n.Locale()).SchedRequireMonthDay() }
+
+// SchedRequireMonthDay says "Choose at least one day of the month."
+// in the language of msgs.
+func (msgs Messages) SchedRequireMonthDay() string {
+	return Catalog.Format(msgs.locale, "schedRequireMonthDay", nil)
+}
+
+// SchedRequireAgent says "Choose a machine and an Agent."
+// in the language the app shows.
+func SchedRequireAgent() string { return In(i18n.Locale()).SchedRequireAgent() }
+
+// SchedRequireAgent says "Choose a machine and an Agent."
+// in the language of msgs.
+func (msgs Messages) SchedRequireAgent() string {
+	return Catalog.Format(msgs.locale, "schedRequireAgent", nil)
+}
+
+// SchedFixMarked says "Fix the marked items to save."
+// in the language the app shows.
+func SchedFixMarked() string { return In(i18n.Locale()).SchedFixMarked() }
+
+// SchedFixMarked says "Fix the marked items to save."
+// in the language of msgs.
+func (msgs Messages) SchedFixMarked() string {
+	return Catalog.Format(msgs.locale, "schedFixMarked", nil)
+}
+
+// SchedSumDaily says "Every day at {time}"
+// in the language the app shows.
+func SchedSumDaily(time_ string) string { return In(i18n.Locale()).SchedSumDaily(time_) }
+
+// SchedSumDaily says "Every day at {time}"
+// in the language of msgs.
+func (msgs Messages) SchedSumDaily(time_ string) string {
+	return Catalog.Format(msgs.locale, "schedSumDaily", map[string]any{"time": time_})
+}
+
+// SchedSumWeekdays says "Every weekday at {time}"
+// in the language the app shows.
+func SchedSumWeekdays(time_ string) string { return In(i18n.Locale()).SchedSumWeekdays(time_) }
+
+// SchedSumWeekdays says "Every weekday at {time}"
+// in the language of msgs.
+func (msgs Messages) SchedSumWeekdays(time_ string) string {
+	return Catalog.Format(msgs.locale, "schedSumWeekdays", map[string]any{"time": time_})
+}
+
+// SchedSumWeekly says "Every {days} at {time}"
+// in the language the app shows.
+func SchedSumWeekly(days string, time_ string) string {
+	return In(i18n.Locale()).SchedSumWeekly(days, time_)
+}
+
+// SchedSumWeekly says "Every {days} at {time}"
+// in the language of msgs.
+func (msgs Messages) SchedSumWeekly(days string, time_ string) string {
+	return Catalog.Format(msgs.locale, "schedSumWeekly", map[string]any{"days": days, "time": time_})
+}
+
+// SchedSumMonthly says "Day {day} of every month at {time}"
+// in the language the app shows.
+func SchedSumMonthly(day string, time_ string) string {
+	return In(i18n.Locale()).SchedSumMonthly(day, time_)
+}
+
+// SchedSumMonthly says "Day {day} of every month at {time}"
+// in the language of msgs.
+func (msgs Messages) SchedSumMonthly(day string, time_ string) string {
+	return Catalog.Format(msgs.locale, "schedSumMonthly", map[string]any{"day": day, "time": time_})
+}
+
+// SchedSumInterval says "Every {duration}"
+// in the language the app shows.
+func SchedSumInterval(duration string) string { return In(i18n.Locale()).SchedSumInterval(duration) }
+
+// SchedSumInterval says "Every {duration}"
+// in the language of msgs.
+func (msgs Messages) SchedSumInterval(duration string) string {
+	return Catalog.Format(msgs.locale, "schedSumInterval", map[string]any{"duration": duration})
+}
+
+// SchedSumOnce says "Once, on {time}"
+// in the language the app shows.
+func SchedSumOnce(time_ string) string { return In(i18n.Locale()).SchedSumOnce(time_) }
+
+// SchedSumOnce says "Once, on {time}"
+// in the language of msgs.
+func (msgs Messages) SchedSumOnce(time_ string) string {
+	return Catalog.Format(msgs.locale, "schedSumOnce", map[string]any{"time": time_})
+}
+
+// SchedSumUnsupported says "Advanced rule ({rule})"
+// in the language the app shows.
+func SchedSumUnsupported(rule string) string { return In(i18n.Locale()).SchedSumUnsupported(rule) }
+
+// SchedSumUnsupported says "Advanced rule ({rule})"
+// in the language of msgs.
+func (msgs Messages) SchedSumUnsupported(rule string) string {
+	return Catalog.Format(msgs.locale, "schedSumUnsupported", map[string]any{"rule": rule})
+}
+
+// SchedMinutes says "{count} minutes"
+// in the language the app shows.
+func SchedMinutes(count string) string { return In(i18n.Locale()).SchedMinutes(count) }
+
+// SchedMinutes says "{count} minutes"
+// in the language of msgs.
+func (msgs Messages) SchedMinutes(count string) string {
+	return Catalog.Format(msgs.locale, "schedMinutes", map[string]any{"count": count})
+}
+
+// SchedMinute says "{count} minute"
+// in the language the app shows.
+func SchedMinute(count string) string { return In(i18n.Locale()).SchedMinute(count) }
+
+// SchedMinute says "{count} minute"
+// in the language of msgs.
+func (msgs Messages) SchedMinute(count string) string {
+	return Catalog.Format(msgs.locale, "schedMinute", map[string]any{"count": count})
+}
+
+// SchedHours says "{count} hours"
+// in the language the app shows.
+func SchedHours(count string) string { return In(i18n.Locale()).SchedHours(count) }
+
+// SchedHours says "{count} hours"
+// in the language of msgs.
+func (msgs Messages) SchedHours(count string) string {
+	return Catalog.Format(msgs.locale, "schedHours", map[string]any{"count": count})
+}
+
+// SchedHour says "{count} hour"
+// in the language the app shows.
+func SchedHour(count string) string { return In(i18n.Locale()).SchedHour(count) }
+
+// SchedHour says "{count} hour"
+// in the language of msgs.
+func (msgs Messages) SchedHour(count string) string {
+	return Catalog.Format(msgs.locale, "schedHour", map[string]any{"count": count})
+}
+
+// SchedDestNew says "New chat each run"
+// in the language the app shows.
+func SchedDestNew() string { return In(i18n.Locale()).SchedDestNew() }
+
+// SchedDestNew says "New chat each run"
+// in the language of msgs.
+func (msgs Messages) SchedDestNew() string {
+	return Catalog.Format(msgs.locale, "schedDestNew", nil)
+}
+
+// SchedDestOwn says "One chat for this task"
+// in the language the app shows.
+func SchedDestOwn() string { return In(i18n.Locale()).SchedDestOwn() }
+
+// SchedDestOwn says "One chat for this task"
+// in the language of msgs.
+func (msgs Messages) SchedDestOwn() string {
+	return Catalog.Format(msgs.locale, "schedDestOwn", nil)
+}
+
+// SchedDestExisting says "An existing chat"
+// in the language the app shows.
+func SchedDestExisting() string { return In(i18n.Locale()).SchedDestExisting() }
+
+// SchedDestExisting says "An existing chat"
+// in the language of msgs.
+func (msgs Messages) SchedDestExisting() string {
+	return Catalog.Format(msgs.locale, "schedDestExisting", nil)
+}
+
+// SchedDestStartNew says "Start a new chat"
+// in the language the app shows.
+func SchedDestStartNew() string { return In(i18n.Locale()).SchedDestStartNew() }
+
+// SchedDestStartNew says "Start a new chat"
+// in the language of msgs.
+func (msgs Messages) SchedDestStartNew() string {
+	return Catalog.Format(msgs.locale, "schedDestStartNew", nil)
+}
+
+// SchedDestNotCreated says "Not created yet"
+// in the language the app shows.
+func SchedDestNotCreated() string { return In(i18n.Locale()).SchedDestNotCreated() }
+
+// SchedDestNotCreated says "Not created yet"
+// in the language of msgs.
+func (msgs Messages) SchedDestNotCreated() string {
+	return Catalog.Format(msgs.locale, "schedDestNotCreated", nil)
+}
+
+// SchedDestChoose says "Choose a chat"
+// in the language the app shows.
+func SchedDestChoose() string { return In(i18n.Locale()).SchedDestChoose() }
+
+// SchedDestChoose says "Choose a chat"
+// in the language of msgs.
+func (msgs Messages) SchedDestChoose() string {
+	return Catalog.Format(msgs.locale, "schedDestChoose", nil)
+}
+
+// SchedDestNoChats says "No chats found"
+// in the language the app shows.
+func SchedDestNoChats() string { return In(i18n.Locale()).SchedDestNoChats() }
+
+// SchedDestNoChats says "No chats found"
+// in the language of msgs.
+func (msgs Messages) SchedDestNoChats() string {
+	return Catalog.Format(msgs.locale, "schedDestNoChats", nil)
+}
+
+// SchedSendTo says "Send to"
+// in the language the app shows.
+func SchedSendTo() string { return In(i18n.Locale()).SchedSendTo() }
+
+// SchedSendTo says "Send to"
+// in the language of msgs.
+func (msgs Messages) SchedSendTo() string {
+	return Catalog.Format(msgs.locale, "schedSendTo", nil)
+}
+
+// SchedChatOnly says "Chat only"
+// in the language the app shows.
+func SchedChatOnly() string { return In(i18n.Locale()).SchedChatOnly() }
+
+// SchedChatOnly says "Chat only"
+// in the language of msgs.
+func (msgs Messages) SchedChatOnly() string {
+	return Catalog.Format(msgs.locale, "schedChatOnly", nil)
+}
+
+// SchedPaused says "Paused"
+// in the language the app shows.
+func SchedPaused() string { return In(i18n.Locale()).SchedPaused() }
+
+// SchedPaused says "Paused"
+// in the language of msgs.
+func (msgs Messages) SchedPaused() string {
+	return Catalog.Format(msgs.locale, "schedPaused", nil)
+}
+
+// SchedEnabled says "Enabled"
+// in the language the app shows.
+func SchedEnabled() string { return In(i18n.Locale()).SchedEnabled() }
+
+// SchedEnabled says "Enabled"
+// in the language of msgs.
+func (msgs Messages) SchedEnabled() string {
+	return Catalog.Format(msgs.locale, "schedEnabled", nil)
+}
+
+// SchedRunsAt says "Runs {time}"
+// in the language the app shows.
+func SchedRunsAt(time_ string) string { return In(i18n.Locale()).SchedRunsAt(time_) }
+
+// SchedRunsAt says "Runs {time}"
+// in the language of msgs.
+func (msgs Messages) SchedRunsAt(time_ string) string {
+	return Catalog.Format(msgs.locale, "schedRunsAt", map[string]any{"time": time_})
+}
+
+// SchedRunManually says "Run manually"
+// in the language the app shows.
+func SchedRunManually() string { return In(i18n.Locale()).SchedRunManually() }
+
+// SchedRunManually says "Run manually"
+// in the language of msgs.
+func (msgs Messages) SchedRunManually() string {
+	return Catalog.Format(msgs.locale, "schedRunManually", nil)
+}
+
+// SchedLastRan says "Last ran {time}"
+// in the language the app shows.
+func SchedLastRan(time_ string) string { return In(i18n.Locale()).SchedLastRan(time_) }
+
+// SchedLastRan says "Last ran {time}"
+// in the language of msgs.
+func (msgs Messages) SchedLastRan(time_ string) string {
+	return Catalog.Format(msgs.locale, "schedLastRan", map[string]any{"time": time_})
+}
+
+// SchedDone says "Done"
+// in the language the app shows.
+func SchedDone() string { return In(i18n.Locale()).SchedDone() }
+
+// SchedDone says "Done"
+// in the language of msgs.
+func (msgs Messages) SchedDone() string {
+	return Catalog.Format(msgs.locale, "schedDone", nil)
+}
+
+// SchedSent says "Sent"
+// in the language the app shows.
+func SchedSent() string { return In(i18n.Locale()).SchedSent() }
+
+// SchedSent says "Sent"
+// in the language of msgs.
+func (msgs Messages) SchedSent() string {
+	return Catalog.Format(msgs.locale, "schedSent", nil)
+}
+
+// SchedCancelled says "Cancelled"
+// in the language the app shows.
+func SchedCancelled() string { return In(i18n.Locale()).SchedCancelled() }
+
+// SchedCancelled says "Cancelled"
+// in the language of msgs.
+func (msgs Messages) SchedCancelled() string {
+	return Catalog.Format(msgs.locale, "schedCancelled", nil)
+}
+
+// SchedNotSent says "Not sent"
+// in the language the app shows.
+func SchedNotSent() string { return In(i18n.Locale()).SchedNotSent() }
+
+// SchedNotSent says "Not sent"
+// in the language of msgs.
+func (msgs Messages) SchedNotSent() string {
+	return Catalog.Format(msgs.locale, "schedNotSent", nil)
+}
+
+// SchedSendsAt says "Sends {time}"
+// in the language the app shows.
+func SchedSendsAt(time_ string) string { return In(i18n.Locale()).SchedSendsAt(time_) }
+
+// SchedSendsAt says "Sends {time}"
+// in the language of msgs.
+func (msgs Messages) SchedSendsAt(time_ string) string {
+	return Catalog.Format(msgs.locale, "schedSendsAt", map[string]any{"time": time_})
+}
+
+// SchedCancelling says "Cancelling…"
+// in the language the app shows.
+func SchedCancelling() string { return In(i18n.Locale()).SchedCancelling() }
+
+// SchedCancelling says "Cancelling…"
+// in the language of msgs.
+func (msgs Messages) SchedCancelling() string {
+	return Catalog.Format(msgs.locale, "schedCancelling", nil)
+}
+
+// SchedStateDue says "Due"
+// in the language the app shows.
+func SchedStateDue() string { return In(i18n.Locale()).SchedStateDue() }
+
+// SchedStateDue says "Due"
+// in the language of msgs.
+func (msgs Messages) SchedStateDue() string {
+	return Catalog.Format(msgs.locale, "schedStateDue", nil)
+}
+
+// SchedStateWaiting says "Waiting for Agent"
+// in the language the app shows.
+func SchedStateWaiting() string { return In(i18n.Locale()).SchedStateWaiting() }
+
+// SchedStateWaiting says "Waiting for Agent"
+// in the language of msgs.
+func (msgs Messages) SchedStateWaiting() string {
+	return Catalog.Format(msgs.locale, "schedStateWaiting", nil)
+}
+
+// SchedStateBlocked says "Needs attention"
+// in the language the app shows.
+func SchedStateBlocked() string { return In(i18n.Locale()).SchedStateBlocked() }
+
+// SchedStateBlocked says "Needs attention"
+// in the language of msgs.
+func (msgs Messages) SchedStateBlocked() string {
+	return Catalog.Format(msgs.locale, "schedStateBlocked", nil)
+}
+
+// SchedStateRetrying says "Retrying dispatch"
+// in the language the app shows.
+func SchedStateRetrying() string { return In(i18n.Locale()).SchedStateRetrying() }
+
+// SchedStateRetrying says "Retrying dispatch"
+// in the language of msgs.
+func (msgs Messages) SchedStateRetrying() string {
+	return Catalog.Format(msgs.locale, "schedStateRetrying", nil)
+}
+
+// SchedNotScheduled says "Not scheduled yet"
+// in the language the app shows.
+func SchedNotScheduled() string { return In(i18n.Locale()).SchedNotScheduled() }
+
+// SchedNotScheduled says "Not scheduled yet"
+// in the language of msgs.
+func (msgs Messages) SchedNotScheduled() string {
+	return Catalog.Format(msgs.locale, "schedNotScheduled", nil)
+}
+
+// SchedAwaitingMachine says "Waiting for the machine to check the schedule"
+// in the language the app shows.
+func SchedAwaitingMachine() string { return In(i18n.Locale()).SchedAwaitingMachine() }
+
+// SchedAwaitingMachine says "Waiting for the machine to check the schedule"
+// in the language of msgs.
+func (msgs Messages) SchedAwaitingMachine() string {
+	return Catalog.Format(msgs.locale, "schedAwaitingMachine", nil)
+}
+
+// SchedHistory says "Run history"
+// in the language the app shows.
+func SchedHistory() string { return In(i18n.Locale()).SchedHistory() }
+
+// SchedHistory says "Run history"
+// in the language of msgs.
+func (msgs Messages) SchedHistory() string {
+	return Catalog.Format(msgs.locale, "schedHistory", nil)
+}
+
+// SchedTabSettings says "Settings"
+// in the language the app shows.
+func SchedTabSettings() string { return In(i18n.Locale()).SchedTabSettings() }
+
+// SchedTabSettings says "Settings"
+// in the language of msgs.
+func (msgs Messages) SchedTabSettings() string {
+	return Catalog.Format(msgs.locale, "schedTabSettings", nil)
+}
+
+// SchedRunNumber says "Run {count}"
+// in the language the app shows.
+func SchedRunNumber(count string) string { return In(i18n.Locale()).SchedRunNumber(count) }
+
+// SchedRunNumber says "Run {count}"
+// in the language of msgs.
+func (msgs Messages) SchedRunNumber(count string) string {
+	return Catalog.Format(msgs.locale, "schedRunNumber", map[string]any{"count": count})
+}
+
+// SchedHistoryEmpty says "No runs yet. Each run will appear here."
+// in the language the app shows.
+func SchedHistoryEmpty() string { return In(i18n.Locale()).SchedHistoryEmpty() }
+
+// SchedHistoryEmpty says "No runs yet. Each run will appear here."
+// in the language of msgs.
+func (msgs Messages) SchedHistoryEmpty() string {
+	return Catalog.Format(msgs.locale, "schedHistoryEmpty", nil)
+}
+
+// SchedAllInChat says "Every run goes to"
+// in the language the app shows.
+func SchedAllInChat() string { return In(i18n.Locale()).SchedAllInChat() }
+
+// SchedAllInChat says "Every run goes to"
+// in the language of msgs.
+func (msgs Messages) SchedAllInChat() string {
+	return Catalog.Format(msgs.locale, "schedAllInChat", nil)
+}
+
+// SchedOpenChatPlain says "Open chat"
+// in the language the app shows.
+func SchedOpenChatPlain() string { return In(i18n.Locale()).SchedOpenChatPlain() }
+
+// SchedOpenChatPlain says "Open chat"
+// in the language of msgs.
+func (msgs Messages) SchedOpenChatPlain() string {
+	return Catalog.Format(msgs.locale, "schedOpenChatPlain", nil)
+}
+
+// SchedCountChats says "{count} chats"
+// in the language the app shows.
+func SchedCountChats(count string) string { return In(i18n.Locale()).SchedCountChats(count) }
+
+// SchedCountChats says "{count} chats"
+// in the language of msgs.
+func (msgs Messages) SchedCountChats(count string) string {
+	return Catalog.Format(msgs.locale, "schedCountChats", map[string]any{"count": count})
+}
+
+// SchedMachineOffline says "{machine} offline"
+// in the language the app shows.
+func SchedMachineOffline(machine string) string {
+	return In(i18n.Locale()).SchedMachineOffline(machine)
+}
+
+// SchedMachineOffline says "{machine} offline"
+// in the language of msgs.
+func (msgs Messages) SchedMachineOffline(machine string) string {
+	return Catalog.Format(msgs.locale, "schedMachineOffline", map[string]any{"machine": machine})
+}
+
+// SchedOpenChat says "Open chat “{title}”"
+// in the language the app shows.
+func SchedOpenChat(title string) string { return In(i18n.Locale()).SchedOpenChat(title) }
+
+// SchedOpenChat says "Open chat “{title}”"
+// in the language of msgs.
+func (msgs Messages) SchedOpenChat(title string) string {
+	return Catalog.Format(msgs.locale, "schedOpenChat", map[string]any{"title": title})
+}
+
+// SchedOwnerOnly says "Only the schedule owner can save changes."
+// in the language the app shows.
+func SchedOwnerOnly() string { return In(i18n.Locale()).SchedOwnerOnly() }
+
+// SchedOwnerOnly says "Only the schedule owner can save changes."
+// in the language of msgs.
+func (msgs Messages) SchedOwnerOnly() string {
+	return Catalog.Format(msgs.locale, "schedOwnerOnly", nil)
+}
+
+// SchedErrNotCommitted says "Waiting for the schedule configuration to finish syncing."
+// in the language the app shows.
+func SchedErrNotCommitted() string { return In(i18n.Locale()).SchedErrNotCommitted() }
+
+// SchedErrNotCommitted says "Waiting for the schedule configuration to finish syncing."
+// in the language of msgs.
+func (msgs Messages) SchedErrNotCommitted() string {
+	return Catalog.Format(msgs.locale, "schedErrNotCommitted", nil)
+}
+
+// SchedFilterProject says "Project"
+// in the language the app shows.
+func SchedFilterProject() string { return In(i18n.Locale()).SchedFilterProject() }
+
+// SchedFilterProject says "Project"
+// in the language of msgs.
+func (msgs Messages) SchedFilterProject() string {
+	return Catalog.Format(msgs.locale, "schedFilterProject", nil)
+}
+
+// SchedFilterStatus says "Status"
+// in the language the app shows.
+func SchedFilterStatus() string { return In(i18n.Locale()).SchedFilterStatus() }
+
+// SchedFilterStatus says "Status"
+// in the language of msgs.
+func (msgs Messages) SchedFilterStatus() string {
+	return Catalog.Format(msgs.locale, "schedFilterStatus", nil)
+}
+
+// SchedAllProjects says "All projects"
+// in the language the app shows.
+func SchedAllProjects() string { return In(i18n.Locale()).SchedAllProjects() }
+
+// SchedAllProjects says "All projects"
+// in the language of msgs.
+func (msgs Messages) SchedAllProjects() string {
+	return Catalog.Format(msgs.locale, "schedAllProjects", nil)
+}
+
+// SchedNoProject says "No project (chat only)"
+// in the language the app shows.
+func SchedNoProject() string { return In(i18n.Locale()).SchedNoProject() }
+
+// SchedNoProject says "No project (chat only)"
+// in the language of msgs.
+func (msgs Messages) SchedNoProject() string {
+	return Catalog.Format(msgs.locale, "schedNoProject", nil)
+}
+
+// SchedAllStatuses says "All statuses"
+// in the language the app shows.
+func SchedAllStatuses() string { return In(i18n.Locale()).SchedAllStatuses() }
+
+// SchedAllStatuses says "All statuses"
+// in the language of msgs.
+func (msgs Messages) SchedAllStatuses() string {
+	return Catalog.Format(msgs.locale, "schedAllStatuses", nil)
+}
+
+// SchedFilterActive says "Active"
+// in the language the app shows.
+func SchedFilterActive() string { return In(i18n.Locale()).SchedFilterActive() }
+
+// SchedFilterActive says "Active"
+// in the language of msgs.
+func (msgs Messages) SchedFilterActive() string {
+	return Catalog.Format(msgs.locale, "schedFilterActive", nil)
+}
+
+// SchedFilterEnded says "Finished"
+// in the language the app shows.
+func SchedFilterEnded() string { return In(i18n.Locale()).SchedFilterEnded() }
+
+// SchedFilterEnded says "Finished"
+// in the language of msgs.
+func (msgs Messages) SchedFilterEnded() string {
+	return Catalog.Format(msgs.locale, "schedFilterEnded", nil)
+}
+
+// SchedSortNext says "Next run"
+// in the language the app shows.
+func SchedSortNext() string { return In(i18n.Locale()).SchedSortNext() }
+
+// SchedSortNext says "Next run"
+// in the language of msgs.
+func (msgs Messages) SchedSortNext() string {
+	return Catalog.Format(msgs.locale, "schedSortNext", nil)
+}
+
+// SchedSortRecent says "Last run"
+// in the language the app shows.
+func SchedSortRecent() string { return In(i18n.Locale()).SchedSortRecent() }
+
+// SchedSortRecent says "Last run"
+// in the language of msgs.
+func (msgs Messages) SchedSortRecent() string {
+	return Catalog.Format(msgs.locale, "schedSortRecent", nil)
+}
+
+// SchedSortName says "Name"
+// in the language the app shows.
+func SchedSortName() string { return In(i18n.Locale()).SchedSortName() }
+
+// SchedSortName says "Name"
+// in the language of msgs.
+func (msgs Messages) SchedSortName() string {
+	return Catalog.Format(msgs.locale, "schedSortName", nil)
+}
+
+// SchedSortNewest says "Newest"
+// in the language the app shows.
+func SchedSortNewest() string { return In(i18n.Locale()).SchedSortNewest() }
+
+// SchedSortNewest says "Newest"
+// in the language of msgs.
+func (msgs Messages) SchedSortNewest() string {
+	return Catalog.Format(msgs.locale, "schedSortNewest", nil)
+}
+
+// SchedRunning says "Running"
+// in the language the app shows.
+func SchedRunning() string { return In(i18n.Locale()).SchedRunning() }
+
+// SchedRunning says "Running"
+// in the language of msgs.
+func (msgs Messages) SchedRunning() string {
+	return Catalog.Format(msgs.locale, "schedRunning", nil)
+}
+
+// SchedOpenRun says "Open run"
+// in the language the app shows.
+func SchedOpenRun() string { return In(i18n.Locale()).SchedOpenRun() }
+
+// SchedOpenRun says "Open run"
+// in the language of msgs.
+func (msgs Messages) SchedOpenRun() string {
+	return Catalog.Format(msgs.locale, "schedOpenRun", nil)
+}
+
+// SchedLoadError says "Schedules could not be loaded."
+// in the language the app shows.
+func SchedLoadError() string { return In(i18n.Locale()).SchedLoadError() }
+
+// SchedLoadError says "Schedules could not be loaded."
+// in the language of msgs.
+func (msgs Messages) SchedLoadError() string {
+	return Catalog.Format(msgs.locale, "schedLoadError", nil)
+}
+
+// SchedSyncError says "Schedules could not be synced. Showing saved tasks."
+// in the language the app shows.
+func SchedSyncError() string { return In(i18n.Locale()).SchedSyncError() }
+
+// SchedSyncError says "Schedules could not be synced. Showing saved tasks."
+// in the language of msgs.
+func (msgs Messages) SchedSyncError() string {
+	return Catalog.Format(msgs.locale, "schedSyncError", nil)
+}
+
+// SchedAgent says "Agent"
+// in the language the app shows.
+func SchedAgent() string { return In(i18n.Locale()).SchedAgent() }
+
+// SchedAgent says "Agent"
+// in the language of msgs.
+func (msgs Messages) SchedAgent() string {
+	return Catalog.Format(msgs.locale, "schedAgent", nil)
+}
+
+// SchedProject says "Project"
+// in the language the app shows.
+func SchedProject() string { return In(i18n.Locale()).SchedProject() }
+
+// SchedProject says "Project"
+// in the language of msgs.
+func (msgs Messages) SchedProject() string {
+	return Catalog.Format(msgs.locale, "schedProject", nil)
+}
+
+// SchedWorktree says "Use a worktree"
+// in the language the app shows.
+func SchedWorktree() string { return In(i18n.Locale()).SchedWorktree() }
+
+// SchedWorktree says "Use a worktree"
+// in the language of msgs.
+func (msgs Messages) SchedWorktree() string {
+	return Catalog.Format(msgs.locale, "schedWorktree", nil)
+}

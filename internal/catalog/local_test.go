@@ -105,7 +105,7 @@ func TestSyncLocal(t *testing.T) {
 	if err := s.Pin(ctx, "s1", true); err != nil {
 		t.Fatal(err)
 	}
-	ups := d.Updates(metaRoom)
+	ups := d.WaitUpdates(t, metaRoom, 1)
 	if len(ups) != 1 || ups[0].Payload.Kind != "flock-json" || !strings.Contains(ups[0].HaveVersion, `"physicalTime"`) {
 		t.Fatalf("updates %+v", ups)
 	}

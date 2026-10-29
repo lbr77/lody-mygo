@@ -85,6 +85,8 @@ func TestStoreLocal(t *testing.T) {
 	if err := s.Save(ctx, "s1", true, draft, "u1", now); err != nil {
 		t.Fatal(err)
 	}
+	d.WaitUpdates(t, docRoom, 1)
+	d.WaitUpdates(t, registry, 1)
 
 	// The document the daemon has reads back to what the row fingerprints.
 	got := read(daemonDoc(t, d, docRoom))
@@ -114,6 +116,8 @@ func TestStoreLocal(t *testing.T) {
 	if err := s.SetEnabled(ctx, "s1", false, "u1", now.Add(time.Minute)); err != nil {
 		t.Fatal(err)
 	}
+	d.WaitUpdates(t, docRoom, 2)
+	d.WaitUpdates(t, registry, 2)
 	paused := read(daemonDoc(t, d, docRoom))
 	if paused.Definition.Enabled || len(paused.Timeline) != 2 || paused.Timeline[1].Kind != "paused" {
 		t.Fatalf("paused %+v", paused)
@@ -121,6 +125,8 @@ func TestStoreLocal(t *testing.T) {
 	if err := s.SetEnabled(ctx, "s1", true, "u1", now.Add(2*time.Minute)); err != nil {
 		t.Fatal(err)
 	}
+	d.WaitUpdates(t, docRoom, 3)
+	d.WaitUpdates(t, registry, 3)
 	resumed := read(daemonDoc(t, d, docRoom)).Definition
 	if !resumed.Enabled || resumed.ActivationID == def.ActivationID || resumed.ActiveFrom != now.Add(2*time.Minute).UnixMilli() {
 		t.Fatalf("resumed %+v", resumed)
@@ -133,6 +139,7 @@ func TestStoreLocal(t *testing.T) {
 	if err := s.RunNow(ctx, "s1", "u1", now.Add(3*time.Minute)); err != nil {
 		t.Fatal(err)
 	}
+	d.WaitUpdates(t, registry, 4)
 	manual := false
 	for _, r := range mustScan(t, daemonFlock(t, d, registry)) {
 		if r.Key[0] == "manual" {
@@ -148,6 +155,7 @@ func TestStoreLocal(t *testing.T) {
 	if err := s.Delete(ctx, "s1", "u1", now); err != nil {
 		t.Fatal(err)
 	}
+	d.WaitUpdates(t, registry, 5)
 	if RegistryOf(mustScan(t, daemonFlock(t, d, registry))).Row("s1") != nil || s.Registry().Row("s1") != nil {
 		t.Fatal("still listed")
 	}

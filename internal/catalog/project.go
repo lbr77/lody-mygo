@@ -41,6 +41,7 @@ type Session struct {
 	Resume                string  `json:"resume,omitempty"`
 	LastModel             *Model  `json:"lastModel,omitempty"`
 	ParentSessionID       string  `json:"parentSessionId,omitempty"`
+	ScheduleID            string  `json:"scheduleId,omitempty"` // the schedule whose run started it
 	OpenedBySessionID     string  `json:"openedBySessionId,omitempty"`
 	OpenedByRootSessionID string  `json:"openedByRootSessionId,omitempty"`
 	AgentConfigID         string  `json:"agentConfigId,omitempty"`
@@ -260,9 +261,11 @@ type Catalog struct {
 	MachineIDs   []string                      `json:"machineIds"`
 	MachineNames map[string]string             `json:"machineNames,omitempty"`
 	MachineOS    map[string]string             `json:"machineOs,omitempty"`
-	MachineCLI   map[string]string             `json:"machineCli,omitempty"`  // the Lody CLI's version
-	MachineCaps  map[string]map[string]float64 `json:"machineCaps,omitempty"` // protocol capabilities, by machine
-	Agents       map[string][]AgentConfig      `json:"agents,omitempty"`      // by machine
+	MachineCLI   map[string]string             `json:"machineCli,omitempty"`   // the Lody CLI's version
+	MachineCaps  map[string]map[string]float64 `json:"machineCaps,omitempty"`  // protocol capabilities, by machine
+	MachineOwner map[string]string             `json:"machineOwner,omitempty"` // the user who owns it, by machine
+	MachineZone  map[string]string             `json:"machineZone,omitempty"`  // its IANA time zone, by machine
+	Agents       map[string][]AgentConfig      `json:"agents,omitempty"`       // by machine
 	Capabilities map[string]Capability         `json:"capabilities,omitempty"`
 	MCPServers   []MCPServer                   `json:"-"`
 	Roles        []AgentRole                   `json:"-"`
@@ -486,6 +489,7 @@ func projectMeta(rows []flock.Row) Catalog {
 	c.MachineOS = map[string]string{}
 	c.MachineCLI = map[string]string{}
 	c.MachineCaps = map[string]map[string]float64{}
+	c.MachineOwner, c.MachineZone = map[string]string{}, map[string]string{}
 	active := map[string]bool{}
 	metadata := map[string]map[string]any{}
 	var order []string
@@ -535,6 +539,12 @@ func projectMeta(rows []flock.Row) Catalog {
 			}
 			if v := text(value["cliVersion"]); v != "" {
 				c.MachineCLI[machineID] = v
+			}
+			if v := text(value["ownerUserId"]); v != "" {
+				c.MachineOwner[machineID] = v
+			}
+			if v := text(value["timeZone"]); v != "" {
+				c.MachineZone[machineID] = v
 			}
 			if caps := object(value["protocolCapabilities"]); len(caps) > 0 {
 				versions := map[string]float64{}
@@ -598,6 +608,7 @@ func projectMeta(rows []flock.Row) Catalog {
 			Resume:                text(value["acpSessionId"]),
 			LastModel:             modelOf(value["lastModel"]),
 			ParentSessionID:       strings.TrimSpace(text(value["parentSessionId"])),
+			ScheduleID:            text(value["scheduleId"]),
 			OpenedBySessionID:     strings.TrimSpace(text(value["openedBySessionId"])),
 			OpenedByRootSessionID: strings.TrimSpace(text(value["openedByRootSessionId"])),
 			AgentConfigID:         text(value["agentConfigId"]),
@@ -684,6 +695,8 @@ func merge(meta Catalog, machines map[string]Catalog) Catalog {
 		MachineOS:    meta.MachineOS,
 		MachineCLI:   meta.MachineCLI,
 		MachineCaps:  meta.MachineCaps,
+		MachineOwner: meta.MachineOwner,
+		MachineZone:  meta.MachineZone,
 		Agents:       map[string][]AgentConfig{},
 		Capabilities: map[string]Capability{},
 	}
