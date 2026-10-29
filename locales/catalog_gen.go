@@ -10498,3 +10498,73 @@ func GitHubRepoUnavailable() string { return In(i18n.Locale()).GitHubRepoUnavail
 func (msgs Messages) GitHubRepoUnavailable() string {
 	return Catalog.Format(msgs.locale, "gitHubRepoUnavailable", nil)
 }
+
+// UsageTokens says "Tokens"
+// in the language the app shows.
+func UsageTokens() string { return In(i18n.Locale()).UsageTokens() }
+
+// UsageTokens says "Tokens"
+// in the language of msgs.
+func (msgs Messages) UsageTokens() string {
+	return Catalog.Format(msgs.locale, "usageTokens", nil)
+}
+
+// UsageWebSearches says "{count, plural, one {# web search} other {# web searches}}"
+// in the language the app shows.
+func UsageWebSearches(count int) string { return In(i18n.Locale()).UsageWebSearches(count) }
+
+// UsageWebSearches says "{count, plural, one {# web search} other {# web searches}}"
+// in the language of msgs.
+func (msgs Messages) UsageWebSearches(count int) string {
+	return Catalog.Format(msgs.locale, "usageWebSearches", map[string]any{"count": count})
+}
+
+// UsageNoUsage says "No usage"
+// in the language the app shows.
+func UsageNoUsage() string { return In(i18n.Locale()).UsageNoUsage() }
+
+// UsageNoUsage says "No usage"
+// in the language of msgs.
+func (msgs Messages) UsageNoUsage() string {
+	return Catalog.Format(msgs.locale, "usageNoUsage", nil)
+}
+
+// UsageCache says "Cache"
+// in the language the app shows.
+func UsageCache() string { return In(i18n.Locale()).UsageCache() }
+
+// UsageCache says "Cache"
+// in the language of msgs.
+func (msgs Messages) UsageCache() string {
+	return Catalog.Format(msgs.locale, "usageCache", nil)
+}
+
+// UsageInput says "Input"
+// in the language the app shows.
+func UsageInput() string { return In(i18n.Locale()).UsageInput() }
+
+// UsageInput says "Input"
+// in the language of msgs.
+func (msgs Messages) UsageInput() string {
+	return Catalog.Format(msgs.locale, "usageInput", nil)
+}
+
+// UsageOutput says "Output"
+// in the language the app shows.
+func UsageOutput() string { return In(i18n.Locale()).UsageOutput() }
+
+// UsageOutput says "Output"
+// in the language of msgs.
+func (msgs Messages) UsageOutput() string {
+	return Catalog.Format(msgs.locale, "usageOutput", nil)
+}
+
+// UsageReasoning says "Reasoning output"
+// in the language the app shows.
+func UsageReasoning() string { return In(i18n.Locale()).UsageReasoning() }
+
+// UsageReasoning says "Reasoning output"
+// in the language of msgs.
+func (msgs Messages) UsageReasoning() string {
+	return Catalog.Format(msgs.locale, "usageReasoning", nil)
+}

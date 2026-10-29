@@ -1040,5 +1040,12 @@
   "deviceVerifying": "验证中...",
   "gitHubManageInSettings": "在 GitHub 设置中管理",
   "gitHubRepository": "仓库",
-  "gitHubRepoUnavailable": "此仓库在当前工作区不可用"
+  "gitHubRepoUnavailable": "此仓库在当前工作区不可用",
+  "usageTokens": "Token",
+  "usageWebSearches": "{count, plural, other {# 次联网搜索}}",
+  "usageNoUsage": "无用量",
+  "usageCache": "缓存",
+  "usageInput": "输入",
+  "usageOutput": "输出",
+  "usageReasoning": "推理输出"
 }

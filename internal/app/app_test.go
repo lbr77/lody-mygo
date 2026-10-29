@@ -1532,3 +1532,26 @@ func TestGitHubProjects(t *testing.T) {
 	a.ghProject.setup.shell = "powershell"
 	snap(t, a, "github-project-ps", false, nil)
 }
+
+func TestUsageDay(t *testing.T) {
+	a := fixture()
+	a.settingsOpen, a.settingsTab, a.usageRange = true, "ai-usage", "total"
+	var timeline usageTimeline
+	json.Unmarshal([]byte(`{"totals":{"tokens":1500000,"costUSD":12.34},"buckets":[{"bucketStartMs":0,"bucketLabel":"Oct 1","tokens":1500000,"costUSD":12.34,"byModel":[{"modelId":"gpt-5","tokens":1500000,"costUSD":12.34}]}]}`), &timeline)
+	var days []usageDay
+	json.Unmarshal([]byte(`[{"dayStartMs":1798761600000,"date":"2027-01-01","tokens":1000,"costUSD":1},{"dayStartMs":1798848000000,"date":"2027-01-02","tokens":3000,"costUSD":2}]`), &days)
+	var detail *usageDayDetail
+	json.Unmarshal([]byte(`{"dayStartMs":1798848000000,"totals":{"tokens":3000,"costUSD":2,"inputTokens":1000,"outputTokens":500,"cacheReadInputTokens":1400,"cacheCreationInputTokens":0,"reasoningOutputTokens":100,"webSearchRequests":2},
+		"byModel":[{"modelId":"claude-opus-5-5","tokens":3000}],"byUser":[{"userId":"u2","tokens":3000}],"users":{"u2":{"name":"Grace Hopper"}}}`), &detail)
+	key := "w1|usage-day/" + time.UnixMilli(1798848000000).Format("2006-01-02")
+	a.fetches = map[string]*fetched{"w1|usage/total": {value: &timeline}, "w1|usage-calendar": {value: days}, key: {value: detail}}
+	a.usageDay = 1798848000000
+	tt := snap(t, a, "usage-day", false, nil)
+	tt.Advance(600 * time.Millisecond)
+	tt.Frame()
+	for _, want := range []string{"3K", "Tokens", "$2.00 · 2 web searches", "Cache", "Input", "Output", "Reasoning output", "claude-opus-5-5", "Grace Hopper"} {
+		if !tt.HasText(want) {
+			t.Fatalf("no %q in %q", want, tt.Texts())
+		}
+	}
+}

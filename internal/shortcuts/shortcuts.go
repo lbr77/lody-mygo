@@ -464,30 +464,15 @@ func (s *Store) Save(ctx context.Context, value Shortcut, base *Entry) (Entry, e
 		return Entry{}, errors.New("shortcuts: staged another document")
 	}
 	if staged.Status == "staged" {
-		stream := bodyStream(entry.BodyDocID)
-		body, err := s.client(ctx, stream, map[string]any{"kind": "body", "bodyDocId": entry.BodyDocID}, true)
-		if err != nil {
-			return Entry{}, err
-		}
-		if err := body.Create(ctx, "application/octet-stream", 0); err != nil {
-			return Entry{}, err
-		}
-		snapshot, err := bodySnapshot(value)
-		if err != nil {
-			return Entry{}, err
-		}
-		if _, err := body.Append(ctx, "application/octet-stream", streams.EncodeFrame(snapshot)); err != nil {
-			return Entry{}, err
-		}
-		var prevBody, prevRevision any
-		if base != nil {
-			prevBody, prevRevision = base.BodyDocID, base.Revision
-		}
-		if err := s.Convex.Mutation(ctx, "promptShortcuts:activateDocument", map[string]any{
-			"workspaceId": s.Workspace, "bodyDocId": entry.BodyDocID, "previousBodyDocId": prevBody, "previousRevision": prevRevision,
-			"revision": entry.Revision, "slug": entry.Slug, "indexBytes": len(encoded),
-		}, nil); err != nil {
-			return Entry{}, err
+		if err := s.publishBody(ctx, entry, value, base, len(encoded)); err != nil {
+			// The staged document is left half done: the server settles it,
+			// activating it if it got that far and cancelling it if not.
+			var status string
+			if s.Convex.Mutation(ctx, "promptShortcuts:settleDocument", map[string]any{
+				"workspaceId": s.Workspace, "shortcutId": entry.ID, "bodyDocId": entry.BodyDocID, "visibility": entry.Visibility,
+			}, &status) != nil || status != "active" {
+				return Entry{}, err
+			}
 		}
 	}
 	before, err := f.Version()
@@ -513,6 +498,33 @@ func (s *Store) Save(ctx context.Context, value Shortcut, base *Entry) (Entry, e
 		return Entry{}, err
 	}
 	return entry, nil
+}
+
+// publishBody writes a staged body document and activates it.
+func (s *Store) publishBody(ctx context.Context, entry Entry, value Shortcut, base *Entry, indexBytes int) error {
+	stream := bodyStream(entry.BodyDocID)
+	body, err := s.client(ctx, stream, map[string]any{"kind": "body", "bodyDocId": entry.BodyDocID}, true)
+	if err != nil {
+		return err
+	}
+	if err := body.Create(ctx, "application/octet-stream", 0); err != nil {
+		return err
+	}
+	snapshot, err := bodySnapshot(value)
+	if err != nil {
+		return err
+	}
+	if _, err := body.Append(ctx, "application/octet-stream", streams.EncodeFrame(snapshot)); err != nil {
+		return err
+	}
+	var prevBody, prevRevision any
+	if base != nil {
+		prevBody, prevRevision = base.BodyDocID, base.Revision
+	}
+	return s.Convex.Mutation(ctx, "promptShortcuts:activateDocument", map[string]any{
+		"workspaceId": s.Workspace, "bodyDocId": entry.BodyDocID, "previousBodyDocId": prevBody, "previousRevision": prevRevision,
+		"revision": entry.Revision, "slug": entry.Slug, "indexBytes": indexBytes,
+	}, nil)
 }
 
 // bodySnapshot is a fresh body document holding one revision.

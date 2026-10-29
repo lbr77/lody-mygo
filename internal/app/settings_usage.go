@@ -264,7 +264,8 @@ func (a *App) usagePage(c *ui.Context, p *palette) {
 				})
 			} else if days := a.usageCalendar(); days != nil {
 				// Longer ranges show the year, the range's days lit.
-				usageHeatmap(c, p, days, cost, rng == "month")
+				a.usageHeatmap(c, p, days, cost, rng == "month")
+				a.usageDayPanel(c, p)
 			}
 		})
 		stats := usageStatsOf(t.Buckets, cost)
@@ -378,7 +379,7 @@ func heatScale(values []float64) func(float64) float32 {
 }
 
 // usageHeatmap is the year a column a week, a cell a day.
-func usageHeatmap(c *ui.Context, p *palette, days []usageDay, cost, month bool) {
+func (a *App) usageHeatmap(c *ui.Context, p *palette, days []usageDay, cost, month bool) {
 	values := make([]float64, len(days))
 	for i, d := range days {
 		values[i] = d.Tokens
@@ -397,7 +398,20 @@ func usageHeatmap(c *ui.Context, p *palette, days []usageDay, cost, month bool) 
 			ui.Column(c.Key(w)).Gap(2).Children(func() {
 				for i := w * 7; i < min(len(days), w*7+7); i++ {
 					d := days[i]
-					cell := ui.Box(c.Key(i)).Size(9, 9).Radius(2).Tooltip(d.Date + " · " + fmtv(values[i]))
+					cell := ui.ButtonBase(c.Key(i)).Size(9, 9).Radius(2).Tooltip(d.Date + " · " + fmtv(values[i])).Label(d.Date)
+					if !d.IsFuture {
+						day := d.DayStartMs
+						cell.Cursor(ui.CursorPointer).OnClick(func() {
+							if a.usageDay == day {
+								a.usageDay = 0
+							} else {
+								a.usageDay = day
+							}
+						})
+					}
+					if a.usageDay == d.DayStartMs {
+						cell.Border(1.5, p.Text)
+					}
 					switch {
 					case d.IsFuture:
 						cell.Background(p.Text.Alpha(0.02))

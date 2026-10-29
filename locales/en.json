@@ -2146,5 +2146,19 @@
   "deviceVerifying": "Verifying...",
   "gitHubManageInSettings": "Manage in GitHub settings",
   "gitHubRepository": "Repository",
-  "gitHubRepoUnavailable": "This repo isn't available in the current workspace."
+  "gitHubRepoUnavailable": "This repo isn't available in the current workspace.",
+  "usageTokens": "Tokens",
+  "usageWebSearches": "{count, plural, one {# web search} other {# web searches}}",
+  "@usageWebSearches": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "usageNoUsage": "No usage",
+  "usageCache": "Cache",
+  "usageInput": "Input",
+  "usageOutput": "Output",
+  "usageReasoning": "Reasoning output"
 }

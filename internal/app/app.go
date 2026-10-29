@@ -165,6 +165,9 @@ type App struct {
 	referral        referrals
 	pairing         machinePairing
 	ghProject       githubProject
+	activeDay       string          // workspace|date the user was last counted active
+	usageDay        float64         // the usage day opened, its start in ms
+	usageDayShown   float64         // the day the panel shows, as it folds away too
 	ghProfileAsked  map[string]bool // workspaces whose GitHub profile was refreshed
 	device          deviceAuth
 	toasts          []ui.Toast // to show with the next frame
@@ -592,6 +595,7 @@ func (a *App) send() {
 		Guide:        working && a.busyBehavior == "steer" && a.steerable(sess),
 		MarkDispatch: sync.MarkDispatch,
 	}
+	a.recordActivity()
 	a.sending, a.sendError, a.uploading = true, "", ""
 	a.draft, a.attachments = "", nil
 	delete(a.drafts, a.selected)
@@ -710,6 +714,28 @@ func (a *App) agent(machine, id string) *catalog.AgentConfig {
 }
 
 // startChat creates a session from New chat and sends its first message.
+// recordActivity counts the user active in the workspace today, as Lody
+// does as a chat starts or a message goes: best effort, once a day here.
+func (a *App) recordActivity() {
+	day := a.workspaceID + "|" + time.Now().Format("2006-01-02")
+	if a.convex == nil || a.offline || a.workspaceID == "" || a.activeDay == day {
+		return
+	}
+	a.activeDay = day
+	convex, ws := a.convex, a.workspaceID
+	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+		defer cancel()
+		if convex.Mutation(ctx, "activity:recordMyWorkspaceDailyActiveUser", map[string]any{"workspaceId": ws}, nil) != nil {
+			a.update(func() {
+				if a.activeDay == day {
+					a.activeDay = ""
+				}
+			})
+		}
+	}()
+}
+
 func (a *App) startChat() {
 	text := strings.TrimSpace(a.draft)
 	nc := a.newChat
@@ -718,6 +744,7 @@ func (a *App) startChat() {
 	if (text == "" && len(files) == 0) || a.sending || agent == nil || a.sync == nil || a.conn == nil {
 		return
 	}
+	a.recordActivity()
 	id := uuid.NewString()
 	sync, userID, workspace, conn := a.sync, a.account.User.ID, a.conn.ID, a.conn
 	target := a.mentionTarget()
