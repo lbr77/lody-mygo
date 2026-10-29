@@ -498,7 +498,7 @@ func (a *App) footer(c *ui.Context, p *palette) {
 		if a.page == "archive" {
 			archive.Background(p.SideSelect)
 		}
-		iconButton(c, p, iconSettings, locales.Settings(), p.SideHover).OnClick(func() { a.settingsOpen = true })
+		iconButton(c, p, iconSettings, locales.Settings(), p.SideHover).OnClick(func() { a.settingsOpen, a.fetches = true, nil })
 	})
 }
 

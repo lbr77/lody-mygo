@@ -3102,3 +3102,423 @@ func PreviewAddress() string { return In(i18n.Locale()).PreviewAddress() }
 func (msgs Messages) PreviewAddress() string {
 	return Catalog.Format(msgs.locale, "previewAddress", nil)
 }
+
+// SettingsYou says "You"
+// in the language the app shows.
+func SettingsYou() string { return In(i18n.Locale()).SettingsYou() }
+
+// SettingsYou says "You"
+// in the language of msgs.
+func (msgs Messages) SettingsYou() string {
+	return Catalog.Format(msgs.locale, "settingsYou", nil)
+}
+
+// RoleOwner says "Owner"
+// in the language the app shows.
+func RoleOwner() string { return In(i18n.Locale()).RoleOwner() }
+
+// RoleOwner says "Owner"
+// in the language of msgs.
+func (msgs Messages) RoleOwner() string {
+	return Catalog.Format(msgs.locale, "roleOwner", nil)
+}
+
+// RoleAdmin says "Admin"
+// in the language the app shows.
+func RoleAdmin() string { return In(i18n.Locale()).RoleAdmin() }
+
+// RoleAdmin says "Admin"
+// in the language of msgs.
+func (msgs Messages) RoleAdmin() string {
+	return Catalog.Format(msgs.locale, "roleAdmin", nil)
+}
+
+// RoleMember says "Member"
+// in the language the app shows.
+func RoleMember() string { return In(i18n.Locale()).RoleMember() }
+
+// RoleMember says "Member"
+// in the language of msgs.
+func (msgs Messages) RoleMember() string {
+	return Catalog.Format(msgs.locale, "roleMember", nil)
+}
+
+// SettingsMembers says "Members"
+// in the language the app shows.
+func SettingsMembers() string { return In(i18n.Locale()).SettingsMembers() }
+
+// SettingsMembers says "Members"
+// in the language of msgs.
+func (msgs Messages) SettingsMembers() string {
+	return Catalog.Format(msgs.locale, "settingsMembers", nil)
+}
+
+// SettingsMachines says "Machines"
+// in the language the app shows.
+func SettingsMachines() string { return In(i18n.Locale()).SettingsMachines() }
+
+// SettingsMachines says "Machines"
+// in the language of msgs.
+func (msgs Messages) SettingsMachines() string {
+	return Catalog.Format(msgs.locale, "settingsMachines", nil)
+}
+
+// SettingsMachinesHelp says "The machines this workspace can see. Share yours so members can run agents on it."
+// in the language the app shows.
+func SettingsMachinesHelp() string { return In(i18n.Locale()).SettingsMachinesHelp() }
+
+// SettingsMachinesHelp says "The machines this workspace can see. Share yours so members can run agents on it."
+// in the language of msgs.
+func (msgs Messages) SettingsMachinesHelp() string {
+	return Catalog.Format(msgs.locale, "settingsMachinesHelp", nil)
+}
+
+// SettingsSharedWithTeam says "Shared with team"
+// in the language the app shows.
+func SettingsSharedWithTeam() string { return In(i18n.Locale()).SettingsSharedWithTeam() }
+
+// SettingsSharedWithTeam says "Shared with team"
+// in the language of msgs.
+func (msgs Messages) SettingsSharedWithTeam() string {
+	return Catalog.Format(msgs.locale, "settingsSharedWithTeam", nil)
+}
+
+// SettingsUsage says "AI Usage"
+// in the language the app shows.
+func SettingsUsage() string { return In(i18n.Locale()).SettingsUsage() }
+
+// SettingsUsage says "AI Usage"
+// in the language of msgs.
+func (msgs Messages) SettingsUsage() string {
+	return Catalog.Format(msgs.locale, "settingsUsage", nil)
+}
+
+// UsageDay says "Today"
+// in the language the app shows.
+func UsageDay() string { return In(i18n.Locale()).UsageDay() }
+
+// UsageDay says "Today"
+// in the language of msgs.
+func (msgs Messages) UsageDay() string {
+	return Catalog.Format(msgs.locale, "usageDay", nil)
+}
+
+// UsageWeek says "Week"
+// in the language the app shows.
+func UsageWeek() string { return In(i18n.Locale()).UsageWeek() }
+
+// UsageWeek says "Week"
+// in the language of msgs.
+func (msgs Messages) UsageWeek() string {
+	return Catalog.Format(msgs.locale, "usageWeek", nil)
+}
+
+// UsageMonth says "Month"
+// in the language the app shows.
+func UsageMonth() string { return In(i18n.Locale()).UsageMonth() }
+
+// UsageMonth says "Month"
+// in the language of msgs.
+func (msgs Messages) UsageMonth() string {
+	return Catalog.Format(msgs.locale, "usageMonth", nil)
+}
+
+// UsageTotal says "All time"
+// in the language the app shows.
+func UsageTotal() string { return In(i18n.Locale()).UsageTotal() }
+
+// UsageTotal says "All time"
+// in the language of msgs.
+func (msgs Messages) UsageTotal() string {
+	return Catalog.Format(msgs.locale, "usageTotal", nil)
+}
+
+// UsageTokens says "Tokens"
+// in the language the app shows.
+func UsageTokens() string { return In(i18n.Locale()).UsageTokens() }
+
+// UsageTokens says "Tokens"
+// in the language of msgs.
+func (msgs Messages) UsageTokens() string {
+	return Catalog.Format(msgs.locale, "usageTokens", nil)
+}
+
+// UsageCost says "Cost"
+// in the language the app shows.
+func UsageCost() string { return In(i18n.Locale()).UsageCost() }
+
+// UsageCost says "Cost"
+// in the language of msgs.
+func (msgs Messages) UsageCost() string {
+	return Catalog.Format(msgs.locale, "usageCost", nil)
+}
+
+// UsageByModel says "By model"
+// in the language the app shows.
+func UsageByModel() string { return In(i18n.Locale()).UsageByModel() }
+
+// UsageByModel says "By model"
+// in the language of msgs.
+func (msgs Messages) UsageByModel() string {
+	return Catalog.Format(msgs.locale, "usageByModel", nil)
+}
+
+// UsageByMember says "By member"
+// in the language the app shows.
+func UsageByMember() string { return In(i18n.Locale()).UsageByMember() }
+
+// UsageByMember says "By member"
+// in the language of msgs.
+func (msgs Messages) UsageByMember() string {
+	return Catalog.Format(msgs.locale, "usageByMember", nil)
+}
+
+// SettingsBilling says "Billing"
+// in the language the app shows.
+func SettingsBilling() string { return In(i18n.Locale()).SettingsBilling() }
+
+// SettingsBilling says "Billing"
+// in the language of msgs.
+func (msgs Messages) SettingsBilling() string {
+	return Catalog.Format(msgs.locale, "settingsBilling", nil)
+}
+
+// PlanFree says "Free"
+// in the language the app shows.
+func PlanFree() string { return In(i18n.Locale()).PlanFree() }
+
+// PlanFree says "Free"
+// in the language of msgs.
+func (msgs Messages) PlanFree() string {
+	return Catalog.Format(msgs.locale, "planFree", nil)
+}
+
+// BillingUnavailable says "Billing isn't available for this workspace."
+// in the language the app shows.
+func BillingUnavailable() string { return In(i18n.Locale()).BillingUnavailable() }
+
+// BillingUnavailable says "Billing isn't available for this workspace."
+// in the language of msgs.
+func (msgs Messages) BillingUnavailable() string {
+	return Catalog.Format(msgs.locale, "billingUnavailable", nil)
+}
+
+// BillingPlan says "Plan"
+// in the language the app shows.
+func BillingPlan() string { return In(i18n.Locale()).BillingPlan() }
+
+// BillingPlan says "Plan"
+// in the language of msgs.
+func (msgs Messages) BillingPlan() string {
+	return Catalog.Format(msgs.locale, "billingPlan", nil)
+}
+
+// BillingInterval says "Billing period"
+// in the language the app shows.
+func BillingInterval() string { return In(i18n.Locale()).BillingInterval() }
+
+// BillingInterval says "Billing period"
+// in the language of msgs.
+func (msgs Messages) BillingInterval() string {
+	return Catalog.Format(msgs.locale, "billingInterval", nil)
+}
+
+// BillingMonthly says "Monthly"
+// in the language the app shows.
+func BillingMonthly() string { return In(i18n.Locale()).BillingMonthly() }
+
+// BillingMonthly says "Monthly"
+// in the language of msgs.
+func (msgs Messages) BillingMonthly() string {
+	return Catalog.Format(msgs.locale, "billingMonthly", nil)
+}
+
+// BillingYearly says "Yearly"
+// in the language the app shows.
+func BillingYearly() string { return In(i18n.Locale()).BillingYearly() }
+
+// BillingYearly says "Yearly"
+// in the language of msgs.
+func (msgs Messages) BillingYearly() string {
+	return Catalog.Format(msgs.locale, "billingYearly", nil)
+}
+
+// BillingSeats says "Seats"
+// in the language the app shows.
+func BillingSeats() string { return In(i18n.Locale()).BillingSeats() }
+
+// BillingSeats says "Seats"
+// in the language of msgs.
+func (msgs Messages) BillingSeats() string {
+	return Catalog.Format(msgs.locale, "billingSeats", nil)
+}
+
+// BillingEnds says "Ends on"
+// in the language the app shows.
+func BillingEnds() string { return In(i18n.Locale()).BillingEnds() }
+
+// BillingEnds says "Ends on"
+// in the language of msgs.
+func (msgs Messages) BillingEnds() string {
+	return Catalog.Format(msgs.locale, "billingEnds", nil)
+}
+
+// BillingNext says "Next payment"
+// in the language the app shows.
+func BillingNext() string { return In(i18n.Locale()).BillingNext() }
+
+// BillingNext says "Next payment"
+// in the language of msgs.
+func (msgs Messages) BillingNext() string {
+	return Catalog.Format(msgs.locale, "billingNext", nil)
+}
+
+// BillingManage says "Manage billing"
+// in the language the app shows.
+func BillingManage() string { return In(i18n.Locale()).BillingManage() }
+
+// BillingManage says "Manage billing"
+// in the language of msgs.
+func (msgs Messages) BillingManage() string {
+	return Catalog.Format(msgs.locale, "billingManage", nil)
+}
+
+// BillingManageHelp says "Payment method, plan and invoices, on Stripe."
+// in the language the app shows.
+func BillingManageHelp() string { return In(i18n.Locale()).BillingManageHelp() }
+
+// BillingManageHelp says "Payment method, plan and invoices, on Stripe."
+// in the language of msgs.
+func (msgs Messages) BillingManageHelp() string {
+	return Catalog.Format(msgs.locale, "billingManageHelp", nil)
+}
+
+// BillingInvoices says "Invoices"
+// in the language the app shows.
+func BillingInvoices() string { return In(i18n.Locale()).BillingInvoices() }
+
+// BillingInvoices says "Invoices"
+// in the language of msgs.
+func (msgs Messages) BillingInvoices() string {
+	return Catalog.Format(msgs.locale, "billingInvoices", nil)
+}
+
+// BillingNoInvoices says "No invoices yet."
+// in the language the app shows.
+func BillingNoInvoices() string { return In(i18n.Locale()).BillingNoInvoices() }
+
+// BillingNoInvoices says "No invoices yet."
+// in the language of msgs.
+func (msgs Messages) BillingNoInvoices() string {
+	return Catalog.Format(msgs.locale, "billingNoInvoices", nil)
+}
+
+// GitHubHelp says "Repositories the workspace's GitHub app can reach. Lody works only in those turned on."
+// in the language the app shows.
+func GitHubHelp() string { return In(i18n.Locale()).GitHubHelp() }
+
+// GitHubHelp says "Repositories the workspace's GitHub app can reach. Lody works only in those turned on."
+// in the language of msgs.
+func (msgs Messages) GitHubHelp() string {
+	return Catalog.Format(msgs.locale, "gitHubHelp", nil)
+}
+
+// GitHubNone says "GitHub isn't connected to this workspace."
+// in the language the app shows.
+func GitHubNone() string { return In(i18n.Locale()).GitHubNone() }
+
+// GitHubNone says "GitHub isn't connected to this workspace."
+// in the language of msgs.
+func (msgs Messages) GitHubNone() string {
+	return Catalog.Format(msgs.locale, "gitHubNone", nil)
+}
+
+// GitHubPrivate says "Private"
+// in the language the app shows.
+func GitHubPrivate() string { return In(i18n.Locale()).GitHubPrivate() }
+
+// GitHubPrivate says "Private"
+// in the language of msgs.
+func (msgs Messages) GitHubPrivate() string {
+	return Catalog.Format(msgs.locale, "gitHubPrivate", nil)
+}
+
+// SettingsShares says "Sharing"
+// in the language the app shows.
+func SettingsShares() string { return In(i18n.Locale()).SettingsShares() }
+
+// SettingsShares says "Sharing"
+// in the language of msgs.
+func (msgs Messages) SettingsShares() string {
+	return Catalog.Format(msgs.locale, "settingsShares", nil)
+}
+
+// SharesHelp says "Static copies you have published. Admins see every share in the workspace."
+// in the language the app shows.
+func SharesHelp() string { return In(i18n.Locale()).SharesHelp() }
+
+// SharesHelp says "Static copies you have published. Admins see every share in the workspace."
+// in the language of msgs.
+func (msgs Messages) SharesHelp() string {
+	return Catalog.Format(msgs.locale, "sharesHelp", nil)
+}
+
+// SharesNone says "No published shares."
+// in the language the app shows.
+func SharesNone() string { return In(i18n.Locale()).SharesNone() }
+
+// SharesNone says "No published shares."
+// in the language of msgs.
+func (msgs Messages) SharesNone() string {
+	return Catalog.Format(msgs.locale, "sharesNone", nil)
+}
+
+// SharesActive says "Active"
+// in the language the app shows.
+func SharesActive() string { return In(i18n.Locale()).SharesActive() }
+
+// SharesActive says "Active"
+// in the language of msgs.
+func (msgs Messages) SharesActive() string {
+	return Catalog.Format(msgs.locale, "sharesActive", nil)
+}
+
+// SharesRevoked says "Revoked"
+// in the language the app shows.
+func SharesRevoked() string { return In(i18n.Locale()).SharesRevoked() }
+
+// SharesRevoked says "Revoked"
+// in the language of msgs.
+func (msgs Messages) SharesRevoked() string {
+	return Catalog.Format(msgs.locale, "sharesRevoked", nil)
+}
+
+// SharesConversations says "{n, plural, one {# conversation} other {# conversations}}"
+// in the language the app shows.
+func SharesConversations(n int) string { return In(i18n.Locale()).SharesConversations(n) }
+
+// SharesConversations says "{n, plural, one {# conversation} other {# conversations}}"
+// in the language of msgs.
+func (msgs Messages) SharesConversations(n int) string {
+	return Catalog.Format(msgs.locale, "sharesConversations", map[string]any{"n": n})
+}
+
+// SharesRevoke says "Revoke"
+// in the language the app shows.
+func SharesRevoke() string { return In(i18n.Locale()).SharesRevoke() }
+
+// SharesRevoke says "Revoke"
+// in the language of msgs.
+func (msgs Messages) SharesRevoke() string {
+	return Catalog.Format(msgs.locale, "sharesRevoke", nil)
+}
+
+// SharesConfirmRevoke says "Revoke link"
+// in the language the app shows.
+func SharesConfirmRevoke() string { return In(i18n.Locale()).SharesConfirmRevoke() }
+
+// SharesConfirmRevoke says "Revoke link"
+// in the language of msgs.
+func (msgs Messages) SharesConfirmRevoke() string {
+	return Catalog.Format(msgs.locale, "sharesConfirmRevoke", nil)
+}

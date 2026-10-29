@@ -271,3 +271,22 @@ func (a *API) PreviewToken(ctx context.Context, token, userID string, intent map
 	}
 	return res.RequestToken, nil
 }
+
+// Member is a member of a workspace.
+type Member struct {
+	ID     string `json:"id"`
+	UserID string `json:"userId"`
+	Role   string `json:"role"` // owner, admin or member
+	User   User   `json:"user"`
+}
+
+// Members lists a workspace's members.
+func (a *API) Members(ctx context.Context, token, workspaceID string) ([]Member, error) {
+	var org struct {
+		Members []Member `json:"members"`
+	}
+	if err := a.call(ctx, token, "/api/auth/organization/get-full-organization?organizationId="+url.QueryEscape(workspaceID), nil, &org); err != nil {
+		return nil, err
+	}
+	return org.Members, nil
+}

@@ -34,7 +34,12 @@ type settingsSection struct {
 func settingsSections() []settingsSection {
 	return []settingsSection{
 		{locales.SettingsPersonal(), []settingsTab{{"account", "", nil}, {"preferences", locales.SettingsPreferences(), iconSliders}, {"appearance", locales.SettingsAppearance(), iconPalette}, {"keyboard", locales.SettingsKeyboard(), iconKeyboard}}},
-		{locales.SettingsWorkspace(), []settingsTab{{"general", locales.SettingsGeneral(), iconBuilding}, {"agents", locales.SettingsAgents(), iconBot}, {"projects", locales.SettingsProjects(), iconFolder}}},
+		{locales.SettingsWorkspace(), []settingsTab{
+			{"general", locales.SettingsGeneral(), iconBuilding}, {"machines", locales.SettingsMachines(), iconMonitor},
+			{"agents", locales.SettingsAgents(), iconBot}, {"projects", locales.SettingsProjects(), iconFolder},
+			{"github", "GitHub", iconGithub}, {"ai-usage", locales.SettingsUsage(), iconChart},
+			{"shares", locales.SettingsShares(), iconShare}, {"billing", locales.SettingsBilling(), iconCreditCard},
+		}},
 		{locales.SettingsOther(), []settingsTab{{"about", locales.SettingsAbout(), iconInfo}}},
 	}
 }
@@ -157,6 +162,16 @@ func (a *App) settingsPage(c *ui.Context, p *palette) {
 		a.agentsPage(c, p)
 	case "projects":
 		a.projectsPage(c, p)
+	case "machines":
+		a.machinesPage(c, p)
+	case "github":
+		a.githubPage(c, p)
+	case "ai-usage":
+		a.usagePage(c, p)
+	case "shares":
+		a.sharesPage(c, p)
+	case "billing":
+		a.billingPage(c, p)
 	case "about":
 		settingsTitle(c, p, locales.SettingsAbout())
 		settingRow(c, p, "Lody Native "+appVersion, locales.SettingsAboutDescription(), nil)
@@ -269,6 +284,8 @@ func (a *App) workspacePage(c *ui.Context, p *palette) {
 			iconButton(c, p, iconCopy, locales.Copy(), p.Hover).Size(24, 24).OnClick(func() { mygo.Clipboard.WriteText(ws.ID) })
 		})
 	})
+	divider(c, p)
+	a.membersSection(c, p)
 	divider(c, p)
 	settingsHeading(c, p, locales.SettingsWorkspaces())
 	for _, w := range a.account.Workspaces {

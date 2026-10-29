@@ -1,6 +1,8 @@
 package app
 
 import (
+	"encoding/json"
+	"reflect"
 	"strings"
 	"time"
 
@@ -703,5 +705,63 @@ func TestPanelChooser(t *testing.T) {
 	tt.Frame()
 	if in.tab != "" || !tt.HasText("Open a panel") {
 		t.Fatalf("after close: %+v %q", in.tabs, tt.Texts())
+	}
+}
+
+func TestCloudSettings(t *testing.T) {
+	a := fixture()
+	a.settingsOpen = true
+	seed := func(key, raw string, into any) {
+		if err := json.Unmarshal([]byte(raw), into); err != nil {
+			t.Fatal(key, err)
+		}
+		if a.fetches == nil {
+			a.fetches = map[string]*fetched{}
+		}
+		v := reflect.ValueOf(into)
+		switch v.Elem().Kind() {
+		case reflect.Slice:
+			a.fetches[a.workspaceID+"|"+key] = &fetched{value: v.Elem().Interface()}
+		default:
+			a.fetches[a.workspaceID+"|"+key] = &fetched{value: into}
+		}
+	}
+	seed("members", `[{"id":"mem1","userId":"u1","role":"owner","user":{"id":"u1","name":"Ada Lovelace","email":"ada@example.com"}},
+		{"id":"mem2","userId":"u2","role":"member","user":{"id":"u2","name":"Grace Hopper","email":"grace@example.com"}}]`, &[]cloud.Member{})
+	seed("machines", `[{"machineId":"m1","ownerUserId":"u1","sharedWithTeam":true,"updatedAt":1}]`, &[]visibleMachine{})
+	seed("usage/month", `{"totals":{"tokens":1500000,"costUSD":12.34},"users":{"u2":{"name":"Grace Hopper"}},
+		"buckets":[{"bucketStartMs":0,"bucketLabel":"Oct 1","tokens":500000,"costUSD":4,"byModel":[{"modelId":"claude-opus-5-5","tokens":500000,"costUSD":4}],"byUser":[{"userId":"u1","tokens":500000,"costUSD":4}]},
+		{"bucketStartMs":1,"bucketLabel":"Oct 2","tokens":1000000,"costUSD":8.34,"byModel":[{"modelId":"gpt-5","tokens":1000000,"costUSD":8.34}],"byUser":[{"userId":"u2","tokens":1000000,"costUSD":8.34}]}]}`, &usageTimeline{})
+	var billing *billingOverview
+	seed("billing", `{"billingAccountId":null,"planTier":"plus","effectivePlanTier":"plus","billingInterval":"month","nextBillingAt":1798804800000,"seatCount":2,"canManageBilling":true,"cancelAtPeriodEnd":false}`, &billing)
+	a.fetches[a.workspaceID+"|billing"].value = billing
+	var repos *[]workspaceRepo
+	seed("github", `[{"repoFullName":"lbr77/lody-mygo","name":"lody-mygo","repositoryId":1,"private":true,"enabled":true}]`, &repos)
+	a.fetches[a.workspaceID+"|github"].value = repos
+	seed("shares", `[{"shareId":"sh1","publisherUserId":"u2","status":"active","revision":3,"title":"Flock port","createdAt":1798761600000,"totalBytes":2048,"conversationCount":2,"canRevoke":true}]`, &[]publishedShare{})
+
+	check := func(tab string, want ...string) *ui.Tester {
+		t.Helper()
+		a.settingsTab = tab
+		tt := snap(t, a, "settings-"+tab, false, nil)
+		for _, w := range want {
+			if !tt.HasText(w) {
+				t.Fatalf("%s: no %q in %q", tab, w, tt.Texts())
+			}
+		}
+		return tt
+	}
+	check("general", "Members", "Ada Lovelace (You)", "Grace Hopper", "Owner", "Member")
+	check("machines", "Studio", "Shared with team")
+	check("ai-usage", "1.5M", "$12.34", "By model", "claude-opus-5-5", "gpt-5", "By member", "You", "Grace Hopper")
+	check("billing", "Plus", "Monthly", "2027-01-01")
+	check("github", "lbr77/lody-mygo", "Private")
+	tt := check("shares", "Flock port", "Revoke")
+	if err := tt.Click("Revoke"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if !tt.HasText("Revoke link") || a.revoking != "sh1" {
+		t.Fatalf("revoke confirmation: %q", tt.Texts())
 	}
 }

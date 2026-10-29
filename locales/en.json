@@ -704,5 +704,54 @@
       }
     }
   },
-  "previewAddress": "Address"
+  "previewAddress": "Address",
+  "settingsYou": "You",
+  "roleOwner": "Owner",
+  "roleAdmin": "Admin",
+  "roleMember": "Member",
+  "settingsMembers": "Members",
+  "settingsMachines": "Machines",
+  "settingsMachinesHelp": "The machines this workspace can see. Share yours so members can run agents on it.",
+  "settingsSharedWithTeam": "Shared with team",
+  "settingsUsage": "AI Usage",
+  "usageDay": "Today",
+  "usageWeek": "Week",
+  "usageMonth": "Month",
+  "usageTotal": "All time",
+  "usageTokens": "Tokens",
+  "usageCost": "Cost",
+  "usageByModel": "By model",
+  "usageByMember": "By member",
+  "settingsBilling": "Billing",
+  "planFree": "Free",
+  "billingUnavailable": "Billing isn't available for this workspace.",
+  "billingPlan": "Plan",
+  "billingInterval": "Billing period",
+  "billingMonthly": "Monthly",
+  "billingYearly": "Yearly",
+  "billingSeats": "Seats",
+  "billingEnds": "Ends on",
+  "billingNext": "Next payment",
+  "billingManage": "Manage billing",
+  "billingManageHelp": "Payment method, plan and invoices, on Stripe.",
+  "billingInvoices": "Invoices",
+  "billingNoInvoices": "No invoices yet.",
+  "gitHubHelp": "Repositories the workspace's GitHub app can reach. Lody works only in those turned on.",
+  "gitHubNone": "GitHub isn't connected to this workspace.",
+  "gitHubPrivate": "Private",
+  "settingsShares": "Sharing",
+  "sharesHelp": "Static copies you have published. Admins see every share in the workspace.",
+  "sharesNone": "No published shares.",
+  "sharesActive": "Active",
+  "sharesRevoked": "Revoked",
+  "sharesConversations": "{n, plural, one {# conversation} other {# conversations}}",
+  "@sharesConversations": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "sharesRevoke": "Revoke",
+  "sharesConfirmRevoke": "Revoke link"
 }

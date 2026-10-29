@@ -116,6 +116,12 @@ type App struct {
 	inspect        *inspectState
 	term           termDock // the terminal dock under the conversation
 	previews       map[string]*previewState
+	convex         *cloud.Convex
+	fetches        map[string]*fetched // what the settings asked the cloud for
+	toggles        map[string]bool     // cloud switches flipped, until they settle
+	settingsError  string
+	usageRange     string
+	revoking       string // the share whose revoke awaits confirmation
 	taskOpen       bool   // a task's dialog
 	taskEntry      string // the turn and task it shows
 	taskID         string
@@ -131,7 +137,7 @@ type App struct {
 
 // New returns the app. Run it with Start once the window exists.
 func New() *App {
-	return &App{
+	a := &App{
 		api:          &cloud.API{},
 		drafts:       map[string]string{},
 		models:       map[string]string{},
@@ -143,6 +149,8 @@ func New() *App {
 		collapsed:    map[string]bool{},
 		expanded:     map[string]bool{},
 	}
+	a.convex = &cloud.Convex{API: a.api, Token: a.tokenNow}
+	return a
 }
 
 // View is the window's content.
