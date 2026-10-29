@@ -1348,5 +1348,112 @@
     }
   },
   "projectMCPNotOwner": "Only the owner of the project's machine changes its defaults.",
-  "sidebarResize": "Resize sidebar"
+  "sidebarResize": "Resize sidebar",
+  "projectPageConversations": "Conversations",
+  "projectPageConversationsLead": "Import the conversations you had with agents outside Lody into this workspace.",
+  "historyNoAgents": "No agents detected on this machine yet. Conversation sync becomes available once an ACP agent has run here.",
+  "historyPanel": "{provider} conversations",
+  "@historyPanel": {
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "historyNotSynced": "Not synced yet",
+  "historyLastSynced": "Last synced {relative}",
+  "@historyLastSynced": {
+    "placeholders": {
+      "relative": {
+        "type": "String"
+      }
+    }
+  },
+  "historySync": "Sync",
+  "historySyncAgain": "Sync again",
+  "historyInitialTitle": "Sync {provider} conversations",
+  "@historyInitialTitle": {
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "historyInitialHint": "Find this project's conversations in {provider}, then choose which ones to import.",
+  "@historyInitialHint": {
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "historyEmpty": "No {provider} conversations found",
+  "@historyEmpty": {
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "historyEmptyHint": "Start a conversation for this project in {provider}, then sync again.",
+  "@historyEmptyHint": {
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "historyAll": "All",
+  "historyToImport": "To import",
+  "historyConflicts": "Conflicts",
+  "historyImported": "Imported",
+  "historySearch": "Search conversations",
+  "historySelectShown": "Select all {count} shown",
+  "@historySelectShown": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "historyImportCount": "{count, plural, =0 {Import} one {Import # selected} other {Import # selected}}",
+  "@historyImportCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "historyNoMatches": "No conversations match.",
+  "historyUnknownTime": "Unknown time",
+  "historyConflict": "Conflict",
+  "historyResolve": "Resolve",
+  "historySyncFailed": "Failed to sync {provider} history",
+  "@historySyncFailed": {
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "historySummary": "Imported {imported}, refreshed {refreshed}, skipped {skipped}, conflicts {conflicted}, failed {failed}",
+  "@historySummary": {
+    "placeholders": {
+      "imported": {
+        "type": "int"
+      },
+      "refreshed": {
+        "type": "int"
+      },
+      "skipped": {
+        "type": "int"
+      },
+      "conflicted": {
+        "type": "int"
+      },
+      "failed": {
+        "type": "int"
+      }
+    }
+  }
 }

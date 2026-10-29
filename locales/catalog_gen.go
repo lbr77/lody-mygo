@@ -6588,3 +6588,259 @@ func SidebarResize() string { return In(i18n.Locale()).SidebarResize() }
 func (msgs Messages) SidebarResize() string {
 	return Catalog.Format(msgs.locale, "sidebarResize", nil)
 }
+
+// ProjectPageConversations says "Conversations"
+// in the language the app shows.
+func ProjectPageConversations() string { return In(i18n.Locale()).ProjectPageConversations() }
+
+// ProjectPageConversations says "Conversations"
+// in the language of msgs.
+func (msgs Messages) ProjectPageConversations() string {
+	return Catalog.Format(msgs.locale, "projectPageConversations", nil)
+}
+
+// ProjectPageConversationsLead says "Import the conversations you had with agents outside Lody into this workspace."
+// in the language the app shows.
+func ProjectPageConversationsLead() string { return In(i18n.Locale()).ProjectPageConversationsLead() }
+
+// ProjectPageConversationsLead says "Import the conversations you had with agents outside Lody into this workspace."
+// in the language of msgs.
+func (msgs Messages) ProjectPageConversationsLead() string {
+	return Catalog.Format(msgs.locale, "projectPageConversationsLead", nil)
+}
+
+// HistoryNoAgents says "No agents detected on this machine yet. Conversation sync becomes available once an ACP agent has run here."
+// in the language the app shows.
+func HistoryNoAgents() string { return In(i18n.Locale()).HistoryNoAgents() }
+
+// HistoryNoAgents says "No agents detected on this machine yet. Conversation sync becomes available once an ACP agent has run here."
+// in the language of msgs.
+func (msgs Messages) HistoryNoAgents() string {
+	return Catalog.Format(msgs.locale, "historyNoAgents", nil)
+}
+
+// HistoryPanel says "{provider} conversations"
+// in the language the app shows.
+func HistoryPanel(provider string) string { return In(i18n.Locale()).HistoryPanel(provider) }
+
+// HistoryPanel says "{provider} conversations"
+// in the language of msgs.
+func (msgs Messages) HistoryPanel(provider string) string {
+	return Catalog.Format(msgs.locale, "historyPanel", map[string]any{"provider": provider})
+}
+
+// HistoryNotSynced says "Not synced yet"
+// in the language the app shows.
+func HistoryNotSynced() string { return In(i18n.Locale()).HistoryNotSynced() }
+
+// HistoryNotSynced says "Not synced yet"
+// in the language of msgs.
+func (msgs Messages) HistoryNotSynced() string {
+	return Catalog.Format(msgs.locale, "historyNotSynced", nil)
+}
+
+// HistoryLastSynced says "Last synced {relative}"
+// in the language the app shows.
+func HistoryLastSynced(relative string) string { return In(i18n.Locale()).HistoryLastSynced(relative) }
+
+// HistoryLastSynced says "Last synced {relative}"
+// in the language of msgs.
+func (msgs Messages) HistoryLastSynced(relative string) string {
+	return Catalog.Format(msgs.locale, "historyLastSynced", map[string]any{"relative": relative})
+}
+
+// HistorySync says "Sync"
+// in the language the app shows.
+func HistorySync() string { return In(i18n.Locale()).HistorySync() }
+
+// HistorySync says "Sync"
+// in the language of msgs.
+func (msgs Messages) HistorySync() string {
+	return Catalog.Format(msgs.locale, "historySync", nil)
+}
+
+// HistorySyncAgain says "Sync again"
+// in the language the app shows.
+func HistorySyncAgain() string { return In(i18n.Locale()).HistorySyncAgain() }
+
+// HistorySyncAgain says "Sync again"
+// in the language of msgs.
+func (msgs Messages) HistorySyncAgain() string {
+	return Catalog.Format(msgs.locale, "historySyncAgain", nil)
+}
+
+// HistoryInitialTitle says "Sync {provider} conversations"
+// in the language the app shows.
+func HistoryInitialTitle(provider string) string {
+	return In(i18n.Locale()).HistoryInitialTitle(provider)
+}
+
+// HistoryInitialTitle says "Sync {provider} conversations"
+// in the language of msgs.
+func (msgs Messages) HistoryInitialTitle(provider string) string {
+	return Catalog.Format(msgs.locale, "historyInitialTitle", map[string]any{"provider": provider})
+}
+
+// HistoryInitialHint says "Find this project's conversations in {provider}, then choose which ones to import."
+// in the language the app shows.
+func HistoryInitialHint(provider string) string {
+	return In(i18n.Locale()).HistoryInitialHint(provider)
+}
+
+// HistoryInitialHint says "Find this project's conversations in {provider}, then choose which ones to import."
+// in the language of msgs.
+func (msgs Messages) HistoryInitialHint(provider string) string {
+	return Catalog.Format(msgs.locale, "historyInitialHint", map[string]any{"provider": provider})
+}
+
+// HistoryEmpty says "No {provider} conversations found"
+// in the language the app shows.
+func HistoryEmpty(provider string) string { return In(i18n.Locale()).HistoryEmpty(provider) }
+
+// HistoryEmpty says "No {provider} conversations found"
+// in the language of msgs.
+func (msgs Messages) HistoryEmpty(provider string) string {
+	return Catalog.Format(msgs.locale, "historyEmpty", map[string]any{"provider": provider})
+}
+
+// HistoryEmptyHint says "Start a conversation for this project in {provider}, then sync again."
+// in the language the app shows.
+func HistoryEmptyHint(provider string) string { return In(i18n.Locale()).HistoryEmptyHint(provider) }
+
+// HistoryEmptyHint says "Start a conversation for this project in {provider}, then sync again."
+// in the language of msgs.
+func (msgs Messages) HistoryEmptyHint(provider string) string {
+	return Catalog.Format(msgs.locale, "historyEmptyHint", map[string]any{"provider": provider})
+}
+
+// HistoryAll says "All"
+// in the language the app shows.
+func HistoryAll() string { return In(i18n.Locale()).HistoryAll() }
+
+// HistoryAll says "All"
+// in the language of msgs.
+func (msgs Messages) HistoryAll() string {
+	return Catalog.Format(msgs.locale, "historyAll", nil)
+}
+
+// HistoryToImport says "To import"
+// in the language the app shows.
+func HistoryToImport() string { return In(i18n.Locale()).HistoryToImport() }
+
+// HistoryToImport says "To import"
+// in the language of msgs.
+func (msgs Messages) HistoryToImport() string {
+	return Catalog.Format(msgs.locale, "historyToImport", nil)
+}
+
+// HistoryConflicts says "Conflicts"
+// in the language the app shows.
+func HistoryConflicts() string { return In(i18n.Locale()).HistoryConflicts() }
+
+// HistoryConflicts says "Conflicts"
+// in the language of msgs.
+func (msgs Messages) HistoryConflicts() string {
+	return Catalog.Format(msgs.locale, "historyConflicts", nil)
+}
+
+// HistoryImported says "Imported"
+// in the language the app shows.
+func HistoryImported() string { return In(i18n.Locale()).HistoryImported() }
+
+// HistoryImported says "Imported"
+// in the language of msgs.
+func (msgs Messages) HistoryImported() string {
+	return Catalog.Format(msgs.locale, "historyImported", nil)
+}
+
+// HistorySearch says "Search conversations"
+// in the language the app shows.
+func HistorySearch() string { return In(i18n.Locale()).HistorySearch() }
+
+// HistorySearch says "Search conversations"
+// in the language of msgs.
+func (msgs Messages) HistorySearch() string {
+	return Catalog.Format(msgs.locale, "historySearch", nil)
+}
+
+// HistorySelectShown says "Select all {count} shown"
+// in the language the app shows.
+func HistorySelectShown(count int) string { return In(i18n.Locale()).HistorySelectShown(count) }
+
+// HistorySelectShown says "Select all {count} shown"
+// in the language of msgs.
+func (msgs Messages) HistorySelectShown(count int) string {
+	return Catalog.Format(msgs.locale, "historySelectShown", map[string]any{"count": count})
+}
+
+// HistoryImportCount says "{count, plural, =0 {Import} one {Import # selected} other {Import # selected}}"
+// in the language the app shows.
+func HistoryImportCount(count int) string { return In(i18n.Locale()).HistoryImportCount(count) }
+
+// HistoryImportCount says "{count, plural, =0 {Import} one {Import # selected} other {Import # selected}}"
+// in the language of msgs.
+func (msgs Messages) HistoryImportCount(count int) string {
+	return Catalog.Format(msgs.locale, "historyImportCount", map[string]any{"count": count})
+}
+
+// HistoryNoMatches says "No conversations match."
+// in the language the app shows.
+func HistoryNoMatches() string { return In(i18n.Locale()).HistoryNoMatches() }
+
+// HistoryNoMatches says "No conversations match."
+// in the language of msgs.
+func (msgs Messages) HistoryNoMatches() string {
+	return Catalog.Format(msgs.locale, "historyNoMatches", nil)
+}
+
+// HistoryUnknownTime says "Unknown time"
+// in the language the app shows.
+func HistoryUnknownTime() string { return In(i18n.Locale()).HistoryUnknownTime() }
+
+// HistoryUnknownTime says "Unknown time"
+// in the language of msgs.
+func (msgs Messages) HistoryUnknownTime() string {
+	return Catalog.Format(msgs.locale, "historyUnknownTime", nil)
+}
+
+// HistoryConflict says "Conflict"
+// in the language the app shows.
+func HistoryConflict() string { return In(i18n.Locale()).HistoryConflict() }
+
+// HistoryConflict says "Conflict"
+// in the language of msgs.
+func (msgs Messages) HistoryConflict() string {
+	return Catalog.Format(msgs.locale, "historyConflict", nil)
+}
+
+// HistoryResolve says "Resolve"
+// in the language the app shows.
+func HistoryResolve() string { return In(i18n.Locale()).HistoryResolve() }
+
+// HistoryResolve says "Resolve"
+// in the language of msgs.
+func (msgs Messages) HistoryResolve() string {
+	return Catalog.Format(msgs.locale, "historyResolve", nil)
+}
+
+// HistorySyncFailed says "Failed to sync {provider} history"
+// in the language the app shows.
+func HistorySyncFailed(provider string) string { return In(i18n.Locale()).HistorySyncFailed(provider) }
+
+// HistorySyncFailed says "Failed to sync {provider} history"
+// in the language of msgs.
+func (msgs Messages) HistorySyncFailed(provider string) string {
+	return Catalog.Format(msgs.locale, "historySyncFailed", map[string]any{"provider": provider})
+}
+
+// HistorySummary says "Imported {imported}, refreshed {refreshed}, skipped {skipped}, conflicts {conflicted}, failed {failed}"
+// in the language the app shows.
+func HistorySummary(imported int, refreshed int, skipped int, conflicted int, failed int) string {
+	return In(i18n.Locale()).HistorySummary(imported, refreshed, skipped, conflicted, failed)
+}
+
+// HistorySummary says "Imported {imported}, refreshed {refreshed}, skipped {skipped}, conflicts {conflicted}, failed {failed}"
+// in the language of msgs.
+func (msgs Messages) HistorySummary(imported int, refreshed int, skipped int, conflicted int, failed int) string {
+	return Catalog.Format(msgs.locale, "historySummary", map[string]any{"imported": imported, "refreshed": refreshed, "skipped": skipped, "conflicted": conflicted, "failed": failed})
+}

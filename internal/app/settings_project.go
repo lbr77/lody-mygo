@@ -39,11 +39,13 @@ type scriptEditor struct {
 }
 
 type projectWindow struct {
-	open    bool
-	id      string // the project's
-	page    string
-	setup   scriptEditor
-	cleanup scriptEditor
+	open            bool
+	id              string // the project's
+	page            string
+	setup           scriptEditor
+	cleanup         scriptEditor
+	history         map[string]*historyState // by provider
+	historyProvider string
 }
 
 func (a *App) openProject(id string) {
@@ -57,6 +59,7 @@ func projectWindowPages() []struct{ id, label, lead string } {
 		{"worktree", "Worktree", locales.ProjectPageWorktreeLead()},
 		{"skills", locales.ProjectPageSkills(), locales.ProjectPageSkillsLead()},
 		{"mcp", locales.ProjectPageMCP(), locales.ProjectPageMCPLead()},
+		{"conversations", locales.ProjectPageConversations(), locales.ProjectPageConversationsLead()},
 	}
 }
 
@@ -118,7 +121,7 @@ func (a *App) projectWindow(c *ui.Context, p *palette) {
 				})
 				ui.Scroll(c).Grow(1).MinHeight(0).Padding(12, 24, 24, 24).Gap(14).Children(func() {
 					online := a.presence.IsOnline(project.MachineID)
-					if !online && (w.page == "worktree" || w.page == "skills") {
+					if !online && (w.page == "worktree" || w.page == "skills" || w.page == "conversations") {
 						ui.Text(c, locales.ProjectMachineOffline(a.machineName(project.MachineID))).FontSize(sizeFoot).TextColor(p.Secondary).
 							Padding(10, 12).Radius(8).Background(p.Text.Alpha(0.04))
 						if w.page == "skills" {
@@ -135,6 +138,8 @@ func (a *App) projectWindow(c *ui.Context, p *palette) {
 						a.projectSkills(c, p, project)
 					case "mcp":
 						a.projectMCP(c, p, project)
+					case "conversations":
+						a.projectHistory(c, p, project)
 					}
 				})
 			})

@@ -16,6 +16,9 @@ type Project struct {
 	Name         string `json:"name"`
 	RootPath     string `json:"rootPath"`
 	RepoFullName string `json:"repoFullName,omitempty"`
+	// History is what the machine last listed of the agents' own
+	// conversations in the project, by provider.
+	History map[string]any `json:"-"`
 }
 
 type Model struct {
@@ -130,19 +133,20 @@ func (c *Catalog) ModesFor(agentConfigID, agentType string) []Mode {
 }
 
 type Catalog struct {
-	Projects     []Project                `json:"projects"`
-	Sessions     []Session                `json:"sessions"`
-	MachineIDs   []string                 `json:"machineIds"`
-	MachineNames map[string]string        `json:"machineNames,omitempty"`
-	MachineOS    map[string]string        `json:"machineOs,omitempty"`
-	MachineCLI   map[string]string        `json:"machineCli,omitempty"` // the Lody CLI's version
-	Agents       map[string][]AgentConfig `json:"agents,omitempty"`     // by machine
-	Capabilities map[string]Capability    `json:"capabilities,omitempty"`
-	MCPServers   []MCPServer              `json:"-"`
-	Roles        []AgentRole              `json:"-"`
-	ProjectMCP   map[string][]string      `json:"-"` // default MCP servers by project key
-	Memories     map[string][]Memory      `json:"-"` // by machine
-	Removing     map[string]bool          `json:"-"` // projects their machines are removing
+	Projects     []Project                     `json:"projects"`
+	Sessions     []Session                     `json:"sessions"`
+	MachineIDs   []string                      `json:"machineIds"`
+	MachineNames map[string]string             `json:"machineNames,omitempty"`
+	MachineOS    map[string]string             `json:"machineOs,omitempty"`
+	MachineCLI   map[string]string             `json:"machineCli,omitempty"`  // the Lody CLI's version
+	MachineCaps  map[string]map[string]float64 `json:"machineCaps,omitempty"` // protocol capabilities, by machine
+	Agents       map[string][]AgentConfig      `json:"agents,omitempty"`      // by machine
+	Capabilities map[string]Capability         `json:"capabilities,omitempty"`
+	MCPServers   []MCPServer                   `json:"-"`
+	Roles        []AgentRole                   `json:"-"`
+	ProjectMCP   map[string][]string           `json:"-"` // default MCP servers by project key
+	Memories     map[string][]Memory           `json:"-"` // by machine
+	Removing     map[string]bool               `json:"-"` // projects their machines are removing
 }
 
 // Session returns the session with id.
@@ -231,7 +235,7 @@ func projectMachine(rows []flock.Row, machineID string) Catalog {
 			if name == "" {
 				name = id
 			}
-			c.Projects = append(c.Projects, Project{ID: machineID + ":local:" + id, MachineID: machineID, Name: name, RootPath: text(value["rootPath"])})
+			c.Projects = append(c.Projects, Project{ID: machineID + ":local:" + id, MachineID: machineID, Name: name, RootPath: text(value["rootPath"]), History: object(value["history"])})
 		case "agentConfig":
 			cfg := AgentConfig{ID: text(value["id"]), Name: text(value["name"]), MachineID: text(value["machineId"]), AgentType: text(value["agentType"]), CLIType: text(value["cliType"]), Row: value}
 			if cfg.ID == "" {
@@ -304,6 +308,7 @@ func projectMeta(rows []flock.Row) Catalog {
 	c.MachineNames = map[string]string{}
 	c.MachineOS = map[string]string{}
 	c.MachineCLI = map[string]string{}
+	c.MachineCaps = map[string]map[string]float64{}
 	active := map[string]bool{}
 	metadata := map[string]map[string]any{}
 	var order []string
@@ -353,6 +358,13 @@ func projectMeta(rows []flock.Row) Catalog {
 			}
 			if v := text(value["cliVersion"]); v != "" {
 				c.MachineCLI[machineID] = v
+			}
+			if caps := object(value["protocolCapabilities"]); len(caps) > 0 {
+				versions := map[string]float64{}
+				for k, v := range caps {
+					versions[k] = stamp(v)
+				}
+				c.MachineCaps[machineID] = versions
 			}
 			local := object(value["localProjects"])
 			keys := make([]string, 0, len(local))
@@ -471,6 +483,7 @@ func merge(meta Catalog, machines map[string]Catalog) Catalog {
 		MachineNames: meta.MachineNames,
 		MachineOS:    meta.MachineOS,
 		MachineCLI:   meta.MachineCLI,
+		MachineCaps:  meta.MachineCaps,
 		Agents:       map[string][]AgentConfig{},
 		Capabilities: map[string]Capability{},
 	}

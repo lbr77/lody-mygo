@@ -788,6 +788,23 @@ func TestCloudSettings(t *testing.T) {
 	check("projects", "Until you change a switch, the project follows the workspace's defaults.", "IDA Pro", "Notes")
 	a.catalog.ProjectMCP = map[string][]string{catalog.ProjectMCPKey("m1", "p1"): {"x2"}}
 	check("projects", "This project has its own list; servers the workspace turns on by default later aren't added.")
+	for i := range a.catalog.Projects {
+		if a.catalog.Projects[i].ID == "m1:local:p1" {
+			a.catalog.Projects[i].History = map[string]any{"builtin:claude": map[string]any{"lastListedAt": 1.0, "sessions": map[string]any{
+				"x": map[string]any{"acpSessionId": "x", "title": "Fix the login page", "status": "available", "updatedAt": "2026-10-20T10:00:00Z"},
+				"y": map[string]any{"acpSessionId": "y", "title": "Port the parser", "importedSessionId": "s9"},
+			}}}
+		}
+	}
+	a.projectWin.page = "conversations"
+	tt0 := check("projects", "Claude Code conversations", "Sync again", "Fix the login page", "Port the parser", "Imported", "Select all 1 shown")
+	if err := tt0.Click("Select all 1 shown"); err != nil {
+		t.Fatal(err)
+	}
+	tt0.Frame()
+	if !tt0.HasText("Import 1 selected") {
+		t.Fatalf("selection: %q", tt0.Texts())
+	}
 	a.projectWin.open = false
 	seed("shortcuts", `[{"v":1,"id":"p1","workspaceId":"w1","ownerUserId":"u1","visibility":"private","name":"Review","slug":"review","scope":{},"revision":"r1","createdAt":1,"updatedAt":1,"bodyDocId":"b1","dependencySummary":[]}]`, &[]shortcuts.Entry{})
 	check("prompt-shortcuts", "Review", "/review", "Private", "New Prompt Shortcut")
