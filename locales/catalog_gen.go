@@ -17848,3 +17848,185 @@ func HmBaseBranchOnly(base string) string { return In(i18n.Locale()).HmBaseBranc
 func (msgs Messages) HmBaseBranchOnly(base string) string {
 	return Catalog.Format(msgs.locale, "hmBaseBranchOnly", map[string]any{"base": base})
 }
+
+// SetupAwaitingAuth says "Sign in to finish this provider setup."
+// in the language the app shows.
+func SetupAwaitingAuth() string { return In(i18n.Locale()).SetupAwaitingAuth() }
+
+// SetupAwaitingAuth says "Sign in to finish this provider setup."
+// in the language of msgs.
+func (msgs Messages) SetupAwaitingAuth() string {
+	return Catalog.Format(msgs.locale, "setupAwaitingAuth", nil)
+}
+
+// SetupBubInstallRequired says "Bub or its ACP server is not installed on the target machine."
+// in the language the app shows.
+func SetupBubInstallRequired() string { return In(i18n.Locale()).SetupBubInstallRequired() }
+
+// SetupBubInstallRequired says "Bub or its ACP server is not installed on the target machine."
+// in the language of msgs.
+func (msgs Messages) SetupBubInstallRequired() string {
+	return Catalog.Format(msgs.locale, "setupBubInstallRequired", nil)
+}
+
+// SetupDeleteFailed says "Could not cancel provider setup"
+// in the language the app shows.
+func SetupDeleteFailed() string { return In(i18n.Locale()).SetupDeleteFailed() }
+
+// SetupDeleteFailed says "Could not cancel provider setup"
+// in the language of msgs.
+func (msgs Messages) SetupDeleteFailed() string {
+	return Catalog.Format(msgs.locale, "setupDeleteFailed", nil)
+}
+
+// SetupDownloadingPercent says "Downloading the agent runtime… {percent}%"
+// in the language the app shows.
+func SetupDownloadingPercent(percent int) string {
+	return In(i18n.Locale()).SetupDownloadingPercent(percent)
+}
+
+// SetupDownloadingPercent says "Downloading the agent runtime… {percent}%"
+// in the language of msgs.
+func (msgs Messages) SetupDownloadingPercent(percent int) string {
+	return Catalog.Format(msgs.locale, "setupDownloadingPercent", map[string]any{"percent": percent})
+}
+
+// SetupMachineOffline says "Waiting for the target machine to come online…"
+// in the language the app shows.
+func SetupMachineOffline() string { return In(i18n.Locale()).SetupMachineOffline() }
+
+// SetupMachineOffline says "Waiting for the target machine to come online…"
+// in the language of msgs.
+func (msgs Messages) SetupMachineOffline() string {
+	return Catalog.Format(msgs.locale, "setupMachineOffline", nil)
+}
+
+// SetupPreparingRuntime says "Downloading the agent runtime…"
+// in the language the app shows.
+func SetupPreparingRuntime() string { return In(i18n.Locale()).SetupPreparingRuntime() }
+
+// SetupPreparingRuntime says "Downloading the agent runtime…"
+// in the language of msgs.
+func (msgs Messages) SetupPreparingRuntime() string {
+	return Catalog.Format(msgs.locale, "setupPreparingRuntime", nil)
+}
+
+// SetupQueued says "Waiting for the target machine…"
+// in the language the app shows.
+func SetupQueued() string { return In(i18n.Locale()).SetupQueued() }
+
+// SetupQueued says "Waiting for the target machine…"
+// in the language of msgs.
+func (msgs Messages) SetupQueued() string {
+	return Catalog.Format(msgs.locale, "setupQueued", nil)
+}
+
+// SetupRetryFailed says "Could not retry provider setup"
+// in the language the app shows.
+func SetupRetryFailed() string { return In(i18n.Locale()).SetupRetryFailed() }
+
+// SetupRetryFailed says "Could not retry provider setup"
+// in the language of msgs.
+func (msgs Messages) SetupRetryFailed() string {
+	return Catalog.Format(msgs.locale, "setupRetryFailed", nil)
+}
+
+// SetupRuntimeInstallFailed says "The agent runtime could not be downloaded."
+// in the language the app shows.
+func SetupRuntimeInstallFailed() string { return In(i18n.Locale()).SetupRuntimeInstallFailed() }
+
+// SetupRuntimeInstallFailed says "The agent runtime could not be downloaded."
+// in the language of msgs.
+func (msgs Messages) SetupRuntimeInstallFailed() string {
+	return Catalog.Format(msgs.locale, "setupRuntimeInstallFailed", nil)
+}
+
+// SetupRuntimeUnavailable says "This runtime is not available on the target machine."
+// in the language the app shows.
+func SetupRuntimeUnavailable() string { return In(i18n.Locale()).SetupRuntimeUnavailable() }
+
+// SetupRuntimeUnavailable says "This runtime is not available on the target machine."
+// in the language of msgs.
+func (msgs Messages) SetupRuntimeUnavailable() string {
+	return Catalog.Format(msgs.locale, "setupRuntimeUnavailable", nil)
+}
+
+// SetupUnsupportedTarget says "Update Lody on the target machine to finish this provider setup."
+// in the language the app shows.
+func SetupUnsupportedTarget() string { return In(i18n.Locale()).SetupUnsupportedTarget() }
+
+// SetupUnsupportedTarget says "Update Lody on the target machine to finish this provider setup."
+// in the language of msgs.
+func (msgs Messages) SetupUnsupportedTarget() string {
+	return Catalog.Format(msgs.locale, "setupUnsupportedTarget", nil)
+}
+
+// SetupVerificationFailed says "Provider verification failed. Try again."
+// in the language the app shows.
+func SetupVerificationFailed() string { return In(i18n.Locale()).SetupVerificationFailed() }
+
+// SetupVerificationFailed says "Provider verification failed. Try again."
+// in the language of msgs.
+func (msgs Messages) SetupVerificationFailed() string {
+	return Catalog.Format(msgs.locale, "setupVerificationFailed", nil)
+}
+
+// SetupVerifying says "Checking credentials and provider access…"
+// in the language the app shows.
+func SetupVerifying() string { return In(i18n.Locale()).SetupVerifying() }
+
+// SetupVerifying says "Checking credentials and provider access…"
+// in the language of msgs.
+func (msgs Messages) SetupVerifying() string {
+	return Catalog.Format(msgs.locale, "setupVerifying", nil)
+}
+
+// SetupWaiting says "Waiting"
+// in the language the app shows.
+func SetupWaiting() string { return In(i18n.Locale()).SetupWaiting() }
+
+// SetupWaiting says "Waiting"
+// in the language of msgs.
+func (msgs Messages) SetupWaiting() string {
+	return Catalog.Format(msgs.locale, "setupWaiting", nil)
+}
+
+// SetupWorking says "Working"
+// in the language the app shows.
+func SetupWorking() string { return In(i18n.Locale()).SetupWorking() }
+
+// SetupWorking says "Working"
+// in the language of msgs.
+func (msgs Messages) SetupWorking() string {
+	return Catalog.Format(msgs.locale, "setupWorking", nil)
+}
+
+// SetupRetry says "Retry"
+// in the language the app shows.
+func SetupRetry() string { return In(i18n.Locale()).SetupRetry() }
+
+// SetupRetry says "Retry"
+// in the language of msgs.
+func (msgs Messages) SetupRetry() string {
+	return Catalog.Format(msgs.locale, "setupRetry", nil)
+}
+
+// SetupDelete says "Delete"
+// in the language the app shows.
+func SetupDelete() string { return In(i18n.Locale()).SetupDelete() }
+
+// SetupDelete says "Delete"
+// in the language of msgs.
+func (msgs Messages) SetupDelete() string {
+	return Catalog.Format(msgs.locale, "setupDelete", nil)
+}
+
+// DimcodeInstallHint says "dimcode not detected. Install it with {command}."
+// in the language the app shows.
+func DimcodeInstallHint(command string) string { return In(i18n.Locale()).DimcodeInstallHint(command) }
+
+// DimcodeInstallHint says "dimcode not detected. Install it with {command}."
+// in the language of msgs.
+func (msgs Messages) DimcodeInstallHint(command string) string {
+	return Catalog.Format(msgs.locale, "dimcodeInstallHint", map[string]any{"command": command})
+}

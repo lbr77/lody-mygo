@@ -237,10 +237,20 @@ func (a *App) agentsPage(c *ui.Context, p *palette) {
 		return strings.Compare(strings.ToLower(x.Name), strings.ToLower(y.Name))
 	})
 	a.refreshQuotas(agents)
-	if len(agents) == 0 {
+	// Setups still under way list with the providers, until each publishes.
+	var setups []catalog.ProviderSetup
+	for _, st := range a.catalog.ProviderSetups[machine] {
+		if !slices.ContainsFunc(agents, func(ag catalog.AgentConfig) bool { return ag.ID == st.ID }) {
+			setups = append(setups, st)
+		}
+	}
+	if len(agents) == 0 && len(setups) == 0 {
 		emptyCard(c, p, locales.MachinesNoAgents())
 	} else {
 		card(c, p, func() {
+			for _, st := range setups {
+				a.providerSetupRow(c, p, st)
+			}
 			for _, ag := range agents {
 				a.providerRow(c.Key(ag.ID), p, ag)
 			}
@@ -693,6 +703,17 @@ func (a *App) saveProvider(test bool) {
 	}
 	f.err, f.testErr, f.tested = "", "", ""
 	machine, id := f.machine, f.id
+	if a.backgroundSetup(f) {
+		// The machine sets it up in the background, its row saying how far.
+		a.createProviderSetup(machine, id, row, func(err error) {
+			if err != nil {
+				f.err = err.Error()
+				return
+			}
+			f.persisted, f.open = true, false
+		})
+		return
+	}
 	if test {
 		f.testing = true
 	}
@@ -838,7 +859,7 @@ func (a *App) providerFormView(c *ui.Context, p *palette) {
 			})
 		}
 		test := outlineButton(c, p, iconFlask, locales.ProviderTest())
-		if f.testing || !a.binaryReady(f) {
+		if f.testing || !(a.binaryReady(f) || a.backgroundSetup(f)) {
 			test.Disabled(true).Opacity(0.6)
 		} else {
 			test.OnClick(func() { a.saveProvider(true) })
@@ -949,7 +970,7 @@ func (a *App) providerFormView(c *ui.Context, p *palette) {
 		if f.persisted {
 			label = locales.Save()
 		}
-		ready := f.machine != "" && (k.group != "custom" || strings.TrimSpace(f.command) != "") && a.binaryReady(f)
+		ready := f.machine != "" && (k.group != "custom" || strings.TrimSpace(f.command) != "") && (a.binaryReady(f) || a.backgroundSetup(f))
 		primaryButton(c, p, label, ready && !f.testing).OnClick(func() { a.saveProvider(false) })
 	})
 }

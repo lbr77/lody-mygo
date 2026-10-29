@@ -3534,5 +3534,37 @@
         "type": "String"
       }
     }
+  },
+  "setupAwaitingAuth": "Sign in to finish this provider setup.",
+  "setupBubInstallRequired": "Bub or its ACP server is not installed on the target machine.",
+  "setupDeleteFailed": "Could not cancel provider setup",
+  "setupDownloadingPercent": "Downloading the agent runtime… {percent}%",
+  "@setupDownloadingPercent": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "setupMachineOffline": "Waiting for the target machine to come online…",
+  "setupPreparingRuntime": "Downloading the agent runtime…",
+  "setupQueued": "Waiting for the target machine…",
+  "setupRetryFailed": "Could not retry provider setup",
+  "setupRuntimeInstallFailed": "The agent runtime could not be downloaded.",
+  "setupRuntimeUnavailable": "This runtime is not available on the target machine.",
+  "setupUnsupportedTarget": "Update Lody on the target machine to finish this provider setup.",
+  "setupVerificationFailed": "Provider verification failed. Try again.",
+  "setupVerifying": "Checking credentials and provider access…",
+  "setupWaiting": "Waiting",
+  "setupWorking": "Working",
+  "setupRetry": "Retry",
+  "setupDelete": "Delete",
+  "dimcodeInstallHint": "dimcode not detected. Install it with {command}.",
+  "@dimcodeInstallHint": {
+    "placeholders": {
+      "command": {
+        "type": "String"
+      }
+    }
   }
 }

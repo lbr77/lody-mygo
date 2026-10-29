@@ -70,6 +70,18 @@ type Session struct {
 	PRState      map[string]PRState `json:"prState,omitempty"`
 }
 
+// ProviderSetup is a provider a machine is asked to set up: its config,
+// still unpublished, and how far the machine has got. Status is queued,
+// preparing-runtime, verifying, awaiting-auth or failed.
+type ProviderSetup struct {
+	ID, MachineID        string
+	Config               map[string]any
+	Status               string
+	Attempt              int
+	CreatedAt, UpdatedAt float64
+	FailureCode          string // runtime-unavailable, runtime-install-failed or verification-failed
+}
+
 // PullRequest is a pull request a session opened.
 type PullRequest struct {
 	URL        string  `json:"url"`
@@ -264,6 +276,9 @@ type Catalog struct {
 	MachineIDs   []string          `json:"machineIds"`
 	MachineNames map[string]string `json:"machineNames,omitempty"`
 	MachineOS    map[string]string `json:"machineOs,omitempty"`
+	// ProviderSetups are the providers a machine is still setting up, by
+	// machine: the machine publishes each as an agent config once it works.
+	ProviderSetups map[string][]ProviderSetup `json:"providerSetups,omitempty"`
 	// DotLody is each machine's .lody folder, as it reports it, under which
 	// its worktrees and chat folders lie.
 	DotLody      map[string]string             `json:"dotLody,omitempty"`
@@ -388,6 +403,17 @@ func projectMachine(rows []flock.Row, machineID string) Catalog {
 				}
 				c.Removing[machineID+":local:"+text(row.Key[2])] = true
 			}
+		case "providerSetup":
+			if id == "" || len(row.Key) != 2 || value == nil {
+				continue
+			}
+			setup := ProviderSetup{ID: firstText(text(value["id"]), id), MachineID: firstText(text(value["machineId"]), machineID),
+				Config: object(value["config"]), Status: text(value["status"]), Attempt: int(stamp(value["attempt"])),
+				CreatedAt: stamp(value["createdAt"]), UpdatedAt: stamp(value["updatedAt"]), FailureCode: text(value["failureCode"])}
+			if c.ProviderSetups == nil {
+				c.ProviderSetups = map[string][]ProviderSetup{}
+			}
+			c.ProviderSetups[machineID] = append(c.ProviderSetups[machineID], setup)
 		case "localProject":
 			if id == "" {
 				continue
@@ -733,6 +759,12 @@ func merge(meta Catalog, machines map[string]Catalog) Catalog {
 			add(p)
 		}
 		out.Agents[id] = m.Agents[id]
+		if setups := m.ProviderSetups[id]; len(setups) > 0 {
+			if out.ProviderSetups == nil {
+				out.ProviderSetups = map[string][]ProviderSetup{}
+			}
+			out.ProviderSetups[id] = setups
+		}
 		if path := m.DotLody[id]; path != "" {
 			if out.DotLody == nil {
 				out.DotLody = map[string]string{}
