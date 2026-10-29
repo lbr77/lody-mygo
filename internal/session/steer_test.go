@@ -12,6 +12,7 @@ import (
 	"sync"
 	"testing"
 	"time"
+	"unicode/utf16"
 
 	loro "github.com/aholstenson/loro-go"
 
@@ -247,5 +248,23 @@ func TestTurnConfigOptionValues(t *testing.T) {
 	cfg = inputConfig(previous, Turn{CLIType: "builtin", AgentType: "codex", ConfigOptionValues: map[string]any{"reasoning_effort": "low", "fast-mode": true}}, "x")
 	if fmt.Sprint(cfg["configOptionValues"]) != "map[fast-mode:true permission:ask reasoning_effort:low]" {
 		t.Fatalf("chosen: %v", cfg["configOptionValues"])
+	}
+}
+
+func TestTextSpans(t *testing.T) {
+	text := "😀 你需要 发送回 [@计划](lody://session/s2?workspace=w1)"
+	link := "[@计划](lody://session/s2?workspace=w1)"
+	// UTF-16: the emoji is two units.
+	start := len(utf16.Encode([]rune(text[:strings.Index(text, link)])))
+	end := start + len(utf16.Encode([]rune(link)))
+	spans := textSpans(text, []any{
+		map[string]any{"start": float64(start), "end": float64(end), "kind": "session", "label": "@计划", "target": "s2"},
+		map[string]any{"start": float64(start + 2), "end": float64(end), "kind": "session", "label": "overlaps"},
+		map[string]any{"start": 1.0, "end": 2.0, "kind": "session", "label": "inside the emoji"},
+		map[string]any{"start": 0.0, "end": 999.0, "kind": "session", "label": "too long"},
+		map[string]any{"start": 0.0, "end": 1.0, "kind": "weird", "label": "unknown kind"},
+	})
+	if len(spans) != 1 || text[spans[0].Start:spans[0].End] != link || spans[0].Label != "@计划" || spans[0].Target != "s2" {
+		t.Fatalf("spans %+v", spans)
 	}
 }

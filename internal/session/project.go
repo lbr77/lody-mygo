@@ -4,6 +4,7 @@ package session
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 	"time"
 
@@ -15,6 +16,10 @@ type Item struct {
 	ID   string
 	Type string
 	Text string // text, thought; markdown of proposed_plan; notice message
+	// Spans are a user text's mentions as sent, which show as chips, and
+	// Latest whether a proposed plan is the latest.
+	Spans  []TextSpan
+	Latest bool
 
 	// tool_call
 	Kind, Title, Status, Path string
@@ -286,12 +291,14 @@ func summarizeItem(raw map[string]any, identity string) Item {
 	switch typ {
 	case "text", "thought":
 		it.Text = str(raw["text"])
+		it.Spans = textSpans(it.Text, raw["spans"])
 	case "system_notice":
 		it.Title = str(raw["name"])
 		it.Text = str(obj(raw["meta"])["message"])
 	case "proposed_plan":
 		it.Text = str(raw["markdown"])
 		it.Status = str(raw["status"])
+		it.Latest = raw["isLatest"] != false
 	case "goal":
 		it.Text, it.Status = str(raw["objective"]), str(raw["status"])
 		it.Goal = &Goal{ThreadID: str(raw["threadId"]), Objective: str(raw["objective"]), Status: str(raw["status"]),
@@ -620,4 +627,55 @@ func isWorking(history []any, queued int) bool {
 		}
 	}
 	return false
+}
+
+// TextSpan is a mention in a sent text: the region of Text it became,
+// in bytes, what kind it is and the label the user picked, as Lody's
+// message spans.
+type TextSpan struct {
+	Start, End int
+	Kind       string
+	Label      string
+	Target     string
+	Mark       string
+}
+
+var spanKinds = map[string]bool{"file": true, "dir": true, "issue": true, "pr": true, "skill": true, "session": true, "command": true, "agent_role": true, "pasted_text": true}
+
+// textSpans reads a text's spans, their UTF-16 offsets turned to bytes,
+// keeping those in range, in order and apart, as Lody's
+// sanitizeMessageTextSpans does.
+func textSpans(text string, raw any) []TextSpan {
+	list, _ := raw.([]any)
+	if len(list) == 0 {
+		return nil
+	}
+	// Byte offset of each UTF-16 unit boundary.
+	var bytesAt []int
+	for i, r := range text {
+		bytesAt = append(bytesAt, i)
+		if r >= 0x10000 {
+			bytesAt = append(bytesAt, -1) // inside a surrogate pair
+		}
+	}
+	bytesAt = append(bytesAt, len(text))
+	var all []TextSpan
+	for _, v := range list {
+		m := obj(v)
+		start, end := int(num(m["start"])), int(num(m["end"]))
+		kind, label := str(m["kind"]), str(m["label"])
+		if !spanKinds[kind] || label == "" || start < 0 || end <= start || end > len(bytesAt)-1 || bytesAt[start] < 0 || bytesAt[end] < 0 {
+			continue
+		}
+		all = append(all, TextSpan{Start: bytesAt[start], End: bytesAt[end], Kind: kind, Label: label, Target: str(m["target"]), Mark: str(m["mark"])})
+	}
+	sort.SliceStable(all, func(i, j int) bool { return all[i].Start < all[j].Start })
+	var out []TextSpan
+	for _, s := range all {
+		if n := len(out); n > 0 && s.Start < out[n-1].End {
+			continue
+		}
+		out = append(out, s)
+	}
+	return out
 }

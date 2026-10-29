@@ -1,9 +1,12 @@
 package app
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/egoist/mygo/ui"
+
+	"github.com/lbr77/lody-mygo/internal/session"
 )
 
 func TestFindInChat(t *testing.T) {
@@ -78,5 +81,34 @@ func TestFindMarkdown(t *testing.T) {
 	}
 	if o := occurrences("ÉCOLE école", normalizedQuery("école")); len(o) != 2 || o[1][0] != len("ÉCOLE ") {
 		t.Errorf("case folding: %v", o)
+	}
+}
+
+func TestUserMessageChips(t *testing.T) {
+	a := fixture()
+	a.view.Working = false
+	text := "你需要 发送回 [@Sidebar status marks](lody://session/s2?workspace=w1)"
+	start := strings.Index(text, "[@")
+	a.view.Entries = a.view.Entries[:2]
+	a.view.Entries[0].Items = []session.Item{{ID: "t", Type: "text", Text: text, Spans: []session.TextSpan{{Start: start, End: len(text), Kind: "session", Label: "@Sidebar status marks", Target: "s2"}}}}
+	tt := snap(t, a, "user-chips", false, nil)
+	// The chip shows what was picked, not the link the agent read.
+	if tt.HasText(text) || !tt.HasText("@Sidebar status marks") {
+		t.Fatalf("texts %q", tt.Texts())
+	}
+	if err := tt.Click("@Sidebar status marks"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if a.selected != "s2" {
+		t.Fatalf("chip opened %q", a.selected)
+	}
+}
+
+func TestSessionLinkSpans(t *testing.T) {
+	text := `see [@计划 \[v2\]](lody://session/a71ad127-fd8b?workspace=jh7d) and [docs](https://x.y)`
+	spans := sessionLinkSpans(text)
+	if len(spans) != 1 || spans[0].Label != "@计划 [v2]" || spans[0].Target != "a71ad127-fd8b" || text[spans[0].End-1] != ')' {
+		t.Fatalf("%+v", spans)
 	}
 }

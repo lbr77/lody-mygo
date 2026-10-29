@@ -3,6 +3,7 @@ package app
 import (
 	"fmt"
 	"github.com/lbr77/lody-mygo/locales"
+	"regexp"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -381,10 +382,7 @@ func (a *App) userMessage(c *ui.Context, p *palette, e session.Entry, firstQueue
 				}
 				a.findRing(p, e.ID+"/user", bubble)
 				bubble.Children(func() {
-					body := ui.Text(c, text)
-					if spans, ok := a.findSpans(p, e.ID+"/user", text); ok {
-						body = ui.RichText(c, spans...)
-					}
+					body := a.userBody(c, p, e, text)
 					body.Selectable().FontSize(a.convFontSize()).LineHeight(24.0 / 14).TextColor(p.Reading)
 					if long && !open {
 						body.MaxLines(8)
@@ -537,4 +535,70 @@ func firstNonEmpty(values ...string) string {
 		}
 	}
 	return ""
+}
+
+// userBody is a user message's text, as Lody's transcript shows it: plain,
+// its mentions as chips in the accent with what the user picked in place
+// of what the agent read, a session's opening it; marked instead while a
+// search matches in it.
+func (a *App) userBody(c *ui.Context, p *palette, e session.Entry, text string) ui.Element {
+	if spans, ok := a.findSpans(p, e.ID+"/user", text); ok {
+		return ui.RichText(c, spans...)
+	}
+	chips := false
+	items := append([]session.Item(nil), e.Items...)
+	for i := range items {
+		if items[i].Type == "text" && len(items[i].Spans) == 0 {
+			// A session link sent without its span still reads as one.
+			items[i].Spans = sessionLinkSpans(items[i].Text)
+		}
+		chips = chips || items[i].Type == "text" && len(items[i].Spans) > 0
+	}
+	if !chips {
+		return ui.Text(c, text)
+	}
+	accent := p.Primary.Mix(p.Text, 0.18)
+	return ui.RichText(c).Children(func() {
+		first := true
+		for _, it := range items {
+			if it.Type != "text" || it.Text == "" {
+				continue
+			}
+			if !first {
+				ui.Text(c, "\n\n")
+			}
+			first = false
+			last := 0
+			for i, s := range it.Spans {
+				if s.Start > last {
+					ui.Text(c, it.Text[last:s.Start])
+				}
+				label := s.Label
+				if s.Mark != "" {
+					label = s.Mark + " " + label
+				}
+				chip := ui.Text(c.Key(fmt.Sprintf("chip/%s/%d", it.ID, i)), label).TextColor(accent)
+				if target := s.Target; s.Kind == "session" && a.catalog.Session(target) != nil {
+					chip.Cursor(ui.CursorPointer).OnClick(func() { a.open(target) })
+				}
+				last = s.End
+			}
+			if last < len(it.Text) {
+				ui.Text(c, it.Text[last:])
+			}
+		}
+	})
+}
+
+// sessionLinkRe is a session link as Lody writes a session mention:
+// [@Title](lody://session/<id>?workspace=…).
+var sessionLinkRe = regexp.MustCompile(`\[(@(?:\\.|[^\]\\])+)\]\(lody://session/([A-Za-z0-9_-]+)(?:\?[^)\s]*)?\)`)
+
+func sessionLinkSpans(text string) []session.TextSpan {
+	var out []session.TextSpan
+	for _, m := range sessionLinkRe.FindAllStringSubmatchIndex(text, -1) {
+		label := strings.NewReplacer(`\\`, `\`, `\[`, "[", `\]`, "]").Replace(text[m[2]:m[3]])
+		out = append(out, session.TextSpan{Start: m[0], End: m[1], Kind: "session", Label: label, Target: text[m[4]:m[5]]})
+	}
+	return out
 }

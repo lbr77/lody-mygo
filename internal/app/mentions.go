@@ -687,18 +687,28 @@ func expandShortcuts(ctx context.Context, store *shortcuts.Store, text string) s
 	return replaceShortcuts(text, prompts)
 }
 
-// expandMentions rewrites the shortcuts, skills and sessions text
-// mentions into what the agent reads, fetching what isn't at hand.
-func expandMentions(ctx context.Context, conn *cloud.Conn, user string, t mentionTarget, text string, skills, sessions []mention.Item, store *shortcuts.Store) string {
+// expandMentions rewrites the shortcuts, skills, sessions and roles text
+// mentions into what the agent reads, fetching what isn't at hand, with
+// the spans of what they became, which transcripts show as chips.
+func expandMentions(ctx context.Context, conn *cloud.Conn, user string, t mentionTarget, text string, skills, sessions []mention.Item, store *shortcuts.Store) (string, []map[string]any) {
 	text = expandShortcuts(ctx, store, text)
 	hasSkills, hasSessions := mention.Tokens(text)
 	if !hasSkills && !hasSessions {
-		return text
+		return text, nil
 	}
 	if hasSkills && skills == nil && conn != nil {
 		skills, _ = fetchSkills(ctx, conn, user, t)
 	}
-	return mention.Expand(text, append(skills, sessions...))
+	workspace := ""
+	if conn != nil {
+		workspace = conn.ID
+	}
+	out, spans := mention.ExpandSpans(text, append(skills, sessions...), workspace)
+	var maps []map[string]any
+	for _, s := range spans {
+		maps = append(maps, s.Map())
+	}
+	return out, maps
 }
 
 // mentionItems is what expandMentions needs, taken on the main thread.
@@ -730,11 +740,11 @@ func (a *App) roleMentions(t mentionTarget) []mention.Item {
 		targets := append([]catalog.RoleTarget(nil), r.Targets...)
 		sort.SliceStable(targets, func(i, j int) bool { return targets[i].MachineID == t.machine && targets[j].MachineID != t.machine })
 		if len(targets) <= 1 {
-			out = append(out, mention.RoleItem(r.ID, r.Name, firstNonEmpty(r.Emoji, "🤖")+" "+r.Name, r.Description, ""))
+			out = append(out, mention.RoleItem(r.ID, r.Name, firstNonEmpty(r.Emoji, "🤖")+" "+r.Name, r.Description, "", firstNonEmpty(r.Emoji, "🤖")))
 			continue
 		}
 		for _, tg := range targets {
-			out = append(out, mention.RoleItem(r.ID, r.Name, firstNonEmpty(r.Emoji, "🤖")+" "+r.Name+" · "+a.machineLabel(tg.MachineID), r.Description, tg.MachineID))
+			out = append(out, mention.RoleItem(r.ID, r.Name, firstNonEmpty(r.Emoji, "🤖")+" "+r.Name+" · "+a.machineLabel(tg.MachineID), r.Description, tg.MachineID, firstNonEmpty(r.Emoji, "🤖")))
 		}
 	}
 	return out

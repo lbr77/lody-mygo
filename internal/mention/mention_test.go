@@ -3,6 +3,7 @@ package mention
 import (
 	"reflect"
 	"testing"
+	"unicode/utf16"
 )
 
 func TestFiles(t *testing.T) {
@@ -96,7 +97,7 @@ func TestExpand(t *testing.T) {
 	}
 	cases := map[string]string{
 		"$review this":            "use /review [Skill Path](/Users/me/skills/re\\)view/SKILL.md) this",
-		"see @session:s1 first":   "see use lody mcp to query session[id: s1] history first",
+		"see @session:s1 first":   "see [@Earlier work](lody://session/s1) first",
 		"costs $5 and $HOME":      "costs $5 and $HOME",
 		`open @"a $review b" now`: `open @"a $review b" now`,
 		"x$review":                "x$review",
@@ -117,11 +118,34 @@ func TestRoles(t *testing.T) {
 	if got := RoleSlug("  @Code  Reviewer\t2 "); got != "Code-Reviewer2" {
 		t.Errorf("slug %q", got)
 	}
-	one := RoleItem("r1", "Reviewer", "🧐 Reviewer", "", "")
-	two := RoleItem("r2", "Builder", "", "", "m2")
+	one := RoleItem("r1", "Reviewer", "🧐 Reviewer", "", "", "🧐")
+	two := RoleItem("r2", "Builder", "", "", "m2", "")
 	got := Expand("ask "+one.Insert+" and "+two.Insert+" @role:Gone", []Item{one, two})
 	want := "ask use lody mcp to create a session with agent role[id: r1, name: Reviewer] and use lody mcp to create a session with agent role[id: r2, agentRoleMachineId: m2, name: Builder] @role:Gone"
 	if got != want {
 		t.Errorf("expanded:\n%s\nwant:\n%s", got, want)
+	}
+}
+
+func TestExpandSpans(t *testing.T) {
+	items := []Item{SessionItem("s1", "计划 [v2]", "lody"), {Kind: Skill, Path: "/s/SKILL.md", Insert: "$review"}, RoleItem("r1", "Reviewer", "", "", "", "🧐")}
+	got, spans := ExpandSpans("😀 see @session:s1 then $review and @role:Reviewer", items, "w1")
+	want := "😀 see [@计划 \\[v2\\]](lody://session/s1?workspace=w1) then use /review [Skill Path](/s/SKILL.md) and use lody mcp to create a session with agent role[id: r1, name: Reviewer]"
+	if got != want {
+		t.Fatalf("text:\n%s\nwant:\n%s", got, want)
+	}
+	if len(spans) != 3 {
+		t.Fatalf("spans %+v", spans)
+	}
+	// Offsets count UTF-16 units: the emoji is two.
+	u := utf16.Encode([]rune(got))
+	if s := spans[0]; s.Kind != "session" || s.Label != "@计划 [v2]" || s.Target != "s1" || string(utf16.Decode(u[s.Start:s.End])) != "[@计划 \\[v2\\]](lody://session/s1?workspace=w1)" {
+		t.Errorf("session span %+v", s)
+	}
+	if s := spans[1]; s.Kind != "skill" || s.Label != "$review" || string(utf16.Decode(u[s.Start:s.End])) != "use /review [Skill Path](/s/SKILL.md)" {
+		t.Errorf("skill span %+v", s)
+	}
+	if s := spans[2]; s.Kind != "agent_role" || s.Mark != "🧐" || s.Label != "@role:Reviewer" {
+		t.Errorf("role span %+v", s)
 	}
 }

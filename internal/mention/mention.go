@@ -34,6 +34,7 @@ type Item struct {
 	Name     string
 	Subtitle string
 	Insert   string // the text that takes the trigger's place
+	Mark     string // a role's emoji, which its chip shows
 	role     string // a role's own name, which its expansion carries
 }
 
@@ -197,12 +198,12 @@ func IssueItem(number int, title string, pr bool) Item {
 // of its name, which asks the agent to create a session with the role.
 // label is what the menu shows; machine names the target of a role on
 // several machines.
-func RoleItem(id, name, label, description, machine string) Item {
+func RoleItem(id, name, label, description, machine, emoji string) Item {
 	value := id
 	if machine != "" {
 		value += "@" + machine
 	}
-	return Item{Kind: Role, Path: value, Name: firstNonEmpty(label, name), Subtitle: description, Insert: "@role:" + RoleSlug(name), role: name}
+	return Item{Kind: Role, Path: value, Name: firstNonEmpty(label, name), Subtitle: description, Insert: "@role:" + RoleSlug(name), Mark: emoji, role: name}
 }
 
 func firstNonEmpty(values ...string) string {
@@ -399,11 +400,41 @@ func isSpaceByte(b byte) bool {
 	return b == ' ' || b == '\t' || b == '\n' || b == '\r' || b == '\f' || b == '\v'
 }
 
+// Span marks what a mention became in the sent text, as Lody's message
+// spans do: the chip a transcript shows in its place, with what the user
+// picked. Start and End count UTF-16 code units, as Lody's.
+type Span struct {
+	Start, End int
+	Kind       string // session, skill or agent_role
+	Label      string
+	Target     string
+	Mark       string
+}
+
+// Map is the span as a message's text block stores it.
+func (s Span) Map() map[string]any {
+	m := map[string]any{"start": s.Start, "end": s.End, "kind": s.Kind, "label": s.Label}
+	if s.Target != "" {
+		m["target"] = s.Target
+	}
+	if s.Mark != "" {
+		m["mark"] = s.Mark
+	}
+	return m
+}
+
 // Expand rewrites the tokens of text that items know into what the agent
-// reads, as lody-ios does as it sends: a skill into "use /name [Skill
-// Path](…)", a session into a request to read its history. Unknown tokens
-// stay as typed.
+// reads, as Lody does as it sends: a skill into "use /name [Skill
+// Path](…)", a session into a link to it, a role into a request to create
+// a session with it. Unknown tokens stay as typed.
 func Expand(text string, items []Item) string {
+	out, _ := ExpandSpans(text, items, "")
+	return out
+}
+
+// ExpandSpans is Expand with the spans of what it rewrote; workspace goes
+// in session links.
+func ExpandSpans(text string, items []Item, workspace string) (string, []Span) {
 	byInsert := map[string]Item{}
 	for _, it := range items {
 		if it.Kind == Skill || it.Kind == Session || it.Kind == Role {
@@ -411,6 +442,7 @@ func Expand(text string, items []Item) string {
 		}
 	}
 	var b strings.Builder
+	var spans []Span
 	last := 0
 	for _, t := range tokens(text) {
 		it, ok := byInsert[t.text]
@@ -421,17 +453,48 @@ func Expand(text string, items []Item) string {
 			continue
 		}
 		b.WriteString(text[last:t.start])
-		b.WriteString(prompt(it))
+		start := utf16Len(b.String())
+		rewritten := prompt(it, workspace)
+		b.WriteString(rewritten)
+		span := Span{Start: start, End: start + utf16Len(rewritten), Label: t.text, Target: it.Path}
+		switch it.Kind {
+		case Session:
+			span.Kind, span.Label = "session", "@"+firstNonEmpty(strings.TrimSpace(it.Name), it.Path)
+		case Skill:
+			span.Kind = "skill"
+		case Role:
+			span.Kind, span.Mark = "agent_role", it.Mark
+		}
+		spans = append(spans, span)
 		last = t.end
 	}
 	b.WriteString(text[last:])
-	return b.String()
+	return b.String(), spans
 }
 
-func prompt(it Item) string {
+func utf16Len(s string) int {
+	n := 0
+	for _, r := range s {
+		if r >= 0x10000 {
+			n += 2
+		} else {
+			n++
+		}
+	}
+	return n
+}
+
+func prompt(it Item, workspace string) string {
 	switch it.Kind {
 	case Session:
-		return "use lody mcp to query session[id: " + it.Path + "] history"
+		// A link to the session, as Lody's desktop writes it.
+		title := firstNonEmpty(strings.TrimSpace(it.Name), it.Path)
+		label := strings.NewReplacer(`\`, `\\`, "[", `\[`, "]", `\]`).Replace("@" + title)
+		link := "lody://session/" + it.Path
+		if workspace != "" {
+			link += "?workspace=" + workspace
+		}
+		return "[" + label + "](" + link + ")"
 	case Role:
 		name := firstNonEmpty(it.role, it.Name)
 		if id, machine, ok := strings.Cut(it.Path, "@"); ok {

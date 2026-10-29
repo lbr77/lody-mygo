@@ -347,6 +347,9 @@ type Turn struct {
 	// MCPServerIDs are the MCP servers the turn loads; nil keeps the
 	// previous turn's.
 	MCPServerIDs []string
+	// TextSpans mark what mentions became in Text, which transcripts show
+	// as chips: Lody's message spans.
+	TextSpans []map[string]any
 	// ConfigOptionValues are the agent's settings chosen for the turn, as
 	// its reasoning effort and Fast: laid over the previous turn's.
 	ConfigOptionValues map[string]any
@@ -510,7 +513,15 @@ func inputConfig(history []any, t Turn, text string) map[string]any {
 	}
 	var blocks []any
 	if text != "" {
-		blocks = append(blocks, map[string]any{"type": "text", "text": text})
+		block := map[string]any{"type": "text", "text": text}
+		if len(t.TextSpans) > 0 {
+			spans := make([]any, len(t.TextSpans))
+			for i, s := range t.TextSpans {
+				spans[i] = s
+			}
+			block["spans"] = spans
+		}
+		blocks = append(blocks, block)
 	}
 	for _, a := range t.Attachments {
 		blocks = append(blocks, a)

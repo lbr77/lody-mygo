@@ -661,7 +661,7 @@ func (a *App) send() {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
 		defer cancel()
 		state := session.NotSent
-		turn.Text = expandMentions(ctx, conn, userID, target, text, skills, sessions, store)
+		turn.Text, turn.TextSpans = expandMentions(ctx, conn, userID, target, text, skills, sessions, store)
 		blocks, err := a.upload(ctx, workspace, r.ID, files)
 		if err == nil {
 			turn.Attachments = blocks
@@ -880,9 +880,10 @@ func (a *App) createAndSend(n catalog.NewSession, m chatSend, created func()) {
 		var blocks []map[string]any
 		if blocks, err = a.upload(ctx, workspace, id, files); err == nil {
 			if err = r.WaitReady(ctx); err == nil {
+				sent, spans := expandMentions(ctx, conn, userID, m.target, text, m.skills, m.sessions, m.store)
 				state, err = r.Send(ctx, session.Turn{
-					MCPServerIDs: m.mcp,
-					Text:         expandMentions(ctx, conn, userID, m.target, text, m.skills, m.sessions, m.store), UserID: userID, MachineID: n.MachineID, ModelID: m.model, ModeID: m.mode, Attachments: blocks,
+					MCPServerIDs: m.mcp, TextSpans: spans,
+					Text: sent, UserID: userID, MachineID: n.MachineID, ModelID: m.model, ModeID: m.mode, Attachments: blocks,
 					AgentType: agent.AgentType, CLIType: agent.CLIType, MarkDispatch: sync.MarkDispatch, ConfigOptionValues: m.runValues,
 				})
 			}
