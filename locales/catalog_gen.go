@@ -18842,3 +18842,13 @@ func PanelResize() string { return In(i18n.Locale()).PanelResize() }
 func (msgs Messages) PanelResize() string {
 	return Catalog.Format(msgs.locale, "panelResize", nil)
 }
+
+// SidebarNavigationMenu says "Navigation Menu"
+// in the language the app shows.
+func SidebarNavigationMenu() string { return In(i18n.Locale()).SidebarNavigationMenu() }
+
+// SidebarNavigationMenu says "Navigation Menu"
+// in the language of msgs.
+func (msgs Messages) SidebarNavigationMenu() string {
+	return Catalog.Format(msgs.locale, "sidebarNavigationMenu", nil)
+}

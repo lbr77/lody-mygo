@@ -3696,5 +3696,6 @@
       }
     }
   },
-  "panelResize": "Resize panel"
+  "panelResize": "Resize panel",
+  "sidebarNavigationMenu": "Navigation Menu"
 }

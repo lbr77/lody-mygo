@@ -26,11 +26,12 @@ func (a *App) mainView(c *ui.Context, p *palette) {
 	a.membershipSync(c)
 	a.bindCommands(c)
 	defer func() { a.surf, a.surfNext = a.surfNext, surface{} }()
+	a.syncCompact(c)
 	// No fade of its own: Lody's boot shell fades out over it (bootOut).
 	shell := ui.Row(c.Key("main")).Fill().AlignItems(ui.Stretch).Background(p.Ground)
 	// The sidebar slides in and out as it shows and hides; the card grows
-	// into its room.
-	a.sideOut = shell.AnimateTo("sidebar", b2f(!a.sidebarHidden), slideSpring)
+	// into its room. Compact, it shows as a drawer instead (compactDrawer).
+	a.sideOut = shell.AnimateTo("sidebar", b2f(!a.sidebarHidden && !a.compactLayout.on), slideSpring)
 	shell.Children(func() {
 		if out := a.sideOut; out > 0 {
 			w := a.sidebarW()
@@ -72,6 +73,7 @@ func (a *App) mainView(c *ui.Context, p *palette) {
 			ui.Column(c.Key(key)).Fill().Children(func() { withTipDelay(delay, func() { page(c, p) }) })
 		})
 	})
+	withTipDelay(400*time.Millisecond, func() { a.compactDrawer(c, p) })
 	withTipDelay(250*time.Millisecond, func() { a.settingsDialog(c, p) })
 	a.bugReportDialog(c, p)
 	a.createWorkspaceDialog(c, p)
