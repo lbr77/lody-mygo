@@ -31,7 +31,9 @@ func (a *App) mainView(c *ui.Context, p *palette) {
 	shell.Children(func() {
 		if out := a.sideOut; out > 0 {
 			w := a.sidebarW()
-			ui.Row(c).Width(w * out).Shrink(0).ClipX().Children(func() {
+			// Stretched, so the sidebar runs the window's height rather than
+			// sitting centered in it.
+			ui.Row(c).Width(w * out).Shrink(0).AlignItems(ui.Stretch).ClipX().Children(func() {
 				a.sidebar(c, p).Translate(-w*(1-out), 0)
 			})
 			if out == 1 {
