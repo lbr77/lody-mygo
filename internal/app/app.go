@@ -819,7 +819,7 @@ func (a *App) send() {
 // upload, as Lody's pending sends. One bound for the conversation is the
 // message just sent, held near the top of it as Lody anchors the row
 // sent; one for the queue is written there.
-func (a *App) holdMessage(sessionID string, r *session.Replica, text string, files []pendingFile, turn session.Turn, expand func(ctx context.Context) (string, []map[string]any), queue bool) {
+func (a *App) holdMessage(sessionID string, r *session.Replica, text string, files []pendingFile, turn session.Turn, expand func(ctx context.Context) (string, []map[string]any), queue bool) *pendingSend {
 	s := &pendingSend{id: uuid.NewString(), sessionID: sessionID, text: text, at: time.Now(), turn: turn, expand: expand, queue: queue, replica: r}
 	s.turn.Queue = s.turn.Queue || queue
 	for _, f := range files {
@@ -830,6 +830,7 @@ func (a *App) holdMessage(sessionID string, r *session.Replica, text string, fil
 		a.chatList.ScrollToEnd()
 	}
 	a.holdSend(s)
+	return s
 }
 
 // unfinishedReply reports whether the conversation's last reply is still
@@ -1061,7 +1062,9 @@ func (a *App) createAndSend(n catalog.NewSession, m chatSend, created func()) {
 			if len(files) > 0 || a.replica == nil {
 				a.sending = false
 				if len(files) > 0 {
-					a.holdMessage(id, a.replica, text, files, turn, expand, false)
+					// Lody writes a new conversation with its first message;
+					// this one was made for it, and goes if it does.
+					a.holdMessage(id, a.replica, text, files, turn, expand, false).fresh = true
 				}
 				opened <- nil
 				return

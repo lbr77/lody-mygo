@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/lbr77/lody-mygo/internal/catalog"
 	"github.com/lbr77/lody-mygo/internal/session"
 	"github.com/lbr77/lody-mygo/locales"
 )
@@ -50,6 +51,10 @@ type pendingSend struct {
 	err     string // why it was not sent, which holds the ones behind it
 	seq     int
 	replica *session.Replica // its conversation's, as it was sent
+	// fresh is a new conversation's first message, which the conversation
+	// was made for: canceled before anything was written there, the
+	// conversation goes too, as Lody never writes it.
+	fresh bool
 }
 
 // pendingSends are the workspace's held messages in the order sent, as
@@ -326,9 +331,33 @@ func (a *App) cancelSend(id string) {
 		cancel()
 	}
 	q.remove(id)
+	if s.fresh && !q.hasSession(s.sessionID) && a.unwritten(s.sessionID) {
+		a.dropFreshSession(s.sessionID)
+		return
+	}
 	if !q.running[s.sessionID] {
 		a.drainSends(s.sessionID)
 	}
+}
+
+// unwritten reports whether nothing was written in a conversation yet.
+func (a *App) unwritten(sessionID string) bool {
+	if a.selected == sessionID && a.view != nil {
+		return len(a.view.Entries) == 0 && len(a.view.Queue) == 0
+	}
+	s := a.catalog.Session(sessionID)
+	return s == nil || s.LastMessageAt == 0
+}
+
+// dropFreshSession takes away a conversation made for a first message that
+// was canceled, going back to New chat from it.
+func (a *App) dropFreshSession(sessionID string) {
+	if a.selected == sessionID {
+		a.selected = ""
+	}
+	a.catalogAction("delete the session", func(ctx context.Context, sync *catalog.Sync) error {
+		return sync.Delete(ctx, sessionID)
+	})
 }
 
 // cancelSessionSends drops the held messages of conversations archived or

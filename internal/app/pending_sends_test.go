@@ -498,3 +498,24 @@ func TestUnsavedWork(t *testing.T) {
 		t.Fatal("unsaved edits don't make it ask")
 	}
 }
+
+// A new conversation's first message, canceled before anything was written
+// there, takes the conversation with it, as Lody never writes it; once
+// something was, it stays.
+func TestFreshSendCanceled(t *testing.T) {
+	a := fixture()
+	a.selected, a.view = "new1", &session.View{}
+	a.pending.list = []*pendingSend{{id: "p1", sessionID: "new1", fresh: true}}
+	a.cancelSend("p1")
+	if a.selected != "" || len(a.pending.list) != 0 {
+		t.Fatalf("the empty conversation stays: selected %q", a.selected)
+	}
+
+	a.selected = "new2"
+	a.view = &session.View{Entries: []session.Entry{{ID: "u1", Role: "user"}}}
+	a.pending.list = []*pendingSend{{id: "p2", sessionID: "new2", fresh: true}}
+	a.cancelSend("p2")
+	if a.selected != "new2" {
+		t.Fatal("a conversation with something written was taken away")
+	}
+}
