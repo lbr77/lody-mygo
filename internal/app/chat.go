@@ -130,48 +130,6 @@ func (a *App) sessionView(c *ui.Context, p *palette) {
 	host.Children(func() { a.sessionSplit(c, p, k) })
 }
 
-func (a *App) sessionSplit(c *ui.Context, p *palette, k float32) {
-	if k <= 0 {
-		ui.Column(c).Fill().Children(func() { a.sessionMain(c, p) })
-		return
-	}
-	if a.panelPercent == 0 {
-		a.panelPercent = 60
-	}
-	// Keep the panel at least 280 DIPs wide, as Lody's, and the
-	// conversation at least as wide as the panel.
-	w, _ := c.Size()
-	card := w - 8
-	if !a.sidebarHidden {
-		card -= a.sidebarW()
-	}
-	if card > 0 {
-		a.panelPercent = min(a.panelPercent, max(50, 100-280/card*100))
-	}
-	percent := &a.panelPercent
-	if k < 1 {
-		moving := 100 - (100-a.panelPercent)*k
-		percent = &moving
-	}
-	ui.SplitPercent(c, percent, func() {
-		ui.Column(c).Fill().MinWidth(0).Children(func() { a.sessionMain(c, p) })
-	}, func() {
-		panel := ui.Column(c.Key("panel")).Fill().MinWidth(0).ClipX()
-		panel.Children(func() {
-			// Closing, the panel's content is hidden at once, as Lody's
-			// visibility: hidden, while its room shrinks away.
-			if !a.panelOpen {
-				return
-			}
-			inner := ui.Column(c).Fill().MinWidth(0)
-			if k < 1 {
-				inner.Translate(panel.Bounds().W*(1-k), 0)
-			}
-			inner.Children(func() { a.inspector(c, p) })
-		})
-	}).Fill()
-}
-
 func (a *App) sessionMain(c *ui.Context, p *palette) {
 	sess := a.catalog.Session(a.selected)
 	a.tabBar(c, p, sess)

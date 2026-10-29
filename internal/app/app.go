@@ -200,9 +200,10 @@ type App struct {
 	archiveFilter    string // "", "chats" or a project id
 	deleting         *catalog.Session
 	deleteOpen       bool
-	panelOpen        bool    // the inspector beside the conversation
-	panelPercent     float32 // the conversation's share of the width
-	panelFile        string  // the file whose edits the panel shows
+	panelOpen        bool     // the inspector beside the conversation
+	panelPercent     float32  // the conversation's share of the width
+	panelDrag        *float32 // where a drag has the panel's edge, past where it stops
+	panelFile        string   // the file whose edits the panel shows
 	inspect          *inspectState
 	term             termDock // the terminal dock under the conversation
 	previews         map[string]*previewState
@@ -327,6 +328,7 @@ func (a *App) Start(win *mygo.Window) {
 	a.appearance = prefs.Appearance
 	a.busyBehavior = prefs.Busy
 	a.sidebarWidth = prefs.Sidebar
+	a.panelPercent = prefs.Panel
 	a.homeBoard = prefs.HomeBoard
 	a.keyOverrides = prefs.Keys
 	a.language, a.fontSize, a.wideMode, a.inlineMath, a.extendedCode = prefs.Language, prefs.FontSize, prefs.Wide, prefs.InlineMath, prefs.ExtendedCode
@@ -1026,6 +1028,7 @@ type prefs struct {
 	Appearance string          `json:"appearance,omitempty"`
 	Busy       string          `json:"busy,omitempty"`
 	Sidebar    float32         `json:"sidebar,omitempty"` // the sidebar's width
+	Panel      float32         `json:"panel,omitempty"`   // the conversation's share beside the panel
 	HomeBoard  string          `json:"homeBoard,omitempty"`
 	// Keys are the chords rebound in keyboard settings, by command: none
 	// unbinds it.
@@ -1089,7 +1092,7 @@ func (a *App) savePrefs() {
 	if a.quickReplies != nil {
 		quick = &a.quickReplies
 	}
-	writeJSON("prefs.json", prefs{Workspace: a.workspaceID, Collapsed: a.collapsed, Appearance: a.appearance, Busy: a.busyBehavior, Sidebar: a.sidebarWidth, HomeBoard: a.homeBoard, Keys: a.keyOverrides,
+	writeJSON("prefs.json", prefs{Workspace: a.workspaceID, Collapsed: a.collapsed, Appearance: a.appearance, Busy: a.busyBehavior, Sidebar: a.sidebarWidth, Panel: a.panelPercent, HomeBoard: a.homeBoard, Keys: a.keyOverrides,
 		Language: a.language, FontSize: a.fontSize, Wide: a.wideMode, InlineMath: a.inlineMath, ExtendedCode: a.extendedCode,
 		NoLigatures: !a.ligatures, CodeOnly: a.codeOnly, Notifications: a.notifications, Experimental: a.experimental,
 		LocalOnly: a.localOnly, NoNotifyAsk: a.notifyAsk.never, QuickReplies: quick, CreateMemory: a.createMem})

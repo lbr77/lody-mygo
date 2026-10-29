@@ -18832,3 +18832,13 @@ func ArchiveSelectGroup(label string) string { return In(i18n.Locale()).ArchiveS
 func (msgs Messages) ArchiveSelectGroup(label string) string {
 	return Catalog.Format(msgs.locale, "archiveSelectGroup", map[string]any{"label": label})
 }
+
+// PanelResize says "Resize panel"
+// in the language the app shows.
+func PanelResize() string { return In(i18n.Locale()).PanelResize() }
+
+// PanelResize says "Resize panel"
+// in the language of msgs.
+func (msgs Messages) PanelResize() string {
+	return Catalog.Format(msgs.locale, "panelResize", nil)
+}
