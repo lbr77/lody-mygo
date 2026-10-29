@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/egoist/mygo"
 	"github.com/egoist/mygo/ui"
 	"github.com/google/uuid"
 
@@ -20,11 +21,39 @@ import (
 // it again, fork a conversation from a reply, steer the agent's goal, and
 // end an agent process from the machine's page.
 
-// messageEdit is the last user message being rewritten.
+// messageEdit is the last user message being rewritten: its text, and its
+// attachments as the edit leaves them, those it had and files added;
+// progress is how far each file added has uploaded, by path, while the
+// edit is sent.
 type messageEdit struct {
-	id   string
-	text string
-	busy bool
+	id          string
+	text        string
+	busy        bool
+	attachments []editAttachment
+	progress    map[string]float32
+}
+
+// editAttachment is one of the edited message's attachments: one it had,
+// kept by its edit id, or a file added and, once uploaded, its block,
+// which sending again does not upload twice.
+type editAttachment struct {
+	original *session.EditAttachment
+	file     pendingFile
+	ready    map[string]any
+}
+
+// key tells the attachment apart among the editor's.
+func (at editAttachment) key() string {
+	if at.original != nil {
+		return at.original.ID
+	}
+	return at.file.Path
+}
+
+// editResend replaces the last user message through its machine; tests
+// swap it.
+var editResend = func(ctx context.Context, r *session.Replica, machine, user, cliType, agentType string, u session.Entry, e session.Edit) error {
+	return r.EditAndResend(ctx, machine, user, cliType, agentType, u, e)
 }
 
 // forkPending is a fork the machine is making.
@@ -65,33 +94,151 @@ func (a *App) editableEntry() *session.Entry {
 	return session.EditableUser(a.view.Entries, a.sessionForkable(sess))
 }
 
+// startEdit opens the editor on the message: its text, and the pictures
+// and files it carries, each of which the edit may leave out.
 func (a *App) startEdit(e session.Entry) {
-	a.msgEdit = messageEdit{id: e.ID, text: e.Text()}
+	ed := messageEdit{id: e.ID, text: e.Text()}
+	for _, at := range session.EditAttachments(e) {
+		ed.attachments = append(ed.attachments, editAttachment{original: &at})
+	}
+	a.msgEdit = ed
 }
 
-// submitEdit replaces the message and runs its turn again.
+// addEditFiles adds files to the message being rewritten, within Lody's
+// limits for the attachments it keeps and those added.
+func (a *App) addEditFiles(paths []string) {
+	ed := &a.msgEdit
+	images, files := 0, 0
+	for _, at := range ed.attachments {
+		if at.original != nil && at.original.Item.Type == "image" || at.original == nil && at.file.Image {
+			images++
+		} else {
+			files++
+		}
+	}
+	for _, f := range a.admitFiles(images, files, paths) {
+		ed.attachments = append(ed.attachments, editAttachment{file: f})
+	}
+}
+
+// pickEditFiles opens the system's file dialog for the message being
+// rewritten, off the main thread as it waits for the user.
+func (a *App) pickEditFiles() {
+	win, id := a.win, a.msgEdit.id
+	go func() {
+		paths, err := mygo.Dialog.Open(mygo.OpenDialogOptions{Parent: win, Title: locales.AttachFiles(), Multiple: true})
+		if err != nil || len(paths) == 0 {
+			return
+		}
+		a.update(func() {
+			if a.msgEdit.id == id && !a.msgEdit.busy {
+				a.addEditFiles(paths)
+			}
+		})
+	}()
+}
+
+// removeEditAttachment leaves an attachment out of the edit.
+func (a *App) removeEditAttachment(key string) {
+	ed := &a.msgEdit
+	if ed.busy {
+		return
+	}
+	for i, at := range ed.attachments {
+		if at.key() == key {
+			ed.attachments = append(ed.attachments[:i:i], ed.attachments[i+1:]...)
+			return
+		}
+	}
+}
+
+// submitEdit replaces the message and runs its turn again, as Lody's
+// editSession: the files added upload to the conversation first, one at a
+// time, then the edit names the attachments it keeps and adds the blocks
+// of those uploaded. A file that fails stops it with the editor open.
 func (a *App) submitEdit() {
 	ed := &a.msgEdit
 	sess := a.catalog.Session(a.selected)
 	target := a.editableEntry()
 	text := strings.TrimSpace(ed.text)
-	if sess == nil || a.replica == nil || target == nil || target.ID != ed.id || text == "" || ed.busy || a.account == nil {
+	if sess == nil || a.replica == nil || target == nil || target.ID != ed.id || text == "" && len(ed.attachments) == 0 || ed.busy || a.account == nil {
 		return
 	}
-	ed.busy = true
-	r, machine, user, entry := a.replica, sess.MachineID, a.account.User.ID, *target
+	ed.busy, ed.progress = true, map[string]float32{}
+	var retained []string
+	for _, at := range ed.attachments {
+		if at.original != nil {
+			retained = append(retained, at.original.ID)
+		}
+	}
+	all := append([]editAttachment(nil), ed.attachments...)
+	r, machine, user, entry, id, sessionID := a.replica, sess.MachineID, a.account.User.ID, *target, ed.id, sess.ID
 	cliType, agentType := sess.CLIType, sess.AgentType
+	workspace := ""
+	if a.conn != nil {
+		workspace = a.conn.ID
+	}
+	// still reports whether the editor is the one this edit was sent from.
+	still := func() bool { return a.msgEdit.id == id && a.msgEdit.busy }
 	go func() {
-		ctx, cancel := context.WithTimeout(context.Background(), 125*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
 		defer cancel()
-		err := r.EditAndResend(ctx, machine, user, cliType, agentType, entry, text)
+		var blocks []map[string]any
+		for _, at := range all {
+			if at.original != nil {
+				continue
+			}
+			block, path := at.ready, at.file.Path
+			if block == nil {
+				var err error
+				block, err = uploadAttachment(ctx, a, workspace, sessionID, at.file, func(sent, total int64) {
+					if total > 0 {
+						pct := float32(sent) * 100 / float32(total)
+						a.update(func() {
+							if still() {
+								a.msgEdit.progress[path] = pct
+							}
+						})
+					}
+				})
+				if err != nil {
+					name := at.file.Name
+					a.update(func() {
+						if still() {
+							a.msgEdit.busy, a.msgEdit.progress = false, nil
+						}
+						a.sendError = name + ": " + err.Error()
+					})
+					return
+				}
+			}
+			blocks = append(blocks, block)
+			a.update(func() {
+				if !still() {
+					return
+				}
+				for i := range a.msgEdit.attachments {
+					if x := &a.msgEdit.attachments[i]; x.original == nil && x.file.Path == path {
+						x.ready = block
+					}
+				}
+				a.msgEdit.progress[path] = 100
+			})
+		}
+		editCtx, cancelEdit := context.WithTimeout(ctx, 125*time.Second)
+		err := editResend(editCtx, r, machine, user, cliType, agentType, entry, session.Edit{Text: text, Retained: retained, Added: blocks})
+		cancelEdit()
 		a.update(func() {
-			ed.busy = false
+			if still() {
+				a.msgEdit.busy, a.msgEdit.progress = false, nil
+			}
 			if err != nil {
 				a.sendError = editFailed(err)
 				return
 			}
-			a.msgEdit = messageEdit{}
+			if a.msgEdit.id == id {
+				a.msgEdit = messageEdit{}
+			}
 		})
 	}()
 }
@@ -104,9 +251,19 @@ func editFailed(err error) string {
 	return locales.EditResendFailed()
 }
 
-// messageEditor replaces the bubble while the message is rewritten.
+// messageEditor replaces the bubble while the message is rewritten: the
+// attachments the edit leaves, above the card as the message's are, each
+// with the composer's remove button, then the card, Add attachment at
+// the start of its actions.
 func (a *App) messageEditor(c *ui.Context, p *palette) {
 	ed := &a.msgEdit
+	if len(ed.attachments) > 0 {
+		ui.Row(c.Key("edit-attachments")).Wrap().Gap(8).Justify(ui.End).Children(func() {
+			for _, at := range ed.attachments {
+				a.editAttachmentChip(c, p, at)
+			}
+		})
+	}
 	// Its edge darkens while the field has the focus, over Tailwind's
 	// 150ms, as Lody's editor card.
 	card := ui.Column(c.Key("msg-editor")).FillWidth().MinWidth(320).Gap(8).Padding(10, 12).Radius(14).Background(p.UserBubble).Transition(twFade)
@@ -116,7 +273,14 @@ func (a *App) messageEditor(c *ui.Context, p *palette) {
 	}
 	card.Border(1, edge).Children(func() {
 		area(c, p, &ed.text, "", locales.EditMessage(), 3).AutoFocus()
-		ui.Row(c).FillWidth().Gap(8).Justify(ui.End).AlignItems(ui.Center).Children(func() {
+		ui.Row(c).FillWidth().Gap(8).AlignItems(ui.Center).Children(func() {
+			attach := iconButton(c, p, iconPaperclip, locales.AttachMenu(), p.Hover).Disabled(ed.busy)
+			if ed.busy {
+				attach.Opacity(0.5)
+			} else {
+				attach.OnClick(a.pickEditFiles)
+			}
+			ui.Box(c).Grow(1)
 			if ed.busy {
 				spinner(c).Size(14, 14)
 			}
@@ -125,9 +289,43 @@ func (a *App) messageEditor(c *ui.Context, p *palette) {
 					a.msgEdit = messageEdit{}
 				}
 			})
-			primaryButton(c, p, locales.Send(), strings.TrimSpace(ed.text) != "" && !ed.busy).OnClick(a.submitEdit)
+			ready := (strings.TrimSpace(ed.text) != "" || len(ed.attachments) > 0) && !ed.busy
+			primaryButton(c, p, locales.Send(), ready).OnClick(a.submitEdit)
 		})
 	})
+}
+
+// editAttachmentChip is an attachment of the message being rewritten, as
+// the composer's: one it had shows its picture as the conversation
+// fetched it, one added its file; while the edit is sent, one added shows
+// how far it has uploaded, and none can be removed.
+func (a *App) editAttachmentChip(c *ui.Context, p *palette, at editAttachment) {
+	ed := &a.msgEdit
+	key := at.key()
+	remove := func() { a.removeEditAttachment(key) }
+	if ed.busy {
+		remove = nil
+	}
+	progress := float32(-1)
+	if ed.busy && at.original == nil {
+		progress = ed.progress[at.file.Path]
+	}
+	if o := at.original; o != nil {
+		var bm *ui.Bitmap
+		if o.Item.Type == "image" {
+			if img := a.sessionBitmap(a.selected, o.Item); img != nil {
+				bm = img.bitmap
+			}
+		}
+		name := firstNonEmpty(o.Item.FileName, locales.Image())
+		a.attachmentChip(c, p, key, name, o.Item.Type == "image", o.Item.SizeBytes, bm, progress, remove)
+		return
+	}
+	var bm *ui.Bitmap
+	if img := a.images["file:"+at.file.Path]; img != nil {
+		bm = img.bitmap
+	}
+	a.attachmentChip(c, p, key, at.file.Name, at.file.Image, at.file.Size, bm, progress, remove)
 }
 
 // forkable is whether a reply can start a fork: finished, and either

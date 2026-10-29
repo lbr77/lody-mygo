@@ -102,3 +102,32 @@ func TestQueueEdits(t *testing.T) {
 		t.Fatalf("machine calls = %v", m)
 	}
 }
+
+// A send whose turn id is in the conversation or its queue already writes
+// nothing, as a held message sent again after a restart must not repeat.
+func TestSendNeverRepeatsATurn(t *testing.T) {
+	r, g := running(t)
+	ctx := context.Background()
+	turn := Turn{ID: "q-1", Text: "queued once", UserID: "user-1", MachineID: "m1", AgentType: "claude", CLIType: "builtin",
+		MarkDispatch: func(context.Context, string, string, bool) error { return nil }}
+	if state, err := r.Send(ctx, turn); err != nil || state != Queued {
+		t.Fatalf("Send = %q, %v", state, err)
+	}
+	g.mu.Lock()
+	uploads := g.appends
+	g.mu.Unlock()
+	for _, id := range []string{"q-1", "u1"} {
+		turn.ID = id
+		if state, err := r.Send(ctx, turn); !errors.Is(err, ErrTurnExists) || state != Unknown {
+			t.Fatalf("Send(%s) again = %q, %v", id, state, err)
+		}
+	}
+	if got := queueOf(r.View()); len(got) != 1 {
+		t.Fatalf("queue = %q", got)
+	}
+	g.mu.Lock()
+	defer g.mu.Unlock()
+	if g.appends != uploads {
+		t.Fatal("a repeat was uploaded")
+	}
+}

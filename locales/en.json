@@ -3177,6 +3177,7 @@
   "noticeMachineAccessDenied": "Machine access denied",
   "noticeMemoryPressure": "The machine is low on memory - free some memory and retry",
   "noticeMessageDeliveryFailed": "Message delivery failed - please resend after sync recovers",
+  "noticeRetry": "Retry",
   "noticeRetryAgain": "Retry again",
   "noticeRetryAndEnableAuto": "Retry and auto-retry",
   "noticeRetryIn": "Retry in {seconds}s",

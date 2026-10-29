@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -41,6 +42,8 @@ type sendRig struct {
 
 func newSendRig(t *testing.T, working bool) *sendRig {
 	t.Helper()
+	// What the outbox keeps is the test's own.
+	t.Setenv("LODY_DATA_DIR", t.TempDir())
 	a := fixture()
 	a.view.Entries = a.view.Entries[:2]
 	a.view.Working = working
@@ -384,16 +387,20 @@ func TestPendingSendsInOrder(t *testing.T) {
 }
 
 // Canceling a message while it uploads stops the upload, and writes
-// nothing; archiving its conversation, or closing the workspace, drops
-// what it holds.
+// nothing, on disk either; archiving its conversation drops what it holds;
+// closing the workspace stops it, though the disk keeps it for when the
+// workspace opens again.
 func TestPendingSendCanceled(t *testing.T) {
 	r := newSendRig(t, false)
 	a := r.a
 	a.draft, a.attachments = "Never mind", []pendingFile{pendingTextFile}
 	a.send()
 	call := r.upload("notes.txt")
+	if kept := keptSends(t, a); len(kept) != 1 || kept[0].Text != "Never mind" {
+		t.Fatalf("kept %+v", kept)
+	}
 	a.cancelSend(a.pending.list[0].id)
-	if len(a.pending.list) != 0 {
+	if len(a.pending.list) != 0 || len(keptSends(t, a)) != 0 {
 		t.Fatal("still held")
 	}
 	r.pump("the upload to stop", func() bool { return call.ctx.Err() != nil })
@@ -407,7 +414,7 @@ func TestPendingSendCanceled(t *testing.T) {
 	a.catalog.Sessions = append([]catalog.Session(nil), a.catalog.Sessions...)
 	a.catalog.Sessions[0].Archived = true
 	a.dropGoneSends(before, a.catalog)
-	if len(a.pending.list) != 0 {
+	if len(a.pending.list) != 0 || len(keptSends(t, a)) != 0 {
 		t.Fatal("an archived conversation keeps its held message")
 	}
 
@@ -420,6 +427,230 @@ func TestPendingSendCanceled(t *testing.T) {
 		t.Fatal("closing the workspace keeps held messages")
 	}
 	r.noWrite()
+	if kept := keptSends(t, a); len(kept) != 1 || kept[0].Text != "Once more" {
+		t.Fatalf("closing the workspace lost the kept message: %+v", kept)
+	}
+}
+
+// keptSends is what the outbox keeps for the rig's workspace.
+func keptSends(t *testing.T, a *App) []outboxRecord {
+	t.Helper()
+	var kept []outboxRecord
+	readJSON(a.outboxFile(), &kept)
+	return kept
+}
+
+// Held messages are kept on disk as they go, and taken up again when the
+// workspace opens after a restart: a picture uploaded is not uploaded
+// again, the message goes under the same id with the run it was sent
+// with, through a replica opened for its conversation when it isn't the
+// one open, and the disk lets it go once written. One whose write had
+// begun is let go as soon as the conversation shows it.
+func TestPendingSendsDurable(t *testing.T) {
+	r := newSendRig(t, false)
+	a := r.a
+	a.models["s1"] = "claude-opus-5-5"
+	a.draft, a.attachments = "Survives a restart", []pendingFile{pendingImageFile, pendingTextFile}
+	a.send()
+	held := a.pending.list[0]
+	if !held.persisted {
+		t.Fatal("a held message isn't kept")
+	}
+	r.upload("shot.png").done <- nil
+	notes := r.upload("notes.txt")
+	r.pump("the picture kept", func() bool {
+		kept := keptSends(t, a)
+		return len(kept) == 1 && kept[0].Attachments[0].Ready != nil
+	})
+	// The app quits while the file uploads.
+	a.pending.dispose()
+	r.pump("the upload to stop", func() bool { return notes.ctx.Err() != nil })
+
+	// Opened again, in another conversation, offline at first.
+	a.selected, a.replica = "s2", nil
+	a.syncState.Live = false
+	opened, closed := map[string]bool{}, make(chan string, 1)
+	open := openSendReplica
+	t.Cleanup(func() { openSendReplica = open })
+	openSendReplica = func(_ *App, id string) (*session.Replica, func()) {
+		opened[id] = true
+		return &session.Replica{ID: id}, func() { closed <- id }
+	}
+	a.tickSends()
+	if len(a.pending.list) != 1 || a.pending.list[0].id != held.id || !a.pending.list[0].persisted {
+		t.Fatalf("not taken up: %+v", a.pending.list)
+	}
+	r.noWrite()
+	if a.unsavedWork() {
+		t.Fatal("a kept message makes leaving ask")
+	}
+	a.syncState.Live = true
+	a.tickSends()
+	r.upload("notes.txt").done <- nil
+	turn := r.write()
+	if turn.ID != held.id || turn.Text != "Survives a restart" || turn.ModelID != "claude-opus-5-5" || len(turn.Attachments) != 2 ||
+		turn.Attachments[0]["imageId"] != "img-shot.png" || turn.MarkDispatch == nil || !opened["s1"] {
+		t.Fatalf("wrote %+v, opened %v", turn, opened)
+	}
+	if kept := keptSends(t, a); len(kept) != 1 || !kept[0].Writing {
+		t.Fatalf("the write isn't kept as begun: %+v", kept)
+	}
+	r.release <- nil
+	r.pump("the send", func() bool { return len(a.pending.list) == 0 })
+	if len(keptSends(t, a)) != 0 {
+		t.Fatal("the disk keeps a message written")
+	}
+	if id := <-closed; id != "s1" {
+		t.Fatalf("closed %q", id)
+	}
+
+	// One whose write had begun goes once the conversation shows it.
+	writeOutbox(a.outboxFile(), []outboxRecord{{ID: "w1", SessionID: "s1", Text: "Landed", Writing: true}})
+	a.pending.dispose()
+	a.catalog.Sessions[0].LatestUserMsgID = "w1"
+	a.tickSends()
+	if len(a.pending.list) != 0 || len(keptSends(t, a)) != 0 {
+		t.Fatalf("a written message stays: %+v", a.pending.list)
+	}
+	r.noWrite()
+}
+
+// Editing the last message, its attachments show above the editor, each
+// removable, and Add attachment adds files: sent, the files added upload
+// to the conversation first, then the edit keeps the attachments left by
+// their ids and adds the uploaded blocks, as Lody's editSession. A file
+// that fails keeps the editor open; sending again uploads only what did
+// not go.
+func TestEditWithAttachments(t *testing.T) {
+	r := newSendRig(t, false)
+	a := r.a
+	a.view.Entries = a.view.Entries[:3]
+	a.view.Entries[1].AcpTurnID = "t1"
+	a.catalog.Sessions[0].AgentConfigID = "a1"
+	a.catalog.Capabilities = map[string]catalog.Capability{"a1": {Fork: true}}
+	u := &a.view.Entries[2]
+	u.Items = append(u.Items, session.Item{ID: "i", Type: "image", ImageID: "img1", FileName: "before.png"},
+		session.Item{ID: "f", Type: "file", FileID: "file1", FileName: "spec.pdf", SizeBytes: 2048, Transport: "r2"})
+	u.Config = map[string]any{"modelId": "m", "inputBlocks": []any{map[string]any{"type": "text", "text": u.Text()},
+		map[string]any{"type": "image", "imageId": "img1", "fileName": "before.png"},
+		map[string]any{"type": "file", "fileId": "file1", "fileName": "spec.pdf", "sizeBytes": float64(2048)}}}
+	var edits []session.Edit
+	resend := editResend
+	t.Cleanup(func() { editResend = resend })
+	editResend = func(_ context.Context, _ *session.Replica, _, _, _, _ string, e session.Entry, edit session.Edit) error {
+		if e.ID != "u2" {
+			t.Errorf("edited %q", e.ID)
+		}
+		edits = append(edits, edit)
+		return nil
+	}
+
+	a.startEdit(*u)
+	dir := t.TempDir()
+	logs := dir + "/build.log"
+	if err := os.WriteFile(logs, []byte("FAIL ./internal/app"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	a.addEditFiles([]string{logs})
+	tt := ui.NewTester(a.render, 1100, 720)
+	tt.Frame()
+	for _, want := range []string{"before.png", "spec.pdf", "build.log", "Remove before.png", "Remove spec.pdf", "Add attachment", "Send"} {
+		if _, ok := tt.Find(want); !ok {
+			t.Errorf("editor: missing %q in %q", want, tt.Texts())
+		}
+	}
+	snapFrame(t, tt, "edit-attachments")
+	if err := tt.Click("Remove before.png"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if len(a.msgEdit.attachments) != 2 || a.msgEdit.attachments[0].key() != "original:1" {
+		t.Fatalf("after removing: %+v", a.msgEdit.attachments)
+	}
+
+	if err := tt.Click("Send"); err != nil {
+		t.Fatal(err)
+	}
+	call := r.upload("build.log")
+	r.progress2(call, 10, 20)
+	tt.Frame()
+	if err := tt.Click("Remove spec.pdf"); err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := tt.Find("Remove build.log"); ok || len(a.msgEdit.attachments) != 2 || !a.msgEdit.busy {
+		t.Error("an attachment can be removed while the edit goes")
+	}
+	call.done <- errors.New("upload failed: 500")
+	r.pump("the failure", func() bool { return !a.msgEdit.busy })
+	if a.msgEdit.id != "u2" || !strings.Contains(a.sendError, "build.log: upload failed: 500") || len(edits) != 0 {
+		t.Fatalf("after a failed upload: %q, %d edits", a.sendError, len(edits))
+	}
+
+	a.msgEdit.text = "Look at the log instead"
+	tt.Frame()
+	if err := tt.Click("Send"); err != nil {
+		t.Fatal(err)
+	}
+	r.upload("build.log").done <- nil
+	r.pump("the edit", func() bool { return a.msgEdit.id == "" })
+	if len(edits) != 1 {
+		t.Fatalf("%d edits", len(edits))
+	}
+	e := edits[0]
+	if e.Text != "Look at the log instead" || len(e.Retained) != 1 || e.Retained[0] != "original:1" || len(e.Added) != 1 || e.Added[0]["fileId"] != "file-build.log" {
+		t.Fatalf("edit %+v", e)
+	}
+}
+
+// progress2 reports how far an edit's upload has gone and waits for the
+// editor to hear it.
+func (r *sendRig) progress2(call uploadCall, sent, total int64) {
+	r.t.Helper()
+	call.progress(sent, total)
+	want := float32(sent) * 100 / float32(total)
+	r.pump("the progress", func() bool {
+		for path, pct := range r.a.msgEdit.progress {
+			if strings.HasSuffix(path, call.name) && pct == want {
+				return true
+			}
+		}
+		return false
+	})
+}
+
+// Offline, a held message waits rather than failing, and goes once the
+// workspace is back.
+func TestPendingSendOffline(t *testing.T) {
+	r := newSendRig(t, false)
+	a := r.a
+	a.syncState.Live = false
+	a.draft, a.attachments = "Sent on a train", []pendingFile{pendingTextFile}
+	a.send()
+	tt := ui.NewTester(a.render, 1100, 720)
+	tt.Frame()
+	if !tt.HasText("Waiting to send") || tt.HasText("Not sent") {
+		t.Fatalf("offline: %q", tt.Texts())
+	}
+	r.noWrite()
+	a.syncState.Live = true
+	tt.Frame()
+	call := r.upload("notes.txt")
+	// The connection drops mid-upload: it waits again.
+	a.syncState.Live = false
+	call.done <- errors.New("network is unreachable")
+	held := a.pending.list[0]
+	r.pump("the attempt", func() bool { return !a.pending.running["s1"] })
+	if held.err != "" || held.attachments[0].err != "" {
+		t.Fatalf("failed offline: %q", held.err)
+	}
+	a.syncState.Live = true
+	tt.Frame()
+	r.upload("notes.txt").done <- nil
+	if turn := r.write(); turn.ID != held.id {
+		t.Fatalf("wrote %+v", turn)
+	}
+	r.release <- nil
+	r.pump("the send", func() bool { return len(a.pending.list) == 0 })
 }
 
 // A message held while its attachments upload is the message just sent:
@@ -475,8 +706,8 @@ func TestPendingSendAnchored(t *testing.T) {
 	r.pump("the send", func() bool { return len(a.pending.list) == 0 })
 }
 
-// Leaving asks first while a held message waits on its attachments or a
-// file has unsaved edits, as Lody's unload sheet.
+// Leaving asks first while a held message is not kept on disk, or a file
+// has unsaved edits, as Lody's unload sheet.
 func TestUnsavedWork(t *testing.T) {
 	a := fixture()
 	if a.unsavedWork() {
@@ -484,7 +715,11 @@ func TestUnsavedWork(t *testing.T) {
 	}
 	a.pending.list = []*pendingSend{{id: "held", sessionID: "s1"}}
 	if !a.unsavedWork() {
-		t.Fatal("a held message doesn't make it ask")
+		t.Fatal("a held message not kept doesn't make it ask")
+	}
+	a.pending.list[0].persisted = true
+	if a.unsavedWork() {
+		t.Fatal("a kept message makes it ask")
 	}
 	a.pending.list = nil
 	in := a.inspectFor("s1")

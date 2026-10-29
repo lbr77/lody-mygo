@@ -7,15 +7,18 @@ import (
 )
 
 // Closing the window or quitting asks first while work would be lost, as
-// Lody's desktop app does: messages still waiting on their attachments,
+// Lody's desktop app does: a held message not yet kept on disk, as Lody
+// asks only for sends not persisted (one kept goes on after a restart),
 // and a file's unsaved edits. Lody's native sheet offers Stay, the
 // default, and Leave, or Quit when the app is quitting; a quit asks once,
 // not again for the window it closes.
 
 // unsavedWork reports whether leaving now would lose something.
 func (a *App) unsavedWork() bool {
-	if len(a.pending.list) > 0 {
-		return true
+	for _, s := range a.pending.list {
+		if !s.persisted {
+			return true
+		}
 	}
 	if in := a.inspect; in != nil && in.preview != nil {
 		fp := in.preview

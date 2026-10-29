@@ -15981,6 +15981,16 @@ func (msgs Messages) NoticeMessageDeliveryFailed() string {
 	return Catalog.Format(msgs.locale, "noticeMessageDeliveryFailed", nil)
 }
 
+// NoticeRetry says "Retry"
+// in the language the app shows.
+func NoticeRetry() string { return In(i18n.Locale()).NoticeRetry() }
+
+// NoticeRetry says "Retry"
+// in the language of msgs.
+func (msgs Messages) NoticeRetry() string {
+	return Catalog.Format(msgs.locale, "noticeRetry", nil)
+}
+
 // NoticeRetryAgain says "Retry again"
 // in the language the app shows.
 func NoticeRetryAgain() string { return In(i18n.Locale()).NoticeRetryAgain() }

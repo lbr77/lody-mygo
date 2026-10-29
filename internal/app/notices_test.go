@@ -3,9 +3,12 @@ package app
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/egoist/mygo/ui"
 
 	"github.com/lbr77/lody-mygo/internal/catalog"
 	"github.com/lbr77/lody-mygo/internal/cloud"
@@ -76,8 +79,85 @@ func TestNoticeViews(t *testing.T) {
 			t.Errorf("missing %q in %q", want, tt.Texts())
 		}
 	}
-	if latestCapacityFailure(a.view) != "f1" {
-		t.Fatalf("capacity failure %q", latestCapacityFailure(a.view))
+	if id, reason := latestRetryableFailure(a.view); id != "f1" || reason != "acp_provider_overloaded" {
+		t.Fatalf("capacity failure %q %q", id, reason)
+	}
+}
+
+// The latest failure the agent can go on from offers Retry, as Lody's
+// recoverable reasons: one click continues the turn with Lody's
+// continuation, Retrying… while it goes, and the pill leaves once it went;
+// a refusal, a failure without Git, or one a later message superseded
+// offers none.
+func TestErrorRetry(t *testing.T) {
+	failed := func(meta map[string]any) []session.Entry {
+		return []session.Entry{{ID: "u1", Role: "user"}, {ID: "n1", Role: "system", Finished: true, Items: []session.Item{notice("f1", "chat_failed", meta)}}}
+	}
+	for reason := range recoverableReasons {
+		if id, got := latestRetryableFailure(&session.View{Entries: failed(map[string]any{"reason": reason})}); id != "f1" || got != reason {
+			t.Errorf("%s: %q %q", reason, id, got)
+		}
+	}
+	for _, meta := range []map[string]any{{"reason": "acp_auth_required"}, {"reason": "acp_internal_error", "code": "git_executable_not_found"}, {"reason": "future_reason"}} {
+		if id, _ := latestRetryableFailure(&session.View{Entries: failed(meta)}); id != "" {
+			t.Errorf("%v offers a retry", meta)
+		}
+	}
+	later := append(failed(map[string]any{"reason": "agent_disconnected"}), session.Entry{ID: "u2", Role: "user"})
+	if id, _ := latestRetryableFailure(&session.View{Entries: later}); id != "" {
+		t.Error("a failure a later message superseded offers a retry")
+	}
+
+	r := newSendRig(t, false)
+	a := r.a
+	a.sync = &catalog.Sync{}
+	a.view.Entries = append(a.view.Entries[:2], session.Entry{ID: "n1", Role: "system", Finished: true, Items: []session.Item{
+		notice("f1", "chat_failed", map[string]any{"reason": "agent_disconnected", "message": "socket closed"})}})
+	tt := ui.NewTester(a.render, 1100, 720)
+	tt.Frame()
+	if _, ok := tt.Find("Retry"); !ok || !tt.HasText("Agent disconnected unexpectedly") || tt.HasText("Retry and auto-retry") {
+		t.Fatalf("notice: %q", tt.Texts())
+	}
+	snapFrame(t, tt, "error-retry")
+	// While the agent works, it waits.
+	a.view.Working = true
+	tt.Frame()
+	if err := tt.Click("Retry"); err != nil {
+		t.Fatal(err)
+	}
+	r.noWrite()
+	a.view.Working = false
+	tt.Frame()
+	if err := tt.Click("Retry"); err != nil {
+		t.Fatal(err)
+	}
+	turn := r.write()
+	if turn.Text != errorPrompt || turn.Queue || turn.ID != "" {
+		t.Fatalf("continued with %+v", turn)
+	}
+	tt.Frame()
+	if !tt.HasText("Retrying…") {
+		t.Errorf("pending: %q", tt.Texts())
+	}
+	r.release <- nil
+	r.pump("the retry", func() bool { return !a.capState().pending })
+	tt.Frame()
+	if _, ok := tt.Find("Retry"); ok || !a.capState().handled["f1"] {
+		t.Errorf("the retry stays once it went: %q", tt.Texts())
+	}
+
+	// Not written, control goes back, and why shows.
+	a.view.Entries = append(a.view.Entries[:3], session.Entry{ID: "n2", Role: "system", Finished: true, Items: []session.Item{
+		notice("f2", "chat_failed", map[string]any{"reason": "acp_upstream_api_error"})}})
+	tt.Frame()
+	if err := tt.Click("Retry"); err != nil {
+		t.Fatalf("%v in %q", err, tt.Texts())
+	}
+	r.write()
+	r.release <- errors.New("session: a message is still sending")
+	r.pump("the refusal", func() bool { return !a.capState().pending })
+	if a.capState().handled["f2"] || a.sendError != "session: a message is still sending" {
+		t.Fatalf("after a refusal: %q", a.sendError)
 	}
 }
 

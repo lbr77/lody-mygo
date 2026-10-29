@@ -1586,6 +1586,7 @@
   "noticeMachineAccessDenied": "机器访问被拒绝",
   "noticeMemoryPressure": "机器内存不足 - 请释放内存后重试",
   "noticeMessageDeliveryFailed": "消息送达失败 - 请在同步恢复后重发",
+  "noticeRetry": "重试",
   "noticeRetryAgain": "再次重试",
   "noticeRetryAndEnableAuto": "重试并开启自动重试",
   "noticeRetryIn": "{seconds} 秒后重试",
