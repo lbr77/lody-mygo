@@ -3835,56 +3835,6 @@ func (msgs Messages) BillingRenews() string {
 	return Catalog.Format(msgs.locale, "billingRenews", nil)
 }
 
-// BillingReferral says "Referral rewards"
-// in the language the app shows.
-func BillingReferral() string { return In(i18n.Locale()).BillingReferral() }
-
-// BillingReferral says "Referral rewards"
-// in the language of msgs.
-func (msgs Messages) BillingReferral() string {
-	return Catalog.Format(msgs.locale, "billingReferral", nil)
-}
-
-// BillingReferralHelp says "Friends get 10% off their first payment; you get 20% of it as credit."
-// in the language the app shows.
-func BillingReferralHelp() string { return In(i18n.Locale()).BillingReferralHelp() }
-
-// BillingReferralHelp says "Friends get 10% off their first payment; you get 20% of it as credit."
-// in the language of msgs.
-func (msgs Messages) BillingReferralHelp() string {
-	return Catalog.Format(msgs.locale, "billingReferralHelp", nil)
-}
-
-// BillingCopyReferral says "Copy referral link"
-// in the language the app shows.
-func BillingCopyReferral() string { return In(i18n.Locale()).BillingCopyReferral() }
-
-// BillingCopyReferral says "Copy referral link"
-// in the language of msgs.
-func (msgs Messages) BillingCopyReferral() string {
-	return Catalog.Format(msgs.locale, "billingCopyReferral", nil)
-}
-
-// BillingMakeReferral says "Create a referral link"
-// in the language the app shows.
-func BillingMakeReferral() string { return In(i18n.Locale()).BillingMakeReferral() }
-
-// BillingMakeReferral says "Create a referral link"
-// in the language of msgs.
-func (msgs Messages) BillingMakeReferral() string {
-	return Catalog.Format(msgs.locale, "billingMakeReferral", nil)
-}
-
-// BillingReferralBalance says "Available credit"
-// in the language the app shows.
-func BillingReferralBalance() string { return In(i18n.Locale()).BillingReferralBalance() }
-
-// BillingReferralBalance says "Available credit"
-// in the language of msgs.
-func (msgs Messages) BillingReferralBalance() string {
-	return Catalog.Format(msgs.locale, "billingReferralBalance", nil)
-}
-
 // BillingUnlimited says "Unlimited"
 // in the language the app shows.
 func BillingUnlimited() string { return In(i18n.Locale()).BillingUnlimited() }
@@ -9765,4 +9715,372 @@ func InviteUnavailable() string { return In(i18n.Locale()).InviteUnavailable() }
 // in the language of msgs.
 func (msgs Messages) InviteUnavailable() string {
 	return Catalog.Format(msgs.locale, "inviteUnavailable", nil)
+}
+
+// ReferralTitle says "Referrals"
+// in the language the app shows.
+func ReferralTitle() string { return In(i18n.Locale()).ReferralTitle() }
+
+// ReferralTitle says "Referrals"
+// in the language of msgs.
+func (msgs Messages) ReferralTitle() string {
+	return Catalog.Format(msgs.locale, "referralTitle", nil)
+}
+
+// ReferralDiscount says "{discount}% off"
+// in the language the app shows.
+func ReferralDiscount(discount string, rate string) string {
+	return In(i18n.Locale()).ReferralDiscount(discount, rate)
+}
+
+// ReferralDiscount says "{discount}% off"
+// in the language of msgs.
+func (msgs Messages) ReferralDiscount(discount string, rate string) string {
+	return Catalog.Format(msgs.locale, "referralDiscount", map[string]any{"discount": discount, "rate": rate})
+}
+
+// ReferralDescription says "They get {discount} their first payment. You earn {reward} of it as credit."
+// in the language the app shows.
+func ReferralDescription(discount string, reward string) string {
+	return In(i18n.Locale()).ReferralDescription(discount, reward)
+}
+
+// ReferralDescription says "They get {discount} their first payment. You earn {reward} of it as credit."
+// in the language of msgs.
+func (msgs Messages) ReferralDescription(discount string, reward string) string {
+	return Catalog.Format(msgs.locale, "referralDescription", map[string]any{"discount": discount, "reward": reward})
+}
+
+// ReferralCampaignDates says "Campaign: {start}–{end}. The standard discount resumes afterward."
+// in the language the app shows.
+func ReferralCampaignDates(start string, end string) string {
+	return In(i18n.Locale()).ReferralCampaignDates(start, end)
+}
+
+// ReferralCampaignDates says "Campaign: {start}–{end}. The standard discount resumes afterward."
+// in the language of msgs.
+func (msgs Messages) ReferralCampaignDates(start string, end string) string {
+	return Catalog.Format(msgs.locale, "referralCampaignDates", map[string]any{"start": start, "end": end})
+}
+
+// ReferralLink says "Referral link"
+// in the language the app shows.
+func ReferralLink() string { return In(i18n.Locale()).ReferralLink() }
+
+// ReferralLink says "Referral link"
+// in the language of msgs.
+func (msgs Messages) ReferralLink() string {
+	return Catalog.Format(msgs.locale, "referralLink", nil)
+}
+
+// ReferralGenerate says "Create referral link"
+// in the language the app shows.
+func ReferralGenerate() string { return In(i18n.Locale()).ReferralGenerate() }
+
+// ReferralGenerate says "Create referral link"
+// in the language of msgs.
+func (msgs Messages) ReferralGenerate() string {
+	return Catalog.Format(msgs.locale, "referralGenerate", nil)
+}
+
+// ReferralCopied says "Copied"
+// in the language the app shows.
+func ReferralCopied() string { return In(i18n.Locale()).ReferralCopied() }
+
+// ReferralCopied says "Copied"
+// in the language of msgs.
+func (msgs Messages) ReferralCopied() string {
+	return Catalog.Format(msgs.locale, "referralCopied", nil)
+}
+
+// ReferralCreatedCopied says "Referral link created and copied"
+// in the language the app shows.
+func ReferralCreatedCopied() string { return In(i18n.Locale()).ReferralCreatedCopied() }
+
+// ReferralCreatedCopied says "Referral link created and copied"
+// in the language of msgs.
+func (msgs Messages) ReferralCreatedCopied() string {
+	return Catalog.Format(msgs.locale, "referralCreatedCopied", nil)
+}
+
+// ReferralCreateFailed says "Couldn't create the link. Try again."
+// in the language the app shows.
+func ReferralCreateFailed() string { return In(i18n.Locale()).ReferralCreateFailed() }
+
+// ReferralCreateFailed says "Couldn't create the link. Try again."
+// in the language of msgs.
+func (msgs Messages) ReferralCreateFailed() string {
+	return Catalog.Format(msgs.locale, "referralCreateFailed", nil)
+}
+
+// ReferralMemberHint says "An admin creates the link. After that, any member can share it."
+// in the language the app shows.
+func ReferralMemberHint() string { return In(i18n.Locale()).ReferralMemberHint() }
+
+// ReferralMemberHint says "An admin creates the link. After that, any member can share it."
+// in the language of msgs.
+func (msgs Messages) ReferralMemberHint() string {
+	return Catalog.Format(msgs.locale, "referralMemberHint", nil)
+}
+
+// ReferralIneligible says "This plan can't share referral links."
+// in the language the app shows.
+func ReferralIneligible() string { return In(i18n.Locale()).ReferralIneligible() }
+
+// ReferralIneligible says "This plan can't share referral links."
+// in the language of msgs.
+func (msgs Messages) ReferralIneligible() string {
+	return Catalog.Format(msgs.locale, "referralIneligible", nil)
+}
+
+// ReferralPerkDiscount says "They get {discount}% off their first payment"
+// in the language the app shows.
+func ReferralPerkDiscount(discount string, rate string) string {
+	return In(i18n.Locale()).ReferralPerkDiscount(discount, rate)
+}
+
+// ReferralPerkDiscount says "They get {discount}% off their first payment"
+// in the language of msgs.
+func (msgs Messages) ReferralPerkDiscount(discount string, rate string) string {
+	return Catalog.Format(msgs.locale, "referralPerkDiscount", map[string]any{"discount": discount, "rate": rate})
+}
+
+// ReferralPerkReward says "You earn {reward}% of that payment before tax, with no cap"
+// in the language the app shows.
+func ReferralPerkReward(reward string) string { return In(i18n.Locale()).ReferralPerkReward(reward) }
+
+// ReferralPerkReward says "You earn {reward}% of that payment before tax, with no cap"
+// in the language of msgs.
+func (msgs Messages) ReferralPerkReward(reward string) string {
+	return Catalog.Format(msgs.locale, "referralPerkReward", map[string]any{"reward": reward})
+}
+
+// ReferralPerkShared says "Credit belongs to this workspace, is shared by the team, and never expires"
+// in the language the app shows.
+func ReferralPerkShared() string { return In(i18n.Locale()).ReferralPerkShared() }
+
+// ReferralPerkShared says "Credit belongs to this workspace, is shared by the team, and never expires"
+// in the language of msgs.
+func (msgs Messages) ReferralPerkShared() string {
+	return Catalog.Format(msgs.locale, "referralPerkShared", nil)
+}
+
+// ReferralTerms says "Only a new workspace's first payment counts. Inviting members here doesn't. Credit can't be cashed out or transferred…"
+// in the language the app shows.
+func ReferralTerms() string { return In(i18n.Locale()).ReferralTerms() }
+
+// ReferralTerms says "Only a new workspace's first payment counts. Inviting members here doesn't. Credit can't be cashed out or transferred…"
+// in the language of msgs.
+func (msgs Messages) ReferralTerms() string {
+	return Catalog.Format(msgs.locale, "referralTerms", nil)
+}
+
+// ReferralAvailable says "Available"
+// in the language the app shows.
+func ReferralAvailable() string { return In(i18n.Locale()).ReferralAvailable() }
+
+// ReferralAvailable says "Available"
+// in the language of msgs.
+func (msgs Messages) ReferralAvailable() string {
+	return Catalog.Format(msgs.locale, "referralAvailable", nil)
+}
+
+// ReferralAvailableHelp says "Applied automatically to your first subscription payment and later renewal or seat invoices. It lowers the amount due…"
+// in the language the app shows.
+func ReferralAvailableHelp() string { return In(i18n.Locale()).ReferralAvailableHelp() }
+
+// ReferralAvailableHelp says "Applied automatically to your first subscription payment and later renewal or seat invoices. It lowers the amount due…"
+// in the language of msgs.
+func (msgs Messages) ReferralAvailableHelp() string {
+	return Catalog.Format(msgs.locale, "referralAvailableHelp", nil)
+}
+
+// ReferralEarned says "Earned"
+// in the language the app shows.
+func ReferralEarned() string { return In(i18n.Locale()).ReferralEarned() }
+
+// ReferralEarned says "Earned"
+// in the language of msgs.
+func (msgs Messages) ReferralEarned() string {
+	return Catalog.Format(msgs.locale, "referralEarned", nil)
+}
+
+// ReferralUsed says "Applied to invoices"
+// in the language the app shows.
+func ReferralUsed() string { return In(i18n.Locale()).ReferralUsed() }
+
+// ReferralUsed says "Applied to invoices"
+// in the language of msgs.
+func (msgs Messages) ReferralUsed() string {
+	return Catalog.Format(msgs.locale, "referralUsed", nil)
+}
+
+// ReferralFrozen says "On hold"
+// in the language the app shows.
+func ReferralFrozen() string { return In(i18n.Locale()).ReferralFrozen() }
+
+// ReferralFrozen says "On hold"
+// in the language of msgs.
+func (msgs Messages) ReferralFrozen() string {
+	return Catalog.Format(msgs.locale, "referralFrozen", nil)
+}
+
+// ReferralFrozenHelp says "A payment is disputed. Released if the payment stands."
+// in the language the app shows.
+func ReferralFrozenHelp() string { return In(i18n.Locale()).ReferralFrozenHelp() }
+
+// ReferralFrozenHelp says "A payment is disputed. Released if the payment stands."
+// in the language of msgs.
+func (msgs Messages) ReferralFrozenHelp() string {
+	return Catalog.Format(msgs.locale, "referralFrozenHelp", nil)
+}
+
+// ReferralAdjustment says "To offset"
+// in the language the app shows.
+func ReferralAdjustment() string { return In(i18n.Locale()).ReferralAdjustment() }
+
+// ReferralAdjustment says "To offset"
+// in the language of msgs.
+func (msgs Messages) ReferralAdjustment() string {
+	return Catalog.Format(msgs.locale, "referralAdjustment", nil)
+}
+
+// ReferralAdjustmentHelp says "Reversed credit you already used. Taken from future rewards, never charged."
+// in the language the app shows.
+func ReferralAdjustmentHelp() string { return In(i18n.Locale()).ReferralAdjustmentHelp() }
+
+// ReferralAdjustmentHelp says "Reversed credit you already used. Taken from future rewards, never charged."
+// in the language of msgs.
+func (msgs Messages) ReferralAdjustmentHelp() string {
+	return Catalog.Format(msgs.locale, "referralAdjustmentHelp", nil)
+}
+
+// ReferralHistory says "History"
+// in the language the app shows.
+func ReferralHistory() string { return In(i18n.Locale()).ReferralHistory() }
+
+// ReferralHistory says "History"
+// in the language of msgs.
+func (msgs Messages) ReferralHistory() string {
+	return Catalog.Format(msgs.locale, "referralHistory", nil)
+}
+
+// ReferralHistoryEmpty says "No rewards yet. They show up here after a referred team's first payment."
+// in the language the app shows.
+func ReferralHistoryEmpty() string { return In(i18n.Locale()).ReferralHistoryEmpty() }
+
+// ReferralHistoryEmpty says "No rewards yet. They show up here after a referred team's first payment."
+// in the language of msgs.
+func (msgs Messages) ReferralHistoryEmpty() string {
+	return Catalog.Format(msgs.locale, "referralHistoryEmpty", nil)
+}
+
+// ReferralEntryReward says "Reward earned"
+// in the language the app shows.
+func ReferralEntryReward() string { return In(i18n.Locale()).ReferralEntryReward() }
+
+// ReferralEntryReward says "Reward earned"
+// in the language of msgs.
+func (msgs Messages) ReferralEntryReward() string {
+	return Catalog.Format(msgs.locale, "referralEntryReward", nil)
+}
+
+// ReferralEntryReversal says "Reward reversed"
+// in the language the app shows.
+func ReferralEntryReversal() string { return In(i18n.Locale()).ReferralEntryReversal() }
+
+// ReferralEntryReversal says "Reward reversed"
+// in the language of msgs.
+func (msgs Messages) ReferralEntryReversal() string {
+	return Catalog.Format(msgs.locale, "referralEntryReversal", nil)
+}
+
+// ReferralEntryHold says "Put on hold"
+// in the language the app shows.
+func ReferralEntryHold() string { return In(i18n.Locale()).ReferralEntryHold() }
+
+// ReferralEntryHold says "Put on hold"
+// in the language of msgs.
+func (msgs Messages) ReferralEntryHold() string {
+	return Catalog.Format(msgs.locale, "referralEntryHold", nil)
+}
+
+// ReferralEntryUnhold says "Hold released"
+// in the language the app shows.
+func ReferralEntryUnhold() string { return In(i18n.Locale()).ReferralEntryUnhold() }
+
+// ReferralEntryUnhold says "Hold released"
+// in the language of msgs.
+func (msgs Messages) ReferralEntryUnhold() string {
+	return Catalog.Format(msgs.locale, "referralEntryUnhold", nil)
+}
+
+// ReferralEntryUse says "Applied to invoice"
+// in the language the app shows.
+func ReferralEntryUse() string { return In(i18n.Locale()).ReferralEntryUse() }
+
+// ReferralEntryUse says "Applied to invoice"
+// in the language of msgs.
+func (msgs Messages) ReferralEntryUse() string {
+	return Catalog.Format(msgs.locale, "referralEntryUse", nil)
+}
+
+// ReferralEntryRelease says "Returned from invoice"
+// in the language the app shows.
+func ReferralEntryRelease() string { return In(i18n.Locale()).ReferralEntryRelease() }
+
+// ReferralEntryRelease says "Returned from invoice"
+// in the language of msgs.
+func (msgs Messages) ReferralEntryRelease() string {
+	return Catalog.Format(msgs.locale, "referralEntryRelease", nil)
+}
+
+// ReferralNewer says "Newer"
+// in the language the app shows.
+func ReferralNewer() string { return In(i18n.Locale()).ReferralNewer() }
+
+// ReferralNewer says "Newer"
+// in the language of msgs.
+func (msgs Messages) ReferralNewer() string {
+	return Catalog.Format(msgs.locale, "referralNewer", nil)
+}
+
+// ReferralOlder says "Older"
+// in the language the app shows.
+func ReferralOlder() string { return In(i18n.Locale()).ReferralOlder() }
+
+// ReferralOlder says "Older"
+// in the language of msgs.
+func (msgs Messages) ReferralOlder() string {
+	return Catalog.Format(msgs.locale, "referralOlder", nil)
+}
+
+// ReferralDetails says "Details"
+// in the language the app shows.
+func ReferralDetails() string { return In(i18n.Locale()).ReferralDetails() }
+
+// ReferralDetails says "Details"
+// in the language of msgs.
+func (msgs Messages) ReferralDetails() string {
+	return Catalog.Format(msgs.locale, "referralDetails", nil)
+}
+
+// ReferralDetailsTitle says "Referral credit"
+// in the language the app shows.
+func ReferralDetailsTitle() string { return In(i18n.Locale()).ReferralDetailsTitle() }
+
+// ReferralDetailsTitle says "Referral credit"
+// in the language of msgs.
+func (msgs Messages) ReferralDetailsTitle() string {
+	return Catalog.Format(msgs.locale, "referralDetailsTitle", nil)
+}
+
+// ReferralRulesTitle says "How it works"
+// in the language the app shows.
+func ReferralRulesTitle() string { return In(i18n.Locale()).ReferralRulesTitle() }
+
+// ReferralRulesTitle says "How it works"
+// in the language of msgs.
+func (msgs Messages) ReferralRulesTitle() string {
+	return Catalog.Format(msgs.locale, "referralRulesTitle", nil)
 }

@@ -1406,3 +1406,43 @@ func TestWorkspaceDialogs(t *testing.T) {
 		t.Fatalf("deletion: %q", tt.Texts())
 	}
 }
+
+func TestReferrals(t *testing.T) {
+	a := fixture()
+	a.settingsOpen, a.settingsTab = true, "billing"
+	var billing *billingOverview
+	json.Unmarshal([]byte(`{"planTier":"plus","effectivePlanTier":"plus","billingInterval":"month","seatCount":2.0,"canManageBilling":true,"referralRewardsSupported":true}`), &billing)
+	var overview *referralOverview
+	json.Unmarshal([]byte(`{"policy":{"campaignId":"launch","discountPercent":15,"rewardPercent":20},"eligible":true,"code":null,"url":null,"issued":12345,"spent":2000,"available":10345,"frozen":0,"adjustment":0}`), &overview)
+	a.fetches = map[string]*fetched{"w1|billing": {value: billing}, "w1|referrals": {value: overview}}
+	tt := snap(t, a, "referrals", false, nil)
+	for _, want := range []string{"Referrals", "$103.45", "Available", "Details", "Create referral link"} {
+		if !tt.HasText(want) {
+			t.Fatalf("no %q in %q", want, tt.Texts())
+		}
+	}
+	a.openReferralDetails()
+	a.fetches["w1|referral-ledger|"] = &fetched{value: &referralLedger{Page: []referralEntry{
+		{ID: "e1", Kind: "reward", Amount: 12345, CreatedAt: 1798761600000},
+		{ID: "e2", Kind: "use", Amount: -2000, CreatedAt: 1798848000000},
+		{ID: "e3", Kind: "freeze", Frozen: -500, CreatedAt: 1798848000000},
+	}, ContinueCursor: "c2"}}
+	tt = snap(t, a, "referral-details", false, nil)
+	for _, want := range []string{"Referral credit", "Earned", "$123.45", "−$20", "Reward earned", "+$123.45", "Applied to invoice", "Hold released", "$5", "Older", "How it works", "They get 15% off their first payment"} {
+		if !tt.HasText(want) {
+			t.Fatalf("no %q in %q", want, tt.Texts())
+		}
+	}
+	if formatMoney(123456789, "usd") != "$1,234,567.89" || formatMoney(-50000, "usd") != "-$500" {
+		t.Fatalf("money: %s %s", formatMoney(123456789, "usd"), formatMoney(-50000, "usd"))
+	}
+	if d, r, rate := policyValues(&referralPolicy{DiscountPercent: 15, RewardPercent: 25}); d != "15" || r != "25" || rate != "8.5" {
+		t.Fatalf("policy values %s %s %s", d, r, rate)
+	}
+	a.referral.details = false
+	a.toast("success", "Referral link created and copied")
+	tt = snap(t, a, "toast", false, nil)
+	if !tt.HasText("Referral link created and copied") {
+		t.Fatalf("toast: %q", tt.Texts())
+	}
+}

@@ -162,6 +162,8 @@ type App struct {
 	deletion        accountDeletion
 	wsCreate        workspaceCreate
 	wsJoin          workspaceJoin
+	referral        referrals
+	toasts          []ui.Toast // to show with the next frame
 	reviewSent      string // the sharing review last reconciled
 	reviewWriter    string
 	reviewAttempt   int

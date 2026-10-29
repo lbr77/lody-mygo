@@ -65,12 +65,6 @@ type billingInvoices struct {
 	} `json:"upcoming"`
 }
 
-type referralOverview struct {
-	Eligible  bool    `json:"eligible"`
-	URL       *string `json:"url"`
-	Available float64 `json:"available"`
-}
-
 type memberLimit struct {
 	MemberLimit *float64 `json:"memberLimit"`
 	MemberCount float64  `json:"memberCount"`
@@ -91,14 +85,29 @@ func formatMoney(minor float64, currency string) string {
 	cur := strings.ToUpper(currency)
 	switch cur {
 	case "USD", "":
-		if minor == float64(int64(minor/100))*100 {
-			return fmt.Sprintf("$%.0f", minor/100)
+		sign := ""
+		if minor < 0 {
+			sign, minor = "-", -minor
 		}
-		return fmt.Sprintf("$%.2f", minor/100)
+		whole := int64(minor) / 100
+		cents := ""
+		if int64(minor)%100 != 0 {
+			cents = fmt.Sprintf(".%02d", int64(minor)%100)
+		}
+		return sign + "$" + groupThousands(whole) + cents
 	case "JPY", "KRW":
 		return fmt.Sprintf("%.0f %s", minor, cur)
 	}
 	return fmt.Sprintf("%.2f %s", minor/100, cur)
+}
+
+// groupThousands writes n with commas between its thousands.
+func groupThousands(n int64) string {
+	s := fmt.Sprint(n)
+	for i := len(s) - 3; i > 0; i -= 3 {
+		s = s[:i] + "," + s[i:]
+	}
+	return s
 }
 
 // formatDay writes a date as the app's language does: 2026年11月27日 or
@@ -206,32 +215,7 @@ func (a *App) billingPage(c *ui.Context, p *palette) {
 	})
 	if b.ReferralRewards {
 		divider(c, p)
-		rf := a.fetch("referrals", func(ctx context.Context) (any, error) {
-			var out *referralOverview
-			err := convex.Query(ctx, "referrals:getOverview", map[string]any{"workspaceId": ws}, &out)
-			return out, err
-		})
-		r, _ := rf.value.(*referralOverview)
-		ui.Row(c).FillWidth().AlignItems(ui.Start).Children(func() {
-			ui.Column(c).Grow(1).Gap(8).Children(func() {
-				ui.Text(c, locales.BillingReferral()).FontSize(sizeBody).TextColor(p.Text)
-				ui.Text(c, locales.BillingReferralHelp()).FontSize(sizeFoot).TextColor(p.Secondary)
-				if r != nil && r.URL != nil {
-					link := *r.URL
-					ghostButton(c, p, locales.BillingCopyReferral()).Border(1, p.Border).OnClick(func() { mygo.Clipboard.WriteText(link) })
-				} else {
-					webLink(c, p, locales.BillingMakeReferral(), a.webBilling)
-				}
-			})
-			ui.Column(c).AlignItems(ui.End).Gap(4).Children(func() {
-				amount := 0.0
-				if r != nil {
-					amount = r.Available
-				}
-				ui.Text(c, formatMoney(amount, "usd")).FontSize(sizeBody).FontWeight(500).TextColor(p.Strong)
-				ui.Text(c, locales.BillingReferralBalance()).FontSize(sizeCaption).TextColor(p.Secondary)
-			})
-		})
+		a.referralCard(c, p, b.CanManageBilling)
 	}
 	divider(c, p)
 	settingRow(c, p, "Sessions", "", func() { valueText(c, p, locales.BillingUnlimited()) })

@@ -63,6 +63,7 @@ func (a *App) mainView(c *ui.Context, p *palette) {
 	a.bugReportDialog(c, p)
 	a.createWorkspaceDialog(c, p)
 	a.joinWorkspaceDialog(c, p)
+	a.toastViewport(c, p)
 }
 
 // tabBar is the 44px bar over the conversation: the session's tab, New

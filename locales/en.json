@@ -816,11 +816,6 @@
   "billingUpgrade": "Upgrade",
   "billingSwitchYearly": "Switch to yearly",
   "billingRenews": "Renews on",
-  "billingReferral": "Referral rewards",
-  "billingReferralHelp": "Friends get 10% off their first payment; you get 20% of it as credit.",
-  "billingCopyReferral": "Copy referral link",
-  "billingMakeReferral": "Create a referral link",
-  "billingReferralBalance": "Available credit",
   "billingUnlimited": "Unlimited",
   "billingMembers": "Team members",
   "billingMembersHelp": "New seats are prorated by day and charged at the next renewal; removing a member doesn't refund this period.",
@@ -2006,5 +2001,88 @@
   "inviteMismatch": "This invitation is for another email address. Sign in with it to accept.",
   "inviteAccept": "Accept invitation",
   "inviteUnavailableTitle": "Invitation unavailable",
-  "inviteUnavailable": "This invitation is unavailable or expired. Ask the inviter to resend it."
+  "inviteUnavailable": "This invitation is unavailable or expired. Ask the inviter to resend it.",
+  "referralTitle": "Referrals",
+  "referralDiscount": "{discount}% off",
+  "@referralDiscount": {
+    "placeholders": {
+      "discount": {
+        "type": "String"
+      },
+      "rate": {
+        "type": "String"
+      }
+    }
+  },
+  "referralDescription": "They get {discount} their first payment. You earn {reward} of it as credit.",
+  "@referralDescription": {
+    "placeholders": {
+      "discount": {
+        "type": "String"
+      },
+      "reward": {
+        "type": "String"
+      }
+    }
+  },
+  "referralCampaignDates": "Campaign: {start}–{end}. The standard discount resumes afterward.",
+  "@referralCampaignDates": {
+    "placeholders": {
+      "start": {
+        "type": "String"
+      },
+      "end": {
+        "type": "String"
+      }
+    }
+  },
+  "referralLink": "Referral link",
+  "referralGenerate": "Create referral link",
+  "referralCopied": "Copied",
+  "referralCreatedCopied": "Referral link created and copied",
+  "referralCreateFailed": "Couldn't create the link. Try again.",
+  "referralMemberHint": "An admin creates the link. After that, any member can share it.",
+  "referralIneligible": "This plan can't share referral links.",
+  "referralPerkDiscount": "They get {discount}% off their first payment",
+  "@referralPerkDiscount": {
+    "placeholders": {
+      "discount": {
+        "type": "String"
+      },
+      "rate": {
+        "type": "String"
+      }
+    }
+  },
+  "referralPerkReward": "You earn {reward}% of that payment before tax, with no cap",
+  "@referralPerkReward": {
+    "placeholders": {
+      "reward": {
+        "type": "String"
+      }
+    }
+  },
+  "referralPerkShared": "Credit belongs to this workspace, is shared by the team, and never expires",
+  "referralTerms": "Only a new workspace's first payment counts. Inviting members here doesn't. Credit can't be cashed out or transferred, and is reversed if that payment is refunded.",
+  "referralAvailable": "Available",
+  "referralAvailableHelp": "Applied automatically to your first subscription payment and later renewal or seat invoices. It lowers the amount due; it doesn't add time.",
+  "referralEarned": "Earned",
+  "referralUsed": "Applied to invoices",
+  "referralFrozen": "On hold",
+  "referralFrozenHelp": "A payment is disputed. Released if the payment stands.",
+  "referralAdjustment": "To offset",
+  "referralAdjustmentHelp": "Reversed credit you already used. Taken from future rewards, never charged.",
+  "referralHistory": "History",
+  "referralHistoryEmpty": "No rewards yet. They show up here after a referred team's first payment.",
+  "referralEntryReward": "Reward earned",
+  "referralEntryReversal": "Reward reversed",
+  "referralEntryHold": "Put on hold",
+  "referralEntryUnhold": "Hold released",
+  "referralEntryUse": "Applied to invoice",
+  "referralEntryRelease": "Returned from invoice",
+  "referralNewer": "Newer",
+  "referralOlder": "Older",
+  "referralDetails": "Details",
+  "referralDetailsTitle": "Referral credit",
+  "referralRulesTitle": "How it works"
 }
