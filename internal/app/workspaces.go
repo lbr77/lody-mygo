@@ -559,3 +559,45 @@ func (a *App) membershipSync(c *ui.Context) {
 		})
 	}()
 }
+
+// workspaceMode is how the open workspace keeps its content, as
+// e2eeWorkspaces:describe says: "" while unknown or for an ordinary one,
+// which opens at once as in Lody; "e2ee" for an end-to-end encrypted one,
+// which this client can't open; "unknown" for a mode it doesn't know,
+// which fails closed.
+func (a *App) workspaceMode() string {
+	if a.convex == nil || a.workspaceID == "" {
+		return ""
+	}
+	convex, ws := a.convex, a.workspaceID
+	f := a.fetch("mode", func(ctx context.Context) (any, error) {
+		var d map[string]any
+		err := convex.Query(ctx, "e2eeWorkspaces:describe", map[string]any{"workspaceId": ws}, &d)
+		return d, err
+	})
+	d, _ := f.value.(map[string]any)
+	switch {
+	case d == nil, d["admission"] == "legacy-unclassified", d["contentMode"] == "plaintext":
+		return ""
+	case d["contentMode"] == "e2ee":
+		return "e2ee"
+	}
+	return "unknown"
+}
+
+// modeGate holds an encrypted workspace's content back, saying why.
+func (a *App) modeGate(c *ui.Context, p *palette, mode string) {
+	title, help := locales.E2eeModeFailed(), locales.E2eeModeFailedHelp()
+	if mode == "e2ee" {
+		title, help = locales.E2eeWorkspaceTitle(), locales.E2eeModeUpgradeHelp()
+	}
+	ui.Column(c.Key("mode-gate")).Fill().Center().Padding(32).Gap(10).Transition(pageIn).Children(func() {
+		ui.Icon(c, iconLock).Size(28, 28).TextColor(p.Tertiary)
+		ui.Text(c, title).FontSize(16).FontWeight(600).TextColor(p.Strong).TextAlign(ui.Center)
+		ui.Text(c, help).FontSize(sizeSub).LineHeight(1.5).TextColor(p.Secondary).TextAlign(ui.Center).MaxWidth(420)
+		ui.Row(c).Gap(8).Margin(6, 0, 0, 0).Children(func() {
+			outlineButton(c, p, nil, locales.PairingRetry()).OnClick(func() { a.refetchKey("mode") })
+			outlineButton(c, p, iconExternal, locales.WorkspaceCreateOnWeb()).OnClick(func() { openExternal("https://lody.ai") })
+		})
+	})
+}

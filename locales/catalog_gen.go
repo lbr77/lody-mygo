@@ -11628,3 +11628,43 @@ func HomeWeekWallQuiet(date string) string { return In(i18n.Locale()).HomeWeekWa
 func (msgs Messages) HomeWeekWallQuiet(date string) string {
 	return Catalog.Format(msgs.locale, "homeWeekWallQuiet", map[string]any{"date": date})
 }
+
+// E2eeWorkspaceTitle says "This workspace is end-to-end encrypted"
+// in the language the app shows.
+func E2eeWorkspaceTitle() string { return In(i18n.Locale()).E2eeWorkspaceTitle() }
+
+// E2eeWorkspaceTitle says "This workspace is end-to-end encrypted"
+// in the language of msgs.
+func (msgs Messages) E2eeWorkspaceTitle() string {
+	return Catalog.Format(msgs.locale, "e2eeWorkspaceTitle", nil)
+}
+
+// E2eeModeUpgradeHelp says "This workspace uses a mode this version of Lody does not support. Update Lody to open it."
+// in the language the app shows.
+func E2eeModeUpgradeHelp() string { return In(i18n.Locale()).E2eeModeUpgradeHelp() }
+
+// E2eeModeUpgradeHelp says "This workspace uses a mode this version of Lody does not support. Update Lody to open it."
+// in the language of msgs.
+func (msgs Messages) E2eeModeUpgradeHelp() string {
+	return Catalog.Format(msgs.locale, "e2eeModeUpgradeHelp", nil)
+}
+
+// E2eeModeFailed says "Workspace mode could not be verified"
+// in the language the app shows.
+func E2eeModeFailed() string { return In(i18n.Locale()).E2eeModeFailed() }
+
+// E2eeModeFailed says "Workspace mode could not be verified"
+// in the language of msgs.
+func (msgs Messages) E2eeModeFailed() string {
+	return Catalog.Format(msgs.locale, "e2eeModeFailed", nil)
+}
+
+// E2eeModeFailedHelp says "No conversation data was opened. Retry the connection to verify this workspace’s persisted mode."
+// in the language the app shows.
+func E2eeModeFailedHelp() string { return In(i18n.Locale()).E2eeModeFailedHelp() }
+
+// E2eeModeFailedHelp says "No conversation data was opened. Retry the connection to verify this workspace’s persisted mode."
+// in the language of msgs.
+func (msgs Messages) E2eeModeFailedHelp() string {
+	return Catalog.Format(msgs.locale, "e2eeModeFailedHelp", nil)
+}

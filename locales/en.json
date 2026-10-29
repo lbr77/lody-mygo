@@ -2417,5 +2417,9 @@
         "type": "String"
       }
     }
-  }
+  },
+  "e2eeWorkspaceTitle": "This workspace is end-to-end encrypted",
+  "e2eeModeUpgradeHelp": "This workspace uses a mode this version of Lody does not support. Update Lody to open it.",
+  "e2eeModeFailed": "Workspace mode could not be verified",
+  "e2eeModeFailedHelp": "No conversation data was opened. Retry the connection to verify this workspace’s persisted mode."
 }

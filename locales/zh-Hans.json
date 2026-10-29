@@ -1152,5 +1152,9 @@
   "homeWeekAgentShare": "{name} {percent}%",
   "homeWeekUsageNamed": "套餐用量 · {name}",
   "homeWeekWallDay": "{date} · {count, plural, other {# 次会话事件}}",
-  "homeWeekWallQuiet": "{date} · 没有活动"
+  "homeWeekWallQuiet": "{date} · 没有活动",
+  "e2eeWorkspaceTitle": "此工作区已端到端加密",
+  "e2eeModeUpgradeHelp": "这个工作区使用了当前版本 Lody 不支持的模式，请升级后再打开。",
+  "e2eeModeFailed": "无法确认工作区模式",
+  "e2eeModeFailedHelp": "尚未打开对话数据。请重试连接，确认此工作区保存的模式。"
 }

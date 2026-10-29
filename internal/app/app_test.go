@@ -1773,9 +1773,9 @@ func TestHomeDashboard(t *testing.T) {
 		s := &a.catalog.Sessions[i]
 		s.UserID, s.CreatedAt = "u1", created
 	}
-	a.catalog.Sessions[0].LastMessageAt = ms(time.Minute)               // running
-	a.catalog.Sessions[1].LastMessageAt = ms(30 * time.Minute)          // finished, unread
-	a.catalog.Sessions[2].LastMessageAt = ms(time.Hour)                 // waiting
+	a.catalog.Sessions[0].LastMessageAt = ms(time.Minute)      // running
+	a.catalog.Sessions[1].LastMessageAt = ms(30 * time.Minute) // finished, unread
+	a.catalog.Sessions[2].LastMessageAt = ms(time.Hour)        // waiting
 	a.catalog.Sessions[3].LastMessageAt, a.catalog.Sessions[3].LastReadAt = ms(2*time.Hour), ms(time.Hour)
 	a.catalog.Sessions[3].PullRequests = []catalog.PullRequest{{URL: "https://github.com/o/r/pull/12", Status: "open"}}
 	a.catalog.Sessions[0].DiffAdd, a.catalog.Sessions[0].DiffDel = 1200, 300
@@ -1810,5 +1810,24 @@ func TestHomeDashboard(t *testing.T) {
 	}
 	if d := diffSquares(1200, 300); d != [5]int{1, 1, 1, 1, 2} {
 		t.Fatalf("squares %v", d)
+	}
+}
+
+func TestWorkspaceModeGate(t *testing.T) {
+	a := fixture()
+	a.convex = &cloud.Convex{}
+	a.fetches = map[string]*fetched{"w1|mode": {value: map[string]any{"workspaceId": "w1", "contentMode": "plaintext", "contentModeVersion": 1.0}}}
+	tt := snap(t, a, "mode-plain", false, nil)
+	if tt.HasText("This workspace is end-to-end encrypted") {
+		t.Fatal("a plaintext workspace is gated")
+	}
+	a.fetches["w1|mode"] = &fetched{value: map[string]any{"workspaceId": "w1", "contentMode": "e2ee", "activation": "control-only"}}
+	tt = snap(t, a, "mode-e2ee", false, nil)
+	if !tt.HasText("This workspace is end-to-end encrypted") || tt.HasText("Port the Flock catalog runtime from the iOS client to Go, without a web view.") {
+		t.Fatalf("not gated: %q", tt.Texts())
+	}
+	a.fetches["w1|mode"] = &fetched{value: map[string]any{"workspaceId": "w1", "contentMode": "quantum"}}
+	if tt = snap(t, a, "mode-unknown", false, nil); !tt.HasText("Workspace mode could not be verified") {
+		t.Fatalf("unknown mode not gated: %q", tt.Texts())
 	}
 }

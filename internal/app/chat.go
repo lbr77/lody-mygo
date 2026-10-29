@@ -47,6 +47,10 @@ func (a *App) mainView(c *ui.Context, p *palette) {
 			card.Shadow(0, 1, 2, 0, ui.RGBA(0, 0, 0, 0.03))
 		}
 		card.Children(func() {
+			if mode := a.workspaceMode(); mode != "" {
+				a.modeGate(c, p, mode)
+				return
+			}
 			page, key := a.sessionView, "session"
 			switch {
 			case a.page == "archive":
