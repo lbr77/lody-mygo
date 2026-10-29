@@ -25,6 +25,7 @@ import (
 // any network.
 func fixture() *App {
 	a := New()
+	a.offline = true
 	a.phase = phaseSignedIn
 	a.account = &cloud.Account{
 		User:       cloud.User{ID: "u1", Name: "Ada Lovelace", Email: "ada@example.com"},
@@ -729,16 +730,19 @@ func TestCloudSettings(t *testing.T) {
 	seed("members", `[{"id":"mem1","userId":"u1","role":"owner","user":{"id":"u1","name":"Ada Lovelace","email":"ada@example.com"}},
 		{"id":"mem2","userId":"u2","role":"member","user":{"id":"u2","name":"Grace Hopper","email":"grace@example.com"}}]`, &[]cloud.Member{})
 	seed("machines", `[{"machineId":"m1","ownerUserId":"u1","sharedWithTeam":true,"updatedAt":1}]`, &[]visibleMachine{})
-	seed("usage/month", `{"totals":{"tokens":1500000,"costUSD":12.34},"users":{"u2":{"name":"Grace Hopper"}},
+	seed("usage/day", `{"totals":{"tokens":1500000,"costUSD":12.34},"users":{"u2":{"name":"Grace Hopper"}},
 		"buckets":[{"bucketStartMs":0,"bucketLabel":"Oct 1","tokens":500000,"costUSD":4,"byModel":[{"modelId":"claude-opus-5-5","tokens":500000,"costUSD":4}],"byUser":[{"userId":"u1","tokens":500000,"costUSD":4}]},
 		{"bucketStartMs":1,"bucketLabel":"Oct 2","tokens":1000000,"costUSD":8.34,"byModel":[{"modelId":"gpt-5","tokens":1000000,"costUSD":8.34}],"byUser":[{"userId":"u2","tokens":1000000,"costUSD":8.34}]}]}`, &usageTimeline{})
 	var billing *billingOverview
-	seed("billing", `{"billingAccountId":null,"planTier":"plus","effectivePlanTier":"plus","billingInterval":"month","nextBillingAt":1798804800000,"seatCount":2,"canManageBilling":true,"cancelAtPeriodEnd":false}`, &billing)
+	seed("billing", `{"billingAccountId":null,"planTier":"plus","effectivePlanTier":"plus","billingInterval":"month","nextBillingAt":1798804800000,"seatCount":2.0,"canManageBilling":true,"cancelAtPeriodEnd":false}`, &billing)
 	a.fetches[a.workspaceID+"|billing"].value = billing
 	var repos *[]workspaceRepo
 	seed("github", `[{"repoFullName":"lbr77/lody-mygo","name":"lody-mygo","repositoryId":1,"private":true,"enabled":true}]`, &repos)
 	a.fetches[a.workspaceID+"|github"].value = repos
-	seed("shares", `[{"shareId":"sh1","publisherUserId":"u2","status":"active","revision":3,"title":"Flock port","createdAt":1798761600000,"totalBytes":2048,"conversationCount":2,"canRevoke":true}]`, &[]publishedShare{})
+	var limit *memberLimit
+	seed("member-limit", `{"memberLimit":null,"canInvite":true,"isPaid":true,"memberCount":2.0,"pendingInvitationCount":0}`, &limit)
+	a.fetches[a.workspaceID+"|member-limit"].value = limit
+	seed("shares", `[{"shareId":"sh1","publisherUserId":"u2","status":"active","revision":3,"title":"Flock port","createdAt":1798761600000,"totalBytes":2048,"conversationCount":2.0,"canRevoke":true}]`, &[]publishedShare{})
 
 	check := func(tab string, want ...string) *ui.Tester {
 		t.Helper()
@@ -752,9 +756,11 @@ func TestCloudSettings(t *testing.T) {
 		return tt
 	}
 	check("general", "Members", "Ada Lovelace (You)", "Grace Hopper", "Owner", "Member")
-	check("machines", "Studio", "Shared with team")
-	check("ai-usage", "1.5M", "$12.34", "By model", "claude-opus-5-5", "gpt-5", "By member", "You", "Grace Hopper")
-	check("billing", "Plus", "Monthly", "2027-01-01")
+	check("account", "My machines", "Studio", "Manage")
+	a.expanded["machine/m1"] = true
+	check("machines", "Studio", "Shared", "Connected folders", "lody-mygo", "Connected agents", "Claude Code")
+	check("ai-usage", "1.5M", "$12.34", "Usage skyline", "By model", "claude-opus-5-5", "gpt-5", "By member", "Ada Lovelace", "Grace Hopper", "Longest streak")
+	check("billing", "Plus", "Monthly", "Switch to yearly", "Renews on", "Jan 1, 2027", "Team members", "2 / 2")
 	check("github", "lbr77/lody-mygo", "Private")
 	tt := check("shares", "Flock port", "Revoke")
 	if err := tt.Click("Revoke"); err != nil {

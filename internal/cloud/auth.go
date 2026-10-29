@@ -290,3 +290,22 @@ func (a *API) Members(ctx context.Context, token, workspaceID string) ([]Member,
 	}
 	return org.Members, nil
 }
+
+// SetName changes the signed-in user's name.
+func (a *API) SetName(ctx context.Context, token, name string) error {
+	return a.call(ctx, token, "/api/auth/update-user", map[string]any{"name": name}, nil)
+}
+
+// LinkedAccount is a sign-in method linked to the user, as github.
+type LinkedAccount struct {
+	ID         string `json:"id"`
+	ProviderID string `json:"providerId"`
+	AccountID  string `json:"accountId"`
+}
+
+// LinkedAccounts lists the sign-in methods linked to the user.
+func (a *API) LinkedAccounts(ctx context.Context, token string) ([]LinkedAccount, error) {
+	var out []LinkedAccount
+	err := a.call(ctx, token, "/api/auth/list-accounts", nil, &out)
+	return out, err
+}

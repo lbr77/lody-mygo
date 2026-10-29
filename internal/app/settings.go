@@ -35,10 +35,12 @@ func settingsSections() []settingsSection {
 	return []settingsSection{
 		{locales.SettingsPersonal(), []settingsTab{{"account", "", nil}, {"preferences", locales.SettingsPreferences(), iconSliders}, {"appearance", locales.SettingsAppearance(), iconPalette}, {"keyboard", locales.SettingsKeyboard(), iconKeyboard}}},
 		{locales.SettingsWorkspace(), []settingsTab{
-			{"general", locales.SettingsGeneral(), iconBuilding}, {"machines", locales.SettingsMachines(), iconMonitor},
-			{"agents", locales.SettingsAgents(), iconBot}, {"projects", locales.SettingsProjects(), iconFolder},
-			{"github", "GitHub", iconGithub}, {"ai-usage", locales.SettingsUsage(), iconChart},
-			{"shares", locales.SettingsShares(), iconShare}, {"billing", locales.SettingsBilling(), iconCreditCard},
+			{"general", locales.SettingsGeneral(), iconBuilding}, {"agents", locales.SettingsAgents(), iconBot},
+			{"agent-roles", locales.SettingsAgentRoles(), iconUserCog}, {"memory", locales.SettingsMemory(), iconBrain},
+			{"mcp", "MCP", iconPlug}, {"prompt-shortcuts", "Prompt Shortcuts", iconFileText},
+			{"projects", locales.SettingsProjects(), iconFolderOpen}, {"github", "GitHub", iconGithub},
+			{"ai-usage", locales.SettingsUsage(), iconChart}, {"shares", locales.SettingsShares(), iconShare},
+			{"billing", locales.SettingsBilling(), iconCreditCard},
 		}},
 		{locales.SettingsOther(), []settingsTab{{"about", locales.SettingsAbout(), iconInfo}}},
 	}
@@ -70,7 +72,11 @@ func (a *App) settingsNav(c *ui.Context, p *palette) {
 			ui.Text(c, section.title).FontSize(sizeFoot).TextColor(p.Tertiary).Padding(4, 8).Margin(map[bool]float32{true: 0, false: 14}[si == 0], 0, 2, 0)
 			for _, tab := range section.tabs {
 				t := tab
-				selected := firstNonEmpty(a.settingsTab, "account") == t.id
+				current := firstNonEmpty(a.settingsTab, "account")
+				if current == "machines" {
+					current = "account" // a page of the account's
+				}
+				selected := current == t.id
 				row := ui.ButtonBase(c.Key(t.id)).Height(32).Padding(0, 8).Radius(8).Gap(8).Justify(ui.Start).Cursor(ui.CursorPointer).
 					OnClick(func() { a.settingsTab = t.id })
 				switch {
@@ -218,49 +224,6 @@ func settingRow(c *ui.Context, p *palette, label, description string, control fu
 
 func valueText(c *ui.Context, p *palette, s string) {
 	ui.Text(c, s).FontSize(sizeBody).TextColor(p.Secondary).Selectable()
-}
-
-func (a *App) accountPage(c *ui.Context, p *palette) {
-	settingsTitle(c, p, locales.SettingsAccount())
-	if a.account == nil {
-		return
-	}
-	u := a.account.User
-	settingsHeading(c, p, locales.SettingsProfile())
-	settingRow(c, p, locales.SettingsEmail(), "", func() { valueText(c, p, u.Email) })
-	settingRow(c, p, locales.SettingsName(), "", func() { valueText(c, p, u.Name) })
-	settingRow(c, p, locales.SettingsAvatar(), "", func() { a.accountAvatar(c, p, 32) })
-	divider(c, p)
-	settingsHeading(c, p, locales.SettingsMyMachines())
-	if len(a.catalog.MachineIDs) == 0 {
-		ui.Text(c, locales.SettingsNoMachine()).FontSize(sizeFoot).TextColor(p.Secondary)
-	}
-	for _, id := range a.catalog.MachineIDs {
-		var facts []string
-		if a.presence.Live {
-			facts = append(facts, map[bool]string{true: locales.Online(), false: locales.Offline()}[a.presence.IsOnline(id)])
-		}
-		if os := a.catalog.MachineOS[id]; os != "" {
-			facts = append(facts, os)
-		}
-		facts = append(facts, locales.SettingsAgentCount(len(a.catalog.Agents[id])))
-		folders := 0
-		for _, pr := range a.catalog.Projects {
-			if pr.MachineID == id && strings.Contains(pr.ID, ":local:") {
-				folders++
-			}
-		}
-		facts = append(facts, locales.SettingsFolderCount(folders))
-		settingRow(c.Key(id), p, a.machineName(id), strings.Join(facts, " · "), nil)
-	}
-	divider(c, p)
-	settingsHeading(c, p, locales.SettingsSignIn())
-	settingRow(c, p, locales.SignOut(), locales.SettingsSignOutDescription(), func() {
-		ghostButton(c, p, locales.SettingsSignOutButton()).Border(1, p.Border).OnClick(func() {
-			a.settingsOpen = false
-			a.signOut()
-		})
-	})
 }
 
 func (a *App) workspacePage(c *ui.Context, p *palette) {

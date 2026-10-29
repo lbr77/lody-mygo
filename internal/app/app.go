@@ -118,9 +118,14 @@ type App struct {
 	previews       map[string]*previewState
 	convex         *cloud.Convex
 	fetches        map[string]*fetched // what the settings asked the cloud for
+	offline        bool                // fetch nothing from the cloud, as in tests
 	toggles        map[string]bool     // cloud switches flipped, until they settle
 	settingsError  string
 	usageRange     string
+	usageCost      bool // the usage charts show cost rather than tokens
+	editingName    bool
+	nameDraft      string
+	agentsMachine  string // the machine whose agents Settings shows
 	revoking       string // the share whose revoke awaits confirmation
 	taskOpen       bool   // a task's dialog
 	taskEntry      string // the turn and task it shows

@@ -714,26 +714,16 @@
   "settingsMachinesHelp": "The machines this workspace can see. Share yours so members can run agents on it.",
   "settingsSharedWithTeam": "Shared with team",
   "settingsUsage": "AI Usage",
-  "usageDay": "Today",
-  "usageWeek": "Week",
-  "usageMonth": "Month",
   "usageTotal": "All time",
-  "usageTokens": "Tokens",
-  "usageCost": "Cost",
   "usageByModel": "By model",
   "usageByMember": "By member",
   "settingsBilling": "Billing",
   "planFree": "Free",
   "billingUnavailable": "Billing isn't available for this workspace.",
   "billingPlan": "Plan",
-  "billingInterval": "Billing period",
   "billingMonthly": "Monthly",
   "billingYearly": "Yearly",
-  "billingSeats": "Seats",
   "billingEnds": "Ends on",
-  "billingNext": "Next payment",
-  "billingManage": "Manage billing",
-  "billingManageHelp": "Payment method, plan and invoices, on Stripe.",
   "billingInvoices": "Invoices",
   "billingNoInvoices": "No invoices yet.",
   "gitHubHelp": "Repositories the workspace's GitHub app can reach. Lody works only in those turned on.",
@@ -753,5 +743,113 @@
     }
   },
   "sharesRevoke": "Revoke",
-  "sharesConfirmRevoke": "Revoke link"
+  "sharesConfirmRevoke": "Revoke link",
+  "usage24h": "24 hours",
+  "usage7d": "7 days",
+  "usage30d": "30 days",
+  "usageLast24h": "Last 24 hours",
+  "usageLast7d": "Last 7 days",
+  "usageLast30d": "Last 30 days",
+  "usageAllTime": "All time",
+  "usageCostUSD": "Estimated cost (USD)",
+  "usageSkyline": "Usage skyline",
+  "usageStatTotal": "Total",
+  "usageStatAverage": "Average per bucket",
+  "usageStatPeak": "Peak",
+  "usageStatActive": "Active buckets",
+  "usageStatCurrent": "{n} in a row now",
+  "@usageStatCurrent": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "usageStatLongest": "Longest streak",
+  "usageActiveOf": "Active {active}/{total}",
+  "@usageActiveOf": {
+    "placeholders": {
+      "active": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "usageLess": "Less",
+  "usageMore": "More",
+  "settingsUsername": "Username",
+  "settingsLinkedAccounts": "Linked accounts",
+  "settingsLinked": "{provider} linked",
+  "@settingsLinked": {
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsNotLinked": "{provider} not linked",
+  "@settingsNotLinked": {
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsEditName": "Edit username",
+  "settingsMyMachinesHelp": "Machines connected with your account. Manage one to share it, its folders and its agents.",
+  "settingsManage": "Manage",
+  "machineShared": "Shared",
+  "machinePrivate": "Private",
+  "machinesNoneShared": "No connected machines yet",
+  "machinesYourPrivate": "Your private machines",
+  "machinesPrivateHint": "These machines are not available to other workspace members. Select one here to manage sharing.",
+  "machinesShareSwitch": "Share machine",
+  "machinesFolders": "Connected folders",
+  "machinesNoFolders": "No connected folders on this machine.",
+  "machinesFolderHint": "Sharing a folder also makes this machine available to the workspace.",
+  "machinesShareFolder": "Share project with team",
+  "machinesAgents": "Connected agents",
+  "machinesManageAgents": "Manage in Agents",
+  "machinesNoAgents": "No agents configured for this machine.",
+  "settingsAgentRoles": "Agent roles",
+  "settingsMemory": "Memory",
+  "billingUpgrade": "Upgrade",
+  "billingSwitchYearly": "Switch to yearly",
+  "billingRenews": "Renews on",
+  "billingReferral": "Referral rewards",
+  "billingReferralHelp": "Friends get 10% off their first payment; you get 20% of it as credit.",
+  "billingCopyReferral": "Copy referral link",
+  "billingMakeReferral": "Create a referral link",
+  "billingReferralBalance": "Available credit",
+  "billingUnlimited": "Unlimited",
+  "billingMembers": "Team members",
+  "billingMembersHelp": "New seats are prorated by day and charged at the next renewal; removing a member doesn't refund this period.",
+  "billingUpcoming": "Next charge (estimated)",
+  "billingUpcomingDate": "Expected on",
+  "billingUpcomingAmount": "Estimated amount",
+  "billingRenewalLine": "{seats, plural, one {Standard subscription · # seat} other {Standard subscription · # seats}}",
+  "@billingRenewalLine": {
+    "placeholders": {
+      "seats": {
+        "type": "int"
+      }
+    }
+  },
+  "billingDiscount": "Discount",
+  "invoiceStarted": "First subscription",
+  "invoiceRenewed": "Renewal",
+  "invoiceSeatsAdded": "Seats added",
+  "invoiceSeatsRemoved": "Seats removed",
+  "invoiceChanged": "Plan changed",
+  "invoiceGift": "Gift redeemed",
+  "invoiceOther": "Invoice",
+  "billingRedeem": "Redeem a Plus gift code",
+  "billingRedeemHelp": "Gift time starts after the time already paid for or redeemed.",
+  "billingOnWeb": "Open lody.ai",
+  "billingPayment": "Payment method",
+  "billingPaymentHelp": "Change the card future payments are charged to, on Stripe.",
+  "billingChangePayment": "Change payment method",
+  "billingCancel": "Cancel subscription"
 }
