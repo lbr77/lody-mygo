@@ -18,8 +18,13 @@ func (a *App) homeView(c *ui.Context, p *palette) {
 			iconButton(c, p, iconSidebar, locales.SidebarToggle(), p.Hover).OnClick(func() { a.sidebarHidden = false })
 		}
 	})
-	ui.Column(c).Grow(1).MinHeight(0).Justify(ui.Center).AlignItems(ui.Center).Padding(0, 24).Gap(20).Children(func() {
-		ui.Text(c, homeHeading(time.Now())).FontSize(36).LineHeight(40.0 / 36).FontWeight(600).LetterSpacing(-0.9).TextColor(p.Strong).TextAlign(ui.Center)
+	stage := ui.Column(c.Key("home-stage")).Grow(1).MinHeight(0).Justify(ui.Center).AlignItems(ui.Center).Padding(0, 24).Gap(20)
+	// A board opening, switching or folding re-centres the stage: the
+	// heading and the line travel there over 240ms, as Lody's morph.
+	a.homeBoardMorph(c, firstShown(stage, "stage"))
+	stage.Children(func() {
+		ui.Text(c.Key("home-heading"), homeHeading(time.Now())).FontSize(36).LineHeight(40.0 / 36).FontWeight(600).LetterSpacing(-0.9).TextColor(p.Strong).
+			TextAlign(ui.Center).Transition(homeTravel)
 		switch {
 		case len(a.catalog.MachineIDs) > 0:
 			a.syncNewChatMemory()

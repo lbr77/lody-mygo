@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/egoist/mygo"
 	"github.com/egoist/mygo/ui"
 
 	"github.com/lbr77/lody-mygo/internal/catalog"
@@ -104,7 +103,7 @@ func (a *App) projectSettingsRow(c *ui.Context, p *palette, pr catalog.Project, 
 				ui.Icon(c, iconFolder).Size(16, 16).TextColor(p.Secondary)
 				ui.Text(c, project.Name).FontSize(sizeBody).TextColor(p.Text).SingleLine()
 			})
-			ui.Text(c, pathTail(project.RootPath, 2)).Font(fontMono).FontSize(sizeCaption).TextColor(p.Secondary).SingleLine().Tooltip(project.RootPath)
+			tip(c, p, ui.Text(c, pathTail(project.RootPath, 2)).Font(fontMono).FontSize(sizeCaption).TextColor(p.Secondary).SingleLine(), project.RootPath)
 		})
 		switch {
 		case removing && a.presence.IsOnline(project.MachineID):
@@ -118,17 +117,10 @@ func (a *App) projectSettingsRow(c *ui.Context, p *palette, pr catalog.Project, 
 			return
 		}
 		iconButton(c, p, iconChevronRight, locales.ProjectOpen(), p.Hover).OnClick(func() { a.openProject(project.ID) })
-		iconButton(c, p, iconMore, locales.MoreActions(), p.Hover).Menu(func(m *ui.Menu) {
-			if m.Item(locales.ProjectNewChat()).Chosen() {
-				a.settingsOpen = false
-				a.newChat.machine, a.newChat.project = project.MachineID, project.ID
-				a.open("")
-			}
-			if m.Item(locales.ProjectCopyPath()).Chosen() {
-				mygo.Clipboard.WriteText(project.RootPath)
-			}
-			m.Separator()
-			if m.Item(locales.ProjectRemove()).Chosen() {
+		// As Lody's project line, its menu holds the one destructive action.
+		more := iconButton(c.Key("more"), p, iconMore, locales.MoreActions(), p.Hover)
+		lodyMenuButton(c, p, more, &a.rowMenu("project/"+project.ID).menuState, 200, 290, 32, func(m *lodyMenu) {
+			if m.item("remove", nil, locales.ProjectRemove(), menuItem{destructive: true}) {
 				a.askRemoveProject(project)
 			}
 		})
@@ -266,7 +258,7 @@ func (a *App) addProjectDialog(c *ui.Context, p *palette) {
 				}
 				ui.Text(c, f.path).Font(fontMono).FontSize(sizeFoot).TextColor(p.Text).SingleLine().Grow(1).MinWidth(0)
 				if f.loading {
-					spinner(c).Size(13, 13)
+					loader(c, p).Size(14, 14)
 				}
 				if f.path != "" && !f.naming {
 					outlineButton(c, p, iconPlus, locales.ProjectNewFolder()).OnClick(func() { f.naming = true })
@@ -280,7 +272,13 @@ func (a *App) addProjectDialog(c *ui.Context, p *palette) {
 				})
 			}
 		})
-		ui.Scroll(c).FillWidth().Height(min(360, h-300)).Padding(0, 12).Gap(1).Children(func() {
+		// While a folder opens, the list it leaves dims to half over 120ms
+		// and takes no clicks, as Lody's.
+		list := ui.Scroll(c.Key("folders")).FillWidth().Height(min(360, h-300)).Padding(0, 12).Gap(1)
+		if dim := list.AnimateWith("navigating", map[bool]float32{true: 0.5, false: 1}[f.loading], durFast, easeStandard); dim < 1 {
+			list.Opacity(dim)
+		}
+		list.Children(func() {
 			if f.listing == nil {
 				return
 			}
@@ -290,13 +288,14 @@ func (a *App) addProjectDialog(c *ui.Context, p *palette) {
 				}
 				entry := e
 				row := ui.Row(c.Key(e.AbsolutePath)).FillWidth().Height(32).Padding(0, 8).Radius(6).Gap(8).AlignItems(ui.Center).Label(e.Name).Transition(colorFade)
-				if e.Error == "" {
+				switch {
+				case e.Error != "":
+					row.Opacity(0.5)
+				case !f.loading:
 					row.Cursor(ui.CursorPointer).OnClick(func() { a.browseFolder(entry.AbsolutePath) })
 					if row.Hovered() {
 						row.Background(p.Hover)
 					}
-				} else {
-					row.Opacity(0.5)
 				}
 				row.Children(func() {
 					ui.Icon(c, iconFolder).Size(15, 15).TextColor(p.Secondary)
@@ -316,7 +315,7 @@ func (a *App) addProjectDialog(c *ui.Context, p *palette) {
 		ui.Row(c).FillWidth().Padding(12, 20, 16, 20).Gap(8).Justify(ui.End).Children(func() {
 			ghostButton(c, p, locales.Cancel()).Border(1, p.Border).OnClick(func() { f.open = false })
 			if f.busy {
-				spinner(c).Size(14, 14)
+				loader(c, p).Size(14, 14)
 			}
 			primaryButton(c, p, locales.ProjectAddThis(), f.path != "" && !f.busy && !f.loading).OnClick(a.registerFolder)
 		})

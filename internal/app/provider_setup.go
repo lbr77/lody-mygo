@@ -295,15 +295,15 @@ func agentKindLabel(cliType, agentType string) string {
 
 // agentReadinessMark is Lody's agent mark on a tile, saying how near the
 // agent is to usable: dim when cold, a ring around it while arriving — a
-// 22% arc orbiting every 1.4s, or filling to percent when the work can be
-// measured — and full contrast once ready.
+// 22% arc orbiting every 1.4s, or filling to percent over 400ms on CSS's
+// ease-out when the work can be measured — and full contrast once ready.
 func agentReadinessMark(c *ui.Context, p *palette, cliType, agentType string, row map[string]any, readiness string, percent float32) {
 	tile := ui.Box(c.Key("mark")).Size(40, 40).Radius(8).Shrink(0).Center().Background(p.Text.Alpha(0.04))
 	var orbit, fill float32
 	arriving := readiness == "arriving"
 	if arriving {
 		if percent >= 0 {
-			fill = tile.AnimateWith("fill", min(100, max(0, percent))/100, 400*time.Millisecond, ui.EaseOut)
+			fill = tile.AnimateWith("fill", min(100, max(0, percent))/100, 400*time.Millisecond, cssEaseOut)
 		} else {
 			orbit = tile.Keyframes("orbit", []ui.Keyframe{{Value: 0}, {At: 1400 * time.Millisecond, Value: 1}}, ui.KeyframeOptions{Repeat: ui.RepeatForever})
 		}
@@ -342,8 +342,11 @@ func agentReadinessMark(c *ui.Context, p *palette, cliType, agentType string, ro
 	case "cold":
 		ink, opacity = p.Secondary, 0.4
 	}
+	// The mark's opacity, not its ink, eases between the states over 500ms
+	// on CSS's ease, as Lody's.
 	tile.Children(func() {
-		ui.Icon(c, agentMark(cliType, agentType, row)).Size(18, 18).TextColor(ink).Opacity(opacity)
+		icon := ui.Icon(c.Key("agent"), agentMark(cliType, agentType, row)).Size(18, 18).TextColor(ink)
+		icon.Opacity(icon.AnimateWith("opacity", opacity, 500*time.Millisecond, cssEase))
 	})
 }
 

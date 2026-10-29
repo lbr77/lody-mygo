@@ -80,11 +80,13 @@ func (a *App) usageDayDetail(c *ui.Context, p *palette, dayMs float64) {
 			ui.Column(c).Grow(1).MinWidth(0).Gap(4).Children(func() {
 				ui.Text(c, usageDayLabel(dayMs)).FontSize(sizeFoot).TextColor(p.Secondary)
 				ui.Row(c).Gap(6).AlignItems(ui.Baseline).Children(func() {
-					total := "—"
+					// The day's total rolls as NumberFlow's from one day to
+					// the next; "—" while it is on its way.
 					if d != nil {
-						total = formatCount(d.Totals.Tokens)
+						numberFlow(ui.Text(c.Key("total"), formatCount(d.Totals.Tokens)).FontSize(22).FontWeight(600).TextColor(p.Strong).FontFeatures("tnum"), d.Totals.Tokens)
+					} else {
+						ui.Text(c.Key("total-pending"), "—").FontSize(22).FontWeight(600).TextColor(p.Strong)
 					}
-					ui.Text(c, total).FontSize(22).FontWeight(600).TextColor(p.Strong).FontFeatures("tnum")
 					ui.Text(c, locales.UsageTokens()).FontSize(sizeFoot).TextColor(p.Secondary)
 				})
 				if d != nil {
@@ -101,8 +103,12 @@ func (a *App) usageDayDetail(c *ui.Context, p *palette, dayMs float64) {
 		case d == nil && f.err != "":
 			ui.Text(c, f.err).FontSize(sizeFoot).TextColor(p.Danger).Selectable()
 		case d == nil:
-			skeleton(c, p, "day-1", 12).FillWidth()
-			skeleton(c, p, "day-2", 12).WidthPercent(60)
+			// One 6px line breathing to half and back every 2s, as Lody's
+			// day detail waits.
+			line := ui.Box(c.Key("day-loading")).FillWidth().Height(6).Radius(3).Margin(4, 0, 0, 0).Background(p.Secondary.Alpha(0.15))
+			k := line.Keyframes("pulse", []ui.Keyframe{{Value: 1}, {At: time.Second, Value: 0.5, Ease: cssEaseInOut}, {At: 2 * time.Second, Value: 1, Ease: cssEaseInOut}},
+				ui.KeyframeOptions{Repeat: ui.RepeatForever})
+			line.Opacity(k)
 		case d.Totals.Tokens <= 0:
 			ui.Text(c, locales.UsageNoUsage()).FontSize(sizeFoot).TextColor(p.Secondary)
 		default:

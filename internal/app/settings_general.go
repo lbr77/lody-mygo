@@ -130,12 +130,11 @@ func (a *App) generalPage(c *ui.Context, p *palette) {
 		})
 	})
 	settingRow(c, p, locales.WorkspaceIcon(), "", func() {
-		ui.Row(c).Gap(10).AlignItems(ui.Center).Children(func() {
-			if admin {
-				ghostButton(c, p, locales.AvatarChange()).Border(1, p.Border).OnClick(func() { a.pickAvatar("workspace") })
-			}
+		if admin {
+			a.avatarEditor(c, p, "workspace", 8, func() { a.workspaceIcon(c, ws, ws.Name, 32) })
+		} else {
 			a.workspaceIcon(c, ws, ws.Name, 32)
-		})
+		}
 	})
 	divider(c, p)
 	ui.Row(c).FillWidth().AlignItems(ui.Center).Children(func() {
@@ -223,20 +222,35 @@ func (a *App) memberRows(c *ui.Context, p *palette, mf *fetched, admin bool) {
 					ui.Text(c, member.User.Email).FontSize(sizeFoot).TextColor(p.Secondary).SingleLine()
 				}
 			})
-			ui.Text(c, roleLabel(member.Role)).FontSize(sizeFoot).TextColor(p.Secondary)
 			if !admin || member.UserID == me || member.Role == "owner" {
+				ui.Text(c, roleLabel(member.Role)).FontSize(sizeFoot).TextColor(p.Secondary)
 				return
 			}
-			iconButton(c, p, iconMore, locales.MoreActions(), p.Hover).Menu(func(menu *ui.Menu) {
-				next := map[string]string{"admin": "member", "member": "admin"}[member.Role]
-				label := locales.MemberMakeAdmin()
-				if next == "member" {
-					label = locales.MemberMakeMember()
+			// As Lody's, an editable member's role is a button that opens the
+			// roles, the one held checked, and the way out of the workspace.
+			b := ui.ButtonBase(c.Key("role")).Height(28).Padding(0, 8, 0, 10).Radius(8).Gap(4).AlignItems(ui.Center).Border(1, p.Border).
+				Background(p.Canvas).Cursor(ui.CursorPointer).Label(roleLabel(member.Role)).Transition(colorFade)
+			pressable(b, 0.97)
+			if b.Hovered() {
+				b.Background(p.Hover)
+			}
+			b.Children(func() {
+				ui.Text(c, roleLabel(member.Role)).FontSize(sizeFoot).FontWeight(500).TextColor(p.Text)
+				ui.Icon(c, iconChevronDown).Size(14, 14).TextColor(p.Secondary)
+			})
+			lodyMenuButton(c, p, b, &a.rowMenu("member/"+member.ID).menuState, 200, 290, 32, func(m *lodyMenu) {
+				for _, role := range []string{"member", "admin"} {
+					next := role
+					var mark *ui.SVG
+					if member.Role == role {
+						mark = iconCheck
+					}
+					if m.item("role/"+role, mark, roleLabel(role), menuItem{}) && member.Role != next {
+						a.authCall("/api/auth/organization/update-member-role", map[string]any{"organizationId": ws, "memberId": member.ID, "role": next}, "members", nil)
+					}
 				}
-				if menu.Item(label).Chosen() {
-					a.authCall("/api/auth/organization/update-member-role", map[string]any{"organizationId": ws, "memberId": member.ID, "role": next}, "members", nil)
-				}
-				if menu.Item(locales.MemberRemove()).Chosen() {
+				m.sep()
+				if m.item("remove", nil, locales.MemberRemove(), menuItem{destructive: true}) {
 					a.confirm(locales.MemberRemoveTitle(firstNonEmpty(member.User.Name, member.User.Email)), locales.MemberRemoveBody(), locales.MemberRemove(), func() {
 						a.authCall("/api/auth/organization/remove-member", map[string]any{"organizationId": ws, "memberIdOrEmail": member.ID}, "members", nil)
 					})

@@ -97,7 +97,7 @@ func (a *App) preferencesPage(c *ui.Context, p *palette) {
 	settingsTitle(c, p, locales.SettingsPreferences())
 	prefSection(c, p, locales.PrefConversations(), true, func() {
 		settingRow(c, p, locales.SettingsBusy(), locales.SettingsBusyHelp(), func() {
-			segmented(c, p, "busy", []option{{"queue", locales.Queue()}, {"steer", locales.Steer()}}, firstNonEmpty(a.busyBehavior, "queue"), func(v string) {
+			trayChoice(c, p, "busy", []option{{"queue", locales.Queue()}, {"steer", locales.Steer()}}, firstNonEmpty(a.busyBehavior, "queue"), func(v string) {
 				a.busyBehavior = v
 				a.savePrefs()
 			})

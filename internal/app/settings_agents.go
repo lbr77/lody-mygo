@@ -319,15 +319,16 @@ func (a *App) providerRow(c *ui.Context, p *palette, ag catalog.AgentConfig) {
 				ui.Text(c, strings.Join(facts, " · ")).FontSize(sizeFoot).TextColor(p.Secondary).SingleLine()
 			}
 			if a.catalog.Capabilities[agent.ID].RateLimits {
-				quotaMeters(c, p, a.catalog.RateLimits[agent.ID], time.Now())
+				quotaMeters(c, p, a.catalog.RateLimits[agent.ID], time.Now(), false)
 			}
 		})
-		iconButton(c, p, iconMore, locales.MoreActions(), p.Hover).Menu(func(m *ui.Menu) {
-			if m.Item(locales.ProviderRefresh()).Chosen() {
+		more := iconButton(c.Key("more"), p, iconMore, locales.MoreActions(), p.Hover)
+		lodyMenuButton(c, p, more, &a.rowMenu("provider/"+agent.ID).menuState, 180, 290, 32, func(m *lodyMenu) {
+			if m.item("refresh", iconRefresh, locales.ProviderRefresh(), menuItem{}) {
 				a.refreshProvider(agent.MachineID, agent.ID, nil)
 			}
-			m.Separator()
-			if m.Item(locales.ActionDelete()).Chosen() {
+			m.sep()
+			if m.item("delete", iconTrash, locales.ActionDelete(), menuItem{destructive: true}) {
 				a.confirm(locales.ProviderDeleteTitle(agent.Name), locales.ProviderDeleteBody(), locales.ActionDelete(), func() { a.deleteProvider(agent) })
 			}
 		})
@@ -832,21 +833,21 @@ func (a *App) providerSection(c *ui.Context, p *palette, id, title string, body 
 	foldSection(c, p, f.sections[id], func() { f.sections[id] = !f.sections[id] }, id, title, body)
 }
 
-// foldSection is a part of a form that folds away under its title.
+// foldSection is a part of a form that folds away under its title, as
+// Lody's collapsible sections: its body grows into view and shrinks away
+// over 180ms, and its chevron turns half a turn over 120ms.
 func foldSection(c *ui.Context, p *palette, open bool, toggle func(), id, title string, body func()) {
-	ui.Column(c.Key(id)).FillWidth().Radius(8).Background(p.Text.Alpha(0.035)).Clip().Children(func() {
+	section := ui.Column(c.Key(id)).FillWidth().Radius(8).Background(p.Text.Alpha(0.035)).Clip()
+	k := section.AnimateWith("open", b2f(open), foldTime, easeStandard)
+	section.Children(func() {
 		head := ui.Row(c).FillWidth().Height(40).Padding(0, 12).AlignItems(ui.Center).Cursor(ui.CursorPointer).Label(title).OnClick(toggle)
 		head.Children(func() {
 			ui.Text(c, title).FontSize(sizeSub).FontWeight(500).TextColor(p.Text).Grow(1)
-			icon := iconChevronDown
-			if open {
-				icon = iconChevronUp
-			}
-			ui.Icon(c, icon).Size(14, 14).TextColor(p.Tertiary)
+			foldChevron(c, p, open, 14)
 		})
-		if open {
+		foldBody(c, k, open, func() {
 			ui.Column(c).FillWidth().Padding(0, 12, 12, 12).Gap(8).Children(body)
-		}
+		})
 	})
 }
 

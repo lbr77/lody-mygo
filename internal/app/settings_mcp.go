@@ -184,7 +184,7 @@ func (a *App) mcpToolList(c *ui.Context, p *palette, m catalog.MCPServer, t *mcp
 				badge := ui.Text(c.Key(tool.Name), tool.Name).Font(fontMono).FontSize(sizeCaption).TextColor(p.Text).
 					Padding(2, 7).Radius(5).Background(p.Text.Alpha(0.06))
 				if tool.Description != "" {
-					badge.Tooltip(tool.Description)
+					tip(c, p, badge, tool.Description)
 				}
 			}
 		}
@@ -222,7 +222,8 @@ func (a *App) mcpServerRow(c *ui.Context, p *palette, server catalog.MCPServer, 
 			ui.Icon(c, iconSettings).Size(13, 13).TextColor(p.Secondary)
 			ui.Text(c, locales.McpAuthSettings()).FontSize(sizeFoot).TextColor(p.Secondary)
 		})
-		load := ui.Row(c).Gap(4).AlignItems(ui.Center).Padding(4, 8).Radius(6).Tooltip(locales.McpToolsLocal()).Transition(colorFade)
+		load := ui.Row(c).Gap(4).AlignItems(ui.Center).Padding(4, 8).Radius(6).Transition(colorFade)
+		tip(c, p, load, locales.McpToolsLocal())
 		if m.Connection == nil || (tools != nil && tools.loading) || a.toolsMachine() == "" {
 			load.Opacity(0.45)
 		} else {

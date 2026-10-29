@@ -448,7 +448,9 @@ func (a *App) binaryField(c *ui.Context, p *palette) {
 
 // quotaMeters are a provider's subscription windows, as Lody's provider
 // rows show them: each window's share used, a bar, and when it resets.
-func quotaMeters(c *ui.Context, p *palette, limits []catalog.RateLimit, now time.Time) {
+// grow, as the home's usage tile, has each bar grow across from the left
+// over 500ms as it shows.
+func quotaMeters(c *ui.Context, p *palette, limits []catalog.RateLimit, now time.Time, grow bool) {
 	var windows []catalog.RateWindow
 	for _, l := range limits {
 		if len(l.Windows) > 0 {
@@ -465,13 +467,20 @@ func quotaMeters(c *ui.Context, p *palette, limits []catalog.RateLimit, now time
 			short, full := windowLabels(win)
 			used := locales.QuotaUsed(int(win.UsedPercent + 0.5))
 			reset := resetText(win.ResetsAt, now)
-			ui.Column(c.Key(i)).Grow(1).Basis(0).MinWidth(0).Gap(4).Tooltip(full + ": " + used + ", " + reset).Children(func() {
+			meter := ui.Column(c.Key(i)).Grow(1).Basis(0).MinWidth(0).Gap(4)
+			tip(c, p, meter, full+": "+used+", "+reset)
+			meter.Children(func() {
 				ui.Row(c).FillWidth().Gap(6).Children(func() {
 					ui.Text(c, short).FontSize(sizeCaption).FontWeight(500).TextColor(p.Secondary).Grow(1).SingleLine()
 					ui.Text(c, used).FontSize(sizeCaption).TextColor(p.Text).Shrink(0)
 				})
 				ui.Box(c).FillWidth().Height(4).Radius(2).Background(p.Text.Alpha(0.08)).Clip().Children(func() {
-					ui.Box(c).Height(4).Radius(2).Background(p.Text.Alpha(0.45)).WidthPercent(float32(win.UsedPercent))
+					fill := ui.Box(c.Key("fill")).Height(4).Radius(2).Background(p.Text.Alpha(0.45)).WidthPercent(float32(win.UsedPercent))
+					if grow {
+						if k := fill.Keyframes("grow", []ui.Keyframe{{Value: 0}, {At: 500 * time.Millisecond, Value: 1, Ease: easeSweep}}); k < 1 {
+							fill.TransformOrigin(0, 0.5).Scale(k, 1)
+						}
+					}
 				})
 				ui.Text(c, reset).FontSize(sizeCaption).TextColor(p.Tertiary).SingleLine()
 			})
@@ -651,7 +660,7 @@ func (a *App) piExtensionsField(c *ui.Context, p *palette) {
 					if name != "" {
 						ui.Text(c, name).FontSize(sizeSub).TextColor(p.Text).SingleLine()
 					}
-					ui.Text(c, path).Font(fontMono).FontSize(sizeCaption).TextColor(p.Secondary).SingleLine().Tooltip(path)
+					tip(c, p, ui.Text(c, path).Font(fontMono).FontSize(sizeCaption).TextColor(p.Secondary).SingleLine(), path)
 				})
 				if note != "" {
 					ui.Text(c, note).FontSize(sizeCaption).TextColor(p.Tertiary)

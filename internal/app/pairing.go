@@ -376,41 +376,121 @@ func (a *App) deviceAuthDialog(c *ui.Context, p *palette) {
 	if !d.open {
 		return
 	}
+	// Where it stands, as Lody's secondary pages say it: asking for the
+	// code, checking what arrived, or done.
+	state := "ask"
+	switch {
+	case d.success:
+		state = "done"
+	case d.verifying:
+		state = "arrive"
+	}
 	sheet(c, p, &d.open, 440, func() {
-		if d.success {
-			sheetHeader(c, p, locales.DeviceTitle(), "", func() { d.open = false })
-			ui.Column(c).FillWidth().Padding(8, 20, 20, 20).Gap(12).AlignItems(ui.Center).Children(func() {
-				doneMark(c, p)
-				ui.Text(c, locales.DeviceSuccess()).FontSize(sizeSub).FontWeight(500).TextColor(p.Text).TextAlign(ui.Center)
-			})
-			ui.Row(c).FillWidth().Padding(0, 20, 16, 20).Justify(ui.End).Children(func() {
-				primaryButton(c, p, locales.Close(), true).OnClick(func() { d.open = false })
-			})
-			return
+		ui.Row(c).FillWidth().Padding(20, 20, 0, 20).Shrink(0).Children(func() { deviceMark(c, p, state) })
+		// The copy rises in again whenever the state changes: 4px over
+		// 320ms on ease.standard.
+		copy := ui.Column(c.Key("device-copy/" + state)).FillWidth()
+		if k := copy.Keyframes("rise", []ui.Keyframe{{Value: 0}, {At: durSlow, Value: 1, Ease: easeStandard}}); k < 1 {
+			copy.Opacity(k).Translate(0, 4*(1-k))
 		}
-		sheetHeader(c, p, locales.DeviceTitle(), locales.DeviceDescription(), func() { d.open = false })
-		ui.Column(c).FillWidth().Padding(4, 20, 8, 20).Gap(8).Children(func() {
-			ui.Text(c, locales.DeviceVerificationCode()).FontSize(sizeSub).FontWeight(500).TextColor(p.Text)
-			a.codeSlots(c, p, d)
-			ui.Text(c, locales.DeviceCodeHint()).FontSize(sizeFoot).TextColor(p.Tertiary)
-			if d.err != "" {
-				ui.Row(c).FillWidth().Gap(12).Padding(12).Radius(10).Background(p.Danger.Alpha(0.08)).Children(func() {
-					ui.Icon(c, markDanger).Size(16, 16).TextColor(p.Danger).Margin(1, 0, 0, 0)
-					ui.Text(c, d.err).FontSize(sizeFoot).TextColor(p.Text).Grow(1).MinWidth(0).Selectable()
+		copy.Children(func() {
+			if d.success {
+				sheetHeader(c, p, locales.DeviceTitle(), "", func() { d.open = false })
+				ui.Column(c).FillWidth().Padding(0, 20, 20, 20).Children(func() {
+					ui.Text(c, locales.DeviceSuccess()).FontSize(sizeSub).FontWeight(500).TextColor(p.Text)
 				})
+				ui.Row(c).FillWidth().Padding(0, 20, 16, 20).Justify(ui.End).Children(func() {
+					primaryButton(c, p, locales.Close(), true).OnClick(func() { d.open = false })
+				})
+				return
 			}
-			if a.account != nil {
-				ui.Text(c, locales.DeviceLoginAs()+" "+a.account.User.Name+" ("+a.account.User.Email+")").FontSize(sizeFoot).TextColor(p.Secondary)
+			sheetHeader(c, p, locales.DeviceTitle(), locales.DeviceDescription(), func() { d.open = false })
+			ui.Column(c).FillWidth().Padding(4, 20, 8, 20).Gap(8).Children(func() {
+				ui.Text(c, locales.DeviceVerificationCode()).FontSize(sizeSub).FontWeight(500).TextColor(p.Text)
+				a.codeSlots(c, p, d)
+				ui.Text(c, locales.DeviceCodeHint()).FontSize(sizeFoot).TextColor(p.Tertiary)
+				if d.err != "" {
+					ui.Row(c).FillWidth().Gap(12).Padding(12).Radius(10).Background(p.Danger.Alpha(0.08)).Children(func() {
+						ui.Icon(c, markDanger).Size(16, 16).TextColor(p.Danger).Margin(1, 0, 0, 0)
+						ui.Text(c, d.err).FontSize(sizeFoot).TextColor(p.Text).Grow(1).MinWidth(0).Selectable()
+					})
+				}
+				if a.account != nil {
+					ui.Text(c, locales.DeviceLoginAs()+" "+a.account.User.Name+" ("+a.account.User.Email+")").FontSize(sizeFoot).TextColor(p.Secondary)
+				}
+			})
+			ui.Row(c).FillWidth().Padding(12, 20, 16, 20).Gap(8).Justify(ui.End).AlignItems(ui.Center).Children(func() {
+				label := locales.DeviceVerifyButton()
+				if d.verifying {
+					spinner(c).Size(14, 14)
+					label = locales.DeviceVerifying()
+				}
+				primaryButton(c, p, label, len(normalizeDeviceCode(d.code)) == 8 && !d.verifying).OnClick(a.approveDevice)
+			})
+		})
+	})
+}
+
+// The connector's glyphs, in its own 76×48 box.
+var (
+	connectorAsk  = ui.MustParseSVG([]byte(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 76 48" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M34.5 24h7M39 21l3 3-3 3"/></svg>`))
+	connectorDone = ui.MustParseSVG([]byte(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 76 48" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M34 24.2l2.7 2.6 5.3-5.6"/></svg>`))
+)
+
+// deviceMark is Lody's secondary page mark: the terminal's tile and
+// Lody's, joined by a connector that carries the state. Asking, its lines
+// are dotted and an arrow waits in its node; while what arrived is
+// checked, the dots flow toward Lody every 600ms and three dots blink in
+// the node, 200ms apart, every 1.2s; done, the lines turn solid ink and
+// the node fills with it over 320ms, a tick in it.
+func deviceMark(c *ui.Context, p *palette, state string) {
+	tile := func(fn func()) {
+		ui.Row(c).Size(48, 48).Shrink(0).Radius(14).Center().Background(raisedGround(p)).Shadow(0, 1, 2, 0, ui.RGBA(0, 0, 0, 0.08)).
+			Border(0.5, p.CardRim).Children(fn)
+	}
+	ui.Row(c.Key("device-mark")).Height(48).AlignItems(ui.Center).Children(func() {
+		tile(func() { ui.Icon(c, iconTerminal).Size(22, 22).TextColor(p.Text) })
+		conn := ui.Box(c.Key("connector")).Size(76, 48).Shrink(0)
+		done := conn.AnimateWith("done", b2f(state == "done"), durSlow, cssEase)
+		var flow float32
+		var dots [3]float32
+		if state == "arrive" {
+			flow = conn.Keyframes("flow", []ui.Keyframe{{Value: 0}, {At: 600 * time.Millisecond, Value: 1}}, ui.KeyframeOptions{Repeat: ui.RepeatForever})
+			for i := range dots {
+				dots[i] = conn.Keyframes(fmt.Sprint("dot", i), []ui.Keyframe{{Value: 0.25}, {At: 360 * time.Millisecond, Value: 1, Ease: cssEase}, {At: 1200 * time.Millisecond, Value: 0.25, Ease: cssEase}},
+					ui.KeyframeOptions{Repeat: ui.RepeatForever, Delay: time.Duration(i) * 200 * time.Millisecond})
+			}
+		}
+		ink, pending, ground := p.Text, p.Tertiary.Alpha(0.6), p.Popover
+		conn.Draw(func(pt *ui.Painter, r ui.Rect) {
+			line := func(x1, x2 float32, solid bool) {
+				path := new(ui.Path).MoveTo(r.X+x1, r.Y+24).LineTo(r.X+x2, r.Y+24)
+				if !solid {
+					path.Dash(-10*flow, 1, 4)
+				}
+				color := pending
+				if solid {
+					color = pending.Mix(ink, done)
+				}
+				pt.StrokePath(path, 1.5, color)
+			}
+			line(7, 27, state == "done")
+			line(49, 69, state == "done")
+			node := new(ui.Path).Circle(r.X+38, r.Y+24, 9.5)
+			pt.FillPath(node, ground.Mix(ink, done))
+			pt.StrokePath(node, 1.5, pending.Mix(ink, done))
+			switch state {
+			case "arrive":
+				for i, x := range []float32{34, 38, 42} {
+					pt.FillPath(new(ui.Path).Circle(r.X+x, r.Y+24, 1.4), ink.Alpha(dots[i]))
+				}
+			case "ask":
+				pt.Icon(connectorAsk, r, p.Secondary)
+			case "done":
+				pt.Icon(connectorDone, r, ground)
 			}
 		})
-		ui.Row(c).FillWidth().Padding(12, 20, 16, 20).Gap(8).Justify(ui.End).AlignItems(ui.Center).Children(func() {
-			label := locales.DeviceVerifyButton()
-			if d.verifying {
-				spinner(c).Size(14, 14)
-				label = locales.DeviceVerifying()
-			}
-			primaryButton(c, p, label, len(normalizeDeviceCode(d.code)) == 8 && !d.verifying).OnClick(a.approveDevice)
-		})
+		tile(func() { ui.Image(c, bootMarkBitmap).Size(34, 34) })
 	})
 }
 
@@ -422,9 +502,11 @@ func (a *App) codeSlots(c *ui.Context, p *palette, d *deviceAuth) {
 	code := normalizeDeviceCode(d.code)
 	invalid := d.err != ""
 	row := ui.Row(c.Key("device-code")).FillWidth().Gap(4).AlignItems(ui.Center)
+	// 3px each way over 460ms, each step on ease.standard, as Lody's.
 	shake := row.Keyframes("shake", []ui.Keyframe{
-		{Value: 0}, {At: 92 * time.Millisecond, Value: -3}, {At: 184 * time.Millisecond, Value: 3},
-		{At: 276 * time.Millisecond, Value: -3}, {At: 368 * time.Millisecond, Value: 3}, {At: 460 * time.Millisecond, Value: 0},
+		{Value: 0}, {At: 92 * time.Millisecond, Value: -3, Ease: easeStandard}, {At: 184 * time.Millisecond, Value: 3, Ease: easeStandard},
+		{At: 276 * time.Millisecond, Value: -3, Ease: easeStandard}, {At: 368 * time.Millisecond, Value: 3, Ease: easeStandard},
+		{At: 460 * time.Millisecond, Value: 0, Ease: easeStandard},
 	}, ui.KeyframeOptions{Run: d.shook})
 	if d.shook > 0 {
 		row.Translate(shake, 0)
@@ -453,7 +535,8 @@ func (a *App) codeSlots(c *ui.Context, p *palette, d *deviceAuth) {
 					ch := ui.Text(c.Key(fmt.Sprint(i, code[i:i+1])), code[i:i+1]).Font(fontMono).FontSize(21).TextColor(ink).FontFeatures("tnum")
 					k := ch.Keyframes("enter", []ui.Keyframe{{Value: 0}, {At: 260 * time.Millisecond, Value: 1, Ease: ui.CubicBezier(0.22, 1, 0.36, 1)}})
 					if k < 1 {
-						ch.Opacity(k).Translate(0, 8*(1-k)).Scale(0.88+0.12*k, 0.88+0.12*k).Blur(3 * (1 - k))
+						// From 35% of its own height below: the 21px figure's.
+						ch.Opacity(k).Translate(0, 0.35*21*(1-k)).Scale(0.88+0.12*k, 0.88+0.12*k).Blur(3 * (1 - k))
 					}
 					if d.verifying {
 						pulse := ch.Keyframes("checking", []ui.Keyframe{{Value: 1}, {At: 360 * time.Millisecond, Value: 0.92, Ease: easeLody}, {At: 720 * time.Millisecond, Value: 1, Ease: easeLody}},
@@ -463,7 +546,7 @@ func (a *App) codeSlots(c *ui.Context, p *palette, d *deviceAuth) {
 				}
 				if focused && i == active && !d.verifying {
 					caret := ui.Column(c.Key("caret")).Width(2).Height(19).Radius(1).Background(p.Primary)
-					blink := caret.Keyframes("blink", []ui.Keyframe{{Value: 1}, {At: 450 * time.Millisecond, Value: 0.2, Ease: ui.EaseInOut}, {At: 900 * time.Millisecond, Value: 1, Ease: ui.EaseInOut}},
+					blink := caret.Keyframes("blink", []ui.Keyframe{{Value: 1}, {At: 450 * time.Millisecond, Value: 0.2, Ease: cssEaseInOut}, {At: 900 * time.Millisecond, Value: 1, Ease: cssEaseInOut}},
 						ui.KeyframeOptions{Repeat: ui.RepeatForever})
 					caret.Opacity(blink)
 				}
@@ -484,12 +567,4 @@ func (a *App) codeSlots(c *ui.Context, p *palette, d *deviceAuth) {
 			a.approveDevice()
 		}
 	})
-}
-
-// doneMark is the tick that settles in when something is done.
-func doneMark(c *ui.Context, p *palette) {
-	ring := ui.Row(c.Key("done-mark")).Size(44, 44).Radius(22).Background(p.Success.Alpha(0.12)).Justify(ui.Center).AlignItems(ui.Center)
-	k := ring.Keyframes("in", []ui.Keyframe{{Value: 0}, {At: durSlow, Value: 1, Ease: ui.CubicBezier(0.22, 1, 0.36, 1)}})
-	ring.Opacity(k).Scale(0.8+0.2*k, 0.8+0.2*k)
-	ring.Children(func() { ui.Icon(c, markSuccess).Size(22, 22).TextColor(p.Success) })
 }

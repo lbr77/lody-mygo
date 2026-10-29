@@ -51,20 +51,14 @@ func (a *App) accountPage(c *ui.Context, p *palette) {
 	settingRow(c, p, locales.SettingsEmail(), "", func() { valueText(c, p, u.Email) })
 	settingRow(c, p, locales.SettingsUsername(), "", func() { a.nameEditor(c, p) })
 	settingRow(c, p, locales.SettingsAvatar(), "", func() {
-		ui.Row(c).Gap(10).AlignItems(ui.Center).Children(func() {
-			if a.avatarBusy {
-				spinner(c).Size(14, 14)
-			}
-			ghostButton(c, p, locales.AvatarChange()).Border(1, p.Border).OnClick(func() { a.pickAvatar("user") })
-			a.accountAvatar(c, p, 32)
-		})
+		a.avatarEditor(c, p, "user", 16, func() { a.accountAvatar(c, p, 32) })
 	})
 	settingRow(c, p, locales.SettingsLinkedAccounts(), "", func() { a.linkedAccounts(c, p) })
 	divider(c, p)
 	ui.Row(c).FillWidth().AlignItems(ui.Center).Children(func() {
 		settingsHeading(c, p, locales.SettingsMyMachines())
 		ui.Spacer(c)
-		ui.Icon(c, iconHelp).Size(16, 16).TextColor(p.Secondary).Tooltip(locales.SettingsMyMachinesHelp())
+		tip(c, p, ui.Icon(c, iconHelp).Size(16, 16).TextColor(p.Secondary), locales.SettingsMyMachinesHelp())
 	})
 	a.myMachines(c, p)
 	divider(c, p)
@@ -80,6 +74,35 @@ func (a *App) accountPage(c *ui.Context, p *palette) {
 	})
 	divider(c, p)
 	a.accountDeletionRow(c, p)
+}
+
+// avatarEditor is Lody's AvatarEditor: the avatar is the control. Under
+// the pointer a scrim fades over it in 120ms, a pencil in it, and stays,
+// a spinner in place of the pencil, while the picture uploads.
+func (a *App) avatarEditor(c *ui.Context, p *palette, kind string, radius float32, face func()) {
+	busy := a.avatarBusy
+	b := ui.ButtonBase(c.Key("avatar-"+kind)).Size(32, 32).Shrink(0).Radius(radius).Clip().Label(locales.AvatarChange()).Disabled(busy)
+	if !busy {
+		b.Cursor(ui.CursorPointer).OnClick(func() { a.pickAvatar(kind) })
+	}
+	shown := b.AnimateWith("scrim", b2f(b.Hovered() || busy), durFast, easeStandard)
+	scrim := ui.RGBA(28, 28, 28, 0.5)
+	if p.Dark {
+		scrim = ui.RGBA(0, 0, 0, 0.6)
+	}
+	b.Children(func() {
+		face()
+		if shown <= 0 {
+			return
+		}
+		ui.Row(c.Key("scrim")).Absolute().Left(0).Top(0).Right(0).Bottom(0).Center().Background(scrim).Opacity(shown).Children(func() {
+			if busy {
+				spinner(c).Size(14, 14)
+			} else {
+				ui.Icon(c, iconPencil).Size(14, 14).TextColor(ui.RGB(255, 255, 255))
+			}
+		})
+	})
 }
 
 // nameEditor is the user's name, which the pencil makes editable.
@@ -133,19 +156,44 @@ func (a *App) linkedAccounts(c *ui.Context, p *palette) {
 			linked[acc.ProviderID] = true
 		}
 	}
+	// As Lody's marks: a linked mark in its brand's ink; one not linked a
+	// hint that takes that ink under the pointer, as it can be linked, and
+	// Google, whose mark is its colors, grayed and dimmed until then. The
+	// ink, opacity and gray change over 120ms.
+	fade := ui.Animation{Duration: durFast, Ease: easeStandard}
 	ui.Row(c).Gap(14).AlignItems(ui.Center).Children(func() {
 		for _, pr := range signInProviders {
-			ink := p.Text
+			bound := linked[pr.id]
 			label := locales.SettingsLinked(pr.name)
-			if !linked[pr.id] {
-				ink, label = p.Text.Alpha(0.25), locales.SettingsNotLinked(pr.name)
+			if !bound {
+				label = locales.SettingsNotLinked(pr.name)
 			}
-			icon := ui.Box(c.Key(pr.id)).Size(22, 22).Center().Tooltip(label).Label(label)
-			if !linked[pr.id] {
+			mark := ui.Box(c.Key(pr.id)).Size(22, 22).Center().Radius(5).Label(label)
+			tip(c, p, mark, label)
+			if !bound {
 				// Linking needs the provider's page, which lody.ai opens.
-				icon.Cursor(ui.CursorPointer).OnClick(func() { a.webSettings("account") })
+				mark.Cursor(ui.CursorPointer).OnClick(func() { a.webSettings("account") })
 			}
-			icon.Children(func() { ui.Icon(c, pr.icon).Size(20, 20).TextColor(ink) })
+			lit := bound || mark.Hovered()
+			brand := p.Text
+			if pr.id == "discord" {
+				brand = ui.Hex("#5865F2")
+			}
+			ink, opacity := brand, float32(1)
+			switch {
+			case pr.id == "google" && !lit:
+				opacity = 0.4
+			case !lit:
+				ink = p.Tertiary
+			}
+			ink = mark.AnimateColor("ink", ink, fade)
+			opacity = mark.AnimateTo("opacity", opacity, fade)
+			mark.Children(func() {
+				icon := ui.Icon(c, pr.icon).Size(20, 20).TextColor(ink)
+				if opacity < 1 {
+					icon.Opacity(opacity)
+				}
+			})
 		}
 	})
 }
@@ -298,8 +346,12 @@ func (a *App) machineCard(c *ui.Context, p *palette, id string, machines map[str
 	projects := a.machineProjects(id)
 	ws := a.workspaceID
 	ui.Column(c).FillWidth().Radius(12).Border(1, p.Border).Background(p.Canvas).Clip().Children(func() {
-		head := ui.Row(c).FillWidth().Height(48).Padding(0, 14).Gap(10).AlignItems(ui.Center).Cursor(ui.CursorPointer).
-			Label(a.machineName(id)).OnClick(func() { a.expanded[key] = !a.expanded[key] })
+		// The whole row answers the pointer, its fill fading over 120ms.
+		head := ui.Row(c.Key("head")).FillWidth().Height(48).Padding(0, 14).Gap(10).AlignItems(ui.Center).Cursor(ui.CursorPointer).
+			Label(a.machineName(id)).OnClick(func() { a.expanded[key] = !a.expanded[key] }).Transition(colorFade)
+		if head.Hovered() {
+			head.Background(p.Canvas.Mix(p.Text, 0.04))
+		}
 		head.Children(func() {
 			onlineDot(c, p, a.presence.IsOnline(id))
 			ui.Text(c, a.machineName(id)).FontSize(sizeSub).FontWeight(500).TextColor(p.Text).SingleLine().Grow(1).MinWidth(0)
@@ -596,7 +648,6 @@ func (a *App) machineActions(c *ui.Context, p *palette, id string, m visibleMach
 		} else {
 			b := ui.ButtonBase(c).Height(28).Padding(0, 8).Radius(8).Gap(6).AlignItems(ui.Center).Cursor(ui.CursorPointer).Label(locales.MachinesRename()).
 				OnClick(func() { a.renamingMachine, a.machineDraft = id, a.machineName(id) }).Transition(colorFade)
-			pressable(b, 0.97)
 			if b.Hovered() {
 				b.Background(p.Hover)
 			}
@@ -630,7 +681,7 @@ func (a *App) machineActions(c *ui.Context, p *palette, id string, m visibleMach
 				})
 			})
 		} else {
-			remove.Opacity(0.5).Tooltip(locales.MachinesRemoveOnline())
+			tip(c, p, remove.Opacity(0.5), locales.MachinesRemoveOnline())
 		}
 		remove.Children(func() {
 			ui.Icon(c, iconLogOutAlt).Size(14, 14).TextColor(p.Danger)
@@ -853,31 +904,49 @@ func (a *App) passwordDialog(c *ui.Context, p *palette) {
 			lead = locales.PasswordNewStepHint()
 		}
 		sheetHeader(c, p, locales.PasswordChange(), lead, func() { f.open = false })
+		// As Lody's, the steps take turns: the one going slides 28px away and
+		// fades over 200ms, then the next slides in from the other side over
+		// 200ms, both on CSS's ease-in-out. Opening, the first step is there.
 		ui.Column(c).FillWidth().Padding(8, 20).ClipX().Children(func() {
-			step := ui.Column(c.Key(fmt.Sprint("password-step-", f.step))).FillWidth().Gap(12)
-			if k := step.Keyframes("in", []ui.Keyframe{{Value: 0}, {At: 200 * time.Millisecond, Value: 1, Ease: easeStandard}}, ui.KeyframeOptions{Run: f.run}); f.run > 0 && k < 1 {
-				step.Translate(28*f.dir*(1-k), 0).Opacity(k)
+			swap := ui.Column(c.Key(fmt.Sprint("password-swap-", f.run))).FillWidth()
+			k := float32(1)
+			if f.run > 0 {
+				k = swap.Keyframes("swap", []ui.Keyframe{{Value: 0}, {At: 400 * time.Millisecond, Value: 1}})
 			}
-			step.Children(func() {
-				if f.step == 0 {
-					field(c, p, locales.PasswordCurrent(), "", func() {
-						in := input(c, p, &f.current, "", locales.PasswordCurrent()).Password().AutoFocus()
-						if in.Submitted() {
-							verify()
-						}
-					})
-				} else {
-					field(c, p, locales.PasswordNew(), locales.PasswordRule(), func() { input(c, p, &f.next, "", locales.PasswordNew()).Password().AutoFocus() })
-					field(c, p, locales.PasswordConfirm(), "", func() {
-						in := input(c, p, &f.confirmed, "", locales.PasswordConfirm()).Password()
-						if in.Submitted() {
-							submit()
-						}
-					})
+			swap.Children(func() {
+				show := f.step
+				if k < 0.5 {
+					show = 1 - f.step // the step going
 				}
-				if f.err != "" {
-					ui.Text(c, f.err).FontSize(sizeFoot).TextColor(p.Danger)
+				step := ui.Column(c.Key(fmt.Sprint("password-step-", show))).FillWidth().Gap(12)
+				if k < 0.5 {
+					e := cssEaseInOut(k * 2)
+					step.Translate(-28*f.dir*e, 0).Opacity(1 - e).PassThrough()
+				} else if k < 1 {
+					e := cssEaseInOut((k - 0.5) * 2)
+					step.Translate(28*f.dir*(1-e), 0).Opacity(e)
 				}
+				step.Children(func() {
+					if show == 0 {
+						field(c, p, locales.PasswordCurrent(), "", func() {
+							in := input(c, p, &f.current, "", locales.PasswordCurrent()).Password().AutoFocus()
+							if in.Submitted() {
+								verify()
+							}
+						})
+					} else {
+						field(c, p, locales.PasswordNew(), locales.PasswordRule(), func() { input(c, p, &f.next, "", locales.PasswordNew()).Password().AutoFocus() })
+						field(c, p, locales.PasswordConfirm(), "", func() {
+							in := input(c, p, &f.confirmed, "", locales.PasswordConfirm()).Password()
+							if in.Submitted() {
+								submit()
+							}
+						})
+					}
+					if f.err != "" && show == f.step {
+						ui.Text(c, f.err).FontSize(sizeFoot).TextColor(p.Danger)
+					}
+				})
 			})
 		})
 		ui.Row(c).FillWidth().Padding(12, 20, 16, 20).Gap(8).Justify(ui.End).AlignItems(ui.Center).Children(func() {

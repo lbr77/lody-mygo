@@ -84,8 +84,10 @@ type App struct {
 	menus        map[string]*contextMenu   // drawn menus by key: rows' context menus and ⋯
 	booting      bool                      // the boot screen showed, and fades out over the app
 	titleSwipe   titleSwipe                // a sidebar title moved by a sideways scroll
+	changesView  string                    // the Changes panel's Types or Files
 	shareImg     shareImage                // "Share as image…": the messages picked, then their preview
 	binaries     map[string]binaryProgress // what machines said of runtime downloads, by machine/agent
+	motion       settingsMotion            // what the settings' and the home's motion keeps between frames
 	attachPrev   attachPreview             // a text file's preview
 	downloads    map[string]bool           // the files downloading
 	notifyAsk    notifyAsk                 // the prompt to turn notifications on

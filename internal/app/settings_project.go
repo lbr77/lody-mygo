@@ -88,42 +88,36 @@ func (a *App) projectWindow(c *ui.Context, p *palette) {
 		backdrop.Background(ui.RGBA(0, 0, 0, 0.22))
 		panel.Size(min(920, ww-80), min(640, hh-80)).Radius(14).Border(0.5, p.CardRim).Background(p.Popover).Clip().
 			Shadow(0, 22, 70, 0, ui.RGBA(0, 0, 0, 0.25))
-		ui.Row(c).Fill().AlignItems(ui.Stretch).Children(func() {
-			ui.Column(c).Width(240).Shrink(0).Background(p.Ground).BorderWidth(0, 1, 0, 0).BorderColor(p.Border).Padding(18, 10).Gap(2).Children(func() {
-				ui.Column(c).Padding(0, 8, 14, 8).Gap(4).Children(func() {
-					ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
-						ui.Icon(c, iconFolder).Size(16, 16).TextColor(p.Secondary)
-						ui.Text(c, project.Name).FontSize(sizeBody).FontWeight(600).TextColor(p.Strong).SingleLine()
-					})
-					status := map[bool]string{true: locales.Online(), false: locales.Offline()}[a.presence.IsOnline(project.MachineID)]
-					ui.Text(c, a.machineName(project.MachineID)+" · "+status).FontSize(sizeFoot).TextColor(p.Secondary).SingleLine()
+		// As Lody's, the pages of one project are a strip, not a sidebar: the
+		// name and where it lives above, the pages' line tabs under it, the
+		// page at full width.
+		ui.Column(c).Fill().Children(func() {
+			ui.Column(c).FillWidth().Shrink(0).Gap(4).Padding(16, 56, 0, 24).Children(func() {
+				ui.Text(c, project.Name).FontSize(sizeTitle).FontWeight(600).LetterSpacing(-0.18).TextColor(p.Strong).SingleLine()
+				ui.Row(c).FillWidth().Gap(6).AlignItems(ui.Center).Children(func() {
+					ui.Text(c, project.RootPath).Font(fontMono).FontSize(11.5).TextColor(p.Text).SingleLine().Shrink(1).MinWidth(0)
+					ui.Text(c, "·").FontSize(sizeFoot).TextColor(p.Tertiary).Shrink(0)
+					online := a.presence.IsOnline(project.MachineID)
+					ui.Box(c).Size(6, 6).Radius(3).Shrink(0).Background(map[bool]ui.Color{true: p.Success, false: p.Tertiary}[online])
+					status := map[bool]string{true: locales.Online(), false: locales.Offline()}[online]
+					ui.Text(c, a.machineName(project.MachineID)+" · "+status).FontSize(sizeFoot).TextColor(p.Secondary).SingleLine().Shrink(0)
 				})
+				var tabs []lineTab
 				for _, pg := range projectWindowPages() {
-					page := pg
-					row := ui.ButtonBase(c.Key(pg.id)).Height(32).Padding(0, 10).Radius(8).Justify(ui.Start).Cursor(ui.CursorPointer).Label(pg.label).
-						OnClick(func() { w.page = page.id }).Transition(colorFade)
-					switch {
-					case w.page == pg.id:
-						row.Background(p.SideSelect)
-					case row.Hovered():
-						row.Background(p.SideHover)
-					}
-					row.Children(func() { ui.Text(c, page.label).FontSize(sizeSub).TextColor(p.Text) })
+					tabs = append(tabs, lineTab{id: pg.id, label: pg.label})
 				}
-			})
-			ui.Column(c).Grow(1).MinWidth(0).Children(func() {
-				ui.Row(c).FillWidth().Padding(18, 14, 4, 24).Gap(12).AlignItems(ui.Start).Shrink(0).Children(func() {
-					ui.Column(c).Grow(1).MinWidth(0).Gap(4).Children(func() {
-						for _, pg := range projectWindowPages() {
-							if pg.id == w.page {
-								ui.Text(c, pg.label).FontSize(16).FontWeight(600).TextColor(p.Strong)
-								ui.Text(c, pg.lead).FontSize(sizeFoot).LineHeight(1.45).TextColor(p.Secondary)
-							}
-						}
-					})
-					iconButton(c, p, iconX, locales.Close(), p.Hover).OnClick(func() { w.open = false })
+				ui.Column(c).FillWidth().Margin(8, 0, 0, 0).Children(func() {
+					lineTabs(c, p, "project-pages", tabs, w.page, false, func(id string) { w.page = id })
 				})
-				ui.Scroll(c).Grow(1).MinHeight(0).Padding(12, 24, 24, 24).Gap(14).Children(func() {
+			})
+			iconButton(c, p, iconX, locales.Close(), p.Hover).Absolute().Top(12).Right(12).OnClick(func() { w.open = false })
+			ui.Column(c).Grow(1).MinHeight(0).FillWidth().Children(func() {
+				for _, pg := range projectWindowPages() {
+					if pg.id == w.page && pg.lead != "" {
+						ui.Text(c, pg.lead).FontSize(sizeFoot).LineHeight(1.45).TextColor(p.Secondary).Padding(16, 24, 8, 24).Shrink(0)
+					}
+				}
+				ui.Scroll(c).Grow(1).MinHeight(0).Padding(4, 24, 24, 24).Gap(16).Children(func() {
 					online := a.presence.IsOnline(project.MachineID)
 					if !online && (w.page == "worktree" || w.page == "skills" || w.page == "conversations" || w.page == "files") {
 						ui.Text(c, locales.ProjectMachineOffline(a.machineName(project.MachineID))).FontSize(sizeFoot).TextColor(p.Secondary).

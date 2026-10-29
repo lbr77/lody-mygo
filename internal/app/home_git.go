@@ -114,7 +114,7 @@ func (a *App) workdirControls(c *ui.Context, p *palette) {
 	}
 	st := a.projectGit(pr.ID)
 	if st.loading {
-		ui.Row(c).Gap(6).AlignItems(ui.Center).Padding(0, 6).Tooltip(locales.WorkdirChecking()).Children(func() {
+		tip(c, p, ui.Row(c).Gap(6).AlignItems(ui.Center).Padding(0, 6), locales.WorkdirChecking()).Children(func() {
 			spinner(c).Size(11, 11)
 		})
 		return
@@ -124,8 +124,8 @@ func (a *App) workdirControls(c *ui.Context, p *palette) {
 	}
 	worktree := a.newChat.worktree
 	mode := ui.ButtonBase(c).Height(24).Padding(0, 8).Radius(12).Gap(4).Cursor(ui.CursorPointer).Label(locales.WorkdirMode()).
-		Tooltip(map[bool]string{false: locales.WorkdirLocalHint(), true: locales.WorkdirWorktreeHint()}[worktree]).
 		OnClick(func() { a.newChat.worktree = !a.newChat.worktree }).Transition(colorFade)
+	tip(c, p, mode, map[bool]string{false: locales.WorkdirLocalHint(), true: locales.WorkdirWorktreeHint()}[worktree])
 	switch {
 	case worktree:
 		mode.Background(p.Primary.Alpha(0.12))
@@ -146,7 +146,7 @@ func (a *App) workdirControls(c *ui.Context, p *palette) {
 	}
 	if !worktree {
 		// The chat runs in the folder as it is, on its branch.
-		ui.Row(c).Height(24).Padding(0, 6).Gap(4).AlignItems(ui.Center).Tooltip(branch).Children(func() {
+		tip(c, p, ui.Row(c).Height(24).Padding(0, 6).Gap(4).AlignItems(ui.Center), branch).Children(func() {
 			ui.Icon(c, iconBranch).Size(14, 14).TextColor(p.Secondary)
 			ui.Text(c, branch).FontSize(12.6).TextColor(p.Secondary).SingleLine().MaxWidth(180)
 		})

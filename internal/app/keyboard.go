@@ -113,7 +113,8 @@ func (a *App) keyRow(c *ui.Context, p *palette, cmds []command, cmd command) {
 	recording := rec.id == cmd.id
 	_, overridden := a.keyOverrides[cmd.id]
 	row := ui.Row(c).FillWidth().MinHeight(40).Padding(6, 8, 6, 14).Gap(12).AlignItems(ui.Center)
-	hovered := row.Hovered()
+	// The row reaching the pointer or the keyboard reveals its unbind.
+	reveal := row.Hovered() || row.FocusWithin()
 	row.Children(func() {
 		ui.Column(c).Grow(1).MinWidth(0).Gap(2).Children(func() {
 			ui.Text(c, cmd.title).FontSize(sizeSub).TextColor(p.Text)
@@ -141,7 +142,7 @@ func (a *App) keyRow(c *ui.Context, p *palette, cmds []command, cmd command) {
 				b.Background(p.Text.Alpha(0.05))
 			}
 			if recording {
-				b.Label(locales.KeyRecordingCancel()).Tooltip(locales.KeyRecordingCancel()).Focus().HandleInput(a.recordKey).
+				tip(c, p, b.Label(locales.KeyRecordingCancel()), locales.KeyRecordingCancel()).Focus().HandleInput(a.recordKey).
 					OnClick(func() { a.recording = keyRecording{} })
 				b.Gap(6).Padding(3, 9).Border(1, p.Border).AlignItems(ui.Center)
 				b.Children(func() {
@@ -154,7 +155,7 @@ func (a *App) keyRow(c *ui.Context, p *palette, cmds []command, cmd command) {
 				})
 				return
 			}
-			b.Label(locales.KeyEdit()).Tooltip(locales.KeyEdit()).OnClick(func() { a.recording = keyRecording{id: cmd.id} })
+			tip(c, p, b.Label(locales.KeyEdit()), locales.KeyEdit()).OnClick(func() { a.recording = keyRecording{id: cmd.id} })
 			b.Children(func() {
 				if len(cmd.keys) == 0 {
 					ui.Text(c, locales.KeyUnbound()).FontSize(sizeFoot).TextColor(p.Tertiary).Padding(2, 7)
@@ -163,8 +164,19 @@ func (a *App) keyRow(c *ui.Context, p *palette, cmds []command, cmd command) {
 				keyCaps(c, p, cmd.keys[0])
 			})
 		})
-		ui.Box(c).Size(28, 28).Shrink(0).Center().Children(func() {
-			if recording || len(cmd.keys) == 0 || !hovered {
+		// The unbind waits in its slot, unseen and out of the pointer's way,
+		// fading in over 120ms as the row is reached, as Lody's: the slot
+		// keeps its room, so the key caps never shift.
+		slot := ui.Box(c.Key("unbind")).Size(36, 28).Shrink(0).Center()
+		shown := slot.AnimateWith("reveal", b2f(reveal), durFast, easeStandard)
+		if !reveal {
+			slot.PassThrough()
+		}
+		if shown < 1 {
+			slot.Opacity(shown)
+		}
+		slot.Children(func() {
+			if recording || len(cmd.keys) == 0 {
 				return
 			}
 			iconButton(c, p, iconTrash, locales.KeyUnbind(), p.Hover).Size(26, 26).OnClick(func() { a.setKeys(cmd.id, []string{}) })

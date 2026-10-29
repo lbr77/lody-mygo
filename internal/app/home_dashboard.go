@@ -437,42 +437,152 @@ func formatInt(n int) string {
 	return groupThousands(int64(n))
 }
 
+// homeBoardMorph notes the board opening, switching or folding, as
+// Lody's morph does: the board shown, the one going, how, and since when.
+// fresh says the home is showing for the first time, when the board is
+// there at once.
+func (a *App) homeBoardMorph(c *ui.Context, fresh bool) {
+	m := &a.motion
+	shown := a.homeBoard
+	if fresh {
+		m.board, m.boardFrom, m.boardKind, m.boardAt = shown, "", "", time.Time{}
+	}
+	if shown != m.board {
+		kind := "next"
+		switch {
+		case shown == "":
+			kind = "fold"
+		case m.board == "":
+			kind = "unfold"
+		case shown == "now":
+			kind = "previous" // the line runs now, then week
+		}
+		m.boardFrom, m.boardKind, m.boardAt = m.board, kind, c.Now()
+		m.board = shown
+	}
+}
+
+// homeTravel moves the heading and the dashboard to where the stage
+// centres them as a board opens, switches or folds, over 240ms on
+// ease.standard, the board riding with the line: as Lody's morph, which
+// measures the line's travel. Resizing the window moves them at once.
+var homeTravel = ui.ElementTransition{Position: true, Duration: 240 * time.Millisecond, Ease: easeStandard}
+
+// easeAccelerate is the curve a switched-from board leaves on.
+var easeAccelerate = ui.CubicBezier(0.4, 0, 1, 1)
+
 // homeDashboard is the line under the heading and the board it opens.
+// The board never grows out of the line: as Lody's, unfolding it rides
+// in with the travelling line, fading in over its first 60%; folding it
+// rides away, gone by 40%. Switching, the board left drifts 20px toward
+// the segment left behind and fades over 160ms, as the new one comes 28px
+// from the side of the one pressed over 300ms, 40ms on.
 func (a *App) homeDashboard(c *ui.Context, p *palette) {
 	now := c.Now()
 	c.After(time.Minute) // ages read in minutes
 	lists := a.homeNow(now)
 	week := a.homeWeek(now)
-	ui.Column(c.Key("home-dashboard")).Width(680).MaxWidth(680).Gap(6).AlignItems(ui.Center).Children(func() {
-		ui.Row(c).Gap(4).AlignItems(ui.Center).Justify(ui.Center).MinHeight(28).Children(func() {
-			a.boardSegment(c, p, "now", locales.HomeBoardNow(), func() { nowSummary(c, p, lists) })
-			a.boardSegment(c, p, "week", locales.HomeBoardWeek(), func() { weekSummary(c, p, week) })
-			if a.homeBoard != "" {
-				iconButton(c, p, iconChevronUp, locales.HomeBoardFold(), p.Hover).Size(28, 28).OnClick(func() { a.setHomeBoard("") })
-			}
-		})
-		// The open board unfolds below the line, and folds back into it.
-		host := ui.Column(c.Key("board")).FillWidth()
-		k := host.AnimateWith("open", b2f(a.homeBoard != ""), durSlow, easeStandard)
-		if a.homeBoard != "" {
-			a.homeBoardShown = a.homeBoard
+	m := &a.motion
+	dash := ui.Column(c.Key("home-dashboard")).Width(680).MaxWidth(680).Gap(6).AlignItems(ui.Center).Transition(homeTravel)
+	build := func(board string) {
+		if board == "week" {
+			a.weekBento(c, p, week)
+		} else {
+			a.nowBoard(c, p, lists, now)
 		}
-		if k <= 0.001 && a.homeBoard == "" {
+	}
+	dash.Children(func() {
+		line := a.homeLine(c, p, lists, week)
+		if a.homeBoard != "" {
+			board := ui.Column(c.Key("board/" + a.homeBoard)).FillWidth()
+			switch m.boardKind {
+			case "unfold":
+				if k := motionClock(c, m.boardAt, 0, 144*time.Millisecond); k < 1 {
+					board.Opacity(easeStandard(k))
+				}
+			case "next", "previous":
+				if k := motionClock(c, m.boardAt, 40*time.Millisecond, 300*time.Millisecond); k < 1 {
+					from := float32(28)
+					if m.boardKind == "previous" {
+						from = -28
+					}
+					e := easeStandard(k)
+					board.Opacity(e).Translate(from*(1-e), 0)
+				}
+			}
+			board.Children(func() { build(a.homeBoard) })
+		}
+		// The board going, out of the flow where it was, under the line.
+		from := m.boardFrom
+		if from == "" {
 			return
 		}
-		host.Children(func() {
-			unfold(c, k, a.homeBoard != "", func() {
-				ui.Column(c.Key("board/"+a.homeBoardShown)).FillWidth().Padding(6, 0, 0, 0).
-					Transition(ui.ElementTransition{Duration: durRegular, Ease: easeStandard, Enter: &ui.Motion{Y: 4}}).Children(func() {
-					if a.homeBoardShown == "week" {
-						a.weekBento(c, p, week)
-					} else {
-						a.nowBoard(c, p, lists, now)
-					}
-				})
-			})
-		})
+		var k, drift float32
+		switch m.boardKind {
+		case "fold":
+			k = easeStandard(motionClock(c, m.boardAt, 0, 96*time.Millisecond))
+		case "next", "previous":
+			k = easeAccelerate(motionClock(c, m.boardAt, 0, 160*time.Millisecond))
+			drift = -20
+			if m.boardKind == "previous" {
+				drift = 20
+			}
+		default:
+			k = 1
+		}
+		if k >= 1 {
+			m.boardFrom = ""
+			return
+		}
+		ghost := ui.Column(c.Key("board/" + from)).Absolute().Left(0).Right(0).Top(line.Bounds().H + 6).PassThrough()
+		ghost.Opacity(1-k).Translate(drift*k, 0)
+		ghost.Children(func() { build(from) })
 	})
+}
+
+// homeLine is the dashboard's line: a segment a board, the open one on a
+// pill that glides to the other as the board switches, and fades in and
+// out with the board as it unfolds and folds, over 240ms.
+func (a *App) homeLine(c *ui.Context, p *palette, lists map[string]*nowList, week homeWeek) ui.Element {
+	m := &a.motion
+	shown := a.homeBoard
+	line := ui.Row(c.Key("home-line")).Gap(4).AlignItems(ui.Center).Justify(ui.Center).MinHeight(28)
+	var pill ui.Rect
+	line.Children(func() {
+		if b := a.boardSegment(c, p, "now", locales.HomeBoardNow(), func() { nowSummary(c, p, lists) }); shown == "now" {
+			pill = b
+		}
+		// A hairline keeps the two summaries two phrases; beside the pill it
+		// is not needed, but keeps its room.
+		divider := ui.Box(c.Key("divider")).Size(1, 12).Shrink(0).Background(p.Border)
+		if shown != "" {
+			divider.Opacity(0)
+		}
+		if b := a.boardSegment(c, p, "week", locales.HomeBoardWeek(), func() { weekSummary(c, p, week) }); shown == "week" {
+			pill = b
+		}
+		if shown != "" {
+			iconButton(c, p, iconChevronUp, locales.HomeBoardFold(), p.Hover).Size(28, 28).OnClick(func() { a.setHomeBoard("") })
+		}
+	})
+	origin := line.Bounds()
+	if shown != "" && pill.W > 0 {
+		x, w := pill.X-origin.X, pill.W
+		if switching := m.boardKind == "next" || m.boardKind == "previous"; switching && motionClock(c, m.boardAt, 0, 240*time.Millisecond) < 1 {
+			x, w = line.AnimateWith("pill-x", x, 240*time.Millisecond, easeStandard), line.AnimateWith("pill-w", w, 240*time.Millisecond, easeStandard)
+		} else {
+			x, w = line.Jump("pill-x", x), line.Jump("pill-w", w)
+		}
+		m.pill = ui.Rect{X: x, Y: pill.Y - origin.Y, W: w, H: pill.H}
+	}
+	alpha := line.AnimateWith("pill", b2f(shown != ""), 240*time.Millisecond, easeStandard)
+	if r := m.pill; alpha > 0 && r.W > 0 {
+		// In the tiles' own material: the tab the board hangs from.
+		line.Draw(func(pt *ui.Painter, box ui.Rect) {
+			pt.Fill(ui.Rect{X: box.X + r.X, Y: box.Y + r.Y, W: r.W, H: r.H}, p.Text.Alpha(0.05*alpha), r.H/2)
+		})
+	}
+	return line
 }
 
 func (a *App) setHomeBoard(board string) {
@@ -481,27 +591,30 @@ func (a *App) setHomeBoard(board string) {
 }
 
 // boardSegment is one of the line's two parts: its name and its summary,
-// opening its board, or folding it when it is open.
-func (a *App) boardSegment(c *ui.Context, p *palette, key, label string, summary func()) {
+// opening its board, or folding it when it is open. It reports where it
+// was, for the pill. As Lody's, its hover fill comes and goes at once.
+func (a *App) boardSegment(c *ui.Context, p *palette, key, label string, summary func()) ui.Rect {
 	open := a.homeBoard == key
 	seg := ui.ButtonBase(c.Key("seg/"+key)).Height(28).Padding(0, 10).Radius(14).Gap(8).AlignItems(ui.Center).Cursor(ui.CursorPointer).
-		Label(label).Transition(colorFade).OnClick(func() {
+		Label(label).OnClick(func() {
 		if open {
 			a.setHomeBoard("")
 		} else {
 			a.setHomeBoard(key)
 		}
 	})
-	switch {
-	case open:
-		seg.Background(p.Text.Alpha(0.07))
-	case seg.Hovered():
-		seg.Background(p.Text.Alpha(0.04))
+	if !open && seg.Hovered() {
+		seg.Background(p.Hover)
+	}
+	ink := p.Secondary
+	if open {
+		ink = p.Text
 	}
 	seg.Children(func() {
-		ui.Text(c, label).FontSize(sizeFoot).FontWeight(500).TextColor(p.Text)
+		ui.Text(c, label).FontSize(sizeFoot).FontWeight(500).TextColor(ink)
 		summary()
 	})
+	return seg.Bounds()
 }
 
 // nowSummary says how many things need the user, run and just finished;
@@ -603,7 +716,7 @@ func (a *App) nowBoard(c *ui.Context, p *palette, lists map[string]*nowList, now
 						case "usage":
 							tile(c, p, "usage", func() {
 								tileLabel(c, p, locales.HomeWeekUsageNamed(ag.Name))
-								quotaMeters(c, p, limits, now)
+								quotaMeters(c, p, limits, now, true)
 							})
 						case "quiet":
 							tile(c, p, "quiet", func() {
@@ -677,7 +790,7 @@ func (a *App) nowListHead(c *ui.Context, p *palette, l *nowList) {
 func (a *App) nowRow(c *ui.Context, p *palette, it nowItem, now time.Time) ui.Element {
 	item := it
 	row := ui.ButtonBase(c.Key(it.session.ID)).FillWidth().Height(26).Padding(0, 6).Radius(6).Gap(8).AlignItems(ui.Center).
-		Cursor(ui.CursorPointer).Label(it.session.Title).Transition(colorFade).OnClick(func() { a.open(item.session.ID) })
+		Cursor(ui.CursorPointer).Label(it.session.Title).OnClick(func() { a.open(item.session.ID) })
 	if row.Hovered() {
 		row.Background(p.Text.Alpha(0.05))
 	}
@@ -723,30 +836,63 @@ func (a *App) nowFocus(c *ui.Context, p *palette, col, board, tileEl ui.Element,
 	frame := ui.Column(c.Key("focus-frame")).Absolute().Left(lerp(tx, 0)).Top(lerp(ty, 0)).Width(lerp(tb.W, cb.W)).Height(lerp(tb.H, cb.H)).
 		Padding(10).Radius(12).Background(p.Canvas.Mix(p.Text, 0.04)).Gap(8).Clip()
 	opening := a.homeNowOpen == l.key
+	// Lody times the fades by the spring: closing, what the tile does not
+	// show fades out linearly over its first 35%; the tile's "Show all",
+	// which goes in 80ms as the list opens, is back between 20% and 40%,
+	// so the real tile replaces the frame unseen.
+	closing := phaseClock(col, "closing", !opening, focusMoves)
+	opened := phaseClock(col, "opening", opening, 80*time.Millisecond)
+	leaving := max(0, 1-closing/0.35)
+	late := func(e ui.Element, i int) {
+		r := e.Keyframes("late", []ui.Keyframe{{Value: 0}, {At: 200 * time.Millisecond, Value: 1, Ease: easeStandard}},
+			ui.KeyframeOptions{Delay: time.Duration(30+14*min(i, 8)) * time.Millisecond})
+		if opening {
+			// Rising in a few at a time as it opens.
+			e.Opacity(r).Translate(0, 4*(1-r))
+		} else {
+			e.Opacity(r * leaving)
+		}
+	}
+	var last ui.Rect
 	frame.Children(func() {
 		a.nowListHead(c, p, l)
 		ui.Scroll(c.Key("focus-rows")).FillWidth().Grow(1).MinHeight(0).Gap(1).Children(func() {
 			for i, it := range l.items {
 				row := a.nowRow(c, p, it, now)
-				if i < shown {
-					continue
+				if i == shown-1 {
+					last = row.Bounds()
 				}
-				// What the tile hid: rising in a few rows at a time as it
-				// opens, fading over the first third as it closes.
-				late := i - shown
-				if opening {
-					r := row.Keyframes("late", []ui.Keyframe{{Value: 0}, {At: 200 * time.Millisecond, Value: 1, Ease: ui.CubicBezier(0.2, 0, 0, 1)}},
-						ui.KeyframeOptions{Delay: time.Duration(30+14*min(late, 8)) * time.Millisecond})
-					row.Opacity(r).Translate(0, 4*(1-r))
-				} else {
-					row.Opacity(max(0, (k-0.65)/0.35))
+				if i >= shown {
+					late(row, i-shown)
 				}
 			}
-			if opening || k > 0.6 {
-				a.nowMore(c, p, locales.HomeNowShowLess(), iconChevronUp, func() { a.homeNowOpen = "" })
-			}
+			late(a.nowMore(c, p, locales.HomeNowShowLess(), iconChevronUp, func() { a.homeNowOpen = "" }), len(l.items)-shown)
 		})
+		standIn := 1 - opened
+		if !opening {
+			standIn = min(1, max(0, (closing-0.2)/0.2))
+		}
+		if fb := frame.Bounds(); standIn > 0 && last.H > 0 && fb.H > 0 {
+			ui.Row(c.Key("stand-in")).Absolute().Left(10).Top(last.Y+last.H+8-fb.Y).Height(22).Padding(0, 6).Gap(4).AlignItems(ui.Center).
+				PassThrough().Opacity(standIn).Children(func() {
+				ui.Icon(c, iconChevronDown).Size(12, 12).TextColor(p.Secondary)
+				ui.Text(c, locales.HomeNowShowAll(len(l.items))).FontSize(sizeCaption).TextColor(p.Secondary)
+			})
+		}
 	})
+}
+
+// focusMoves is how long the focus spring takes to settle, as Lody's
+// spring(0.4, 0.9) does: what fades with it is timed by it.
+const focusMoves = 662 * time.Millisecond
+
+// phaseClock is how far, 0 to 1 and linearly over d, e is into a phase
+// while on: it starts again each time on turns true, and is 0 while off.
+func phaseClock(e ui.Element, key string, on bool, d time.Duration) float32 {
+	if !on {
+		return e.Keyframes(key, []ui.Keyframe{{Value: 0}, {At: time.Millisecond, Value: 0}})
+	}
+	return e.Keyframes(key, []ui.Keyframe{{Value: 0}, {At: d, Value: 1}}, ui.KeyframeOptions{Run: 1})
 }
 
 // reasonMark is why a row is on the board.
@@ -845,7 +991,7 @@ func (a *App) weekBento(c *ui.Context, p *palette, w homeWeek) {
 					return
 				}
 				_, name, _ := strings.Cut(w.topRepo, "/")
-				ui.Text(c, firstNonEmpty(name, w.topRepo)).FontSize(16).FontWeight(500).TextColor(p.Text).SingleLine().Tooltip(w.topRepo)
+				tip(c, p, ui.Text(c, firstNonEmpty(name, w.topRepo)).FontSize(16).FontWeight(500).TextColor(p.Text).SingleLine(), w.topRepo)
 				ui.Text(c, locales.HomeWeekRepoShare(w.topRepoPercent)).FontSize(sizeCaption).TextColor(p.Secondary)
 			})
 			prs := tile(c, p, "prs", func() {})
@@ -908,11 +1054,12 @@ func diffSquares(added, removed int) [5]int {
 
 // activityWall is the last weeks' workdays, as Lody's contribution wall:
 // cells of 0.7em, 3px apart, as many weeks as fit (eight at least), the
-// cells stretching to fill the width; it fades in over 400ms.
+// cells stretching to fill the width; it fades in over 400ms on CSS's
+// ease-out.
 func (a *App) activityWall(c *ui.Context, p *palette, w homeWeek) {
 	const gap, cellEm, minWeeks = 3, 0.7, 8
 	wall := ui.Row(c.Key("wall")).FillWidth().Gap(gap).Margin(4, 0, 0, 0).ClipX()
-	if k := wall.Keyframes("in", []ui.Keyframe{{Value: 0}, {At: 400 * time.Millisecond, Value: 1, Ease: ui.EaseOut}}); k < 1 {
+	if k := wall.Keyframes("in", []ui.Keyframe{{Value: 0}, {At: 400 * time.Millisecond, Value: 1, Ease: cssEaseOut}}); k < 1 {
 		wall.Opacity(k)
 	}
 	cell := float32(sizeBody * cellEm)
@@ -927,11 +1074,11 @@ func (a *App) activityWall(c *ui.Context, p *palette, w homeWeek) {
 		for i, days := range weeks {
 			ui.Column(c.Key(i)).Gap(gap).Grow(1).Basis(0).MinWidth(0).Children(func() {
 				for _, d := range days {
-					tip := locales.HomeWeekWallQuiet(d.day.Format("Mon, Jan 2, 2006"))
+					label := locales.HomeWeekWallQuiet(d.day.Format("Mon, Jan 2, 2006"))
 					if d.count > 0 {
-						tip = locales.HomeWeekWallDay(d.day.Format("Mon, Jan 2, 2006"), d.count)
+						label = locales.HomeWeekWallDay(d.day.Format("Mon, Jan 2, 2006"), d.count)
 					}
-					ui.Box(c.Key(dayKey(d.day))).FillWidth().Height(cell).Radius(3).Background(wallInk(p, d.level)).Tooltip(tip)
+					tip(c, p, ui.Box(c.Key(dayKey(d.day))).FillWidth().Height(cell).Radius(3).Background(wallInk(p, d.level)), label)
 				}
 			})
 		}

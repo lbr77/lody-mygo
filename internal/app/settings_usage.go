@@ -215,37 +215,32 @@ func (a *App) usagePage(c *ui.Context, p *palette) {
 			}
 			ui.Text(c, usageRangeSubtitle(a.usageRange)).FontSize(sizeFoot).TextColor(p.Secondary)
 		})
-		picked := slicesIndex(usageRanges, a.usageRange)
-		was := picked
-		ui.Segmented(c, &picked, usageRangeLabels()...).Label(locales.SettingsUsage())
-		if picked != was {
-			a.usageRange = usageRanges[picked]
-		}
+		usageRangeTray(c, p, a.usageRange, func(r string) { a.usageRange = r })
 	})
-	convex, ws, rng := a.convex, a.workspaceID, a.usageRange
-	f := a.fetch("usage/"+rng, func(ctx context.Context) (any, error) {
-		var out usageTimeline
-		args := map[string]any{"workspaceId": ws, "range": rng}
-		if rng == "day" || rng == "week" {
-			args["granularity"] = "hour" // as Lody asks; the server picks for longer ranges
-		}
-		err := convex.Query(ctx, "usage:getWorkspaceUsageTimeline", args, &out)
-		return &out, err
-	})
+	// Lody asks for every range at once, so that a switch shows at once
+	// and its motion has both sides to move between.
+	for _, r := range usageRanges {
+		a.usageTimelineFetch(r)
+	}
+	rng := a.usageRange
+	f := a.usageTimelineFetch(rng)
 	if !pending(c, p, f) {
+		a.motion.rng = ""
 		return
 	}
 	t, _ := f.value.(*usageTimeline)
 	if t == nil {
+		a.motion.rng = ""
 		return
 	}
 	ui.Row(c).FillWidth().Gap(12).Margin(4, 0).Children(func() {
-		bigStat(c, p, "Token", formatCount(t.Totals.Tokens))
-		bigStat(c, p, locales.UsageCostUSD(), formatUSD(t.Totals.CostUSD))
+		bigStat(c, p, "Token", t.Totals.Tokens, formatCount)
+		bigStat(c, p, locales.UsageCostUSD(), t.Totals.CostUSD, formatUSD)
 	})
 	cost := a.usageCost
 	models := usageSplit(t.Buckets, false)
 	people := usageSplit(t.Buckets, true)
+	hourly := rng == "day" || rng == "week"
 	ui.Column(c).FillWidth().Radius(12).Border(1, p.Border).Clip().Children(func() {
 		ui.Column(c).FillWidth().Padding(16).Gap(16).Children(func() {
 			ui.Row(c).FillWidth().AlignItems(ui.Center).Children(func() {
@@ -253,28 +248,37 @@ func (a *App) usagePage(c *ui.Context, p *palette) {
 					ui.Text(c, locales.UsageSkyline()).FontSize(sizeBody).FontWeight(600).TextColor(p.Strong)
 					ui.Text(c, usageRangeSubtitle(rng)).FontSize(sizeFoot).TextColor(p.Secondary)
 				})
-				picked := map[bool]int{false: 0, true: 1}[cost]
-				ui.Segmented(c, &picked, "Token", locales.UsageCostUSD()).Label(locales.UsageSkyline())
-				a.usageCost = picked == 1
+				usageMetricSegments(c, p, cost, func(v bool) { a.usageCost = v })
 			})
-			// A range comes in sharpening out of a 6px blur over 200ms, as
-			// Lody's range switch.
-			chart := ui.Column(c.Key("chart/" + rng)).FillWidth().Gap(16)
-			if k := chart.Keyframes("in", []ui.Keyframe{{Value: 0}, {At: 200 * time.Millisecond, Value: 1, Ease: ui.EaseOut}}); k < 1 {
-				chart.Opacity(k).Blur(6 * (1 - k))
-			}
-			chart.Children(func() {
-				if rng == "day" || rng == "week" {
-					ui.Row(c).FillWidth().Gap(24).AlignItems(ui.Start).Children(func() {
-						usageDonut(c, p, models, cost, t)
-						usageSkyline(c, p, t, cost, t.BucketSizeMs > 0 && t.BucketSizeMs < 86400000)
+			// As Lody's: the donut is the hourly ranges' own column, fading
+			// in and out over 150ms; beside it, one view for the hourly
+			// ranges and one for the year, crossfading over 200ms as the
+			// range crosses between them. 30 days and all time share the
+			// year, which only relights its days. None of it moves as the
+			// card first shows.
+			frame := ui.Row(c.Key("usage-view")).FillWidth().Gap(24).AlignItems(ui.Start)
+			settle := firstShown(frame, "frame")
+			frame.Children(func() {
+				if hourly {
+					ui.Column(c.Key("rings")).Width(170).Shrink(0).Transition(usageViewFade(150 * time.Millisecond)).Children(func() {
+						usageDonut(c, p, models, cost, t, settle)
 					})
-				} else if days := a.usageCalendar(); days != nil {
-					// Longer ranges show the year, the range's days lit.
-					a.usageHeatmap(c, p, days, cost, rng == "month")
-					a.usageDayPanel(c, p)
 				}
+				view := ui.Column(c.Key(map[bool]string{true: "hourly", false: "skyline"}[hourly])).Grow(1).MinWidth(0).Gap(16).
+					Transition(usageViewFade(200 * time.Millisecond))
+				view.Children(func() {
+					if hourly {
+						a.usageRangePanel(c, p, t, cost)
+					} else if days := a.usageCalendar(); days != nil {
+						// Longer ranges show the year, the range's days lit.
+						a.usageHeatmap(c, p, days, cost, rng == "month")
+						a.usageDayPanel(c, p)
+					}
+				})
 			})
+			if !hourly {
+				a.motion.rng = ""
+			}
 		})
 		stats := usageStatsOf(t.Buckets, cost)
 		dayStats := rng == "total" && a.usageCalendar() != nil
@@ -386,7 +390,9 @@ func heatScale(values []float64) func(float64) float32 {
 	}
 }
 
-// usageHeatmap is the year a column a week, a cell a day.
+// usageHeatmap is the year a column a week, a cell a day. As Lody's, the
+// cells only relight: hovering one brightens it over 300ms and rings it,
+// and the days outside 30 days dim to 0.3 over 300ms, on CSS's ease.
 func (a *App) usageHeatmap(c *ui.Context, p *palette, days []usageDay, cost, month bool) {
 	values := make([]float64, len(days))
 	for i, d := range days {
@@ -401,19 +407,14 @@ func (a *App) usageHeatmap(c *ui.Context, p *palette, days []usageDay, cost, mon
 	if cost {
 		fmtv = formatUSD
 	}
-	ui.Row(c).FillWidth().Gap(2).Children(func() {
+	relight := ui.Animation{Duration: 300 * time.Millisecond, Ease: cssEase}
+	ui.Row(c.Key("heatmap")).FillWidth().Gap(2).Children(func() {
 		for w := 0; w*7 < len(days); w++ {
-			// The weeks resolve in order, each a blurred rise 22ms after the
-			// last, as Lody's range sweep.
-			col := ui.Column(c.Key(w)).Gap(2)
-			if k := col.Keyframes("sweep", []ui.Keyframe{{Value: 0}, {At: 360 * time.Millisecond, Value: 1, Ease: easeSweep}},
-				ui.KeyframeOptions{Delay: time.Duration(w) * 22 * time.Millisecond}); k < 1 {
-				col.Opacity(k).Blur(5*(1-k)).Translate(0, 6*(1-k))
-			}
-			col.Children(func() {
+			ui.Column(c.Key(w)).Gap(2).Children(func() {
 				for i := w * 7; i < min(len(days), w*7+7); i++ {
 					d := days[i]
-					cell := ui.ButtonBase(c.Key(i)).Size(9, 9).Radius(2).Tooltip(d.Date + " · " + fmtv(values[i])).Label(d.Date)
+					cell := ui.ButtonBase(c.Key(i)).Size(9, 9).Radius(2).Label(d.Date)
+					tip(c, p, cell, d.Date+" · "+fmtv(values[i]))
 					if !d.IsFuture {
 						day := d.DayStartMs
 						cell.Cursor(ui.CursorPointer).OnClick(func() {
@@ -424,19 +425,28 @@ func (a *App) usageHeatmap(c *ui.Context, p *palette, days []usageDay, cost, mon
 							}
 						})
 					}
-					if a.usageDay == d.DayStartMs {
-						cell.Border(1.5, p.Text)
-					}
+					hovered := cell.Hovered() && !d.IsFuture
+					fill := p.Text.Alpha(0.06)
 					switch {
 					case d.IsFuture:
-						cell.Background(p.Text.Alpha(0.02))
+						fill = p.Text.Alpha(0.02)
 					case values[i] > 0:
-						cell.Background(usagePalette(p, 0).Alpha(0.18 + 0.74*heat(values[i])))
-					default:
-						cell.Background(p.Text.Alpha(0.06))
+						fill = usagePalette(p, 0).Alpha(0.18 + 0.74*heat(values[i]))
 					}
+					bright := cell.AnimateTo("bright", b2f(hovered), relight)
+					cell.Background(cssBrightness(fill, 1+0.1*bright))
+					switch {
+					case a.usageDay == d.DayStartMs:
+						cell.Shadow(0, 0, 0, 1, p.Text)
+					case hovered:
+						cell.Shadow(0, 0, 0, 1, p.Text.Alpha(0.4))
+					}
+					dim := float32(1)
 					if month && d.DayStartMs < float64(window) {
-						cell.Opacity(0.3)
+						dim = 0.3
+					}
+					if o := cell.AnimateTo("dim", dim, relight); o < 1 {
+						cell.Opacity(o)
 					}
 				}
 			})
@@ -529,10 +539,12 @@ func slicesIndex(list []string, v string) int {
 	return 0
 }
 
-func bigStat(c *ui.Context, p *palette, label, value string) {
-	ui.Column(c).Grow(1).Basis(0).Height(140).Padding(18, 18).Radius(12).Border(1, p.Border).Justify(ui.SpaceBetween).Children(func() {
+// bigStat is one of the range's two totals, its digits rolling as
+// NumberFlow's when the range changes it.
+func bigStat(c *ui.Context, p *palette, label string, value float64, format func(float64) string) {
+	ui.Column(c.Key("stat/"+label)).Grow(1).Basis(0).Height(140).Padding(18, 18).Radius(12).Border(1, p.Border).Justify(ui.SpaceBetween).Children(func() {
 		ui.Text(c, label).FontSize(sizeSub).TextColor(p.Secondary)
-		ui.Text(c, value).FontSize(40).FontWeight(500).LetterSpacing(-1).TextColor(p.Strong).SingleLine()
+		numberFlow(ui.Text(c.Key("value"), format(value)).FontSize(40).FontWeight(500).LetterSpacing(-1).TextColor(p.Strong).SingleLine(), value)
 	})
 }
 
@@ -546,47 +558,60 @@ func smallStat(c *ui.Context, p *palette, label, value, note string) {
 	})
 }
 
-// usageDonut is the models' shares around the range's total.
-func usageDonut(c *ui.Context, p *palette, parts []usagePart, cost bool, t *usageTimeline) {
+// usageDonut is the models' shares around the range's total. As Lody's,
+// it shows settled as the card first does; afterwards each slice goes
+// from the length it had to its new one over 850ms, 60ms after the one
+// before, a new slice from nothing, while where it starts moves at once.
+// settle says the card is showing for the first time.
+func usageDonut(c *ui.Context, p *palette, parts []usagePart, cost bool, t *usageTimeline, settle bool) {
 	total := t.Totals.Tokens
 	if cost {
 		total = t.Totals.CostUSD
 	}
 	ui.Column(c).Width(170).Shrink(0).Gap(12).Children(func() {
 		ring := ui.Box(c.Key("donut")).Size(170, 170).Center()
-		// Each slice draws its arc over 850ms, 60ms after the one before.
-		drawn := make([]float64, len(parts))
-		for i := range parts {
-			drawn[i] = float64(ring.Keyframes(fmt.Sprint("slice", i), []ui.Keyframe{{Value: 0}, {At: 850 * time.Millisecond, Value: 1, Ease: easeSweep}},
-				ui.KeyframeOptions{Delay: time.Duration(i) * 60 * time.Millisecond}))
+		type slice struct {
+			from, gap, length float64
+			color             ui.Color
+		}
+		var slices []slice
+		from := 0.0
+		for i, s := range parts {
+			share := 0.0
+			if total > 0 {
+				share = s.value(cost) / total
+			}
+			// A hairline between slices, as Lody's donut has.
+			gap := math.Min(0.003, share/4)
+			key := "slice/" + s.key
+			if firstShown(ring, key) && !settle {
+				ring.Jump(key, 0)
+			}
+			length := ring.AnimateTo(key, float32(max(0, math.Min(from+share, 1)-from-2*gap)),
+				ui.Animation{Duration: 850 * time.Millisecond, Ease: easeSweep, Delay: time.Duration(i) * 60 * time.Millisecond})
+			if share > 0 || length > 0 {
+				slices = append(slices, slice{from, gap, float64(length), usagePalette(p, i)})
+			}
+			from += share
 		}
 		ring.Draw(func(pt *ui.Painter, r ui.Rect) {
 			cx, cy := r.X+r.W/2, r.Y+r.H/2
 			outer, inner := float32(83), float32(57)
 			pt.FillPath(ringSlice(cx, cy, inner, outer, 0, 1), p.Text.Alpha(0.06))
-			if total <= 0 {
-				return
-			}
-			from := 0.0
-			for i, s := range parts {
-				share := s.value(cost) / total
-				if share <= 0 {
-					continue
+			for _, s := range slices {
+				if s.length > 0 {
+					pt.FillPath(ringSlice(cx, cy, inner, outer, s.from+s.gap, math.Min(1, s.from+s.gap+s.length)), s.color)
 				}
-				// A hairline between slices, as Lody's donut has.
-				gap := math.Min(0.003, share/4)
-				if end := from + gap + (math.Min(from+share, 1)-gap-from-gap)*drawn[i]; end > from+gap {
-					pt.FillPath(ringSlice(cx, cy, inner, outer, from+gap, end), usagePalette(p, i))
-				}
-				from += share
 			}
 		}).Children(func() {
 			ui.Column(c).AlignItems(ui.Center).Children(func() {
-				v := formatCount(total)
+				// The total rolls as NumberFlow's in tokens; in cost it is
+				// written plainly.
 				if cost {
-					v = formatUSD(total)
+					ui.Text(c.Key("total-cost"), formatUSD(total)).FontSize(18).FontWeight(600).TextColor(p.Strong)
+				} else {
+					numberFlow(ui.Text(c.Key("total-tokens"), formatCount(total)).FontSize(18).FontWeight(600).TextColor(p.Strong), total)
 				}
-				ui.Text(c, v).FontSize(18).FontWeight(600).TextColor(p.Strong)
 				ui.Text(c, map[bool]string{false: "TOKEN", true: "USD"}[cost]).FontSize(sizeCaption).TextColor(p.Tertiary)
 			})
 		})
@@ -605,65 +630,231 @@ func usageDonut(c *ui.Context, p *palette, parts []usagePart, cost bool, t *usag
 	})
 }
 
-// usageSkyline is a bar a bucket, shaded by how much it used.
-func usageSkyline(c *ui.Context, p *palette, t *usageTimeline, cost, hourly bool) {
+// usageRangePanel is an hourly range: what it spans and its peak over the
+// day's skyline or the week's dots. As Lody's, switching between the two
+// crossfades them over 200ms, each sharpening out of or blurring into 6px,
+// as the new one's tracks sweep in one after another.
+func (a *App) usageRangePanel(c *ui.Context, p *palette, t *usageTimeline, cost bool) {
+	m := &a.motion
+	rng := a.usageRange
+	if m.rng != "" && m.rng != rng {
+		m.rngFrom, m.rngAt = m.rng, c.Now()
+	}
+	m.rng = rng
+	k := motionClock(c, m.rngAt, 0, 200*time.Millisecond)
+	if k >= 1 {
+		m.rngFrom = ""
+	}
+	usageRangeHead(c, p, t, cost)
+	matrix := func(rng string, t *usageTimeline, sweep time.Time) {
+		if rng == "week" {
+			usageWeekMatrix(c, p, t, cost, sweep)
+		} else {
+			usageDayMatrix(c, p, t, cost, sweep)
+		}
+	}
+	ui.Column(c.Key("range-frame")).FillWidth().Children(func() {
+		in := ui.Column(c.Key("range/" + rng)).FillWidth()
+		if e := cssEaseOut(k); e < 1 {
+			in.Opacity(e).Blur(6 * (1 - e))
+		}
+		in.Children(func() { matrix(rng, t, m.rngAt) })
+		if m.rngFrom == "" {
+			return
+		}
+		old, _ := a.usageTimelineFetch(m.rngFrom).value.(*usageTimeline)
+		if old == nil {
+			return
+		}
+		// The range going pops out of the flow where it was.
+		out := ui.Column(c.Key("range/" + m.rngFrom)).Absolute().Left(0).Top(0).Right(0).PassThrough()
+		e := cssEaseOut(k)
+		out.Opacity(1 - e).Blur(6 * e)
+		out.Children(func() { matrix(m.rngFrom, old, time.Time{}) })
+	})
+}
+
+// usageRangeHead says what an hourly range spans, how active it was, its
+// peak and the shades' key.
+func usageRangeHead(c *ui.Context, p *palette, t *usageTimeline, cost bool) {
 	stats := usageStatsOf(t.Buckets, cost)
 	fmtv := formatCount
 	if cost {
 		fmtv = formatUSD
 	}
-	ui.Column(c).Grow(1).MinWidth(0).Gap(8).Children(func() {
-		if len(t.Buckets) > 0 {
-			span := bucketTime(t.Buckets[0].BucketStartMs, true) + " — " + bucketTime(t.EndMs, true)
-			ui.Text(c, span+" · "+locales.UsageActiveOf(stats.active, len(t.Buckets))).FontSize(sizeCaption).TextColor(p.Secondary).SingleLine()
+	if len(t.Buckets) > 0 {
+		span := bucketTime(t.Buckets[0].BucketStartMs, true) + " — " + bucketTime(t.EndMs, true)
+		ui.Text(c, span+" · "+locales.UsageActiveOf(stats.active, len(t.Buckets))).FontSize(sizeCaption).TextColor(p.Secondary).SingleLine()
+	}
+	ui.Row(c).FillWidth().Gap(8).AlignItems(ui.Center).Children(func() {
+		if stats.peak > 0 {
+			ui.Text(c, locales.UsageStatPeak()+" "+fmtv(stats.peak)+" · "+bucketTime(stats.peakAt, true)).FontSize(sizeCaption).TextColor(p.Secondary).SingleLine()
 		}
-		ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
-			if stats.peak > 0 {
-				ui.Text(c, locales.UsageStatPeak()+" "+fmtv(stats.peak)+" · "+bucketTime(stats.peakAt, hourly)).FontSize(sizeCaption).TextColor(p.Secondary).SingleLine()
-			}
-			ui.Spacer(c)
-			ui.Text(c, locales.UsageLess()).FontSize(sizeCaption).TextColor(p.Tertiary)
-			ui.Box(c).Size(80, 6).Radius(3).Draw(func(pt *ui.Painter, r ui.Rect) {
-				pt.FillGradient(r, ui.LinearGradient{From: usagePalette(p, 0).Alpha(0.15), To: usagePalette(p, 0), Angle: 90}, 3)
-			})
-			ui.Text(c, locales.UsageMore()).FontSize(sizeCaption).TextColor(p.Tertiary)
+		ui.Spacer(c)
+		ui.Text(c, locales.UsageLess()).FontSize(sizeCaption).TextColor(p.Tertiary)
+		ui.Box(c).Size(80, 6).Radius(3).Draw(func(pt *ui.Painter, r ui.Rect) {
+			pt.FillGradient(r, ui.LinearGradient{From: usagePalette(p, 0).Alpha(0.15), To: usagePalette(p, 0), Angle: 90}, 3)
 		})
-		values := make([]float64, len(t.Buckets))
-		for i, b := range t.Buckets {
-			values[i] = b.Tokens
-			if cost {
-				values[i] = b.CostUSD
-			}
+		ui.Text(c, locales.UsageMore()).FontSize(sizeCaption).TextColor(p.Tertiary)
+	})
+}
+
+// rangeSweep is Lody's RangeSweep on one track of an hourly range, an
+// hour's column or a day's row: from a switch at `at`, the tracks resolve
+// in order, 22ms apart, each a 5px blur sharpening over 360ms as it rises
+// 6px (a column) or slides 8px in from the left (a row).
+func rangeSweep(c *ui.Context, track ui.Element, i int, at time.Time, row bool) {
+	k := motionClock(c, at, time.Duration(i)*22*time.Millisecond, 360*time.Millisecond)
+	if k >= 1 {
+		return
+	}
+	e := easeSweep(k)
+	track.Opacity(e).Blur(5 * (1 - e))
+	if row {
+		track.Translate(-8*(1-e), 0)
+	} else {
+		track.Translate(0, 6*(1-e))
+	}
+}
+
+// rangeIntensity is how strongly a range's buckets show, as heatScale.
+func rangeIntensity(t *usageTimeline, cost bool) (func(float64) float32, []float64) {
+	values := make([]float64, len(t.Buckets))
+	for i, b := range t.Buckets {
+		values[i] = b.Tokens
+		if cost {
+			values[i] = b.CostUSD
 		}
-		scale := heatScale(values)
-		ui.Row(c).FillWidth().Height(150).Gap(3).AlignItems(ui.End).BorderWidth(0, 0, 1, 0).BorderColor(p.Border).Children(func() {
+	}
+	return heatScale(values), values
+}
+
+// usageDayMatrix is the day's skyline: a bar an hour standing on a
+// baseline, as tall as it used, at least 7% of the tallest, its light its
+// share of the peak. As Lody's, a bar changing grows and recolors over
+// 300ms on CSS's ease; hovering one lights its column and brightens it.
+func usageDayMatrix(c *ui.Context, p *palette, t *usageTimeline, cost bool, sweep time.Time) {
+	const track = 148
+	scale, values := rangeIntensity(t, cost)
+	peak := 0.0
+	for _, v := range values {
+		peak = math.Max(peak, v)
+	}
+	fmtv := formatCount
+	if cost {
+		fmtv = formatUSD
+	}
+	change := ui.Animation{Duration: 300 * time.Millisecond, Ease: cssEase}
+	ui.Column(c).FillWidth().Children(func() {
+		ui.Row(c).FillWidth().Height(track).Gap(3).Children(func() {
 			for i, b := range t.Buckets {
 				v := values[i]
-				h, heat := float32(0), scale(v)
-				if stats.peak > 0 && v > 0 {
-					// At least 7% high, as Lody's bars.
-					h = max(0.07, float32(v/stats.peak)) * 146
-				}
-				bar := ui.Box(c.Key(i)).Grow(1).Basis(0).MinWidth(1).Height(max(h, 0)).Radius(2).
-					Tooltip(bucketTime(b.BucketStartMs, hourly) + " · " + fmtv(v))
-				if v > 0 {
-					bar.Background(usagePalette(p, 0).Alpha(0.18 + 0.74*heat))
-				}
+				col := ui.Column(c.Key(b.BucketStartMs)).Grow(1).Basis(0).MinWidth(1).Height(track)
+				rangeSweep(c, col, i, sweep, false)
+				col.Children(func() {
+					cell := ui.ButtonBase(c.Key("cell")).FillWidth().Height(track).Radius(3).Justify(ui.End).Label(bucketTime(b.BucketStartMs, true))
+					tip(c, p, cell, bucketTime(b.BucketStartMs, true)+" · "+fmtv(v))
+					hovered := cell.Hovered()
+					if hovered {
+						cell.Background(p.Secondary.Alpha(0.06))
+					}
+					h := float32(0)
+					if v > 0 && peak > 0 {
+						h = float32(math.Max(7, v/peak*100)) / 100 * track
+					}
+					fill := ui.Transparent
+					if v > 0 {
+						fill = usagePalette(p, 0).Alpha(0.18 + 0.74*scale(v))
+					}
+					fill = cell.AnimateColor("fill", fill, change)
+					if hovered {
+						fill = cssBrightness(fill, 1.1)
+					}
+					cell.Children(func() {
+						ui.Box(c.Key("bar")).FillWidth().Height(cell.AnimateTo("height", h, change)).Radius(3, 3, 0, 0).Background(fill)
+					})
+				})
 			}
 		})
-		// Axis labels at even steps, about eight of them.
-		ui.Row(c).FillWidth().Gap(3).Children(func() {
-			step := max(1, int(math.Ceil(float64(len(t.Buckets))/8)))
+		ui.Box(c).FillWidth().Height(1).Background(p.Border.Alpha(0.7))
+		// The hours, labelled every three: a label on all 24 is noise.
+		ui.Row(c).FillWidth().Gap(3).Margin(6, 0, 0, 0).Children(func() {
 			for i, b := range t.Buckets {
 				label := ""
-				if i%step == 0 {
-					tm := time.UnixMilli(int64(b.BucketStartMs)).UTC()
-					label = tm.Format("02")
-					if hourly {
-						label = tm.Format("15")
-					}
+				if i%3 == 0 {
+					label = time.UnixMilli(int64(b.BucketStartMs)).UTC().Format("15")
 				}
-				ui.Text(c.Key(i), label).FontSize(sizeCaption).TextColor(p.Tertiary).Grow(1).Basis(0).MinWidth(1).SingleLine()
+				ui.Text(c.Key(i), label).FontSize(9).TextColor(p.Secondary.Alpha(0.6)).TextAlign(ui.Center).FontFeatures("tnum").
+					Grow(1).Basis(0).MinWidth(1).SingleLine()
+			}
+		})
+	})
+}
+
+// usageWeekMatrix is the week: the day's 24 hour tracks stacked seven
+// deep, a dot an hour that grows from 5 to 13 and brightens with what it
+// used. As Lody's, a dot changing grows and recolors over 300ms; hovering
+// one brightens it over 300ms and rings it at once.
+func usageWeekMatrix(c *ui.Context, p *palette, t *usageTimeline, cost bool, sweep time.Time) {
+	const day, hour = 86400000.0, 3600000.0
+	scale, values := rangeIntensity(t, cost)
+	byStart := map[float64]float64{}
+	for i, b := range t.Buckets {
+		byStart[b.BucketStartMs] = values[i]
+	}
+	first := math.Floor(t.StartMs/day) * day
+	last := math.Floor(math.Max(t.StartMs, t.EndMs-1)/day) * day
+	var days []float64
+	for d := first; d <= last && len(days) < 8; d += day {
+		days = append(days, d)
+	}
+	fmtv := formatCount
+	if cost {
+		fmtv = formatUSD
+	}
+	change := ui.Animation{Duration: 300 * time.Millisecond, Ease: cssEase}
+	zh := strings.HasPrefix(i18n.Locale(), "zh")
+	ui.Row(c).FillWidth().Gap(8).Children(func() {
+		// The days' gutter, outside the rows so the sweep cannot drag it.
+		ui.Column(c).Shrink(0).Gap(3).Children(func() {
+			for _, d := range days {
+				tm := time.UnixMilli(int64(d)).UTC()
+				weekday := tm.Format("Mon")
+				if zh {
+					weekday = [...]string{"周日", "周一", "周二", "周三", "周四", "周五", "周六"}[tm.Weekday()]
+				}
+				ui.Row(c.Key(d)).Height(18).Gap(4).AlignItems(ui.Center).Justify(ui.End).Children(func() {
+					ui.Text(c, weekday).FontSize(10).TextColor(p.Secondary)
+					ui.Text(c, tm.Format("2")).FontSize(10).TextColor(p.Secondary.Alpha(0.55)).FontFeatures("tnum")
+				})
+			}
+		})
+		ui.Column(c).Grow(1).MinWidth(0).Gap(3).Children(func() {
+			for di, d := range days {
+				row := ui.Row(c.Key(d)).FillWidth().Height(18).Gap(3)
+				rangeSweep(c, row, di, sweep, true)
+				row.Children(func() {
+					for h := 0; h < 24; h++ {
+						at := d + float64(h)*hour
+						v := byStart[at]
+						cell := ui.ButtonBase(c.Key(h)).Grow(1).Basis(0).MinWidth(1).Height(18).Center().Label(bucketTime(at, true))
+						tip(c, p, cell, bucketTime(at, true)+" · "+fmtv(v))
+						heat := scale(v)
+						size, fill := float32(4), p.Text.Alpha(0.08)
+						if heat > 0 {
+							size, fill = 5+8*heat, usagePalette(p, 0).Alpha(0.18+0.74*heat)
+						}
+						hovered := cell.Hovered()
+						fill = cssBrightness(cell.AnimateColor("fill", fill, change), 1+0.1*cell.AnimateTo("bright", b2f(hovered), change))
+						size = cell.AnimateTo("size", size, change)
+						cell.Children(func() {
+							dot := ui.Box(c.Key("dot")).Size(size, size).Radius(size / 2).Background(fill)
+							if hovered {
+								dot.Shadow(0, 0, 0, 1, p.Text.Alpha(0.4))
+							}
+						})
+					}
+				})
 			}
 		})
 	})
@@ -725,4 +916,67 @@ func ringSlice(cx, cy, inner, outer float32, from, to float64) *ui.Path {
 		path.LineTo(x, y)
 	}
 	return path.Close()
+}
+
+// usageTimelineFetch is a range's usage, by bucket.
+func (a *App) usageTimelineFetch(rng string) *fetched {
+	convex, ws := a.convex, a.workspaceID
+	return a.fetch("usage/"+rng, func(ctx context.Context) (any, error) {
+		var out usageTimeline
+		args := map[string]any{"workspaceId": ws, "range": rng}
+		if rng == "day" || rng == "week" {
+			args["granularity"] = "hour" // as Lody asks; the server picks for longer ranges
+		}
+		err := convex.Query(ctx, "usage:getWorkspaceUsageTimeline", args, &out)
+		return &out, err
+	})
+}
+
+// usageViewFade fades a view of the usage card in as it comes and out as
+// it goes, in place, over d on CSS's ease-out: not as the card first shows.
+func usageViewFade(d time.Duration) ui.ElementTransition {
+	return ui.ElementTransition{Colors: true, Duration: d, Ease: cssEaseOut, Enter: &ui.Motion{}, Exit: &ui.Motion{}}
+}
+
+// usageRangeTray is Lody's range selector: a bordered tray of the four
+// ranges, the chosen one raised on the page's ground; the fills and inks
+// crossfade over 150ms on Tailwind's curve, and nothing slides.
+func usageRangeTray(c *ui.Context, p *palette, selected string, pick func(string)) {
+	labels := usageRangeLabels()
+	fade := ui.Animation{Duration: 150 * time.Millisecond, Ease: twEase}
+	ui.Row(c.Key("usage-range")).Gap(2).Padding(2).Radius(8).Border(1, p.Border.Alpha(0.6)).Background(p.Text.Alpha(0.03)).
+		Shrink(0).Label(locales.SettingsUsage()).Children(func() {
+		for i, r := range usageRanges {
+			id := r
+			on := r == selected
+			tab := ui.ButtonBase(c.Key(r)).Padding(4, 12).Radius(6).Cursor(ui.CursorPointer).Label(labels[i]).OnClick(func() { pick(id) })
+			if k := tab.AnimateTo("on", b2f(on), fade); k > 0 {
+				tab.Background(p.Canvas.Alpha(k)).Shadow(0, 1, 2, 0, ui.RGBA(0, 0, 0, 0.05*k))
+			}
+			ink := tab.AnimateColor("ink", map[bool]ui.Color{true: p.Text, false: p.Secondary}[on || tab.Hovered()], fade)
+			tab.Children(func() { ui.Text(c, labels[i]).FontSize(sizeFoot).TextColor(ink).SingleLine() })
+		}
+	})
+}
+
+// usageMetricSegments is the usage card's tokens-or-cost switch, as Lody's
+// SegmentedControl: the chosen segment raised and ringed, the fills and
+// inks crossfading over 150ms on CSS's ease.
+func usageMetricSegments(c *ui.Context, p *palette, cost bool, pick func(bool)) {
+	fade := ui.Animation{Duration: 150 * time.Millisecond, Ease: cssEase}
+	ui.Row(c.Key("usage-metric")).Padding(2).Radius(6).Background(p.Text.Alpha(0.05)).Shrink(0).Label(locales.UsageSkyline()).Children(func() {
+		for _, o := range []struct {
+			cost  bool
+			label string
+		}{{false, "Token"}, {true, locales.UsageCostUSD()}} {
+			v := o.cost
+			on := v == cost
+			seg := ui.ButtonBase(c.Key(o.label)).Padding(4, 10).Radius(5).Cursor(ui.CursorPointer).Label(o.label).OnClick(func() { pick(v) })
+			if k := seg.AnimateTo("on", b2f(on), fade); k > 0 {
+				seg.Background(p.Canvas.Alpha(k)).Shadow(0, 0, 0, 1, p.Border.Alpha(0.7*k))
+			}
+			ink := seg.AnimateColor("ink", map[bool]ui.Color{true: p.Text, false: p.Secondary}[on || seg.Hovered()], fade)
+			seg.Children(func() { ui.Text(c, o.label).FontSize(sizeFoot).TextColor(ink).SingleLine() })
+		}
+	})
 }

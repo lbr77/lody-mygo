@@ -395,13 +395,13 @@ func (a *App) sharesPage(c *ui.Context, p *palette) {
 						a.toast("success", locales.ShareCopied())
 					})
 				case mine && share.CanManage:
-					ghostButton(c, p, locales.ShareReset()).Border(1, p.Border).Tooltip(locales.SharesLinkOtherDevice()).OnClick(func() { a.resetting = share.ShareID })
+					tip(c, p, ghostButton(c, p, locales.ShareReset()).Border(1, p.Border), locales.SharesLinkOtherDevice()).OnClick(func() { a.resetting = share.ShareID })
 				}
 			}
 			if a.resetting == share.ShareID {
 				ui.Row(c).Gap(6).Children(func() {
 					ghostButton(c, p, locales.Cancel()).OnClick(func() { a.resetting = "" })
-					ghostButton(c, p, locales.ShareReset()).Border(1, p.Danger).Tooltip(locales.ShareInvalidateNotice()).OnClick(func() {
+					tip(c, p, ghostButton(c, p, locales.ShareReset()).Border(1, p.Danger), locales.ShareInvalidateNotice()).OnClick(func() {
 						a.resetting = ""
 						a.resetShareLink(&shareJob{root: share.RootSessionID, entry: entry, loaded: true})
 					})
