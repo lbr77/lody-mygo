@@ -13448,3 +13448,83 @@ func MentionPullRequests() string { return In(i18n.Locale()).MentionPullRequests
 func (msgs Messages) MentionPullRequests() string {
 	return Catalog.Format(msgs.locale, "mentionPullRequests", nil)
 }
+
+// PlanTitle says "Proposed Plan"
+// in the language the app shows.
+func PlanTitle() string { return In(i18n.Locale()).PlanTitle() }
+
+// PlanTitle says "Proposed Plan"
+// in the language of msgs.
+func (msgs Messages) PlanTitle() string {
+	return Catalog.Format(msgs.locale, "planTitle", nil)
+}
+
+// PlanCopy says "Copy plan"
+// in the language the app shows.
+func PlanCopy() string { return In(i18n.Locale()).PlanCopy() }
+
+// PlanCopy says "Copy plan"
+// in the language of msgs.
+func (msgs Messages) PlanCopy() string {
+	return Catalog.Format(msgs.locale, "planCopy", nil)
+}
+
+// PlanCopied says "Copied"
+// in the language the app shows.
+func PlanCopied() string { return In(i18n.Locale()).PlanCopied() }
+
+// PlanCopied says "Copied"
+// in the language of msgs.
+func (msgs Messages) PlanCopied() string {
+	return Catalog.Format(msgs.locale, "planCopied", nil)
+}
+
+// PlanImplement says "Implement plan"
+// in the language the app shows.
+func PlanImplement() string { return In(i18n.Locale()).PlanImplement() }
+
+// PlanImplement says "Implement plan"
+// in the language of msgs.
+func (msgs Messages) PlanImplement() string {
+	return Catalog.Format(msgs.locale, "planImplement", nil)
+}
+
+// PlanImplementing says "Implementing plan..."
+// in the language the app shows.
+func PlanImplementing() string { return In(i18n.Locale()).PlanImplementing() }
+
+// PlanImplementing says "Implementing plan..."
+// in the language of msgs.
+func (msgs Messages) PlanImplementing() string {
+	return Catalog.Format(msgs.locale, "planImplementing", nil)
+}
+
+// PlanContinue says "Continue discussing"
+// in the language the app shows.
+func PlanContinue() string { return In(i18n.Locale()).PlanContinue() }
+
+// PlanContinue says "Continue discussing"
+// in the language of msgs.
+func (msgs Messages) PlanContinue() string {
+	return Catalog.Format(msgs.locale, "planContinue", nil)
+}
+
+// PlanImplementPrompt says "Implement the plan"
+// in the language the app shows.
+func PlanImplementPrompt() string { return In(i18n.Locale()).PlanImplementPrompt() }
+
+// PlanImplementPrompt says "Implement the plan"
+// in the language of msgs.
+func (msgs Messages) PlanImplementPrompt() string {
+	return Catalog.Format(msgs.locale, "planImplementPrompt", nil)
+}
+
+// PlanImplementFailed says "Failed to execute plan"
+// in the language the app shows.
+func PlanImplementFailed() string { return In(i18n.Locale()).PlanImplementFailed() }
+
+// PlanImplementFailed says "Failed to execute plan"
+// in the language of msgs.
+func (msgs Messages) PlanImplementFailed() string {
+	return Catalog.Format(msgs.locale, "planImplementFailed", nil)
+}

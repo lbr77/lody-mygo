@@ -18,6 +18,7 @@ import (
 // the thinking and tool calls between texts.
 type block struct {
 	text  bool
+	plan  bool // a proposed plan, a panel of its own
 	items []session.Item
 	key   string
 }
@@ -30,6 +31,10 @@ func blocks(items []session.Item) []block {
 			continue // the task card shows these
 		case it.Type == "text":
 			out = append(out, block{text: true, items: []session.Item{it}, key: it.ID})
+		case it.Type == "proposed_plan":
+			if strings.TrimSpace(it.Text) != "" && it.Status != "cleared" {
+				out = append(out, block{plan: true, items: []session.Item{it}, key: it.ID})
+			}
 		default:
 			if n := len(out); n > 0 && !out[n-1].text {
 				out[n-1].items = append(out[n-1].items, it)
@@ -45,7 +50,7 @@ func blocks(items []session.Item) []block {
 // text. What comes before folds under "Worked for".
 func answerStart(bs []block) int {
 	k := len(bs)
-	for k > 0 && bs[k-1].text {
+	for k > 0 && (bs[k-1].text || bs[k-1].plan) {
 		k--
 	}
 	return k
@@ -70,7 +75,7 @@ func (a *App) assistantMessage(c *ui.Context, p *palette, e session.Entry) {
 			switch {
 			case first:
 				top = 0
-			case b.text || prevText:
+			case b.text || prevText || b.plan:
 				top = 12
 			}
 			// Before el, which places the blocks a group folds.
@@ -116,12 +121,15 @@ func (a *App) assistantMessage(c *ui.Context, p *palette, e session.Entry) {
 			ui.Column(c).FillWidth().Margin(12, 0, 0, 0).Children(func() { a.editedFiles(c, p, e) })
 		}
 		ui.Column(c).Margin(4, 0, 0, 0).Children(func() { a.turnFooter(c, p, e, hovered) })
+		a.planActions(c, p, e)
 	})
 }
 
 func (a *App) block(c *ui.Context, p *palette, e session.Entry, b block, last bool) {
 	live := !e.Finished && last
 	switch {
+	case b.plan:
+		a.planPanel(c, p, e, b.items[0])
 	case b.text:
 		it := b.items[0]
 		id := e.ID + "/" + it.ID

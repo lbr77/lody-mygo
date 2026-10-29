@@ -112,3 +112,36 @@ func TestSessionLinkSpans(t *testing.T) {
 		t.Fatalf("%+v", spans)
 	}
 }
+
+func TestProposedPlan(t *testing.T) {
+	a := fixture()
+	a.view.Working = false
+	a.view.Entries = a.view.Entries[:2]
+	plan := "## Plan\n\n" + strings.Repeat("- Step that does a thing\n", 30)
+	a.view.Entries[1].Items = append(a.view.Entries[1].Items, session.Item{ID: "pp", Type: "proposed_plan", Text: plan, Status: "completed", Latest: true})
+	a.catalog.Sessions[0].AgentType, a.catalog.Sessions[0].Status = "codex", "idle"
+	tt := snap(t, a, "proposed-plan", false, nil)
+	for _, want := range []string{"Proposed Plan", "Implement plan", "Continue discussing"} {
+		if !tt.HasText(want) {
+			t.Errorf("missing %q in %q", want, tt.Texts())
+		}
+	}
+	// Awaiting the decision, the plan opens in full.
+	if !tt.HasText("Step that does a thing") {
+		t.Fatal("plan body not shown")
+	}
+	if err := tt.Click("Continue discussing"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if tt.HasText("Implement plan") {
+		t.Fatal("Continue discussing left the decision")
+	}
+	// A Claude session is never asked.
+	a.plan.dismissed = nil
+	a.catalog.Sessions[0].AgentType = "claude"
+	tt.Frame()
+	if tt.HasText("Implement plan") {
+		t.Fatal("decision offered outside Codex")
+	}
+}

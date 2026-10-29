@@ -111,10 +111,11 @@ type App struct {
 	history          []string // sessions shown, for Back and Forward
 	histPos          int
 	palette          paletteState
-	mdSize           float32 // the text size the Markdown themes were made for
-	language         string  // the app's language; "" follows the system
-	fontSize         float32 // the conversation's text size; 0 is the default
-	wideMode         bool    // the conversation spans the window
+	plan             planState // proposed plans' panels and decisions
+	mdSize           float32   // the text size the Markdown themes were made for
+	language         string    // the app's language; "" follows the system
+	fontSize         float32   // the conversation's text size; 0 is the default
+	wideMode         bool      // the conversation spans the window
 	inlineMath       bool
 	extendedCode     bool
 	ligatures        bool

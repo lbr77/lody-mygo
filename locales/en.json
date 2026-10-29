@@ -2726,5 +2726,13 @@
   "mentionShortcuts": "Prompt Shortcuts",
   "mentionCommands": "Agent Commands",
   "mentionIssues": "Issues",
-  "mentionPullRequests": "Pull Requests"
+  "mentionPullRequests": "Pull Requests",
+  "planTitle": "Proposed Plan",
+  "planCopy": "Copy plan",
+  "planCopied": "Copied",
+  "planImplement": "Implement plan",
+  "planImplementing": "Implementing plan...",
+  "planContinue": "Continue discussing",
+  "planImplementPrompt": "Implement the plan",
+  "planImplementFailed": "Failed to execute plan"
 }

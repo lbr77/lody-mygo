@@ -1333,5 +1333,13 @@
   "mentionShortcuts": "提示词快捷方式",
   "mentionCommands": "Agent 命令",
   "mentionIssues": "Issues",
-  "mentionPullRequests": "Pull Requests"
+  "mentionPullRequests": "Pull Requests",
+  "planTitle": "Proposed Plan",
+  "planCopy": "复制计划",
+  "planCopied": "已复制",
+  "planImplement": "实施计划",
+  "planImplementing": "正在实施计划...",
+  "planContinue": "继续讨论",
+  "planImplementPrompt": "实施计划",
+  "planImplementFailed": "执行计划失败"
 }
