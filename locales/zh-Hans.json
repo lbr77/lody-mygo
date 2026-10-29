@@ -1288,5 +1288,7 @@
   "mentionSessionViewAll": "查看全部项目",
   "mentionSessionShowAll": "显示全部项目的会话",
   "mentionSessionEmptyCurrent": "当前项目没有其他会话。",
-  "mentionSessionEmptyNone": "没有其他无项目会话。"
+  "mentionSessionEmptyNone": "没有其他无项目会话。",
+  "openedHide": "收起打开的会话",
+  "openedShow": "{count, plural, other{展开 # 个打开的会话}}"
 }

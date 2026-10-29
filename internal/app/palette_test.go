@@ -1,6 +1,7 @@
 package app
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -365,5 +366,36 @@ func TestSessionMentionScope(t *testing.T) {
 	tt.Frame()
 	if names() != "Sidebar status marks" {
 		t.Fatalf("back to current: %q", names())
+	}
+}
+
+func TestSidebarOpenedTree(t *testing.T) {
+	a := fixture()
+	a.view.Entries = a.view.Entries[:2]
+	a.view.Working = false
+	a.catalog.Sessions = append(a.catalog.Sessions,
+		catalog.Session{ID: "s5", MachineID: "m1", Title: "Dispatched review", Status: "idle", ProjectID: "m1:local:p2", OpenedBySessionID: "s2"},
+		catalog.Session{ID: "s6", MachineID: "m1", Title: "Opened second", Status: "idle", ProjectID: "m1:unassigned", OpenedBySessionID: "s5"},
+		catalog.Session{ID: "s7", MachineID: "m1", Title: "A fork of the runtime", Status: "idle", ProjectID: "m1:local:p1", ParentSessionID: "s1"},
+	)
+	tt := snap(t, a, "sidebar-opened", false, nil)
+	var order []string
+	for _, r := range a.sideRows() {
+		if r.kind == rowSession {
+			order = append(order, fmt.Sprintf("%s:%d", r.session.ID, r.depth))
+		}
+	}
+	// The fork is a tab, not a row; what s2 opened, and what that opened,
+	// sit under s2 in its project.
+	if got := strings.Join(order, " "); !strings.Contains(got, "s2:0 s5:1 s6:1") || strings.Contains(got, "s7") {
+		t.Fatalf("rows: %s", got)
+	}
+	if !tt.HasText("Hide opened sessions") {
+		t.Fatalf("no fold: %q", tt.Texts())
+	}
+	a.collapsed["opened:s2"] = true
+	tt.Frame()
+	if tt.HasText("Dispatched review") {
+		t.Fatal("folded opener still lists its sessions")
 	}
 }

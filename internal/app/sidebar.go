@@ -5,6 +5,7 @@ import (
 	"github.com/lbr77/lody-mygo/internal/cloud"
 	"github.com/lbr77/lody-mygo/locales"
 	"math"
+	"sort"
 	"strings"
 	"time"
 	"unicode/utf16"
@@ -43,6 +44,8 @@ type sideRow struct {
 	nested  bool    // a session under a project
 	depth   int     // sessions opened by another sit under it
 	top     float32 // space above the row
+	opened  int     // the sessions it opened, nested under it
+	last    bool    // the last nested under its opener, where the trunk ends
 }
 
 // machineLabel is a machine's name without the ".local" of mDNS hosts.
@@ -56,17 +59,31 @@ func (a *App) machineLabel(id string) string {
 func (a *App) sideRows() []sideRow {
 	var rows []sideRow
 	sessions := a.catalog.Sessions
-	visible := map[string]bool{}
+	// A child conversation (parentSessionId) is one of its parent's tabs,
+	// never a row of its own, as Lody's sidebar.
+	listed := map[string]*catalog.Session{}
 	for i := range sessions {
-		if !sessions[i].Archived {
-			visible[sessions[i].ID] = true
+		if s := &sessions[i]; !s.Archived && s.ParentSessionID == "" {
+			listed[s.ID] = s
 		}
 	}
-	children := map[string][]*catalog.Session{}
-	isChild := func(s *catalog.Session) bool { return s.ParentSessionID != "" && visible[s.ParentSessionID] }
-	for i := range sessions {
-		if s := &sessions[i]; !s.Archived && isChild(s) {
-			children[s.ParentSessionID] = append(children[s.ParentSessionID], s)
+	// A session another opened nests under the topmost listed one that
+	// opened it, in that one's group.
+	group := map[string]string{}
+	for _, s := range listed {
+		switch {
+		case s.Pinned:
+			group[s.ID] = "pinned"
+		case a.catalog.Project(s.ProjectID) != nil:
+			group[s.ID] = "project:" + s.ProjectID
+		default:
+			group[s.ID] = "chats"
+		}
+	}
+	opener := openedBy(listed)
+	for id, root := range opener {
+		if root != "" {
+			group[id] = group[root]
 		}
 	}
 	sectionOpen := false // whether the last section was expanded
@@ -83,19 +100,22 @@ func (a *App) sideRows() []sideRow {
 		return sectionOpen
 	}
 	addSessions := func(group string, list []*catalog.Session, nested bool, limit int) {
+		roots, kids := openedTree(list, opener)
 		shown := 0
-		for _, s := range list {
+		for _, s := range roots {
 			if limit > 0 && shown == limit && !a.showAll[group] {
-				rows = append(rows, sideRow{kind: rowMore, key: "m:" + group, group: group, count: len(list), nested: nested})
+				rows = append(rows, sideRow{kind: rowMore, key: "m:" + group, group: group, count: len(roots), nested: nested})
 				return
 			}
 			top := float32(0)
 			if shown == 0 {
 				top = 2
 			}
-			rows = append(rows, sideRow{kind: rowSession, key: group + "/" + s.ID, group: group, session: s, nested: nested, top: top})
-			for _, child := range children[s.ID] {
-				rows = append(rows, sideRow{kind: rowSession, key: group + "/" + child.ID, group: group, session: child, nested: nested, depth: 1})
+			rows = append(rows, sideRow{kind: rowSession, key: group + "/" + s.ID, group: group, session: s, nested: nested, top: top, opened: len(kids[s.ID])})
+			if !a.collapsed["opened:"+s.ID] {
+				for i, child := range kids[s.ID] {
+					rows = append(rows, sideRow{kind: rowSession, key: group + "/" + child.ID, group: group, session: child, nested: nested, depth: 1, last: i == len(kids[s.ID])-1})
+				}
 			}
 			shown++
 		}
@@ -105,14 +125,14 @@ func (a *App) sideRows() []sideRow {
 	byProject := map[string][]*catalog.Session{}
 	for i := range sessions {
 		s := &sessions[i]
-		if s.Archived || isChild(s) {
+		if listed[s.ID] == nil {
 			continue
 		}
-		switch {
-		case s.Pinned:
+		switch g := group[s.ID]; {
+		case g == "pinned":
 			pinned = append(pinned, s)
-		case a.catalog.Project(s.ProjectID) != nil:
-			byProject[s.ProjectID] = append(byProject[s.ProjectID], s)
+		case strings.HasPrefix(g, "project:"):
+			byProject[strings.TrimPrefix(g, "project:")] = append(byProject[strings.TrimPrefix(g, "project:")], s)
 		default:
 			chats = append(chats, s)
 		}
@@ -354,21 +374,13 @@ func (a *App) sessionRow(c *ui.Context, p *palette, r sideRow) {
 	if selected {
 		ink = p.SideRowSel
 	}
+	rowH := float32(26)
+	if r.nested {
+		rowH = 30
+	}
 	row.Children(func() {
-		if r.nested || r.depth > 0 {
-			// The leading slot: "⋯" on hover, the tree's indent below.
-			if r.depth > 0 {
-				ui.Box(c).Width(14).Shrink(0)
-			}
-			slot := ui.ButtonBase(c).Size(14, 18).Shrink(0).Radius(4).Label(locales.MoreActions())
-			if hovered {
-				slot.Menu(func(m *ui.Menu) { a.sessionMenu(m, sess) })
-			}
-			slot.Children(func() {
-				if hovered {
-					ui.Icon(c, iconMore).Size(14, 14).TextColor(p.SideMuted)
-				}
-			})
+		if r.nested || r.depth > 0 || r.opened > 0 {
+			a.rowLeadingSlot(c, p, r, sess, hovered, rowH)
 		}
 		if s.Pinned && r.group != "pinned" {
 			ui.Icon(c, iconPin).Size(12, 12).TextColor(p.SideMuted)
@@ -726,4 +738,112 @@ func (a *App) workspaceIcon(c *ui.Context, ws *cloud.Workspace, name string, siz
 		}
 	}
 	workspaceTile(c, name, size)
+}
+
+// openedBy maps each listed session to the topmost listed session that
+// opened it, "" for a top-level row, as Lody's opened-by tree: a chain
+// climbs to its topmost listed ancestor, and only a top-level row hosts
+// others, so a cycle stays flat.
+func openedBy(listed map[string]*catalog.Session) map[string]string {
+	candidate := map[string]string{}
+	for id, s := range listed {
+		top := ""
+		seen := map[string]bool{id: true}
+		for cursor := strings.TrimSpace(s.OpenedBySessionID); cursor != "" && !seen[cursor]; {
+			o := listed[cursor]
+			if o == nil {
+				break
+			}
+			seen[cursor], top = true, cursor
+			cursor = strings.TrimSpace(o.OpenedBySessionID)
+		}
+		candidate[id] = top
+	}
+	out := map[string]string{}
+	for id, c := range candidate {
+		if c != "" && candidate[c] == "" {
+			out[id] = c
+		} else {
+			out[id] = ""
+		}
+	}
+	return out
+}
+
+// openedTree splits a group's sessions into its top-level rows, ranked by
+// the freshest of each and the sessions it opened (pinned first), and those
+// nested under each, in the order they came.
+func openedTree(list []*catalog.Session, opener map[string]string) (roots []*catalog.Session, kids map[string][]*catalog.Session) {
+	kids = map[string][]*catalog.Session{}
+	in := map[string]bool{}
+	for _, s := range list {
+		in[s.ID] = true
+	}
+	for _, s := range list {
+		if o := opener[s.ID]; o != "" && in[o] {
+			kids[o] = append(kids[o], s)
+			continue
+		}
+		roots = append(roots, s)
+	}
+	if len(kids) == 0 {
+		return roots, kids
+	}
+	rank := func(s *catalog.Session) float64 {
+		r := activity(*s)
+		for _, k := range kids[s.ID] {
+			r = max(r, activity(*k))
+		}
+		if s.Pinned {
+			r += 1e15
+		}
+		return r
+	}
+	sort.SliceStable(roots, func(i, j int) bool { return rank(roots[i]) > rank(roots[j]) })
+	return roots, kids
+}
+
+// rowLeadingSlot is a row's leading slot, as Lody's: an opener's chevron,
+// which folds the sessions it opened, or a nested row's connector, at rest;
+// "⋯" in their place while the row is hovered.
+func (a *App) rowLeadingSlot(c *ui.Context, p *palette, r sideRow, sess catalog.Session, hovered bool, rowH float32) {
+	width := float32(14)
+	if r.depth > 0 {
+		width = 26
+	}
+	slot := ui.Box(c.Key("slot")).Size(width, 14).Shrink(0)
+	slot.Children(func() {
+		line := p.SideRow.Alpha(0.2)
+		switch {
+		case r.depth > 0 && !hovered:
+			// The trunk climbs to the row above and runs on into the next
+			// unless this is the last; the elbow reaches the title.
+			reach := (rowH - 14) / 2
+			trunk := ui.Box(c.Key("trunk")).Absolute().Left(7).Top(-reach).Width(1).Background(line)
+			if r.last {
+				trunk.Height(reach + 7)
+			} else {
+				trunk.Height(rowH + 1)
+			}
+			ui.Box(c.Key("elbow")).Absolute().Left(7).Top(7).Width(13).Height(1).Background(line)
+		case r.opened > 0 && !hovered:
+			collapsed := a.collapsed["opened:"+sess.ID]
+			label := locales.OpenedHide()
+			if collapsed {
+				label = locales.OpenedShow(r.opened)
+			}
+			b := ui.ButtonBase(c.Key("fold")).Size(14, 14).Radius(4).Center().Cursor(ui.CursorPointer).Label(label).Tooltip(label).
+				OnClick(func() { a.collapsed["opened:"+sess.ID] = !collapsed })
+			b.Children(func() {
+				turn := b.AnimateWith("turn", b2f(!collapsed), 150*time.Millisecond, ui.EaseOut)
+				ui.Icon(c, iconChevronDown).Size(14, 14).TextColor(p.SideMuted).Rotate(-90 * (1 - turn))
+			})
+		case hovered:
+			more := ui.ButtonBase(c.Key("more")).Size(14, 14).Radius(4).Label(locales.MoreActions()).Menu(func(m *ui.Menu) { a.sessionMenu(m, sess) })
+			if r.depth > 0 {
+				more.Absolute().Left(0)
+			}
+			more.Children(func() { ui.Icon(c, iconMore).Size(14, 14).TextColor(p.SideMuted) })
+		}
+	})
 }

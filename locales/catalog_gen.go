@@ -12998,3 +12998,23 @@ func MentionSessionEmptyNone() string { return In(i18n.Locale()).MentionSessionE
 func (msgs Messages) MentionSessionEmptyNone() string {
 	return Catalog.Format(msgs.locale, "mentionSessionEmptyNone", nil)
 }
+
+// OpenedHide says "Hide opened sessions"
+// in the language the app shows.
+func OpenedHide() string { return In(i18n.Locale()).OpenedHide() }
+
+// OpenedHide says "Hide opened sessions"
+// in the language of msgs.
+func (msgs Messages) OpenedHide() string {
+	return Catalog.Format(msgs.locale, "openedHide", nil)
+}
+
+// OpenedShow says "{count, plural, =1{Show 1 opened session} other{Show # opened sessions}}"
+// in the language the app shows.
+func OpenedShow(count int) string { return In(i18n.Locale()).OpenedShow(count) }
+
+// OpenedShow says "{count, plural, =1{Show 1 opened session} other{Show # opened sessions}}"
+// in the language of msgs.
+func (msgs Messages) OpenedShow(count int) string {
+	return Catalog.Format(msgs.locale, "openedShow", map[string]any{"count": count})
+}

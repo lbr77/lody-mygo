@@ -2674,5 +2674,14 @@
   "mentionSessionViewAll": "View all projects",
   "mentionSessionShowAll": "Show sessions from all projects",
   "mentionSessionEmptyCurrent": "There are no other sessions in the current project.",
-  "mentionSessionEmptyNone": "There are no other sessions without a project."
+  "mentionSessionEmptyNone": "There are no other sessions without a project.",
+  "openedHide": "Hide opened sessions",
+  "openedShow": "{count, plural, =1{Show 1 opened session} other{Show # opened sessions}}",
+  "@openedShow": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }
