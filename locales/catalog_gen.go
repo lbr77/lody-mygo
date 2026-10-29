@@ -12704,3 +12704,13 @@ func CmdBranchCopied() string { return In(i18n.Locale()).CmdBranchCopied() }
 func (msgs Messages) CmdBranchCopied() string {
 	return Catalog.Format(msgs.locale, "cmdBranchCopied", nil)
 }
+
+// KeyUnbound says "Unbound"
+// in the language the app shows.
+func KeyUnbound() string { return In(i18n.Locale()).KeyUnbound() }
+
+// KeyUnbound says "Unbound"
+// in the language of msgs.
+func (msgs Messages) KeyUnbound() string {
+	return Catalog.Format(msgs.locale, "keyUnbound", nil)
+}

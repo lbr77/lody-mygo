@@ -217,32 +217,34 @@ func (a *App) commands() []command {
 		{id: "session.cycleProvider", title: locales.CmdCycleProvider(), category: catSession, icon: iconBot, when: s.provider.can(), run: func() { a.surf.provider.next() }},
 		{id: "session.cycleModel", title: locales.CmdCycleModel(), category: catSession, icon: iconSparkles, when: s.model.can(), run: func() { a.surf.model.next() }},
 	}
-	if sess == nil {
-		return cmds
+	// A session's commands are listed without one too, as Lody's
+	// placeholders, so settings can show every shortcut.
+	id, open := "", sess != nil
+	if open {
+		id = sess.ID
 	}
-	id := sess.ID
 	cmds = append(cmds,
 		command{id: "session.archiveCurrent", title: locales.CmdArchiveCurrent(), category: catSession, keys: keyChords("Mod+Alt+a"), icon: iconArchive, when: live,
 			run: func() { a.archiveSession(id) }},
 		command{id: "session.toggleCurrentPinned", title: locales.CmdTogglePinned(), category: catSession, keys: keyChords("Mod+Alt+p"), icon: iconPin, when: live,
 			run: func() { a.togglePinned(id) }},
-		command{id: "session.toggleExplorerSidebar", title: locales.CmdToggleExplorer(), category: catView, keys: keyChords("Mod+Alt+b"), icon: iconPanelRight, when: true,
+		command{id: "session.toggleExplorerSidebar", title: locales.CmdToggleExplorer(), category: catView, keys: keyChords("Mod+Alt+b"), icon: iconPanelRight, when: open,
 			run: a.togglePanel},
-		command{id: "session.newTabOrTerminal", title: locales.CmdNewTabOrTerminal(), category: catSession, keys: keyChords("Alt+n", "Mod+t"), icon: iconPlus, when: true,
+		command{id: "session.newTabOrTerminal", title: locales.CmdNewTabOrTerminal(), category: catSession, keys: keyChords("Alt+n", "Mod+t"), icon: iconPlus, when: open,
 			run: func() { a.newTabOrTerminal(id) }},
 		command{id: "session.toggleTerminal", title: locales.CmdToggleTerminal(), category: catView, keys: keyChords("Ctrl+`", "Mod+j"), icon: iconSquareTerminal,
-			when: a.localMachine() != "", run: a.toggleTerminal},
+			when: open && a.localMachine() != "", run: a.toggleTerminal},
 		command{id: "session.copyCurrentBranch", title: locales.CmdCopyBranch(), category: catSession, keys: keyChords("Alt+Shift+b"), icon: iconBranch, when: branch != "",
 			run: func() {
 				writeClipboard(branch)
 				a.toast("success", locales.CmdBranchCopied())
 			}},
-		command{id: "session.copyUrl", title: locales.CmdCopyURL(), category: catSession, keys: keyChords("Alt+Shift+c"), icon: iconLink, when: true,
+		command{id: "session.copyUrl", title: locales.CmdCopyURL(), category: catSession, keys: keyChords("Alt+Shift+c"), icon: iconLink, when: open,
 			run: func() { a.copySessionLink(id) }},
 		command{id: "session.renameCurrent", title: locales.CmdRenameCurrent(), category: catSession, keys: keyChords("F2"), icon: iconPencil, when: live,
 			run: func() {
 				a.sidebarHidden = false
-				a.renaming, a.renameText = id, sess.Title
+				a.renaming, a.renameText = id, a.catalog.Session(id).Title
 			}},
 		command{id: "session.nextTab", title: locales.CmdNextTab(), category: catNavigation, keys: keyChords("Mod+Shift+."), icon: iconChevronsRight, when: tabs > 1, run: func() {}},
 		command{id: "session.previousTab", title: locales.CmdPreviousTab(), category: catNavigation, keys: keyChords("Mod+Shift+,"), icon: iconChevronsLeft, when: tabs > 1, run: func() {}},
@@ -411,4 +413,39 @@ func (a *App) newTabOrTerminal(id string) {
 		a.newChat.agent = sess.AgentConfigID
 	}
 	a.open("")
+}
+
+// keyboardPage lists every command under its category with the chord that
+// runs it, as Lody's keyboard settings.
+func (a *App) keyboardPage(c *ui.Context, p *palette) {
+	settingsTitle(c, p, locales.SettingsKeyboard())
+	cmds := a.commands()
+	for cat := catNavigation; cat <= catOther; cat++ {
+		var rows []command
+		for _, cmd := range cmds {
+			if cmd.category == cat {
+				rows = append(rows, cmd)
+			}
+		}
+		if len(rows) == 0 {
+			continue
+		}
+		settingsHeading(c, p, cat.label())
+		card(c, p, func() {
+			for _, cmd := range rows {
+				ui.Row(c.Key(cmd.id)).FillWidth().MinHeight(40).Padding(0, 12, 0, 14).Gap(16).AlignItems(ui.Center).Children(func() {
+					ui.Text(c, cmd.title).FontSize(sizeSub).TextColor(p.Text).Grow(1).MinWidth(0)
+					if len(cmd.keys) == 0 {
+						ui.Text(c, locales.KeyUnbound()).FontSize(sizeFoot).TextColor(p.Tertiary).Shrink(0)
+						return
+					}
+					ui.Row(c).Gap(4).Shrink(0).Children(func() {
+						for _, key := range cmd.keys[0].parts() {
+							ui.Text(c, key).FontSize(sizeFoot).TextColor(p.Secondary).Padding(2, 7).Radius(5).Border(1, p.Border).Background(p.Canvas)
+						}
+					})
+				})
+			}
+		})
+	}
 }

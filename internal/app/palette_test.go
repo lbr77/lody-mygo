@@ -227,3 +227,17 @@ func TestPaletteSearchSnapshot(t *testing.T) {
 		t.Errorf("empty: %q", tt.Texts())
 	}
 }
+
+func TestKeyboardSettings(t *testing.T) {
+	a := fixture()
+	a.view.Working = false
+	a.selected = ""
+	a.settingsOpen, a.settingsTab = true, "keyboard"
+	tt := snap(t, a, "settings-keyboard", false, nil)
+	// Every command, a session's too with none open.
+	for _, want := range []string{"Navigation", "Session", "Editor", "View", "Workspace", "Toggle Sidebar", "Copy Current Branch", "Switch to Tab 8", "Cycle Model", "Unbound"} {
+		if !tt.HasText(want) {
+			t.Errorf("missing %q in %q", want, tt.Texts())
+		}
+	}
+}

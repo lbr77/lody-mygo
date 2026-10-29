@@ -156,19 +156,7 @@ func (a *App) settingsPage(c *ui.Context, p *palette) {
 			}
 		})
 	case "keyboard":
-		settingsTitle(c, p, locales.SettingsKeyboard())
-		for _, sc := range [][2]string{
-			{locales.NewChat(), "⌘ N"}, {locales.KeyFocusComposer(), "⌘ L"}, {locales.KeyToggleSidebar(), "⌘ \\"},
-			{locales.KeySend(), "↩"}, {locales.KeyNewLine(), "⇧ ↩"},
-		} {
-			settingRow(c.Key(sc[0]), p, sc[0], "", func() {
-				ui.Row(c).Gap(4).Children(func() {
-					for _, key := range strings.Fields(sc[1]) {
-						ui.Text(c, key).FontSize(sizeFoot).TextColor(p.Secondary).Padding(2, 7).Radius(5).Border(1, p.Border).Background(p.Canvas)
-					}
-				})
-			})
-		}
+		a.keyboardPage(c, p)
 	case "general":
 		a.generalPage(c, p)
 	case "agents":

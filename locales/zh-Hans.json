@@ -1259,5 +1259,6 @@
   "cmdCycleProvider": "循环切换 ACP 提供方",
   "cmdCycleModel": "循环切换模型",
   "cmdURLCopied": "会话链接已复制到剪贴板",
-  "cmdBranchCopied": "当前分支名已复制到剪贴板"
+  "cmdBranchCopied": "当前分支名已复制到剪贴板",
+  "keyUnbound": "未绑定"
 }

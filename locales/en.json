@@ -2611,5 +2611,6 @@
   "cmdCycleProvider": "Cycle ACP Provider",
   "cmdCycleModel": "Cycle Model",
   "cmdURLCopied": "Session URL copied to clipboard",
-  "cmdBranchCopied": "Current branch name copied to clipboard"
+  "cmdBranchCopied": "Current branch name copied to clipboard",
+  "keyUnbound": "Unbound"
 }
