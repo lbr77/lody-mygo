@@ -1096,5 +1096,151 @@
     }
   },
   "machinesRemoveBody": "If its Lody CLI connects again, the machine comes back.",
-  "machinesRemoveOnline": "Only an offline machine can be removed."
+  "machinesRemoveOnline": "Only an offline machine can be removed.",
+  "providerAdd": "Add Provider",
+  "providerCustom": "Custom command",
+  "providerCustomShort": "Custom",
+  "providerUsed": "used {ago}",
+  "@providerUsed": {
+    "placeholders": {
+      "ago": {
+        "type": "String"
+      }
+    }
+  },
+  "providerEnvCount": "{n, plural, one {# environment variable} other {# environment variables}}",
+  "@providerEnvCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "agoMinutes": "{n}m ago",
+  "@agoMinutes": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "agoHours": "{n}h ago",
+  "@agoHours": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "agoDays": "{n}d ago",
+  "@agoDays": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "providerRefresh": "Refresh models and modes",
+  "providerDeleteTitle": "Delete {name}?",
+  "@providerDeleteTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "providerDeleteBody": "New chats can no longer use it; its chats keep their history.",
+  "providerAuthRequired": "The agent needs you to sign in on the machine.",
+  "providerTestFailed": "The machine couldn't start the agent.",
+  "providerTestOK": "Works: {models} models, {modes} modes.",
+  "@providerTestOK": {
+    "placeholders": {
+      "models": {
+        "type": "int"
+      },
+      "modes": {
+        "type": "int"
+      }
+    }
+  },
+  "providerUnclosedQuote": "The command has an unclosed quote.",
+  "providerNeedsCommand": "Enter the command that starts the agent.",
+  "providerBuiltin": "Built in",
+  "providerPresets": "Presets",
+  "providerCustomGroup": "Custom",
+  "providerNew": "New Provider",
+  "providerEdit": "Edit Provider",
+  "providerRuntime": "{name} runtime",
+  "@providerRuntime": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "providerTest": "Test",
+  "providerMachine": "Machine",
+  "providerName": "Configuration name",
+  "providerNameHint": "Shown in the provider list and the chats' menus.",
+  "providerCommand": "Launch command",
+  "providerCommandHint": "Quotes and backslashes work as in a shell; variables and pipes don't.",
+  "providerPath": "Runtime binary path",
+  "providerPathHint": "Advanced: left empty, Lody installs and checks a managed runtime. Fill it only for a local mirror or to debug the runtime.",
+  "providerEndpoint": "Endpoint",
+  "providerTitleGen": "Title generation",
+  "providerTitleGenHint": "Test the provider to load the options.",
+  "providerPrompt": "Custom prompt",
+  "providerPromptPlaceholder": "Instructions every chat with this provider starts with",
+  "providerExtraEnv": "Extra environment variables",
+  "providerTesting": "Starting the agent on the machine…",
+  "providerCreate": "Create",
+  "memoryLead": "The memories each machine imports into Lody.",
+  "memoryAdd": "Add memory",
+  "memoryNone": "No memories imported yet. Click Add memory to start.",
+  "memoryMissing": "Missing",
+  "memoryRemove": "Remove from Lody",
+  "memoryNotInstalled": "Nowledge Mem isn't installed on this machine.",
+  "memoryNotRunning": "Nowledge Mem isn't running on this machine.",
+  "memoryProviders": "Memory providers",
+  "memoryAddLead": "Choose a provider, then create a memory or import an identity this machine already has.",
+  "memoryCreate": "Create",
+  "memoryImport": "Import",
+  "memoryImportButton": "{n, plural, =0 {Import} one {Import #} other {Import #}}",
+  "@memoryImportButton": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "memoryCreateButton": "Create and import",
+  "memoryName": "Name",
+  "memoryDescription": "Description (optional)",
+  "memoryRole": "Role (optional)",
+  "memoryNothingToImport": "Every memory on this machine is imported already.",
+  "projectAdd": "Add project",
+  "projectAddLead": "Choose a folder on the machine.",
+  "projectAddThis": "Add this folder",
+  "projectParent": "Up one folder",
+  "projectAdded": "Added",
+  "projectRemove": "Delete project",
+  "projectRemoveTitle": "Delete {name}?",
+  "@projectRemoveTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "projectRemoveBody": "Lody forgets the folder; its files stay on the machine.",
+  "projectRemoveChats": "{n, plural, one {Its chat is archived. Lody forgets the folder; its files stay on the machine.} other {Its # chats are archived. Lody forgets the folder; its files stay on the machine.}}",
+  "@projectRemoveChats": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "projectRemoving": "Removing…",
+  "projectWaitingDevice": "Waiting for the machine…"
 }

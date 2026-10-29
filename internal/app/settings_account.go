@@ -376,7 +376,7 @@ func (a *App) machineCard(c *ui.Context, p *palette, id string, machines map[str
 				}
 				ui.Row(c).FillWidth().Wrap().Gap(6).Children(func() {
 					for _, ag := range agents {
-						pill(c.Key(ag.ID), p, agentIcon(ag.AgentType), ag.Name)
+						pill(c.Key(ag.ID), p, agentIcon(ag.CLIType), ag.Name)
 					}
 				})
 			})
@@ -384,10 +384,10 @@ func (a *App) machineCard(c *ui.Context, p *palette, id string, machines map[str
 	})
 }
 
-// agentIcon is the mark of an agent type.
-func agentIcon(agentType string) *ui.SVG {
-	switch strings.ToLower(agentType) {
-	case "custom", "custom-command":
+// agentIcon is the mark of an agent's kind: a terminal for custom
+// commands.
+func agentIcon(cliType string) *ui.SVG {
+	if cliType == "custom" {
 		return iconSquareTerminal
 	}
 	return iconBot

@@ -356,7 +356,7 @@ func TestSettingsAgents(t *testing.T) {
 	a := fixture()
 	a.settingsOpen, a.settingsTab = true, "agents"
 	tt := snap(t, a, "settings-agents", true, nil)
-	if !tt.HasText("Claude Code") || !tt.HasText("claude · builtin · 6 modes") {
+	if !tt.HasText("Claude Code") || !tt.HasText("Add Provider") {
 		t.Fatalf("agents: %q", tt.Texts())
 	}
 }
@@ -764,6 +764,20 @@ func TestCloudSettings(t *testing.T) {
 	check("ai-usage", "1.5M", "$12.34", "Usage skyline", "By model", "claude-opus-5-5", "gpt-5", "By member", "Ada Lovelace", "Grace Hopper", "Longest streak")
 	check("billing", "Plus", "Monthly", "Switch to yearly", "Renews on", "Jan 1, 2027", "Team members", "2 / 2")
 	check("github", "GitHub App", "1 of 1 repositories enabled", "Act as yourself", "lbr77/lody-mygo", "Private")
+	a.catalog.MCPServers = []catalog.MCPServer{
+		{ID: "x1", Name: "IDA Pro", Transport: "stdio", Connection: map[string]any{"transport": "stdio", "command": "uvx", "args": []any{"ida-mcp", "stdio"}}, EnabledByDefault: true},
+		{ID: "x2", Name: "Notes", Transport: "http", Connection: map[string]any{"transport": "http", "url": "https://notes.example/mcp"}, Description: "A note server"},
+	}
+	check("mcp", "IDA Pro", "stdio", "uvx ida-mcp stdio", "Notes", "Streamable HTTP", "https://notes.example/mcp", "Add server")
+	a.catalog.Agents["m1"][0].Row = map[string]any{"env": map[string]any{"A": "1"}}
+	check("agents", "Claude Code", "1 environment variable", "Add Provider")
+	a.openProvider("m1", nil)
+	check("agents", "New Provider", "Kimi Code", "DeepSeek over Claude Code", "Custom command", "Runtime binary path")
+	a.provider.open = false
+	a.catalog.Memories = map[string][]catalog.Memory{"m1": {{ProviderID: "nowledge-mem", MemoryID: "ada", MachineID: "m1", Name: "Ada's memory"}}}
+	seed("memory/m1", `{"type":"machine/memory","status":"ready","memories":[{"id":"ada","name":"Ada's memory"},{"id":"grace","name":"Grace"}]}`, &memoryInventory{})
+	check("memory", "Ada's memory", "Add memory")
+	check("projects", "lody-mygo", "src/lody-mygo", "Add project")
 	tt := check("shares", "Flock port", "Revoke")
 	if err := tt.Click("Revoke"); err != nil {
 		t.Fatal(err)
@@ -771,5 +785,36 @@ func TestCloudSettings(t *testing.T) {
 	tt.Frame()
 	if !tt.HasText("Revoke link") || a.revoking != "sh1" {
 		t.Fatalf("revoke confirmation: %q", tt.Texts())
+	}
+}
+
+func TestProviderRow(t *testing.T) {
+	var deepseek providerKind
+	for _, k := range providerKinds {
+		if k.value == "preset:deepseek-over-claude-code" {
+			deepseek = k
+		}
+	}
+	f := providerForm{machine: "m1", id: "c1", kind: deepseek, token: "sk-x", env: "EXTRA=1"}
+	row, err := f.row()
+	if err != nil {
+		t.Fatal(err)
+	}
+	env := row["env"].(map[string]any)
+	if row["agentType"] != "claude" || row["brandId"] != "deepseek" || env["ANTHROPIC_AUTH_TOKEN"] != "sk-x" ||
+		env["ANTHROPIC_BASE_URL"] != "https://api.deepseek.com/anthropic" || env["EXTRA"] != "1" || row["name"] != "DeepSeek over Claude Code" {
+		t.Fatalf("row = %v", row)
+	}
+	custom := providerForm{machine: "m1", id: "c2", kind: providerKinds[len(providerKinds)-1], command: `/opt/my agent --flag "two words" a\ b`}
+	row, err = custom.row()
+	if err != nil {
+		t.Fatal(err)
+	}
+	acp := row["customAcp"].(map[string]any)
+	if acp["command"] != "/opt/my" || len(acp["args"].([]any)) != 4 || acp["args"].([]any)[2] != "two words" || acp["args"].([]any)[3] != "a b" {
+		t.Fatalf("custom = %v", acp)
+	}
+	if !strings.HasPrefix(row["agentType"].(string), "custom-") || row["cliType"] != "custom" {
+		t.Fatalf("custom row = %v", row)
 	}
 }

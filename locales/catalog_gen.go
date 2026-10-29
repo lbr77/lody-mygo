@@ -5216,3 +5216,665 @@ func MachinesRemoveOnline() string { return In(i18n.Locale()).MachinesRemoveOnli
 func (msgs Messages) MachinesRemoveOnline() string {
 	return Catalog.Format(msgs.locale, "machinesRemoveOnline", nil)
 }
+
+// ProviderAdd says "Add Provider"
+// in the language the app shows.
+func ProviderAdd() string { return In(i18n.Locale()).ProviderAdd() }
+
+// ProviderAdd says "Add Provider"
+// in the language of msgs.
+func (msgs Messages) ProviderAdd() string {
+	return Catalog.Format(msgs.locale, "providerAdd", nil)
+}
+
+// ProviderCustom says "Custom command"
+// in the language the app shows.
+func ProviderCustom() string { return In(i18n.Locale()).ProviderCustom() }
+
+// ProviderCustom says "Custom command"
+// in the language of msgs.
+func (msgs Messages) ProviderCustom() string {
+	return Catalog.Format(msgs.locale, "providerCustom", nil)
+}
+
+// ProviderCustomShort says "Custom"
+// in the language the app shows.
+func ProviderCustomShort() string { return In(i18n.Locale()).ProviderCustomShort() }
+
+// ProviderCustomShort says "Custom"
+// in the language of msgs.
+func (msgs Messages) ProviderCustomShort() string {
+	return Catalog.Format(msgs.locale, "providerCustomShort", nil)
+}
+
+// ProviderUsed says "used {ago}"
+// in the language the app shows.
+func ProviderUsed(ago string) string { return In(i18n.Locale()).ProviderUsed(ago) }
+
+// ProviderUsed says "used {ago}"
+// in the language of msgs.
+func (msgs Messages) ProviderUsed(ago string) string {
+	return Catalog.Format(msgs.locale, "providerUsed", map[string]any{"ago": ago})
+}
+
+// ProviderEnvCount says "{n, plural, one {# environment variable} other {# environment variables}}"
+// in the language the app shows.
+func ProviderEnvCount(n int) string { return In(i18n.Locale()).ProviderEnvCount(n) }
+
+// ProviderEnvCount says "{n, plural, one {# environment variable} other {# environment variables}}"
+// in the language of msgs.
+func (msgs Messages) ProviderEnvCount(n int) string {
+	return Catalog.Format(msgs.locale, "providerEnvCount", map[string]any{"n": n})
+}
+
+// AgoMinutes says "{n}m ago"
+// in the language the app shows.
+func AgoMinutes(n int) string { return In(i18n.Locale()).AgoMinutes(n) }
+
+// AgoMinutes says "{n}m ago"
+// in the language of msgs.
+func (msgs Messages) AgoMinutes(n int) string {
+	return Catalog.Format(msgs.locale, "agoMinutes", map[string]any{"n": n})
+}
+
+// AgoHours says "{n}h ago"
+// in the language the app shows.
+func AgoHours(n int) string { return In(i18n.Locale()).AgoHours(n) }
+
+// AgoHours says "{n}h ago"
+// in the language of msgs.
+func (msgs Messages) AgoHours(n int) string {
+	return Catalog.Format(msgs.locale, "agoHours", map[string]any{"n": n})
+}
+
+// AgoDays says "{n}d ago"
+// in the language the app shows.
+func AgoDays(n int) string { return In(i18n.Locale()).AgoDays(n) }
+
+// AgoDays says "{n}d ago"
+// in the language of msgs.
+func (msgs Messages) AgoDays(n int) string {
+	return Catalog.Format(msgs.locale, "agoDays", map[string]any{"n": n})
+}
+
+// ProviderRefresh says "Refresh models and modes"
+// in the language the app shows.
+func ProviderRefresh() string { return In(i18n.Locale()).ProviderRefresh() }
+
+// ProviderRefresh says "Refresh models and modes"
+// in the language of msgs.
+func (msgs Messages) ProviderRefresh() string {
+	return Catalog.Format(msgs.locale, "providerRefresh", nil)
+}
+
+// ProviderDeleteTitle says "Delete {name}?"
+// in the language the app shows.
+func ProviderDeleteTitle(name string) string { return In(i18n.Locale()).ProviderDeleteTitle(name) }
+
+// ProviderDeleteTitle says "Delete {name}?"
+// in the language of msgs.
+func (msgs Messages) ProviderDeleteTitle(name string) string {
+	return Catalog.Format(msgs.locale, "providerDeleteTitle", map[string]any{"name": name})
+}
+
+// ProviderDeleteBody says "New chats can no longer use it; its chats keep their history."
+// in the language the app shows.
+func ProviderDeleteBody() string { return In(i18n.Locale()).ProviderDeleteBody() }
+
+// ProviderDeleteBody says "New chats can no longer use it; its chats keep their history."
+// in the language of msgs.
+func (msgs Messages) ProviderDeleteBody() string {
+	return Catalog.Format(msgs.locale, "providerDeleteBody", nil)
+}
+
+// ProviderAuthRequired says "The agent needs you to sign in on the machine."
+// in the language the app shows.
+func ProviderAuthRequired() string { return In(i18n.Locale()).ProviderAuthRequired() }
+
+// ProviderAuthRequired says "The agent needs you to sign in on the machine."
+// in the language of msgs.
+func (msgs Messages) ProviderAuthRequired() string {
+	return Catalog.Format(msgs.locale, "providerAuthRequired", nil)
+}
+
+// ProviderTestFailed says "The machine couldn't start the agent."
+// in the language the app shows.
+func ProviderTestFailed() string { return In(i18n.Locale()).ProviderTestFailed() }
+
+// ProviderTestFailed says "The machine couldn't start the agent."
+// in the language of msgs.
+func (msgs Messages) ProviderTestFailed() string {
+	return Catalog.Format(msgs.locale, "providerTestFailed", nil)
+}
+
+// ProviderTestOK says "Works: {models} models, {modes} modes."
+// in the language the app shows.
+func ProviderTestOK(models int, modes int) string {
+	return In(i18n.Locale()).ProviderTestOK(models, modes)
+}
+
+// ProviderTestOK says "Works: {models} models, {modes} modes."
+// in the language of msgs.
+func (msgs Messages) ProviderTestOK(models int, modes int) string {
+	return Catalog.Format(msgs.locale, "providerTestOK", map[string]any{"models": models, "modes": modes})
+}
+
+// ProviderUnclosedQuote says "The command has an unclosed quote."
+// in the language the app shows.
+func ProviderUnclosedQuote() string { return In(i18n.Locale()).ProviderUnclosedQuote() }
+
+// ProviderUnclosedQuote says "The command has an unclosed quote."
+// in the language of msgs.
+func (msgs Messages) ProviderUnclosedQuote() string {
+	return Catalog.Format(msgs.locale, "providerUnclosedQuote", nil)
+}
+
+// ProviderNeedsCommand says "Enter the command that starts the agent."
+// in the language the app shows.
+func ProviderNeedsCommand() string { return In(i18n.Locale()).ProviderNeedsCommand() }
+
+// ProviderNeedsCommand says "Enter the command that starts the agent."
+// in the language of msgs.
+func (msgs Messages) ProviderNeedsCommand() string {
+	return Catalog.Format(msgs.locale, "providerNeedsCommand", nil)
+}
+
+// ProviderBuiltin says "Built in"
+// in the language the app shows.
+func ProviderBuiltin() string { return In(i18n.Locale()).ProviderBuiltin() }
+
+// ProviderBuiltin says "Built in"
+// in the language of msgs.
+func (msgs Messages) ProviderBuiltin() string {
+	return Catalog.Format(msgs.locale, "providerBuiltin", nil)
+}
+
+// ProviderPresets says "Presets"
+// in the language the app shows.
+func ProviderPresets() string { return In(i18n.Locale()).ProviderPresets() }
+
+// ProviderPresets says "Presets"
+// in the language of msgs.
+func (msgs Messages) ProviderPresets() string {
+	return Catalog.Format(msgs.locale, "providerPresets", nil)
+}
+
+// ProviderCustomGroup says "Custom"
+// in the language the app shows.
+func ProviderCustomGroup() string { return In(i18n.Locale()).ProviderCustomGroup() }
+
+// ProviderCustomGroup says "Custom"
+// in the language of msgs.
+func (msgs Messages) ProviderCustomGroup() string {
+	return Catalog.Format(msgs.locale, "providerCustomGroup", nil)
+}
+
+// ProviderNew says "New Provider"
+// in the language the app shows.
+func ProviderNew() string { return In(i18n.Locale()).ProviderNew() }
+
+// ProviderNew says "New Provider"
+// in the language of msgs.
+func (msgs Messages) ProviderNew() string {
+	return Catalog.Format(msgs.locale, "providerNew", nil)
+}
+
+// ProviderEdit says "Edit Provider"
+// in the language the app shows.
+func ProviderEdit() string { return In(i18n.Locale()).ProviderEdit() }
+
+// ProviderEdit says "Edit Provider"
+// in the language of msgs.
+func (msgs Messages) ProviderEdit() string {
+	return Catalog.Format(msgs.locale, "providerEdit", nil)
+}
+
+// ProviderRuntime says "{name} runtime"
+// in the language the app shows.
+func ProviderRuntime(name string) string { return In(i18n.Locale()).ProviderRuntime(name) }
+
+// ProviderRuntime says "{name} runtime"
+// in the language of msgs.
+func (msgs Messages) ProviderRuntime(name string) string {
+	return Catalog.Format(msgs.locale, "providerRuntime", map[string]any{"name": name})
+}
+
+// ProviderTest says "Test"
+// in the language the app shows.
+func ProviderTest() string { return In(i18n.Locale()).ProviderTest() }
+
+// ProviderTest says "Test"
+// in the language of msgs.
+func (msgs Messages) ProviderTest() string {
+	return Catalog.Format(msgs.locale, "providerTest", nil)
+}
+
+// ProviderMachine says "Machine"
+// in the language the app shows.
+func ProviderMachine() string { return In(i18n.Locale()).ProviderMachine() }
+
+// ProviderMachine says "Machine"
+// in the language of msgs.
+func (msgs Messages) ProviderMachine() string {
+	return Catalog.Format(msgs.locale, "providerMachine", nil)
+}
+
+// ProviderName says "Configuration name"
+// in the language the app shows.
+func ProviderName() string { return In(i18n.Locale()).ProviderName() }
+
+// ProviderName says "Configuration name"
+// in the language of msgs.
+func (msgs Messages) ProviderName() string {
+	return Catalog.Format(msgs.locale, "providerName", nil)
+}
+
+// ProviderNameHint says "Shown in the provider list and the chats' menus."
+// in the language the app shows.
+func ProviderNameHint() string { return In(i18n.Locale()).ProviderNameHint() }
+
+// ProviderNameHint says "Shown in the provider list and the chats' menus."
+// in the language of msgs.
+func (msgs Messages) ProviderNameHint() string {
+	return Catalog.Format(msgs.locale, "providerNameHint", nil)
+}
+
+// ProviderCommand says "Launch command"
+// in the language the app shows.
+func ProviderCommand() string { return In(i18n.Locale()).ProviderCommand() }
+
+// ProviderCommand says "Launch command"
+// in the language of msgs.
+func (msgs Messages) ProviderCommand() string {
+	return Catalog.Format(msgs.locale, "providerCommand", nil)
+}
+
+// ProviderCommandHint says "Quotes and backslashes work as in a shell; variables and pipes don't."
+// in the language the app shows.
+func ProviderCommandHint() string { return In(i18n.Locale()).ProviderCommandHint() }
+
+// ProviderCommandHint says "Quotes and backslashes work as in a shell; variables and pipes don't."
+// in the language of msgs.
+func (msgs Messages) ProviderCommandHint() string {
+	return Catalog.Format(msgs.locale, "providerCommandHint", nil)
+}
+
+// ProviderPath says "Runtime binary path"
+// in the language the app shows.
+func ProviderPath() string { return In(i18n.Locale()).ProviderPath() }
+
+// ProviderPath says "Runtime binary path"
+// in the language of msgs.
+func (msgs Messages) ProviderPath() string {
+	return Catalog.Format(msgs.locale, "providerPath", nil)
+}
+
+// ProviderPathHint says "Advanced: left empty, Lody installs and checks a managed runtime. Fill it only for a local mirror or to debug the run…"
+// in the language the app shows.
+func ProviderPathHint() string { return In(i18n.Locale()).ProviderPathHint() }
+
+// ProviderPathHint says "Advanced: left empty, Lody installs and checks a managed runtime. Fill it only for a local mirror or to debug the run…"
+// in the language of msgs.
+func (msgs Messages) ProviderPathHint() string {
+	return Catalog.Format(msgs.locale, "providerPathHint", nil)
+}
+
+// ProviderEndpoint says "Endpoint"
+// in the language the app shows.
+func ProviderEndpoint() string { return In(i18n.Locale()).ProviderEndpoint() }
+
+// ProviderEndpoint says "Endpoint"
+// in the language of msgs.
+func (msgs Messages) ProviderEndpoint() string {
+	return Catalog.Format(msgs.locale, "providerEndpoint", nil)
+}
+
+// ProviderTitleGen says "Title generation"
+// in the language the app shows.
+func ProviderTitleGen() string { return In(i18n.Locale()).ProviderTitleGen() }
+
+// ProviderTitleGen says "Title generation"
+// in the language of msgs.
+func (msgs Messages) ProviderTitleGen() string {
+	return Catalog.Format(msgs.locale, "providerTitleGen", nil)
+}
+
+// ProviderTitleGenHint says "Test the provider to load the options."
+// in the language the app shows.
+func ProviderTitleGenHint() string { return In(i18n.Locale()).ProviderTitleGenHint() }
+
+// ProviderTitleGenHint says "Test the provider to load the options."
+// in the language of msgs.
+func (msgs Messages) ProviderTitleGenHint() string {
+	return Catalog.Format(msgs.locale, "providerTitleGenHint", nil)
+}
+
+// ProviderPrompt says "Custom prompt"
+// in the language the app shows.
+func ProviderPrompt() string { return In(i18n.Locale()).ProviderPrompt() }
+
+// ProviderPrompt says "Custom prompt"
+// in the language of msgs.
+func (msgs Messages) ProviderPrompt() string {
+	return Catalog.Format(msgs.locale, "providerPrompt", nil)
+}
+
+// ProviderPromptPlaceholder says "Instructions every chat with this provider starts with"
+// in the language the app shows.
+func ProviderPromptPlaceholder() string { return In(i18n.Locale()).ProviderPromptPlaceholder() }
+
+// ProviderPromptPlaceholder says "Instructions every chat with this provider starts with"
+// in the language of msgs.
+func (msgs Messages) ProviderPromptPlaceholder() string {
+	return Catalog.Format(msgs.locale, "providerPromptPlaceholder", nil)
+}
+
+// ProviderExtraEnv says "Extra environment variables"
+// in the language the app shows.
+func ProviderExtraEnv() string { return In(i18n.Locale()).ProviderExtraEnv() }
+
+// ProviderExtraEnv says "Extra environment variables"
+// in the language of msgs.
+func (msgs Messages) ProviderExtraEnv() string {
+	return Catalog.Format(msgs.locale, "providerExtraEnv", nil)
+}
+
+// ProviderTesting says "Starting the agent on the machine…"
+// in the language the app shows.
+func ProviderTesting() string { return In(i18n.Locale()).ProviderTesting() }
+
+// ProviderTesting says "Starting the agent on the machine…"
+// in the language of msgs.
+func (msgs Messages) ProviderTesting() string {
+	return Catalog.Format(msgs.locale, "providerTesting", nil)
+}
+
+// ProviderCreate says "Create"
+// in the language the app shows.
+func ProviderCreate() string { return In(i18n.Locale()).ProviderCreate() }
+
+// ProviderCreate says "Create"
+// in the language of msgs.
+func (msgs Messages) ProviderCreate() string {
+	return Catalog.Format(msgs.locale, "providerCreate", nil)
+}
+
+// MemoryLead says "The memories each machine imports into Lody."
+// in the language the app shows.
+func MemoryLead() string { return In(i18n.Locale()).MemoryLead() }
+
+// MemoryLead says "The memories each machine imports into Lody."
+// in the language of msgs.
+func (msgs Messages) MemoryLead() string {
+	return Catalog.Format(msgs.locale, "memoryLead", nil)
+}
+
+// MemoryAdd says "Add memory"
+// in the language the app shows.
+func MemoryAdd() string { return In(i18n.Locale()).MemoryAdd() }
+
+// MemoryAdd says "Add memory"
+// in the language of msgs.
+func (msgs Messages) MemoryAdd() string {
+	return Catalog.Format(msgs.locale, "memoryAdd", nil)
+}
+
+// MemoryNone says "No memories imported yet. Click Add memory to start."
+// in the language the app shows.
+func MemoryNone() string { return In(i18n.Locale()).MemoryNone() }
+
+// MemoryNone says "No memories imported yet. Click Add memory to start."
+// in the language of msgs.
+func (msgs Messages) MemoryNone() string {
+	return Catalog.Format(msgs.locale, "memoryNone", nil)
+}
+
+// MemoryMissing says "Missing"
+// in the language the app shows.
+func MemoryMissing() string { return In(i18n.Locale()).MemoryMissing() }
+
+// MemoryMissing says "Missing"
+// in the language of msgs.
+func (msgs Messages) MemoryMissing() string {
+	return Catalog.Format(msgs.locale, "memoryMissing", nil)
+}
+
+// MemoryRemove says "Remove from Lody"
+// in the language the app shows.
+func MemoryRemove() string { return In(i18n.Locale()).MemoryRemove() }
+
+// MemoryRemove says "Remove from Lody"
+// in the language of msgs.
+func (msgs Messages) MemoryRemove() string {
+	return Catalog.Format(msgs.locale, "memoryRemove", nil)
+}
+
+// MemoryNotInstalled says "Nowledge Mem isn't installed on this machine."
+// in the language the app shows.
+func MemoryNotInstalled() string { return In(i18n.Locale()).MemoryNotInstalled() }
+
+// MemoryNotInstalled says "Nowledge Mem isn't installed on this machine."
+// in the language of msgs.
+func (msgs Messages) MemoryNotInstalled() string {
+	return Catalog.Format(msgs.locale, "memoryNotInstalled", nil)
+}
+
+// MemoryNotRunning says "Nowledge Mem isn't running on this machine."
+// in the language the app shows.
+func MemoryNotRunning() string { return In(i18n.Locale()).MemoryNotRunning() }
+
+// MemoryNotRunning says "Nowledge Mem isn't running on this machine."
+// in the language of msgs.
+func (msgs Messages) MemoryNotRunning() string {
+	return Catalog.Format(msgs.locale, "memoryNotRunning", nil)
+}
+
+// MemoryProviders says "Memory providers"
+// in the language the app shows.
+func MemoryProviders() string { return In(i18n.Locale()).MemoryProviders() }
+
+// MemoryProviders says "Memory providers"
+// in the language of msgs.
+func (msgs Messages) MemoryProviders() string {
+	return Catalog.Format(msgs.locale, "memoryProviders", nil)
+}
+
+// MemoryAddLead says "Choose a provider, then create a memory or import an identity this machine already has."
+// in the language the app shows.
+func MemoryAddLead() string { return In(i18n.Locale()).MemoryAddLead() }
+
+// MemoryAddLead says "Choose a provider, then create a memory or import an identity this machine already has."
+// in the language of msgs.
+func (msgs Messages) MemoryAddLead() string {
+	return Catalog.Format(msgs.locale, "memoryAddLead", nil)
+}
+
+// MemoryCreate says "Create"
+// in the language the app shows.
+func MemoryCreate() string { return In(i18n.Locale()).MemoryCreate() }
+
+// MemoryCreate says "Create"
+// in the language of msgs.
+func (msgs Messages) MemoryCreate() string {
+	return Catalog.Format(msgs.locale, "memoryCreate", nil)
+}
+
+// MemoryImport says "Import"
+// in the language the app shows.
+func MemoryImport() string { return In(i18n.Locale()).MemoryImport() }
+
+// MemoryImport says "Import"
+// in the language of msgs.
+func (msgs Messages) MemoryImport() string {
+	return Catalog.Format(msgs.locale, "memoryImport", nil)
+}
+
+// MemoryImportButton says "{n, plural, =0 {Import} one {Import #} other {Import #}}"
+// in the language the app shows.
+func MemoryImportButton(n int) string { return In(i18n.Locale()).MemoryImportButton(n) }
+
+// MemoryImportButton says "{n, plural, =0 {Import} one {Import #} other {Import #}}"
+// in the language of msgs.
+func (msgs Messages) MemoryImportButton(n int) string {
+	return Catalog.Format(msgs.locale, "memoryImportButton", map[string]any{"n": n})
+}
+
+// MemoryCreateButton says "Create and import"
+// in the language the app shows.
+func MemoryCreateButton() string { return In(i18n.Locale()).MemoryCreateButton() }
+
+// MemoryCreateButton says "Create and import"
+// in the language of msgs.
+func (msgs Messages) MemoryCreateButton() string {
+	return Catalog.Format(msgs.locale, "memoryCreateButton", nil)
+}
+
+// MemoryName says "Name"
+// in the language the app shows.
+func MemoryName() string { return In(i18n.Locale()).MemoryName() }
+
+// MemoryName says "Name"
+// in the language of msgs.
+func (msgs Messages) MemoryName() string {
+	return Catalog.Format(msgs.locale, "memoryName", nil)
+}
+
+// MemoryDescription says "Description (optional)"
+// in the language the app shows.
+func MemoryDescription() string { return In(i18n.Locale()).MemoryDescription() }
+
+// MemoryDescription says "Description (optional)"
+// in the language of msgs.
+func (msgs Messages) MemoryDescription() string {
+	return Catalog.Format(msgs.locale, "memoryDescription", nil)
+}
+
+// MemoryRole says "Role (optional)"
+// in the language the app shows.
+func MemoryRole() string { return In(i18n.Locale()).MemoryRole() }
+
+// MemoryRole says "Role (optional)"
+// in the language of msgs.
+func (msgs Messages) MemoryRole() string {
+	return Catalog.Format(msgs.locale, "memoryRole", nil)
+}
+
+// MemoryNothingToImport says "Every memory on this machine is imported already."
+// in the language the app shows.
+func MemoryNothingToImport() string { return In(i18n.Locale()).MemoryNothingToImport() }
+
+// MemoryNothingToImport says "Every memory on this machine is imported already."
+// in the language of msgs.
+func (msgs Messages) MemoryNothingToImport() string {
+	return Catalog.Format(msgs.locale, "memoryNothingToImport", nil)
+}
+
+// ProjectAdd says "Add project"
+// in the language the app shows.
+func ProjectAdd() string { return In(i18n.Locale()).ProjectAdd() }
+
+// ProjectAdd says "Add project"
+// in the language of msgs.
+func (msgs Messages) ProjectAdd() string {
+	return Catalog.Format(msgs.locale, "projectAdd", nil)
+}
+
+// ProjectAddLead says "Choose a folder on the machine."
+// in the language the app shows.
+func ProjectAddLead() string { return In(i18n.Locale()).ProjectAddLead() }
+
+// ProjectAddLead says "Choose a folder on the machine."
+// in the language of msgs.
+func (msgs Messages) ProjectAddLead() string {
+	return Catalog.Format(msgs.locale, "projectAddLead", nil)
+}
+
+// ProjectAddThis says "Add this folder"
+// in the language the app shows.
+func ProjectAddThis() string { return In(i18n.Locale()).ProjectAddThis() }
+
+// ProjectAddThis says "Add this folder"
+// in the language of msgs.
+func (msgs Messages) ProjectAddThis() string {
+	return Catalog.Format(msgs.locale, "projectAddThis", nil)
+}
+
+// ProjectParent says "Up one folder"
+// in the language the app shows.
+func ProjectParent() string { return In(i18n.Locale()).ProjectParent() }
+
+// ProjectParent says "Up one folder"
+// in the language of msgs.
+func (msgs Messages) ProjectParent() string {
+	return Catalog.Format(msgs.locale, "projectParent", nil)
+}
+
+// ProjectAdded says "Added"
+// in the language the app shows.
+func ProjectAdded() string { return In(i18n.Locale()).ProjectAdded() }
+
+// ProjectAdded says "Added"
+// in the language of msgs.
+func (msgs Messages) ProjectAdded() string {
+	return Catalog.Format(msgs.locale, "projectAdded", nil)
+}
+
+// ProjectRemove says "Delete project"
+// in the language the app shows.
+func ProjectRemove() string { return In(i18n.Locale()).ProjectRemove() }
+
+// ProjectRemove says "Delete project"
+// in the language of msgs.
+func (msgs Messages) ProjectRemove() string {
+	return Catalog.Format(msgs.locale, "projectRemove", nil)
+}
+
+// ProjectRemoveTitle says "Delete {name}?"
+// in the language the app shows.
+func ProjectRemoveTitle(name string) string { return In(i18n.Locale()).ProjectRemoveTitle(name) }
+
+// ProjectRemoveTitle says "Delete {name}?"
+// in the language of msgs.
+func (msgs Messages) ProjectRemoveTitle(name string) string {
+	return Catalog.Format(msgs.locale, "projectRemoveTitle", map[string]any{"name": name})
+}
+
+// ProjectRemoveBody says "Lody forgets the folder; its files stay on the machine."
+// in the language the app shows.
+func ProjectRemoveBody() string { return In(i18n.Locale()).ProjectRemoveBody() }
+
+// ProjectRemoveBody says "Lody forgets the folder; its files stay on the machine."
+// in the language of msgs.
+func (msgs Messages) ProjectRemoveBody() string {
+	return Catalog.Format(msgs.locale, "projectRemoveBody", nil)
+}
+
+// ProjectRemoveChats says "{n, plural, one {Its chat is archived. Lody forgets the folder; its files stay on the machine.} other {Its # chats ar…"
+// in the language the app shows.
+func ProjectRemoveChats(n int) string { return In(i18n.Locale()).ProjectRemoveChats(n) }
+
+// ProjectRemoveChats says "{n, plural, one {Its chat is archived. Lody forgets the folder; its files stay on the machine.} other {Its # chats ar…"
+// in the language of msgs.
+func (msgs Messages) ProjectRemoveChats(n int) string {
+	return Catalog.Format(msgs.locale, "projectRemoveChats", map[string]any{"n": n})
+}
+
+// ProjectRemoving says "Removing…"
+// in the language the app shows.
+func ProjectRemoving() string { return In(i18n.Locale()).ProjectRemoving() }
+
+// ProjectRemoving says "Removing…"
+// in the language of msgs.
+func (msgs Messages) ProjectRemoving() string {
+	return Catalog.Format(msgs.locale, "projectRemoving", nil)
+}
+
+// ProjectWaitingDevice says "Waiting for the machine…"
+// in the language the app shows.
+func ProjectWaitingDevice() string { return In(i18n.Locale()).ProjectWaitingDevice() }
+
+// ProjectWaitingDevice says "Waiting for the machine…"
+// in the language of msgs.
+func (msgs Messages) ProjectWaitingDevice() string {
+	return Catalog.Format(msgs.locale, "projectWaitingDevice", nil)
+}

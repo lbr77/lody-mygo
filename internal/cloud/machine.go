@@ -21,6 +21,9 @@ import (
 // "local-project/list-files". It returns the request's result.
 func (w *Conn) ProjectControl(ctx context.Context, machineID string, request map[string]any, timeout time.Duration) (json.RawMessage, error) {
 	req := map[string]any{"workspaceId": w.ID, "machineId": machineID}
+	if request["type"] == "local-project/list-roots" {
+		delete(req, "workspaceId") // its schema is strict and has none
+	}
 	for k, v := range request {
 		req[k] = v
 	}

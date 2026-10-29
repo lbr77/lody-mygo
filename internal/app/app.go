@@ -133,6 +133,10 @@ type App struct {
 	passwordNotice  string
 	renamingMachine string
 	machineDraft    string
+	provider        providerForm
+	memoryMachine   string
+	memoryForm      memoryForm
+	addProject      addProjectForm
 	revoking        string // the share whose revoke awaits confirmation
 	taskOpen        bool   // a task's dialog
 	taskEntry       string // the turn and task it shows

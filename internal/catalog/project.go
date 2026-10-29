@@ -78,6 +78,9 @@ type AgentConfig struct {
 	MachineID string `json:"machineId"`
 	AgentType string `json:"agentType"`
 	CLIType   string `json:"cliType"`
+	// Row is the config as its machine's stream stores it, for edits,
+	// which rewrite it whole.
+	Row map[string]any `json:"-"`
 }
 
 // Capability lists what an agent config supports.
@@ -89,6 +92,8 @@ type Capability struct {
 	Steer bool `json:"steer,omitempty"`
 	// Commands are the agent's slash commands.
 	Commands []Command `json:"commands,omitempty"`
+	// DefaultModel is the name of the model the agent starts with.
+	DefaultModel string `json:"defaultModel,omitempty"`
 }
 
 // Command is an agent's slash command.
@@ -227,7 +232,7 @@ func projectMachine(rows []flock.Row, machineID string) Catalog {
 			}
 			c.Projects = append(c.Projects, Project{ID: machineID + ":local:" + id, MachineID: machineID, Name: name, RootPath: text(value["rootPath"])})
 		case "agentConfig":
-			cfg := AgentConfig{ID: text(value["id"]), Name: text(value["name"]), MachineID: text(value["machineId"]), AgentType: text(value["agentType"]), CLIType: text(value["cliType"])}
+			cfg := AgentConfig{ID: text(value["id"]), Name: text(value["name"]), MachineID: text(value["machineId"]), AgentType: text(value["agentType"]), CLIType: text(value["cliType"]), Row: value}
 			if cfg.ID == "" {
 				cfg.ID = id
 			}
@@ -262,6 +267,24 @@ func projectMachine(rows []flock.Row, machineID string) Catalog {
 				}
 			}
 			capability.Steer = value["acknowledgedSteer"] == true && value["provenance"] == "runtime"
+			// The model option's current value names the default, as
+			// Lody's provider rows show it.
+			for _, o := range anyList(value["configOptions"]) {
+				opt := object(o)
+				if text(opt["category"]) != "model" {
+					continue
+				}
+				current := text(opt["currentValue"])
+				for _, choice := range anyList(opt["options"]) {
+					ch := object(choice)
+					if current != "" && current != "default" && text(ch["value"]) == current {
+						capability.DefaultModel = firstText(text(ch["name"]), current)
+					}
+				}
+			}
+			if capability.DefaultModel == "" && len(capability.Models) > 0 {
+				capability.DefaultModel = firstText(capability.Models[0].Name, capability.Models[0].ModelID)
+			}
 			c.Capabilities[id] = capability
 		}
 	}
@@ -500,4 +523,13 @@ func merge(meta Catalog, machines map[string]Catalog) Catalog {
 	out.Sessions = append([]Session(nil), meta.Sessions...)
 	sort.SliceStable(out.Sessions, func(i, j int) bool { return out.Sessions[i].CreatedAt > out.Sessions[j].CreatedAt })
 	return out
+}
+
+func firstText(v ...string) string {
+	for _, s := range v {
+		if s != "" {
+			return s
+		}
+	}
+	return ""
 }
