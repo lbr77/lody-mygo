@@ -13,7 +13,7 @@ import (
 )
 
 // An agent shows Lody's mark for it: its provider's brand for a preset
-// over Claude Code (DeepSeek, MiniMax, GLM), Anthropic's for Claude,
+// over Claude Code (DeepSeek, MiMo, MiniMax, GLM), Anthropic's for Claude,
 // OpenAI's for Codex, the registry's own for an ACP agent, a terminal for
 // a custom command, and a robot when nothing else says. The marks are
 // Lody's, drawn in the text's ink where they take currentColor.
@@ -87,7 +87,6 @@ func agentMark(cliType, agentType string, row map[string]any) *ui.SVG {
 			if svg := agentSVG("brand-" + brand); svg != nil {
 				return svg
 			}
-			// MiMo's Xiaomi mark isn't bundled: it falls to the robot.
 			return iconBot
 		}
 		switch agentType {
@@ -143,6 +142,7 @@ var modelBrands = []struct {
 	{regexp.MustCompile(`^(claude|anthropic)`), "brand-anthropic"},
 	{regexp.MustCompile(`^(gpt|codex|o[1-9]|chatgpt|openai)`), "brand-openai"},
 	{regexp.MustCompile(`^deepseek`), "brand-deepseek"},
+	{regexp.MustCompile(`^(mimo|xiaomi)`), "brand-mimo"},
 	{regexp.MustCompile(`^(glm|zhipu)`), "brand-glm"},
 	{regexp.MustCompile(`^(minimax|abab)`), "brand-minimax"},
 	{regexp.MustCompile(`^gemini`), "gemini"},

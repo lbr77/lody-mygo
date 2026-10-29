@@ -25,6 +25,8 @@ func TestAgentMarks(t *testing.T) {
 		{"builtin", "claude", nil, "brand-anthropic"},
 		{"builtin", "codex", nil, "brand-openai"},
 		{"builtin", "claude", map[string]any{"brandId": "deepseek"}, "brand-deepseek"},
+		{"builtin", "claude", map[string]any{"brandId": "mimo"}, "brand-mimo"},
+		{"builtin", "claude", map[string]any{"env": map[string]any{"ANTHROPIC_BASE_URL": "https://api.xiaomimimo.com/anthropic"}}, "brand-mimo"},
 		{"builtin", "claude", map[string]any{"env": map[string]any{"ANTHROPIC_BASE_URL": "https://open.bigmodel.cn/api/anthropic"}}, "brand-glm"},
 		{"builtin", "claude", map[string]any{"env": map[string]any{"ANTHROPIC_BASE_URL": "https://api.minimax.io/anthropic"}}, "brand-minimax"},
 		{"builtin", "pi", nil, "pi-acp"},
@@ -41,7 +43,7 @@ func TestAgentMarks(t *testing.T) {
 	if agentMark("custom", "x", nil) != iconSquareTerminal || agentMark("registry", "nobody", nil) != iconBot {
 		t.Error("custom and unknown marks")
 	}
-	for id, want := range map[string]string{"claude-opus-5-5": "brand-anthropic", "openrouter:google/gemini-2.5-pro": "gemini", "gpt-5": "brand-openai", "o3-mini": "brand-openai", "qwq-32b": "qwen-code", "devstral-small": "mistral-vibe"} {
+	for id, want := range map[string]string{"claude-opus-5-5": "brand-anthropic", "openrouter:google/gemini-2.5-pro": "gemini", "gpt-5": "brand-openai", "o3-mini": "brand-openai", "qwq-32b": "qwen-code", "devstral-small": "mistral-vibe", "xiaomi/mimo-v2-flash": "brand-mimo"} {
 		if modelMark(id) != agentSVG(want) {
 			t.Errorf("model %s: not %s", id, want)
 		}
