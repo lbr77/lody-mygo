@@ -125,8 +125,8 @@ func (a *App) attachmentChips(c *ui.Context, p *palette) {
 		for i, f := range files {
 			index := i
 			remove := func() { a.attachments = append(a.attachments[:index:index], a.attachments[index+1:]...) }
-			if uploading {
-				remove = nil
+			if uploading || a.sending {
+				remove = nil // they go with the message being sent
 			}
 			if f.Image {
 				img := a.images["file:"+f.Path]
@@ -264,9 +264,10 @@ func (a *App) upload(ctx context.Context, workspace, sessionID string, files []p
 	return blocks, nil
 }
 
-// sendingAttachments keeps a message's attachments in the composer while
-// they upload, as Lody's: they take no edits then, and show how far each
-// has gone.
+// sendingAttachments keeps a scheduled message's attachments in the
+// composer while they upload, as Lody's: they take no edits then, and show
+// how far each has gone. A message sent now leaves the composer at once
+// instead, held while its attachments upload (holdMessage).
 func (a *App) sendingAttachments(files []pendingFile) {
 	a.sendingFiles = files
 	a.fileProgress = map[string]float32{}
@@ -366,18 +367,4 @@ func fileChip(c *ui.Context, p *palette, it session.Item) {
 			}
 		})
 	})
-}
-
-// sendProgress is how much of the message going out has been sent, as a
-// percentage of its files' bytes, and whether there are bytes to measure.
-func (a *App) sendProgress() (float32, bool) {
-	var total, sent float64
-	for _, f := range a.sendingFiles {
-		total += float64(f.Size)
-		sent += float64(f.Size) * float64(min(100, max(0, a.fileProgress[f.Path]))) / 100
-	}
-	if total <= 0 {
-		return 0, false
-	}
-	return float32(sent / total * 100), true
 }

@@ -121,8 +121,9 @@ func TestScrollToLatest(t *testing.T) {
 	}
 }
 
-// While a message's attachments upload they stay in the composer, an
-// image washed over what is still to go and a file with its bar.
+// While a scheduled message's attachments upload they stay in the
+// composer, an image washed over what is still to go and a file with its
+// bar.
 func TestUploadProgress(t *testing.T) {
 	a := fixture()
 	a.view.Entries, a.view.Working = a.view.Entries[:2], false

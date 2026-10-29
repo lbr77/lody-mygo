@@ -115,8 +115,14 @@ func OpenLocal(conn *cloud.Conn, local *localplane.Conn, id string, onChange fun
 	return r
 }
 
-// WaitReady waits until the replica first caught up with its stream.
+// WaitReady waits until the replica first caught up with its stream; one
+// that did is ready even once closed, as Send still writes through it.
 func (r *Replica) WaitReady(ctx context.Context) error {
+	select {
+	case <-r.firstReady:
+		return nil
+	default:
+	}
 	select {
 	case <-r.firstReady:
 		return nil
@@ -424,6 +430,10 @@ const (
 
 // Turn is a message to send.
 type Turn struct {
+	// ID is the user turn's id, chosen by the sender so that what it holds
+	// meanwhile can find the turn once written, as Lody's pending sends
+	// are their turn's id; empty gets a new one.
+	ID        string
 	Text      string
 	UserID    string
 	MachineID string
@@ -488,7 +498,10 @@ func (r *Replica) Send(ctx context.Context, t Turn) (string, error) {
 		r.mu.Unlock()
 	}()
 
-	turnID := uuid.NewString()
+	turnID := t.ID
+	if turnID == "" {
+		turnID = uuid.NewString()
+	}
 	timestamp := time.Now().UTC().Format("2006-01-02T15:04:05.000Z")
 	r.mu.Lock()
 	history := list(deepValue(r.doc.GetList(loro.AsContainerId("history")).GetDeepValue()))

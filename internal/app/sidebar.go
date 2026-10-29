@@ -681,15 +681,20 @@ func (a *App) rowEnd(c *ui.Context, p *palette, s *catalog.Session, age, hovered
 	})
 }
 
-// statusMark is the one mark at a row's end: waiting, working or unread;
-// an idle row outside a project shows its age, one inside nothing.
+// statusMark is the one mark at a row's end, as Lody's
+// SessionRowStatusIndicator: a message that was not sent, which outranks
+// everything as nothing else sends it again; waiting; messages held on
+// their way, unless the agent is at work; working or unread. An idle row
+// outside a project shows its age, one inside nothing.
 func (a *App) statusMark(c *ui.Context, p *palette, s *catalog.Session, age bool) {
+	send := a.sendStatus(s.ID)
 	switch {
+	case send.failed:
+		tip(c, p, ui.Icon(c, iconAlertHeavy).Size(12, 12).TextColor(p.Danger).Label(send.label()), send.label())
 	case s.Waiting():
 		tip(c, p, ui.Icon(c, iconHand).Size(12, 12).TextColor(p.Primary), locales.StatusWaiting())
-	case a.sending && a.sendingID == s.ID && !s.Working():
-		progress, known := a.sendProgress()
-		sendRing(c, p, progress, known)
+	case send.held && !s.Working():
+		sendRing(c, p, float32(send.progress), send.known, send.label())
 	case a.workingMark(c, p, s.ID, s.Working(), s.Unread() && a.selected != s.ID):
 	case prMark(c, p, s, true):
 	case age:

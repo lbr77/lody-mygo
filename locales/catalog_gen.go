@@ -11143,16 +11143,6 @@ func (msgs Messages) PasswordVerifyFailed() string {
 	return Catalog.Format(msgs.locale, "passwordVerifyFailed", nil)
 }
 
-// Sending says "Sending"
-// in the language the app shows.
-func Sending() string { return In(i18n.Locale()).Sending() }
-
-// Sending says "Sending"
-// in the language of msgs.
-func (msgs Messages) Sending() string {
-	return Catalog.Format(msgs.locale, "sending", nil)
-}
-
 // AttachMenu says "Add attachment"
 // in the language the app shows.
 func AttachMenu() string { return In(i18n.Locale()).AttachMenu() }
@@ -20669,4 +20659,136 @@ func PermissionPosition(index int, total int) string {
 // in the language of msgs.
 func (msgs Messages) PermissionPosition(index int, total int) string {
 	return Catalog.Format(msgs.locale, "permissionPosition", map[string]any{"index": index, "total": total})
+}
+
+// PendingMessageUploadFailed says "Not sent"
+// in the language the app shows.
+func PendingMessageUploadFailed() string { return In(i18n.Locale()).PendingMessageUploadFailed() }
+
+// PendingMessageUploadFailed says "Not sent"
+// in the language of msgs.
+func (msgs Messages) PendingMessageUploadFailed() string {
+	return Catalog.Format(msgs.locale, "pendingMessageUploadFailed", nil)
+}
+
+// PendingMessageUploading says "Waiting to send · Uploading attachments"
+// in the language the app shows.
+func PendingMessageUploading() string { return In(i18n.Locale()).PendingMessageUploading() }
+
+// PendingMessageUploading says "Waiting to send · Uploading attachments"
+// in the language of msgs.
+func (msgs Messages) PendingMessageUploading() string {
+	return Catalog.Format(msgs.locale, "pendingMessageUploading", nil)
+}
+
+// PendingMessageWaiting says "Waiting to send"
+// in the language the app shows.
+func PendingMessageWaiting() string { return In(i18n.Locale()).PendingMessageWaiting() }
+
+// PendingMessageWaiting says "Waiting to send"
+// in the language of msgs.
+func (msgs Messages) PendingMessageWaiting() string {
+	return Catalog.Format(msgs.locale, "pendingMessageWaiting", nil)
+}
+
+// AttachmentPrepared says "Ready"
+// in the language the app shows.
+func AttachmentPrepared() string { return In(i18n.Locale()).AttachmentPrepared() }
+
+// AttachmentPrepared says "Ready"
+// in the language of msgs.
+func (msgs Messages) AttachmentPrepared() string {
+	return Catalog.Format(msgs.locale, "attachmentPrepared", nil)
+}
+
+// AttachmentUploading says "Uploading · {progress}%"
+// in the language the app shows.
+func AttachmentUploading(progress int) string { return In(i18n.Locale()).AttachmentUploading(progress) }
+
+// AttachmentUploading says "Uploading · {progress}%"
+// in the language of msgs.
+func (msgs Messages) AttachmentUploading(progress int) string {
+	return Catalog.Format(msgs.locale, "attachmentUploading", map[string]any{"progress": progress})
+}
+
+// AttachmentInterrupted says "Upload interrupted"
+// in the language the app shows.
+func AttachmentInterrupted() string { return In(i18n.Locale()).AttachmentInterrupted() }
+
+// AttachmentInterrupted says "Upload interrupted"
+// in the language of msgs.
+func (msgs Messages) AttachmentInterrupted() string {
+	return Catalog.Format(msgs.locale, "attachmentInterrupted", nil)
+}
+
+// RetryPendingSend says "Continue sending"
+// in the language the app shows.
+func RetryPendingSend() string { return In(i18n.Locale()).RetryPendingSend() }
+
+// RetryPendingSend says "Continue sending"
+// in the language of msgs.
+func (msgs Messages) RetryPendingSend() string {
+	return Catalog.Format(msgs.locale, "retryPendingSend", nil)
+}
+
+// CancelPendingSend says "Cancel send"
+// in the language the app shows.
+func CancelPendingSend() string { return In(i18n.Locale()).CancelPendingSend() }
+
+// CancelPendingSend says "Cancel send"
+// in the language of msgs.
+func (msgs Messages) CancelPendingSend() string {
+	return Catalog.Format(msgs.locale, "cancelPendingSend", nil)
+}
+
+// SendStatusSending says "Sending · {sent} / {total}"
+// in the language the app shows.
+func SendStatusSending(sent string, total string) string {
+	return In(i18n.Locale()).SendStatusSending(sent, total)
+}
+
+// SendStatusSending says "Sending · {sent} / {total}"
+// in the language of msgs.
+func (msgs Messages) SendStatusSending(sent string, total string) string {
+	return Catalog.Format(msgs.locale, "sendStatusSending", map[string]any{"sent": sent, "total": total})
+}
+
+// SendStatusSendingWithoutSize says "Sending"
+// in the language the app shows.
+func SendStatusSendingWithoutSize() string { return In(i18n.Locale()).SendStatusSendingWithoutSize() }
+
+// SendStatusSendingWithoutSize says "Sending"
+// in the language of msgs.
+func (msgs Messages) SendStatusSendingWithoutSize() string {
+	return Catalog.Format(msgs.locale, "sendStatusSendingWithoutSize", nil)
+}
+
+// SendStatusFailed says "Not sent. Open the conversation to continue sending."
+// in the language the app shows.
+func SendStatusFailed() string { return In(i18n.Locale()).SendStatusFailed() }
+
+// SendStatusFailed says "Not sent. Open the conversation to continue sending."
+// in the language of msgs.
+func (msgs Messages) SendStatusFailed() string {
+	return Catalog.Format(msgs.locale, "sendStatusFailed", nil)
+}
+
+// MqFailedCount says "{count} not sent"
+// in the language the app shows.
+func MqFailedCount(count int) string { return In(i18n.Locale()).MqFailedCount(count) }
+
+// MqFailedCount says "{count} not sent"
+// in the language of msgs.
+func (msgs Messages) MqFailedCount(count int) string {
+	return Catalog.Format(msgs.locale, "mqFailedCount", map[string]any{"count": count})
+}
+
+// MqPreparingCount says "{count} preparing"
+// in the language the app shows.
+func MqPreparingCount(count int) string { return In(i18n.Locale()).MqPreparingCount(count) }
+
+// MqPreparingCount says "{count} preparing"
+// in the language of msgs.
+func (msgs Messages) MqPreparingCount(count int) string {
+	return Catalog.Format(msgs.locale, "mqPreparingCount", map[string]any{"count": count})
 }

@@ -99,10 +99,11 @@ type App struct {
 	viewer        imageViewer               // the full-screen image viewer, while it shows
 	downloads     map[string]bool           // the files downloading
 	notifyAsk     notifyAsk                 // the prompt to turn notifications on
-	// sendingFiles are a message's attachments as they upload, and
-	// fileProgress how far each has gone, 0 to 100, by path.
+	// sendingFiles are a scheduled message's attachments as they upload,
+	// and fileProgress how far each has gone, 0 to 100, by path.
 	sendingFiles  []pendingFile
 	fileProgress  map[string]float32
+	pending       pendingSends                  // messages held while attachments upload, as Lody's pending sends
 	proposals     map[string]*proposalEdit      // schedule proposals being edited, by notice
 	roleProposals map[string]*roleProposalState // Agent Role proposals being saved, by notice
 	local         *localplane.Conn
@@ -566,6 +567,7 @@ func (a *App) startSync(id string, local *localplane.Conn) {
 			before := a.catalog
 			a.catalog, a.synced = c, true
 			a.notifyTransitions(before, c)
+			a.dropGoneSends(before, c)
 			a.pickNewChatDefaults()
 		})
 	}
@@ -582,6 +584,7 @@ func (a *App) startSync(id string, local *localplane.Conn) {
 }
 
 func (a *App) disconnect() {
+	a.pending.dispose()
 	a.closeSession()
 	if a.sync != nil {
 		a.sync.Stop()
@@ -733,8 +736,11 @@ func (a *App) steerable(s *catalog.Session) bool {
 	return a.catalog.Capabilities[s.AgentConfigID].Steer
 }
 
-// send sends the composer's text to the open session, or reserves it for
-// the time chosen.
+// send sends the composer's message to the open session, or reserves it
+// for the time chosen. Sending clears the composer at once, as Lody's: a
+// message with attachments, or one behind a message held so, is held
+// while they upload (holdMessage); any other is written at once, and
+// comes back to the composer if it could not be.
 func (a *App) send() {
 	if d := a.schedSends[a.selected]; d != nil {
 		a.sendScheduled(d)
@@ -746,7 +752,7 @@ func (a *App) send() {
 	if (text == "" && len(files) == 0) || a.sending || a.replica == nil || sess == nil || a.conn == nil {
 		return
 	}
-	r, sync, userID, workspace, conn := a.replica, a.sync, a.account.User.ID, a.conn.ID, a.conn
+	r, sync, userID, conn := a.replica, a.sync, a.account.User.ID, a.conn
 	target := a.mentionTarget()
 	skills, sessions := a.mentionItems(target)
 	store := a.shortcutStore()
@@ -766,45 +772,92 @@ func (a *App) send() {
 		Guide:              working && a.busyBehavior == "steer" && a.steerable(sess),
 		MarkDispatch:       sync.MarkDispatch,
 	}
+	expand := func(ctx context.Context) (string, []map[string]any) {
+		return expandMentions(ctx, conn, userID, target, text, skills, sessions, store)
+	}
 	a.recordActivity()
 	// Sending gives the conversation its room back.
 	a.composerFull = false
-	a.sending, a.sendError, a.uploading = true, "", ""
-	a.sendingID = a.selected
-	a.sendingAttachments(files)
+	a.sendError = ""
 	a.draft, a.attachments = "", nil
 	delete(a.drafts, a.selected)
 	delete(a.attachDrafts, a.selected)
+	if len(files) > 0 || a.pending.hasSession(sess.ID) {
+		// Bound for the queue as Lody routes it: the agent busy, or its
+		// reply unfinished, and the message not steering it.
+		queue := !turn.Guide && (working || unfinishedReply(a.view))
+		a.holdMessage(sess.ID, r, text, files, turn, expand, queue)
+		return
+	}
+	a.sending, a.uploading = true, ""
+	a.sendingID = a.selected
 	a.chatList.ScrollToEnd()
 	go func() {
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 		defer cancel()
-		state := session.NotSent
-		turn.Text, turn.TextSpans = expandMentions(ctx, conn, userID, target, text, skills, sessions, store)
-		blocks, err := a.upload(ctx, workspace, r.ID, files)
-		if err == nil {
-			turn.Attachments = blocks
-			sendCtx, cancelSend := context.WithTimeout(ctx, 60*time.Second)
-			state, err = r.Send(sendCtx, turn)
-			cancelSend()
-		}
+		turn.Text, turn.TextSpans = expand(ctx)
+		sendCtx, cancelSend := context.WithTimeout(ctx, 60*time.Second)
+		state, err := r.Send(sendCtx, turn)
+		cancelSend()
 		a.update(func() {
 			a.sending, a.uploading = false, ""
-			a.sentAttachments()
 			if err != nil && state == session.NotSent {
 				// Nothing was written: give the message back.
 				if a.replica == r && a.draft == "" && len(a.attachments) == 0 {
-					a.draft, a.attachments = text, files
+					a.draft = text
 				}
-				a.sendError = err.Error()
-				if strings.Contains(err.Error(), "free_session_turn_limit_reached") {
-					a.sendError = locales.SendFreeTurnLimit()
-				}
+				a.sendError = sendErrorText(err)
 			} else if err != nil {
 				a.sendError = locales.SentUnconfirmed()
 			}
 		})
 	}()
+}
+
+// holdMessage holds a message for a conversation while its attachments
+// upload, as Lody's pending sends. One bound for the conversation is the
+// message just sent, held near the top of it as Lody anchors the row
+// sent; one for the queue is written there.
+func (a *App) holdMessage(sessionID string, r *session.Replica, text string, files []pendingFile, turn session.Turn, expand func(ctx context.Context) (string, []map[string]any), queue bool) {
+	s := &pendingSend{id: uuid.NewString(), sessionID: sessionID, text: text, at: time.Now(), turn: turn, expand: expand, queue: queue, replica: r}
+	s.turn.Queue = s.turn.Queue || queue
+	for _, f := range files {
+		s.attachments = append(s.attachments, sendAttachment{file: f})
+	}
+	if !queue && a.selected == sessionID {
+		a.chatMotion.sent.sendAnchor(sessionID, s.id)
+		a.chatList.ScrollToEnd()
+	}
+	a.holdSend(s)
+}
+
+// unfinishedReply reports whether the conversation's last reply is still
+// being written, which a message sent then waits behind.
+func unfinishedReply(v *session.View) bool {
+	if v == nil {
+		return false
+	}
+	for i := len(v.Entries) - 1; i >= 0; i-- {
+		if e := v.Entries[i]; e.Role == "assistant" {
+			return !e.Finished
+		}
+	}
+	return false
+}
+
+// dropGoneSends drops the held messages of conversations archived, or
+// deleted since the catalog last changed, as Lody's archive and delete
+// cancel them.
+func (a *App) dropGoneSends(before, after catalog.Catalog) {
+	if len(a.pending.list) == 0 {
+		return
+	}
+	a.cancelSessionSends(func(id string) bool {
+		if s := after.Session(id); s != nil {
+			return s.Archived
+		}
+		return before.Session(id) != nil
+	})
 }
 
 // steerQueued gives a queued message to the running turn, or with
@@ -973,13 +1026,20 @@ type chatSend struct {
 }
 
 // createAndSend creates a session and sends its first message; created
-// runs once it exists, before it opens.
+// runs once it exists, before it opens. With attachments the message is
+// held in the new conversation while they upload, as Lody's.
 func (a *App) createAndSend(n catalog.NewSession, m chatSend, created func()) {
-	sync, userID, workspace, conn := a.sync, a.account.User.ID, a.conn.ID, a.conn
+	sync, userID, conn := a.sync, a.account.User.ID, a.conn
 	id, agent, text, files := n.ID, n.Agent, m.text, m.files
 	a.sending, a.sendError, a.uploading = true, "", ""
 	a.sendingID = a.selected
-	a.sendingAttachments(files)
+	turn := session.Turn{
+		MCPServerIDs: m.mcp, Text: text, UserID: userID, MachineID: n.MachineID, ModelID: m.model, ModeID: m.mode,
+		AgentType: agent.AgentType, CLIType: agent.CLIType, MarkDispatch: sync.MarkDispatch, ConfigOptionValues: m.runValues,
+	}
+	expand := func(ctx context.Context) (string, []map[string]any) {
+		return expandMentions(ctx, conn, userID, m.target, text, m.skills, m.sessions, m.store)
+	}
 	go func() {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
 		defer cancel()
@@ -987,7 +1047,6 @@ func (a *App) createAndSend(n catalog.NewSession, m chatSend, created func()) {
 		if err != nil {
 			a.update(func() {
 				a.sending, a.sendError = false, locales.FailCreate(err.Error())
-				a.sentAttachments()
 			})
 			return
 		}
@@ -998,6 +1057,14 @@ func (a *App) createAndSend(n catalog.NewSession, m chatSend, created func()) {
 				created()
 			}
 			a.open(id)
+			if len(files) > 0 || a.replica == nil {
+				a.sending = false
+				if len(files) > 0 {
+					a.holdMessage(id, a.replica, text, files, turn, expand, false)
+				}
+				opened <- nil
+				return
+			}
 			opened <- a.replica
 		})
 		r := <-opened
@@ -1005,23 +1072,15 @@ func (a *App) createAndSend(n catalog.NewSession, m chatSend, created func()) {
 			return
 		}
 		state := session.NotSent
-		var blocks []map[string]any
-		if blocks, err = a.upload(ctx, workspace, id, files); err == nil {
-			if err = r.WaitReady(ctx); err == nil {
-				sent, spans := expandMentions(ctx, conn, userID, m.target, text, m.skills, m.sessions, m.store)
-				state, err = r.Send(ctx, session.Turn{
-					MCPServerIDs: m.mcp, TextSpans: spans,
-					Text: sent, UserID: userID, MachineID: n.MachineID, ModelID: m.model, ModeID: m.mode, Attachments: blocks,
-					AgentType: agent.AgentType, CLIType: agent.CLIType, MarkDispatch: sync.MarkDispatch, ConfigOptionValues: m.runValues,
-				})
-			}
+		if err = r.WaitReady(ctx); err == nil {
+			turn.Text, turn.TextSpans = expand(ctx)
+			state, err = r.Send(ctx, turn)
 		}
 		a.update(func() {
 			a.sending, a.uploading = false, ""
-			a.sentAttachments()
 			if err != nil && state == session.NotSent {
 				if a.draft == "" && len(a.attachments) == 0 {
-					a.draft, a.attachments = text, files
+					a.draft = text
 				}
 				a.sendError = err.Error()
 			}

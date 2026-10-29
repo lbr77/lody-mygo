@@ -2256,7 +2256,6 @@
   "passwordMismatch": "Passwords do not match.",
   "passwordCurrentRequired": "Enter your current password.",
   "passwordVerifyFailed": "Couldn't verify your password. Please try again.",
-  "sending": "Sending",
   "attachMenu": "Add attachment",
   "mcpServersTitle": "MCP servers",
   "mcpLoadNone": "No MCP servers loaded",
@@ -4153,6 +4152,50 @@
         "type": "int"
       },
       "total": {
+        "type": "int"
+      }
+    }
+  },
+  "pendingMessageUploadFailed": "Not sent",
+  "pendingMessageUploading": "Waiting to send · Uploading attachments",
+  "pendingMessageWaiting": "Waiting to send",
+  "attachmentPrepared": "Ready",
+  "attachmentUploading": "Uploading · {progress}%",
+  "@attachmentUploading": {
+    "placeholders": {
+      "progress": {
+        "type": "int"
+      }
+    }
+  },
+  "attachmentInterrupted": "Upload interrupted",
+  "retryPendingSend": "Continue sending",
+  "cancelPendingSend": "Cancel send",
+  "sendStatusSending": "Sending · {sent} / {total}",
+  "@sendStatusSending": {
+    "placeholders": {
+      "sent": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "sendStatusSendingWithoutSize": "Sending",
+  "sendStatusFailed": "Not sent. Open the conversation to continue sending.",
+  "mqFailedCount": "{count} not sent",
+  "@mqFailedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mqPreparingCount": "{count} preparing",
+  "@mqPreparingCount": {
+    "placeholders": {
+      "count": {
         "type": "int"
       }
     }

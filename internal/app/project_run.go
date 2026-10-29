@@ -692,10 +692,10 @@ func (a *App) infoActions(s *catalog.Session, gs githubState, live *prPanel) []i
 func (a *App) dispatchPrompt(text string) bool {
 	draft, files := a.draft, a.attachments
 	a.draft, a.attachments = text, nil
-	was := a.sending
+	was, held := a.sending, a.pending.seq
 	a.send()
 	a.draft, a.attachments = draft, files
-	return !was && a.sending
+	return !was && a.sending || a.pending.seq != held
 }
 
 // infoActionsView ends the bar's context with its actions, as Lody's

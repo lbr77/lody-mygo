@@ -1105,7 +1105,6 @@
   "passwordMismatch": "两次输入的密码不一致。",
   "passwordCurrentRequired": "请输入当前密码。",
   "passwordVerifyFailed": "无法验证密码，请重试。",
-  "sending": "发送中",
   "attachMenu": "添加附件",
   "mcpServersTitle": "MCP 服务器",
   "mcpLoadNone": "未加载 MCP",
@@ -2049,5 +2048,18 @@
   "promptResolveConflicts": "解决 {repoFullName} PR {prLabel} 与其目标分支之间的合并冲突。\nPR: {prUrl}\n\n先检查该 PR 和仓库说明。根据仓库约定选择 merge 或 rebase，保留双方变更的意图，运行相关检查，然后推送已解决冲突的分支。",
   "permissionPrevious": "上一个请求",
   "permissionNext": "下一个请求",
-  "permissionPosition": "{index}/{total}"
+  "permissionPosition": "{index}/{total}",
+  "pendingMessageUploadFailed": "未发送",
+  "pendingMessageUploading": "正在等待发送 · 正在上传附件",
+  "pendingMessageWaiting": "正在等待发送",
+  "attachmentPrepared": "已准备好",
+  "attachmentUploading": "正在上传 · {progress}%",
+  "attachmentInterrupted": "上传已中断",
+  "retryPendingSend": "继续发送",
+  "cancelPendingSend": "取消发送",
+  "sendStatusSending": "正在发送 · {sent} / {total}",
+  "sendStatusSendingWithoutSize": "正在发送",
+  "sendStatusFailed": "发送失败，打开对话可继续发送",
+  "mqFailedCount": "{count} 条未发送",
+  "mqPreparingCount": "{count} 条准备中"
 }
