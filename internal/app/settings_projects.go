@@ -89,8 +89,10 @@ func (a *App) projectsPage(c *ui.Context, p *palette) {
 			}
 		})
 	}
+	a.githubProjectSections(c, p)
 	a.addProjectDialog(c, p)
 	a.projectWindow(c, p)
+	a.githubProjectWindow(c, p)
 }
 
 func (a *App) projectSettingsRow(c *ui.Context, p *palette, pr catalog.Project, chats int) {

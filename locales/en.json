@@ -2143,5 +2143,8 @@
   "deviceTitle": "Device Authorization",
   "deviceVerificationCode": "Verification Code",
   "deviceVerifyButton": "Verify & Authorize",
-  "deviceVerifying": "Verifying..."
+  "deviceVerifying": "Verifying...",
+  "gitHubManageInSettings": "Manage in GitHub settings",
+  "gitHubRepository": "Repository",
+  "gitHubRepoUnavailable": "This repo isn't available in the current workspace."
 }

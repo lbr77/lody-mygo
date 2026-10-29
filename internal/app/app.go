@@ -164,6 +164,8 @@ type App struct {
 	wsJoin          workspaceJoin
 	referral        referrals
 	pairing         machinePairing
+	ghProject       githubProject
+	ghProfileAsked  map[string]bool // workspaces whose GitHub profile was refreshed
 	device          deviceAuth
 	toasts          []ui.Toast // to show with the next frame
 	reviewSent      string     // the sharing review last reconciled

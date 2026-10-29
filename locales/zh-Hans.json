@@ -1037,5 +1037,8 @@
   "deviceTitle": "设备授权",
   "deviceVerificationCode": "验证码",
   "deviceVerifyButton": "验证并授权",
-  "deviceVerifying": "验证中..."
+  "deviceVerifying": "验证中...",
+  "gitHubManageInSettings": "在 GitHub 设置中管理",
+  "gitHubRepository": "仓库",
+  "gitHubRepoUnavailable": "此仓库在当前工作区不可用"
 }

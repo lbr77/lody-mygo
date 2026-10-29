@@ -10468,3 +10468,33 @@ func DeviceVerifying() string { return In(i18n.Locale()).DeviceVerifying() }
 func (msgs Messages) DeviceVerifying() string {
 	return Catalog.Format(msgs.locale, "deviceVerifying", nil)
 }
+
+// GitHubManageInSettings says "Manage in GitHub settings"
+// in the language the app shows.
+func GitHubManageInSettings() string { return In(i18n.Locale()).GitHubManageInSettings() }
+
+// GitHubManageInSettings says "Manage in GitHub settings"
+// in the language of msgs.
+func (msgs Messages) GitHubManageInSettings() string {
+	return Catalog.Format(msgs.locale, "gitHubManageInSettings", nil)
+}
+
+// GitHubRepository says "Repository"
+// in the language the app shows.
+func GitHubRepository() string { return In(i18n.Locale()).GitHubRepository() }
+
+// GitHubRepository says "Repository"
+// in the language of msgs.
+func (msgs Messages) GitHubRepository() string {
+	return Catalog.Format(msgs.locale, "gitHubRepository", nil)
+}
+
+// GitHubRepoUnavailable says "This repo isn't available in the current workspace."
+// in the language the app shows.
+func GitHubRepoUnavailable() string { return In(i18n.Locale()).GitHubRepoUnavailable() }
+
+// GitHubRepoUnavailable says "This repo isn't available in the current workspace."
+// in the language of msgs.
+func (msgs Messages) GitHubRepoUnavailable() string {
+	return Catalog.Format(msgs.locale, "gitHubRepoUnavailable", nil)
+}

@@ -190,9 +190,12 @@ func trimZero(s string) string { return strings.TrimSuffix(s, ".0") }
 func formatUSD(x float64) string { return fmt.Sprintf("$%.2f", x) }
 
 type workspaceRepo struct {
-	RepoFullName string `json:"repoFullName"`
-	Private      bool   `json:"private"`
-	Enabled      bool   `json:"enabled"`
+	RepoFullName    string           `json:"repoFullName"`
+	Name            string           `json:"name"`
+	Private         bool             `json:"private"`
+	Enabled         bool             `json:"enabled"`
+	WorktreeSetup   *worktreeScripts `json:"worktreeSetup"`
+	WorktreeCleanup *worktreeScripts `json:"worktreeCleanup"`
 }
 
 // githubPage is the workspace's GitHub: its app and the repositories it
@@ -244,6 +247,7 @@ func (a *App) githubPage(c *ui.Context, p *palette) {
 		outlineButton(c, p, iconExternal, locales.SettingsManage()).OnClick(install)
 	})
 	personal, _ := pf.value.(*githubPersonal)
+	a.refreshGitHubProfile(personal)
 	desc := locales.GitHubPersonalHelp()
 	if personal != nil && personal.Authorization.State == "authorized" && personal.Authorization.Profile != nil && personal.Authorization.Profile.Login != "" {
 		desc += " · @" + personal.Authorization.Profile.Login

@@ -1497,3 +1497,38 @@ func TestPairingAndDevice(t *testing.T) {
 		t.Fatalf("device done: %q", tt.Texts())
 	}
 }
+
+func TestGitHubProjects(t *testing.T) {
+	a := fixture()
+	a.settingsOpen, a.settingsTab = true, "projects"
+	var repos *[]workspaceRepo
+	json.Unmarshal([]byte(`[{"repoFullName":"lbr77/lody-mygo","name":"lody-mygo","private":true,"enabled":true,"worktreeSetup":{"scripts":{"bash":"pnpm install"}}},
+		{"repoFullName":"egoist/mygo","name":"mygo","private":false,"enabled":true}]`), &repos)
+	a.fetches = map[string]*fetched{"w1|github": {value: repos}}
+	tt := snap(t, a, "github-projects", false, nil)
+	for _, want := range []string{"egoist", "lbr77", "mygo", "lody-mygo", "Manage in GitHub settings"} {
+		if !tt.HasText(want) {
+			t.Fatalf("no %q in %q", want, tt.Texts())
+		}
+	}
+	a.openGitHubProject("lbr77/lody-mygo")
+	a.ghProject.page = "worktree"
+	tt = snap(t, a, "github-project-worktree", false, nil)
+	for _, want := range []string{"Worktree Setup", "Worktree Cleanup", "Bash", "PowerShell"} {
+		if !tt.HasText(want) {
+			t.Fatalf("no %q in %q", want, tt.Texts())
+		}
+	}
+	if a.ghProject.setup.bash != "pnpm install" || a.ghProject.cleanup.bash != "" {
+		t.Fatalf("scripts loaded: %+v", a.ghProject.setup)
+	}
+	if !setsEphemeralEnv("bash", "cd x && export FOO=1") || setsEphemeralEnv("bash", "echo export") || !setsEphemeralEnv("powershell", "$env:FOO = 1") {
+		t.Fatal("ephemeral env")
+	}
+	cfg := scriptsConfig("pnpm i", "  ", 5000)
+	if s := cfg["scripts"].(map[string]any); s["bash"] != "pnpm i" || s["powershell"] != nil || cfg["timeoutMs"] != int64(5000) {
+		t.Fatalf("config %v", cfg)
+	}
+	a.ghProject.setup.shell = "powershell"
+	snap(t, a, "github-project-ps", false, nil)
+}

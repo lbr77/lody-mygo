@@ -132,3 +132,50 @@ func copyButton(c *ui.Context, p *palette, key string, copiedAt *time.Time, labe
 	})
 	return b
 }
+
+// segmented is Lody's small tab list: the selected tab's pill slides and
+// stretches to the tab chosen over 180ms, the labels' ink fading over
+// 120ms. An invisible copy of the tabs sizes the track; the pill, then
+// the tabs, lie over it, as what is placed absolutely lies above what
+// flows.
+func segmented(c *ui.Context, p *palette, key string, options []option, selected string, pick func(string)) {
+	tabLook := func(e ui.Element) ui.Element {
+		return e.Height(24).Padding(0, 10).Radius(6).Gap(6).AlignItems(ui.Center)
+	}
+	content := func(label string, ink ui.Color) {
+		ui.Icon(c, iconTerminal).Size(13, 13).TextColor(ink)
+		ui.Text(c, label).FontSize(sizeFoot).FontWeight(500).TextColor(ink)
+	}
+	track := ui.Row(c.Key("seg-" + key)).Padding(2).Radius(8).Background(p.Text.Alpha(0.05)).AlignSelf(ui.Start)
+	track.Children(func() {
+		ui.Row(c).Gap(2).Opacity(0).Children(func() {
+			for _, o := range options {
+				tabLook(ui.Row(c.Key(o.id))).Children(func() { content(o.label, p.Text) })
+			}
+		})
+		pill := ui.Column(c.Key("pill")).Absolute().Top(2).Height(24).Radius(6).Background(p.Popover).Shadow(0, 1, 2, 0, ui.RGBA(0, 0, 0, 0.08))
+		var first, sel ui.Rect
+		ui.Row(c.Key("tabs")).Absolute().Top(2).Left(2).Gap(2).Children(func() {
+			for i, o := range options {
+				id := o.id
+				tab := tabLook(ui.ButtonBase(c.Key(o.id))).Cursor(ui.CursorPointer).Label(o.label).OnClick(func() { pick(id) })
+				b := tab.Bounds()
+				if i == 0 {
+					first = b
+				}
+				if o.id == selected {
+					sel = b
+				}
+				ink := tab.AnimateColor("ink", map[bool]ui.Color{true: p.Text, false: p.Secondary}[o.id == selected], ui.Animation{Duration: durFast, Ease: easeLody})
+				tab.Children(func() { content(o.label, ink) })
+			}
+		})
+		if sel.W == 0 {
+			pill.Width(0).Opacity(0)
+			return
+		}
+		x := pill.AnimateWith("x", sel.X-first.X, durRegular, easeLody)
+		w := pill.AnimateWith("w", sel.W, durRegular, easeLody)
+		pill.Left(2 + x).Width(w)
+	})
+}
