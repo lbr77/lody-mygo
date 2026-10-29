@@ -68,6 +68,9 @@ func (a *App) tabBar(c *ui.Context, p *palette, sess *catalog.Session) {
 		if sess != nil {
 			s := *sess
 			iconButton(c, p, iconMore, locales.MoreActions(), p.Hover).Menu(func(m *ui.Menu) { a.sessionMenu(m, s) })
+			if !a.panelOpen {
+				iconButton(c, p, iconPanelRight, locales.PanelChanges(), p.Hover).OnClick(func() { a.panelOpen = true })
+			}
 		}
 	})
 }
@@ -91,7 +94,33 @@ func (a *App) sessionTab(c *ui.Context, p *palette, s *catalog.Session) {
 	})
 }
 
+// sessionView is the conversation, with the inspector beside it when open.
 func (a *App) sessionView(c *ui.Context, p *palette) {
+	if !a.panelOpen {
+		ui.Column(c).Fill().Children(func() { a.sessionMain(c, p) })
+		return
+	}
+	if a.panelPercent == 0 {
+		a.panelPercent = 66
+	}
+	// Keep the panel at least 280 DIPs wide, as Lody's, and the
+	// conversation at least as wide as the panel.
+	w, _ := c.Size()
+	card := w - 8
+	if !a.sidebarHidden {
+		card -= sidebarWidth
+	}
+	if card > 0 {
+		a.panelPercent = min(a.panelPercent, max(50, 100-280/card*100))
+	}
+	ui.SplitPercent(c, &a.panelPercent, func() {
+		ui.Column(c).Fill().MinWidth(0).Children(func() { a.sessionMain(c, p) })
+	}, func() {
+		ui.Column(c).Fill().MinWidth(0).Children(func() { a.inspector(c, p) })
+	}).Fill()
+}
+
+func (a *App) sessionMain(c *ui.Context, p *palette) {
 	sess := a.catalog.Session(a.selected)
 	a.tabBar(c, p, sess)
 	v := a.view
@@ -303,6 +332,8 @@ func userAvatar(c *ui.Context, p *palette) ui.Element {
 		ui.Icon(c, iconUser).Size(16, 16).TextColor(p.Secondary)
 	})
 }
+
+func conversationTimeOf(ts string) string { return conversationTime(ts, time.Now()) }
 
 // conversationTime formats a message time as Lody does, in the app's
 // language: the time today, the weekday within a week, the date before.

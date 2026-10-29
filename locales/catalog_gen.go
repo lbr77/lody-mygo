@@ -2532,3 +2532,43 @@ func ShowLess() string { return In(i18n.Locale()).ShowLess() }
 func (msgs Messages) ShowLess() string {
 	return Catalog.Format(msgs.locale, "showLess", nil)
 }
+
+// PanelChanges says "Changes"
+// in the language the app shows.
+func PanelChanges() string { return In(i18n.Locale()).PanelChanges() }
+
+// PanelChanges says "Changes"
+// in the language of msgs.
+func (msgs Messages) PanelChanges() string {
+	return Catalog.Format(msgs.locale, "panelChanges", nil)
+}
+
+// PanelNoChanges says "No changes yet"
+// in the language the app shows.
+func PanelNoChanges() string { return In(i18n.Locale()).PanelNoChanges() }
+
+// PanelNoChanges says "No changes yet"
+// in the language of msgs.
+func (msgs Messages) PanelNoChanges() string {
+	return Catalog.Format(msgs.locale, "panelNoChanges", nil)
+}
+
+// PanelNoChangesHint says "Files the agent edits in this session show here."
+// in the language the app shows.
+func PanelNoChangesHint() string { return In(i18n.Locale()).PanelNoChangesHint() }
+
+// PanelNoChangesHint says "Files the agent edits in this session show here."
+// in the language of msgs.
+func (msgs Messages) PanelNoChangesHint() string {
+	return Catalog.Format(msgs.locale, "panelNoChangesHint", nil)
+}
+
+// PanelEdit says "Edit {n}"
+// in the language the app shows.
+func PanelEdit(n int) string { return In(i18n.Locale()).PanelEdit(n) }
+
+// PanelEdit says "Edit {n}"
+// in the language of msgs.
+func (msgs Messages) PanelEdit(n int) string {
+	return Catalog.Format(msgs.locale, "panelEdit", map[string]any{"n": n})
+}

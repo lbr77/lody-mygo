@@ -598,5 +598,16 @@
   "taskNoSteps": "No steps were received.",
   "taskUnknownExplanation": "Lody lost track of this run. It may still be running, or may have stopped.",
   "showMore": "Show more",
-  "showLess": "Show less"
+  "showLess": "Show less",
+  "panelChanges": "Changes",
+  "panelNoChanges": "No changes yet",
+  "panelNoChangesHint": "Files the agent edits in this session show here.",
+  "panelEdit": "Edit {n}",
+  "@panelEdit": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  }
 }

@@ -110,8 +110,11 @@ type App struct {
 	archiveFilter  string // "", "chats" or a project id
 	deleting       *catalog.Session
 	deleteOpen     bool
-	taskOpen       bool   // a task's dialog
-	taskEntry      string // the turn and task it shows
+	panelOpen      bool    // the inspector beside the conversation
+	panelPercent   float32 // the conversation's share of the width
+	panelFile      string  // the file whose edits the panel shows
+	taskOpen       bool    // a task's dialog
+	taskEntry      string  // the turn and task it shows
 	taskID         string
 	page           string // "archive", or "" for chats
 	archiveSearch  string

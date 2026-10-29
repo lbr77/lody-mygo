@@ -248,5 +248,9 @@
   "taskNoSteps": "未收到任何步骤。",
   "taskUnknownExplanation": "Lody 已失去对此次执行的跟踪，它可能仍在运行，也可能已停止。",
   "showMore": "展开",
-  "showLess": "收起"
+  "showLess": "收起",
+  "panelChanges": "变更",
+  "panelNoChanges": "还没有变更",
+  "panelNoChangesHint": "Agent 在这个会话中编辑的文件会显示在这里。",
+  "panelEdit": "第 {n} 次修改"
 }

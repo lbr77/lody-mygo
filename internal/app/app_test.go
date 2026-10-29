@@ -455,3 +455,28 @@ func TestArchiveMine(t *testing.T) {
 		t.Fatalf("mine = %+v", got)
 	}
 }
+
+func TestChangesPanel(t *testing.T) {
+	a := fixture()
+	a.view.Entries = a.view.Entries[:2]
+	a.view.Working = false
+	items := a.view.Entries[1].Items
+	items[4].Content = []any{map[string]any{"type": "diff", "path": "internal/catalog/sync.go", "oldText": "package catalog\n", "newText": "package catalog\n\nconst maxReplica = 8 << 20\n"}}
+	items[2].Content = []any{map[string]any{"type": "diff", "path": "README.md", "oldText": "# Lody", "newText": "# Lody Native"}}
+	tt := snap(t, a, "changes-panel", false, func(tt *ui.Tester) {
+		tt.Frame()
+		if err := tt.Click("Changes"); err != nil {
+			t.Fatal(err)
+		}
+	})
+	if !a.panelOpen || !tt.HasText("sync.go") || !tt.HasText("README.md") {
+		t.Fatalf("panel: %q", tt.Texts())
+	}
+	if err := tt.Click("internal/catalog/sync.go"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if a.panelFile != "internal/catalog/sync.go" || !tt.HasText("Edit 1") {
+		t.Fatalf("file edits: %q", tt.Texts())
+	}
+}
