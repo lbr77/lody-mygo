@@ -4199,5 +4199,10 @@
         "type": "int"
       }
     }
-  }
+  },
+  "unloadTitle": "Leave with unsaved work?",
+  "unloadDetail": "Messages still waiting for attachments to upload and unsaved file edits in this window will be lost.",
+  "unloadStay": "Stay",
+  "unloadLeave": "Leave",
+  "unloadQuit": "Quit"
 }

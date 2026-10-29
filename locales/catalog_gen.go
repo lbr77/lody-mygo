@@ -20792,3 +20792,53 @@ func MqPreparingCount(count int) string { return In(i18n.Locale()).MqPreparingCo
 func (msgs Messages) MqPreparingCount(count int) string {
 	return Catalog.Format(msgs.locale, "mqPreparingCount", map[string]any{"count": count})
 }
+
+// UnloadTitle says "Leave with unsaved work?"
+// in the language the app shows.
+func UnloadTitle() string { return In(i18n.Locale()).UnloadTitle() }
+
+// UnloadTitle says "Leave with unsaved work?"
+// in the language of msgs.
+func (msgs Messages) UnloadTitle() string {
+	return Catalog.Format(msgs.locale, "unloadTitle", nil)
+}
+
+// UnloadDetail says "Messages still waiting for attachments to upload and unsaved file edits in this window will be lost."
+// in the language the app shows.
+func UnloadDetail() string { return In(i18n.Locale()).UnloadDetail() }
+
+// UnloadDetail says "Messages still waiting for attachments to upload and unsaved file edits in this window will be lost."
+// in the language of msgs.
+func (msgs Messages) UnloadDetail() string {
+	return Catalog.Format(msgs.locale, "unloadDetail", nil)
+}
+
+// UnloadStay says "Stay"
+// in the language the app shows.
+func UnloadStay() string { return In(i18n.Locale()).UnloadStay() }
+
+// UnloadStay says "Stay"
+// in the language of msgs.
+func (msgs Messages) UnloadStay() string {
+	return Catalog.Format(msgs.locale, "unloadStay", nil)
+}
+
+// UnloadLeave says "Leave"
+// in the language the app shows.
+func UnloadLeave() string { return In(i18n.Locale()).UnloadLeave() }
+
+// UnloadLeave says "Leave"
+// in the language of msgs.
+func (msgs Messages) UnloadLeave() string {
+	return Catalog.Format(msgs.locale, "unloadLeave", nil)
+}
+
+// UnloadQuit says "Quit"
+// in the language the app shows.
+func UnloadQuit() string { return In(i18n.Locale()).UnloadQuit() }
+
+// UnloadQuit says "Quit"
+// in the language of msgs.
+func (msgs Messages) UnloadQuit() string {
+	return Catalog.Format(msgs.locale, "unloadQuit", nil)
+}

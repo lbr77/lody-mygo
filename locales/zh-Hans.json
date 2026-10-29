@@ -2061,5 +2061,10 @@
   "sendStatusSendingWithoutSize": "正在发送",
   "sendStatusFailed": "发送失败，打开对话可继续发送",
   "mqFailedCount": "{count} 条未发送",
-  "mqPreparingCount": "{count} 条准备中"
+  "mqPreparingCount": "{count} 条准备中",
+  "unloadTitle": "有未保存的内容，确定离开吗？",
+  "unloadDetail": "此窗口中仍在等待附件上传的消息和未保存的文件修改将会丢失。",
+  "unloadStay": "留下",
+  "unloadLeave": "离开",
+  "unloadQuit": "退出"
 }

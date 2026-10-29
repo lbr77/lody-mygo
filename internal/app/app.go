@@ -340,6 +340,7 @@ func (a *App) View() *ui.Content { return ui.View(a.render) }
 // Start loads the saved session and connects. Call it on the main thread.
 func (a *App) Start(win *mygo.Window) {
 	a.win = win
+	a.guardUnload(win)
 	prefs := loadPrefs()
 	a.workspaceID = prefs.Workspace
 	a.collapsed = prefs.Collapsed

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/egoist/mygo/ui"
+	"github.com/egoist/mygo/ui/editor"
 
 	"github.com/lbr77/lody-mygo/internal/catalog"
 	"github.com/lbr77/lody-mygo/internal/cloud"
@@ -472,4 +473,28 @@ func TestPendingSendAnchored(t *testing.T) {
 	}
 	r.release <- nil
 	r.pump("the send", func() bool { return len(a.pending.list) == 0 })
+}
+
+// Leaving asks first while a held message waits on its attachments or a
+// file has unsaved edits, as Lody's unload sheet.
+func TestUnsavedWork(t *testing.T) {
+	a := fixture()
+	if a.unsavedWork() {
+		t.Fatal("nothing to lose, yet it would ask")
+	}
+	a.pending.list = []*pendingSend{{id: "held", sessionID: "s1"}}
+	if !a.unsavedWork() {
+		t.Fatal("a held message doesn't make it ask")
+	}
+	a.pending.list = nil
+	in := a.inspectFor("s1")
+	buf := editor.NewBuffer("package main\n")
+	in.preview = &filePreview{path: "main.go", editing: true, code: &editor.State{Buffer: buf}}
+	if a.unsavedWork() {
+		t.Fatal("an untouched file makes it ask")
+	}
+	buf.Set("package other\n")
+	if !a.unsavedWork() {
+		t.Fatal("unsaved edits don't make it ask")
+	}
 }
