@@ -72,3 +72,21 @@ func TestRateLimitRows(t *testing.T) {
 		t.Fatalf("capability = %+v", cap)
 	}
 }
+
+// A machine reports its .lody folder, and a session whether it works in a
+// worktree.
+func TestDotLodyAndWorktree(t *testing.T) {
+	meta := projectMeta([]flock.Row{
+		row(true, "e", "machine-m1"),
+		row(true, "e", "session-s1"),
+		row(map[string]any{"name": "Studio"}, "m", "machine-m1"),
+		row(map[string]any{"id": "s1", "machineId": "m1", "title": "T", "isWorktree": true}, "m", "session-s1"),
+	})
+	c := merge(meta, map[string]Catalog{"m1": projectMachine([]flock.Row{row("/Users/ada/.lody", "dotlodyPath")}, "m1")})
+	if c.DotLody["m1"] != "/Users/ada/.lody" {
+		t.Fatalf("dotlody %v", c.DotLody)
+	}
+	if s := c.Session("s1"); s == nil || !s.IsWorktree {
+		t.Fatalf("session %+v", s)
+	}
+}

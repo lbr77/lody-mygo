@@ -200,10 +200,7 @@ func (a *App) headerMenu(m *ui.Menu, s catalog.Session) {
 			}
 			m.Separator()
 		}
-		path := ""
-		if !a.sessionWorktree(&s) {
-			path = root
-		}
+		path := a.sessionWorkspacePath(&s)
 		if m.Item(locales.HmCopyPath()).Disabled(path == "").Chosen() {
 			copied(path, locales.HmPathCopied())
 		}

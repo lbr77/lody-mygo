@@ -56,6 +56,9 @@ type Session struct {
 	Project      map[string]any `json:"project,omitempty"`
 	RepoFullName string         `json:"repoFullName,omitempty"`
 	BaseBranch   string         `json:"baseBranch,omitempty"`
+	// IsWorktree is whether it works in a worktree of its own, as its meta
+	// says.
+	IsWorktree bool `json:"isWorktree,omitempty"`
 	// ChildPlacement is where a child conversation shows: "side-panel",
 	// or among its parent's tabs.
 	ChildPlacement string  `json:"childPlacement,omitempty"`
@@ -256,11 +259,14 @@ func (c *Catalog) ModesFor(agentConfigID, agentType string) []Mode {
 }
 
 type Catalog struct {
-	Projects     []Project                     `json:"projects"`
-	Sessions     []Session                     `json:"sessions"`
-	MachineIDs   []string                      `json:"machineIds"`
-	MachineNames map[string]string             `json:"machineNames,omitempty"`
-	MachineOS    map[string]string             `json:"machineOs,omitempty"`
+	Projects     []Project         `json:"projects"`
+	Sessions     []Session         `json:"sessions"`
+	MachineIDs   []string          `json:"machineIds"`
+	MachineNames map[string]string `json:"machineNames,omitempty"`
+	MachineOS    map[string]string `json:"machineOs,omitempty"`
+	// DotLody is each machine's .lody folder, as it reports it, under which
+	// its worktrees and chat folders lie.
+	DotLody      map[string]string             `json:"dotLody,omitempty"`
 	MachineCLI   map[string]string             `json:"machineCli,omitempty"`   // the Lody CLI's version
 	MachineCaps  map[string]map[string]float64 `json:"machineCaps,omitempty"`  // protocol capabilities, by machine
 	MachineOwner map[string]string             `json:"machineOwner,omitempty"` // the user who owns it, by machine
@@ -328,6 +334,12 @@ func modelOf(v any) *Model {
 func projectMachine(rows []flock.Row, machineID string) Catalog {
 	c := Catalog{Agents: map[string][]AgentConfig{}, Capabilities: map[string]Capability{}}
 	for _, row := range rows {
+		if row.Live && len(row.Key) == 1 && row.Key[0] == "dotlodyPath" {
+			if path, ok := row.Value.(string); ok && strings.TrimSpace(path) != "" {
+				c.DotLody = map[string]string{machineID: strings.TrimSpace(path)}
+			}
+			continue
+		}
 		if !row.Live || len(row.Key) < 2 {
 			continue
 		}
@@ -621,6 +633,7 @@ func projectMeta(rows []flock.Row) Catalog {
 			Project:               object(value["project"]),
 			RepoFullName:          text(value["repoFullName"]),
 			BaseBranch:            text(value["baseBranch"]),
+			IsWorktree:            value["isWorktree"] == true,
 			ChildPlacement:        text(value["childSessionPlacement"]),
 		}
 		if s.ID == "" {
@@ -720,6 +733,12 @@ func merge(meta Catalog, machines map[string]Catalog) Catalog {
 			add(p)
 		}
 		out.Agents[id] = m.Agents[id]
+		if path := m.DotLody[id]; path != "" {
+			if out.DotLody == nil {
+				out.DotLody = map[string]string{}
+			}
+			out.DotLody[id] = path
+		}
 		for k, v := range m.Capabilities {
 			out.Capabilities[k] = v
 		}

@@ -232,7 +232,7 @@ func ciVerdict(ci string) string {
 // sessionWorktree reports whether a chat works in a worktree of its own:
 // a GitHub project's, or a local project's asked for one.
 func (a *App) sessionWorktree(s *catalog.Session) bool {
-	if strings.HasPrefix(s.ProjectID, "github:") {
+	if s.IsWorktree || strings.HasPrefix(s.ProjectID, "github:") {
 		return true
 	}
 	v, _ := s.Project["useWorktree"].(bool)
