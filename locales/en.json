@@ -3282,5 +3282,9 @@
   "infoCiFailing": "CI failed",
   "infoCiExpected": "CI expected",
   "infoCiRunning": "CI running",
-  "infoOpenPR": "Open pull request"
+  "infoOpenPR": "Open pull request",
+  "outlineRail": "Conversation outline",
+  "outlineUntitled": "Untitled turn",
+  "outlineAgentStarted": "Started by the agent.",
+  "outlineNoReply": "No reply yet."
 }

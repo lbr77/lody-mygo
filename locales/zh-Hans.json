@@ -1677,5 +1677,9 @@
   "infoCiFailing": "CI 未通过",
   "infoCiExpected": "等待 CI 上报",
   "infoCiRunning": "CI 运行中",
-  "infoOpenPR": "打开 Pull Request"
+  "infoOpenPR": "打开 Pull Request",
+  "outlineRail": "对话目录",
+  "outlineUntitled": "未命名轮次",
+  "outlineAgentStarted": "由 agent 发起。",
+  "outlineNoReply": "暂无回复。"
 }

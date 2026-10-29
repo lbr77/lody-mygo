@@ -77,6 +77,7 @@ type App struct {
 	capRetries   map[string]*capRetry // capacity retries, by chat
 	stuck        stuckState           // a connection that has been connecting too long
 	card         hoverCard            // the sidebar's info card
+	outline      outlineRail          // the conversation's outline rail
 	notifyAsk    notifyAsk            // the prompt to turn notifications on
 	// sendingFiles are a message's attachments as they upload, and
 	// fileProgress how far each has gone, 0 to 100, by path.

@@ -322,3 +322,72 @@ func TestSessionHoverCard(t *testing.T) {
 		t.Fatalf("still shown after a press: %+v", a.card)
 	}
 }
+
+// From ten user rounds, beside a wide enough pane, the conversation has
+// Lody's outline rail: a tick a round, a card on resting there, and a jump
+// on a click.
+func TestOutlineRail(t *testing.T) {
+	a := fixture()
+	a.view.Working = false
+	var entries []session.Entry
+	for i := range 12 {
+		id := fmt.Sprint(i)
+		entries = append(entries,
+			session.Entry{ID: "ou" + id, Role: "user", Items: []session.Item{{ID: "t", Type: "text", Text: "Question **number** " + id}}},
+			session.Entry{ID: "or" + id, Role: "assistant", Finished: true, Items: []session.Item{{ID: "t", Type: "text", Text: "Answer " + id + "\n\n" + strings.Repeat("More prose. ", 40*(i%4))}}},
+		)
+	}
+	a.view.Entries = entries
+	a.outline.digests = map[string]roundDigest{}
+	rounds := a.outline.rounds(entries)
+	if len(rounds) != 12 || rounds[3].title != "Question number 3" || !strings.HasPrefix(rounds[3].preview, "Answer 3 More prose.") {
+		t.Fatalf("rounds %+v", rounds[3])
+	}
+	if rounds[0].weight != 0 || rounds[3].weight == 0 {
+		t.Fatalf("weights %d %d", rounds[0].weight, rounds[3].weight)
+	}
+	tt := ui.NewTester(a.render, 1400, 800)
+	tt.Frame()
+	tt.Advance(400 * time.Millisecond)
+	tt.Frame()
+	snapFrame(t, tt, "outline-rail")
+	if a.outline.active < 0 {
+		t.Fatalf("no reader round: %+v", a.outline.active)
+	}
+	r, ok := tt.Find("Question number 4")
+	if !ok {
+		t.Fatalf("no tick for round 4 in %q", tt.Texts())
+	}
+	tt.Move(r.X+r.W/2, r.Y+r.H/2)
+	tt.Frame()
+	if a.outline.pointer != 4 || a.outline.open {
+		t.Fatalf("pointer %d open %v", a.outline.pointer, a.outline.open)
+	}
+	a.outline.since = time.Now().Add(-time.Second)
+	tt.Frame()
+	tt.Advance(300 * time.Millisecond)
+	tt.Frame()
+	snapFrame(t, tt, "outline-card")
+	if !a.outline.open || !tt.HasText("Answer 4") {
+		t.Fatalf("no card: %+v", a.outline)
+	}
+	if err := tt.Click("Question number 4"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	tt.Advance(400 * time.Millisecond)
+	tt.Frame()
+	if a.outline.open {
+		t.Fatal("card open after the jump")
+	}
+	tt.Frame()
+	if first, last := a.chatList.Visible(); first > 8 || last < 8 || a.outline.active != 4 {
+		t.Fatalf("jumped to rows %d–%d, round %d", first, last, a.outline.active)
+	}
+	// Narrow, it is gone.
+	tt.SetSize(1000, 800)
+	tt.Frame()
+	if _, ok := tt.Find("Question number 4"); ok {
+		t.Fatal("rail beside a narrow pane")
+	}
+}

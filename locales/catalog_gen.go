@@ -16900,3 +16900,43 @@ func InfoOpenPR() string { return In(i18n.Locale()).InfoOpenPR() }
 func (msgs Messages) InfoOpenPR() string {
 	return Catalog.Format(msgs.locale, "infoOpenPR", nil)
 }
+
+// OutlineRail says "Conversation outline"
+// in the language the app shows.
+func OutlineRail() string { return In(i18n.Locale()).OutlineRail() }
+
+// OutlineRail says "Conversation outline"
+// in the language of msgs.
+func (msgs Messages) OutlineRail() string {
+	return Catalog.Format(msgs.locale, "outlineRail", nil)
+}
+
+// OutlineUntitled says "Untitled turn"
+// in the language the app shows.
+func OutlineUntitled() string { return In(i18n.Locale()).OutlineUntitled() }
+
+// OutlineUntitled says "Untitled turn"
+// in the language of msgs.
+func (msgs Messages) OutlineUntitled() string {
+	return Catalog.Format(msgs.locale, "outlineUntitled", nil)
+}
+
+// OutlineAgentStarted says "Started by the agent."
+// in the language the app shows.
+func OutlineAgentStarted() string { return In(i18n.Locale()).OutlineAgentStarted() }
+
+// OutlineAgentStarted says "Started by the agent."
+// in the language of msgs.
+func (msgs Messages) OutlineAgentStarted() string {
+	return Catalog.Format(msgs.locale, "outlineAgentStarted", nil)
+}
+
+// OutlineNoReply says "No reply yet."
+// in the language the app shows.
+func OutlineNoReply() string { return In(i18n.Locale()).OutlineNoReply() }
+
+// OutlineNoReply says "No reply yet."
+// in the language of msgs.
+func (msgs Messages) OutlineNoReply() string {
+	return Catalog.Format(msgs.locale, "outlineNoReply", nil)
+}

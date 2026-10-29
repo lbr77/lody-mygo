@@ -222,6 +222,7 @@ func (a *App) conversation(c *ui.Context, p *palette, sess *catalog.Session) {
 		return
 	}
 	entries := foldNotices(v.Entries)
+	a.outline.prepare(a.selected)
 	a.indexFind(entries)
 	a.revealFind()
 	defer func() {
@@ -243,18 +244,21 @@ func (a *App) conversation(c *ui.Context, p *palette, sess *catalog.Session) {
 	a.chatList.FollowAnimation = &chatGlide
 	// Keyed by session, so that each conversation fades in as it opens.
 	ui.Box(c.Key("chat-frame/" + a.selected)).FillWidth().Grow(1).MinHeight(0).Children(func() {
-		ui.List(c.Key("chat/"+a.selected), &a.chatList, len(entries)+1, func(i int) {
+		list := ui.List(c.Key("chat/"+a.selected), &a.chatList, len(entries)+1, func(i int) {
 			if i == len(entries) {
 				a.liveStatus(c, p, v)
 				return
 			}
-			a.entry(c, p, entries, i)
-		}).Fill().Padding(16, 0, 24, 0).FontFeatures(a.ligatureFeatures()...).Children(func() {
+			// Where each row was, for the outline's reader position.
+			a.outline.tops[i] = a.entry(c, p, entries, i).Bounds().Y
+		}).Fill().Padding(chatPadTop, 0, 24, 0).FontFeatures(a.ligatureFeatures()...).Children(func() {
 			ui.Text(c, locales.SendToStart()).FontSize(sizeSub).TextColor(p.Secondary).Margin(ui.Auto)
 		})
+		a.outline.top = list.Bounds().Y
 		a.chatEdges(c, p, v, len(entries))
 	})
 	a.bottom(c, p, sess, v)
+	a.outlineRail(c, p, entries)
 	a.findBar(c, p)
 }
 
@@ -320,7 +324,7 @@ func (a *App) column(c *ui.Context, key any, fn func()) ui.Element {
 	})
 }
 
-func (a *App) entry(c *ui.Context, p *palette, entries []session.Entry, i int) {
+func (a *App) entry(c *ui.Context, p *palette, entries []session.Entry, i int) ui.Element {
 	e := entries[i]
 	top := float32(0)
 	if i > 0 {
@@ -339,7 +343,7 @@ func (a *App) entry(c *ui.Context, p *palette, entries []session.Entry, i int) {
 	if e.Queued && i > 0 && entries[i-1].Queued {
 		top = 12
 	}
-	a.column(c, e.ID, func() {
+	return a.column(c, e.ID, func() {
 		if e.Role == "user" {
 			a.userMessage(c, p, e, firstQueued)
 		} else {
