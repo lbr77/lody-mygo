@@ -2,6 +2,7 @@ package app
 
 import (
 	"encoding/json"
+	"fmt"
 	"reflect"
 	"strings"
 	"time"
@@ -1141,5 +1142,51 @@ func TestFileEditing(t *testing.T) {
 	tt = snap(t, a, "file-disk-changed", false, nil)
 	if !tt.HasText("The agent or another peer changed this file.") {
 		t.Fatalf("disk banner: %q", tt.Texts())
+	}
+}
+
+// A command step opens Lody's sheet: the command after a prompt, then the
+// tail of its output, saying when earlier output was left out.
+func TestCommandDetail(t *testing.T) {
+	a := fixture()
+	a.view.Entries = a.view.Entries[:2]
+	a.view.Working = false
+	var out []string
+	for i := 1; i <= 30; i++ {
+		out = append(out, fmt.Sprintf("line %d", i))
+	}
+	items := a.view.Entries[1].Items
+	items[2].HasDetail = true
+	items[2].Content = []any{
+		map[string]any{"type": "terminal_command", "command": "/bin/zsh", "args": []any{"-lc", "grep -rn MUSE MuseAmp | head"}},
+		map[string]any{"type": "terminal_output", "output": strings.Join(out, "\n"), "exitStatus": map[string]any{"exitCode": 1.0}},
+	}
+	key := "r1/" + blocks(items)[0].key
+	a.expanded["r1/work"], a.expanded[key], a.expanded[key+"/"+items[2].ID] = true, true, true
+	tt := snap(t, a, "command-detail", false, nil)
+	for _, want := range []string{"$", "grep -rn MUSE MuseAmp | head", "Earlier output not shown", "line 30", "Exit 1"} {
+		if !tt.HasText(want) {
+			t.Fatalf("no %q in %q", want, tt.Texts())
+		}
+	}
+	if tt.HasText("line 14\n") || strings.Contains(strings.Join(tt.Texts(), "\n"), "\"terminal_command\"") {
+		t.Fatalf("raw content shown: %q", tt.Texts())
+	}
+}
+
+func TestToolCommandAndTail(t *testing.T) {
+	if got := toolCommand(map[string]any{"command": "/bin/bash", "args": []any{"-lc", "ls -la"}}); got != "ls -la" {
+		t.Fatalf("wrapped = %q", got)
+	}
+	if got := toolCommand(map[string]any{"command": "rg", "args": []any{"two words", "src/"}}); got != "rg 'two words' src/" {
+		t.Fatalf("quoted = %q", got)
+	}
+	text, cut := terminalTail([]string{"a\nb\n"})
+	if text != "a\nb" || cut {
+		t.Fatalf("tail = %q %v", text, cut)
+	}
+	spans := ansiSpans("\x1b[31mred\x1b[0m plain\x1b[K", ui.Hex("#777777"), false)
+	if len(spans) != 2 || spans[0].Text != "red" || spans[0].Color != ui.Hex("#C91B00") || spans[1].Text != " plain" {
+		t.Fatalf("spans = %+v", spans)
 	}
 }

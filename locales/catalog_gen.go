@@ -8440,3 +8440,33 @@ func LspUnavailable() string { return In(i18n.Locale()).LspUnavailable() }
 func (msgs Messages) LspUnavailable() string {
 	return Catalog.Format(msgs.locale, "lspUnavailable", nil)
 }
+
+// ToolEarlierOutputHidden says "Earlier output not shown"
+// in the language the app shows.
+func ToolEarlierOutputHidden() string { return In(i18n.Locale()).ToolEarlierOutputHidden() }
+
+// ToolEarlierOutputHidden says "Earlier output not shown"
+// in the language of msgs.
+func (msgs Messages) ToolEarlierOutputHidden() string {
+	return Catalog.Format(msgs.locale, "toolEarlierOutputHidden", nil)
+}
+
+// ToolExitCode says "Exit {code}"
+// in the language the app shows.
+func ToolExitCode(code string) string { return In(i18n.Locale()).ToolExitCode(code) }
+
+// ToolExitCode says "Exit {code}"
+// in the language of msgs.
+func (msgs Messages) ToolExitCode(code string) string {
+	return Catalog.Format(msgs.locale, "toolExitCode", map[string]any{"code": code})
+}
+
+// ToolTerminalStreaming says "Terminal output is streaming in your CLI"
+// in the language the app shows.
+func ToolTerminalStreaming() string { return In(i18n.Locale()).ToolTerminalStreaming() }
+
+// ToolTerminalStreaming says "Terminal output is streaming in your CLI"
+// in the language of msgs.
+func (msgs Messages) ToolTerminalStreaming() string {
+	return Catalog.Format(msgs.locale, "toolTerminalStreaming", nil)
+}

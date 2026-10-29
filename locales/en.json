@@ -1748,5 +1748,15 @@
   "saveConflictMarkersHint": "Reload with conflict markers so you can resolve by hand.",
   "saveConflictOverwrite": "Overwrite disk",
   "saveConflictOverwriteConfirm": "Confirm: overwrite disk",
-  "lspUnavailable": "The machine has no language server for this file."
+  "lspUnavailable": "The machine has no language server for this file.",
+  "toolEarlierOutputHidden": "Earlier output not shown",
+  "toolExitCode": "Exit {code}",
+  "@toolExitCode": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "toolTerminalStreaming": "Terminal output is streaming in your CLI"
 }

@@ -836,5 +836,8 @@
   "saveConflictMarkersHint": "重新加载并插入冲突标记，由你手动解决。",
   "saveConflictOverwrite": "覆盖磁盘",
   "saveConflictOverwriteConfirm": "确认：覆盖磁盘",
-  "lspUnavailable": "这台机器没有为此文件提供语言服务。"
+  "lspUnavailable": "这台机器没有为此文件提供语言服务。",
+  "toolEarlierOutputHidden": "更早的输出未显示",
+  "toolExitCode": "退出码 {code}",
+  "toolTerminalStreaming": "终端输出正在 CLI 中流式显示"
 }
