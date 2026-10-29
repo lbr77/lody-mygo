@@ -90,7 +90,7 @@ func (a *App) createPairing() {
 // watchPairing follows a request until it settles, as Lody's live query
 // does.
 func (a *App) watchPairing(id string) {
-	if a.convex == nil || a.offline {
+	if a.convex == nil || a.noCloud() {
 		return
 	}
 	convex := a.convex

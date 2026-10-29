@@ -517,7 +517,16 @@ func (a *App) footer(c *ui.Context, p *palette) {
 		switcher.Children(func() {
 			a.workspaceIcon(c, ws, name, 16)
 			ui.Text(c, name).FontSize(sizeSub).TextColor(p.SideRow).SingleLine().MinWidth(0)
-			if !a.syncState.Live && a.sync != nil {
+			switch {
+			case a.localOnly:
+				// Local-only mode says so, and whether the daemon is up.
+				label, color := locales.LocalChip(), p.SideMuted
+				if a.local == nil {
+					label, color = locales.Offline(), p.Danger
+				}
+				ui.Text(c, label).FontSize(10).FontWeight(500).TextColor(color).Padding(1, 5).Radius(5).Background(color.Alpha(0.14)).Shrink(0).
+					Tooltip(firstNonEmpty(a.syncState.Reason, locales.PrefLocalOnly()))
+			case !a.syncState.Live && a.sync != nil:
 				label, color := locales.ConnectionSyncing(), p.SideMuted
 				if a.syncState.Reason != "" {
 					label, color = locales.Offline(), p.Danger

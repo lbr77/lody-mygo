@@ -38,7 +38,7 @@ func (r *Replica) steer(machineID string, params map[string]any) string {
 	turnID, _ := params["userTurnId"].(string)
 	ctx, cancel := context.WithTimeout(r.ctx, 35*time.Second)
 	defer cancel()
-	reply, err := r.Conn.MachineRPC(ctx, machineID, "session/steer", params, 30*time.Second)
+	reply, err := r.machineRPC(ctx, machineID, "session/steer", params, 30*time.Second)
 	var res struct {
 		Applied     bool   `json:"applied"`
 		Disposition string `json:"disposition"`
@@ -179,7 +179,7 @@ func (r *Replica) SteerQueued(ctx context.Context, machineID, messageID string, 
 		return errors.New("session: the steer may not have been saved")
 	}
 	if interrupt {
-		reply, err := r.Conn.MachineRPC(ctx, machineID, "session/cancel", map[string]any{"sessionId": r.ID, "turnId": target}, 35*time.Second)
+		reply, err := r.machineRPC(ctx, machineID, "session/cancel", map[string]any{"sessionId": r.ID, "turnId": target}, 35*time.Second)
 		var res struct {
 			Success bool `json:"success"`
 		}

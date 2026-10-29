@@ -23,6 +23,7 @@ import (
 
 	"github.com/lbr77/lody-mygo/internal/catalog"
 	"github.com/lbr77/lody-mygo/internal/cloud"
+	"github.com/lbr77/lody-mygo/internal/localplane"
 	"github.com/lbr77/lody-mygo/internal/mention"
 	"github.com/lbr77/lody-mygo/internal/presence"
 	"github.com/lbr77/lody-mygo/internal/session"
@@ -65,6 +66,11 @@ type App struct {
 	synced       bool
 	presence     presence.State
 	stopPresence context.CancelFunc
+	// localOnly syncs with this machine's daemon alone, never the cloud;
+	// local is its data plane connection while the daemon is up.
+	localOnly bool
+	local     *localplane.Conn
+	stopLocal context.CancelFunc
 
 	selected string // session id; empty shows New chat
 	replica  *session.Replica
@@ -167,6 +173,7 @@ type App struct {
 	convex           *cloud.Convex
 	fetches          map[string]*fetched // what the settings asked the cloud for
 	offline          bool                // fetch nothing from the cloud, as in tests
+	post             func(func())        // runs update's functions in tests, which have no event loop
 	toggles          map[string]bool     // cloud switches flipped, until they settle
 	settingsError    string
 	settingsNotice   string // what a settings action did
@@ -288,6 +295,7 @@ func (a *App) Start(win *mygo.Window) {
 		a.quickReplies = *prefs.QuickReplies
 	}
 	a.createMem = prefs.CreateMemory
+	a.localOnly = prefs.LocalOnly
 	if a.language != "" {
 		mygo.App.SetLocale(a.language)
 	}
@@ -308,13 +316,20 @@ func (a *App) Start(win *mygo.Window) {
 				// in the background.
 				a.signedIn(cached)
 			}
-			go a.refreshAccount()
+			// Local-only mode leaves the cloud alone once it has the account.
+			if cached == nil || !a.localOnly {
+				go a.refreshAccount()
+			}
 		})
 	}()
 }
 
 // update runs fn on the main thread and redraws.
 func (a *App) update(fn func()) {
+	if a.post != nil {
+		a.post(fn)
+		return
+	}
 	if a.win == nil {
 		mygo.RunOnMain(fn)
 		return
@@ -457,7 +472,28 @@ func (a *App) connect(id string) {
 		Session: a.tokenNow,
 		HTTP:    &http.Client{Transport: http.DefaultTransport},
 	}
-	sync := &catalog.Sync{Conn: a.conn}
+	if a.localOnly {
+		a.connectLocal(id)
+		a.pickNewChatDefaults()
+		return
+	}
+	a.startSync(id, nil)
+	ctx, cancel := context.WithCancel(context.Background())
+	a.stopPresence = cancel
+	go presence.Watch(ctx, a.conn, func(st presence.State) {
+		a.update(func() {
+			if ctx.Err() == nil {
+				a.presence = st
+			}
+		})
+	})
+	a.pickNewChatDefaults()
+}
+
+// startSync syncs workspace id's catalog: with the daemon over local when
+// set, else with the cloud.
+func (a *App) startSync(id string, local *localplane.Conn) {
+	sync := &catalog.Sync{Conn: a.conn, Local: local}
 	sync.OnChange = func(c catalog.Catalog) {
 		saveCatalog(id, c)
 		a.update(func() {
@@ -479,16 +515,6 @@ func (a *App) connect(id string) {
 	}
 	a.sync = sync
 	sync.Start()
-	ctx, cancel := context.WithCancel(context.Background())
-	a.stopPresence = cancel
-	go presence.Watch(ctx, a.conn, func(st presence.State) {
-		a.update(func() {
-			if ctx.Err() == nil {
-				a.presence = st
-			}
-		})
-	})
-	a.pickNewChatDefaults()
 }
 
 func (a *App) disconnect() {
@@ -501,6 +527,11 @@ func (a *App) disconnect() {
 		a.stopPresence()
 		a.stopPresence = nil
 	}
+	if a.stopLocal != nil {
+		a.stopLocal()
+		a.stopLocal = nil
+	}
+	a.local = nil
 	a.presence = presence.State{}
 	a.selected = ""
 	a.catalog = catalog.Catalog{}
@@ -601,15 +632,7 @@ func (a *App) show(id string) {
 	if id == "" || a.conn == nil {
 		return
 	}
-	var r *session.Replica
-	r = session.Open(a.conn, id, func(v *session.View) {
-		a.update(func() {
-			if a.replica == r {
-				a.view = v
-			}
-		})
-	})
-	a.replica = r
+	a.openReplica(id)
 	if s := a.catalog.Session(id); s != nil && s.Unread() && a.sync != nil {
 		sess, sync := *s, a.sync
 		go sync.MarkRead(context.Background(), sess)
@@ -801,7 +824,7 @@ func (a *App) agent(machine, id string) *catalog.AgentConfig {
 // does as a chat starts or a message goes: best effort, once a day here.
 func (a *App) recordActivity() {
 	day := a.workspaceID + "|" + time.Now().Format("2006-01-02")
-	if a.convex == nil || a.offline || a.workspaceID == "" || a.activeDay == day {
+	if a.convex == nil || a.noCloud() || a.workspaceID == "" || a.activeDay == day {
 		return
 	}
 	a.activeDay = day
@@ -960,6 +983,7 @@ type prefs struct {
 	CodeOnly      bool    `json:"codeOnly,omitempty"`
 	Notifications bool    `json:"notifications,omitempty"`
 	Experimental  bool    `json:"experimental,omitempty"`
+	LocalOnly     bool    `json:"localOnly,omitempty"`
 	// QuickReplies are the quick replies as edited; absent for lody-ios's.
 	QuickReplies *[]quickReply `json:"quickReplies,omitempty"`
 	// CreateMemory is New chat's remembered choices, as lody-ios's.
@@ -1010,7 +1034,7 @@ func (a *App) savePrefs() {
 	writeJSON("prefs.json", prefs{Workspace: a.workspaceID, Collapsed: a.collapsed, Appearance: a.appearance, Busy: a.busyBehavior, Sidebar: a.sidebarWidth, HomeBoard: a.homeBoard, Keys: a.keyOverrides,
 		Language: a.language, FontSize: a.fontSize, Wide: a.wideMode, InlineMath: a.inlineMath, ExtendedCode: a.extendedCode,
 		NoLigatures: !a.ligatures, CodeOnly: a.codeOnly, Notifications: a.notifications, Experimental: a.experimental,
-		QuickReplies: quick, CreateMemory: a.createMem})
+		LocalOnly: a.localOnly, QuickReplies: quick, CreateMemory: a.createMem})
 }
 
 func loadAccount() *cloud.Account {

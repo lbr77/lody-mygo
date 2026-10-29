@@ -826,7 +826,7 @@ func (a *App) issueSource(repo string) *mentionSource {
 		src = &mentionSource{}
 		a.mentionSources[key] = src
 	}
-	if repo == "" || src.loading || (!src.loaded.IsZero() && time.Since(src.loaded) < 5*time.Minute) || a.offline {
+	if repo == "" || src.loading || (!src.loaded.IsZero() && time.Since(src.loaded) < 5*time.Minute) || a.noCloud() {
 		return src
 	}
 	src.loading, src.err = true, ""

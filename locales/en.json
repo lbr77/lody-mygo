@@ -2836,5 +2836,9 @@
   "formatStrikethrough": "Strikethrough",
   "formatCode": "Code",
   "formatList": "Bulleted list",
-  "formatQuote": "Quote"
+  "formatQuote": "Quote",
+  "localDaemonAway": "Lody isn't running on this computer",
+  "localChip": "Local",
+  "prefLocalOnly": "Connect only to this computer's Lody",
+  "prefLocalOnlyHelp": "Sync with the Lody daemon on this computer instead of the cloud, so the app works without a network. Other machines, billing and GitHub need the cloud."
 }

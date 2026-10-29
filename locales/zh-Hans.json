@@ -1412,5 +1412,9 @@
   "formatStrikethrough": "删除线",
   "formatCode": "代码",
   "formatList": "项目符号列表",
-  "formatQuote": "引用"
+  "formatQuote": "引用",
+  "localDaemonAway": "本机 Lody 未运行",
+  "localChip": "本机",
+  "prefLocalOnly": "仅连接本机 Lody（离线）",
+  "prefLocalOnlyHelp": "直接与本机的 Lody 守护进程同步，不经过云端，断网也能用。其他机器、账单和 GitHub 功能需要联网。"
 }

@@ -14240,3 +14240,43 @@ func FormatQuote() string { return In(i18n.Locale()).FormatQuote() }
 func (msgs Messages) FormatQuote() string {
 	return Catalog.Format(msgs.locale, "formatQuote", nil)
 }
+
+// LocalDaemonAway says "Lody isn't running on this computer"
+// in the language the app shows.
+func LocalDaemonAway() string { return In(i18n.Locale()).LocalDaemonAway() }
+
+// LocalDaemonAway says "Lody isn't running on this computer"
+// in the language of msgs.
+func (msgs Messages) LocalDaemonAway() string {
+	return Catalog.Format(msgs.locale, "localDaemonAway", nil)
+}
+
+// LocalChip says "Local"
+// in the language the app shows.
+func LocalChip() string { return In(i18n.Locale()).LocalChip() }
+
+// LocalChip says "Local"
+// in the language of msgs.
+func (msgs Messages) LocalChip() string {
+	return Catalog.Format(msgs.locale, "localChip", nil)
+}
+
+// PrefLocalOnly says "Connect only to this computer's Lody"
+// in the language the app shows.
+func PrefLocalOnly() string { return In(i18n.Locale()).PrefLocalOnly() }
+
+// PrefLocalOnly says "Connect only to this computer's Lody"
+// in the language of msgs.
+func (msgs Messages) PrefLocalOnly() string {
+	return Catalog.Format(msgs.locale, "prefLocalOnly", nil)
+}
+
+// PrefLocalOnlyHelp says "Sync with the Lody daemon on this computer instead of the cloud, so the app works without a network. Other machines, …"
+// in the language the app shows.
+func PrefLocalOnlyHelp() string { return In(i18n.Locale()).PrefLocalOnlyHelp() }
+
+// PrefLocalOnlyHelp says "Sync with the Lody daemon on this computer instead of the cloud, so the app works without a network. Other machines, …"
+// in the language of msgs.
+func (msgs Messages) PrefLocalOnlyHelp() string {
+	return Catalog.Format(msgs.locale, "prefLocalOnlyHelp", nil)
+}

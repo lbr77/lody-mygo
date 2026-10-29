@@ -103,7 +103,7 @@ func editBlocks(u Entry, text string) []any {
 // EditAndResend replaces the last user message with text and runs the
 // turn again from the reply before it.
 func (r *Replica) EditAndResend(ctx context.Context, machineID, userID, cliType, agentType string, u Entry, text string) error {
-	return editAndResend(ctx, r.Conn.MachineRPC, r.ID, machineID, userID, cliType, agentType, u, text)
+	return editAndResend(ctx, r.machineRPC, r.ID, machineID, userID, cliType, agentType, u, text)
 }
 
 func editAndResend(ctx context.Context, call rpc, sessionID, machineID, userID, cliType, agentType string, u Entry, text string) error {
@@ -157,7 +157,7 @@ type ForkResult struct {
 // worktree from the last commit. target is the session to make, new when
 // empty; dirtyOK confirms leaving uncommitted changes behind.
 func (r *Replica) Fork(ctx context.Context, machineID, userID, turnID string, worktree bool, target string, dirtyOK bool) (ForkResult, error) {
-	return fork(ctx, r.Conn.MachineRPC, r.ID, machineID, userID, turnID, worktree, target, dirtyOK)
+	return fork(ctx, r.machineRPC, r.ID, machineID, userID, turnID, worktree, target, dirtyOK)
 }
 
 func fork(ctx context.Context, call rpc, sessionID, machineID, userID, turnID string, worktree bool, target string, dirtyOK bool) (ForkResult, error) {
@@ -214,7 +214,7 @@ func fork(ctx context.Context, call rpc, sessionID, machineID, userID, turnID st
 
 // Terminate ends the agent process a session runs on its machine.
 func (r *Replica) Terminate(ctx context.Context, machineID string) error {
-	return Terminate(ctx, r.Conn.MachineRPC, machineID, r.ID)
+	return Terminate(ctx, r.machineRPC, machineID, r.ID)
 }
 
 // rpc is a machine RPC, as cloud.Conn makes one.
@@ -243,7 +243,7 @@ func Terminate(ctx context.Context, call rpc, machineID, sessionID string) error
 // Goal steers a session's goal: set (with an objective), pause, resume or
 // clear. It returns how the machine took it.
 func (r *Replica) Goal(ctx context.Context, machineID, userID, action, objective string) (string, error) {
-	return goal(ctx, r.Conn.MachineRPC, r.ID, machineID, userID, action, objective)
+	return goal(ctx, r.machineRPC, r.ID, machineID, userID, action, objective)
 }
 
 func goal(ctx context.Context, call rpc, sessionID, machineID, userID, action, objective string) (string, error) {
@@ -272,7 +272,7 @@ func goal(ctx context.Context, call rpc, sessionID, machineID, userID, action, o
 // LiveStatus asks the machine what the session's agent is doing: idle,
 // initializing, running, waiting or unknown.
 func (r *Replica) LiveStatus(ctx context.Context, machineID string) (string, error) {
-	return liveStatus(ctx, r.Conn.MachineRPC, r.ID, machineID)
+	return liveStatus(ctx, r.machineRPC, r.ID, machineID)
 }
 
 func liveStatus(ctx context.Context, call rpc, sessionID, machineID string) (string, error) {

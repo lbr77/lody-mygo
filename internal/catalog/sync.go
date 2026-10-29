@@ -12,6 +12,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/lbr77/lody-mygo/internal/cloud"
 	"github.com/lbr77/lody-mygo/internal/flock"
+	"github.com/lbr77/lody-mygo/internal/localplane"
 	"github.com/lbr77/lody-mygo/internal/streams"
 )
 
@@ -30,6 +31,9 @@ type Sync struct {
 	Conn     *cloud.Conn
 	OnChange func(Catalog)
 	OnState  func(State)
+	// Local, when set, syncs the catalog with this machine's daemon over
+	// its local data plane rather than with the cloud.
+	Local *localplane.Conn
 
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -47,6 +51,7 @@ type replica struct {
 	mu     sync.Mutex
 	flock  *flock.Flock
 	client *streams.Client
+	room   *localplane.Room // the data plane room, when local
 }
 
 // Start begins syncing. Stop ends it.
@@ -125,8 +130,94 @@ func (s *Sync) run(ctx context.Context, mode string) {
 
 var errLimit = errors.New("catalog: replica exceeds its limit")
 
+// planeVersion is a Flock version as the data plane spells it: each peer's
+// {physicalTime, logicalCounter}, where the replica has [time, counter].
+func planeVersion(v flock.Version) string {
+	out := map[string]any{}
+	for peer, at := range v {
+		if pair, ok := at.([]any); ok && len(pair) == 2 {
+			out[peer] = map[string]any{"physicalTime": pair[0], "logicalCounter": pair[1]}
+		}
+	}
+	b, _ := json.Marshal(out)
+	return string(b)
+}
+
+// localRoom is a catalog stream's data plane room: the meta room, or the
+// Flock <workspace>:wf:workspace, or <workspace>:mf:<machine>.
+func localRoom(workspace, mode string) localplane.Room {
+	switch mode {
+	case "meta":
+		return localplane.Room{Scope: "meta"}
+	case workspaceMode:
+		return localplane.FlockRoom(workspace + ":wf:workspace")
+	}
+	return localplane.FlockRoom(workspace + ":mf:" + mode)
+}
+
+// followLocal follows a catalog stream through the daemon's data plane:
+// joins its room with what it has, takes the bundle it missed, and takes
+// in what the daemon pushes until the connection ends.
+func (s *Sync) followLocal(ctx context.Context, mode string, failures *int) error {
+	f, err := flock.New("lody-mygo-" + uuid.NewString())
+	if err != nil {
+		return err
+	}
+	room := localRoom(s.Local.Workspace, mode)
+	rep := &replica{flock: f, room: &room}
+	pushes := make(chan localplane.Payload, 256)
+	// A fresh Flock has nothing, which the daemon takes as no version.
+	joined, err := s.Local.Join(ctx, room, "", func(p localplane.Payload) {
+		select {
+		case pushes <- p:
+		case <-ctx.Done():
+		}
+	}, nil)
+	if err != nil {
+		return err
+	}
+	defer s.Local.Leave(room)
+	take := func(p *localplane.Payload) error {
+		if p == nil || p.Kind != "flock-json" || len(p.Bundle) == 0 {
+			return nil
+		}
+		var bundle map[string]any
+		if err := json.Unmarshal(p.Bundle, &bundle); err != nil {
+			return err
+		}
+		rep.mu.Lock()
+		defer rep.mu.Unlock()
+		return f.ImportJSON(bundle)
+	}
+	if err := take(joined.Payload); err != nil {
+		return err
+	}
+	if err := s.settle(mode, rep); err != nil {
+		return err
+	}
+	*failures = 0
+	for {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-s.Local.Done():
+			return s.Local.Err()
+		case p := <-pushes:
+			if err := take(&p); err != nil {
+				return err
+			}
+			if err := s.settle(mode, rep); err != nil {
+				return err
+			}
+		}
+	}
+}
+
 // follow bootstraps a replica and tails it until an error.
 func (s *Sync) follow(ctx context.Context, mode string, failures *int) error {
+	if s.Local != nil {
+		return s.followLocal(ctx, mode, failures)
+	}
 	name := "meta"
 	switch mode {
 	case "meta":
@@ -334,7 +425,18 @@ func (s *Sync) writeTo(ctx context.Context, rep *replica, mode string, edit func
 	if err != nil {
 		return err
 	}
-	if _, err := rep.client.Append(ctx, "application/octet-stream", streams.EncodeFrame(body)); err != nil {
+	if rep.room != nil {
+		// Through the daemon, as a Flock bundle, with the version after it.
+		rep.mu.Lock()
+		after, verr := rep.flock.Version()
+		rep.mu.Unlock()
+		if verr != nil {
+			return verr
+		}
+		if err := s.Local.Update(*rep.room, planeVersion(after), localplane.Payload{Kind: "flock-json", Bundle: body}); err != nil {
+			return err
+		}
+	} else if _, err := rep.client.Append(ctx, "application/octet-stream", streams.EncodeFrame(body)); err != nil {
 		return err
 	}
 	rep.mu.Lock()

@@ -44,6 +44,10 @@ type Conn struct {
 	ID      string
 	UserID  string
 	HTTP    *http.Client // for streams; long polls need no client timeout
+	// Local, when set, answers machine RPCs in place of the cloud: this
+	// machine's daemon over its control socket, when the app syncs only
+	// with it.
+	Local func(ctx context.Context, method string, params any, timeout time.Duration) (json.RawMessage, error)
 
 	mu      sync.Mutex
 	grant   *Grant
@@ -167,6 +171,9 @@ func WithRequestID(ctx context.Context, id string) context.Context {
 // MachineRPCProgress is MachineRPC that hands onProgress the progress
 // frames before the answer; each one restarts the timeout.
 func (w *Conn) MachineRPCProgress(ctx context.Context, machineID, method string, params any, timeout time.Duration, onProgress func(json.RawMessage)) (json.RawMessage, error) {
+	if w.Local != nil {
+		return w.Local(ctx, method, params, timeout)
+	}
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	idle := time.AfterFunc(timeout+3*time.Second, cancel)

@@ -53,7 +53,7 @@ func (a *App) inboxItems() ([]inboxItem, *fetched) {
 		return out, err
 	})
 	// Lody's query is live; this one is asked again each minute.
-	if !a.offline && !f.loading && time.Since(a.inboxAt) > time.Minute {
+	if !a.noCloud() && !f.loading && time.Since(a.inboxAt) > time.Minute {
 		if !a.inboxAt.IsZero() {
 			a.reload(f, nil)
 		}
@@ -193,7 +193,7 @@ func (a *App) computeSharingReview() sharingReview {
 // reconcileSharingReview tells the server whether the review applies,
 // when what it was computed from changed.
 func (a *App) reconcileSharingReview(sr sharingReview) {
-	if !sr.ready || a.convex == nil || a.offline {
+	if !sr.ready || a.convex == nil || a.noCloud() {
 		return
 	}
 	key := a.workspaceID + "|" + map[bool]string{true: "on", false: "off"}[sr.active] + "|" + sr.revision

@@ -2,6 +2,7 @@ package session
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -13,6 +14,8 @@ import (
 	loro "github.com/aholstenson/loro-go"
 	"github.com/google/uuid"
 	"github.com/lbr77/lody-mygo/internal/cloud"
+	"github.com/lbr77/lody-mygo/internal/localplane"
+	"github.com/lbr77/lody-mygo/internal/localterm"
 	"github.com/lbr77/lody-mygo/internal/streams"
 )
 
@@ -24,6 +27,10 @@ type Replica struct {
 	ID       string
 	Conn     *cloud.Conn
 	OnChange func(*View)
+	// Local, when set, syncs the session with this machine's daemon over
+	// its local data plane rather than with the cloud.
+	Local *localplane.Conn
+	local *localplane.Room // the room joined while following locally
 
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -96,7 +103,13 @@ func (r *Replica) timeThoughts(v *View, now time.Time) {
 
 // Open starts following the session.
 func Open(conn *cloud.Conn, id string, onChange func(*View)) *Replica {
-	r := &Replica{ID: id, Conn: conn, OnChange: onChange, doc: loro.NewLoroDoc(), status: "syncing", firstReady: make(chan struct{})}
+	return OpenLocal(conn, nil, id, onChange)
+}
+
+// OpenLocal starts following the session through this machine's daemon
+// when local is set, through the cloud otherwise.
+func OpenLocal(conn *cloud.Conn, local *localplane.Conn, id string, onChange func(*View)) *Replica {
+	r := &Replica{ID: id, Conn: conn, Local: local, OnChange: onChange, doc: loro.NewLoroDoc(), status: "syncing", firstReady: make(chan struct{})}
 	r.ctx, r.cancel = context.WithCancel(context.Background())
 	go r.run()
 	return r
@@ -177,7 +190,12 @@ func (r *Replica) flush() {
 func (r *Replica) run() {
 	backoff := time.Second
 	for r.ctx.Err() == nil {
-		err := r.follow()
+		var err error
+		if r.Local != nil {
+			err = r.followLocal()
+		} else {
+			err = r.follow()
+		}
 		if r.ctx.Err() != nil {
 			return
 		}
@@ -189,7 +207,7 @@ func (r *Replica) run() {
 			reason = err.Error()
 		}
 		r.setStatus("syncing", reason)
-		if streams.IsUnauthorized(err) {
+		if streams.IsUnauthorized(err) && r.Conn != nil {
 			r.Conn.Invalidate()
 		}
 		if errors.Is(err, errLimit) {
@@ -304,14 +322,91 @@ func (r *Replica) follow() error {
 	}
 }
 
+// machineRPC asks the session's machine: over this computer's control
+// socket when following locally, else through the cloud.
+func (r *Replica) machineRPC(ctx context.Context, machine, method string, params any, timeout time.Duration) (json.RawMessage, error) {
+	if r.Local != nil {
+		return localterm.MachineRPC(ctx, r.Local.Workspace, method, params, timeout)
+	}
+	return r.Conn.MachineRPC(ctx, machine, method, params, timeout)
+}
+
+// followLocal follows the session through the daemon's data plane: it
+// joins the session's document with what it has, takes what it missed,
+// and imports what the daemon pushes until the connection ends.
+func (r *Replica) followLocal() error {
+	doc := loro.NewLoroDoc()
+	room := localplane.DocRoom("session-" + r.ID)
+	pushes := make(chan localplane.Payload, 256)
+	// A fresh document has nothing, which the daemon takes as no version.
+	joined, err := r.Local.Join(r.ctx, room, "", func(p localplane.Payload) {
+		select {
+		case pushes <- p:
+		case <-r.ctx.Done():
+		}
+	}, nil)
+	if err != nil {
+		return err
+	}
+	defer r.Local.Leave(room)
+	if joined.Payload != nil {
+		data, err := joined.Payload.Bytes()
+		if err != nil {
+			return err
+		}
+		if _, err := doc.Import(data); err != nil {
+			return err
+		}
+	}
+	r.mu.Lock()
+	r.doc, r.local = doc, &room
+	wasReady := r.ready
+	r.ready, r.status, r.reason = true, "live", ""
+	r.mu.Unlock()
+	r.readyOnce.Do(func() { close(r.firstReady) })
+	r.emit(!wasReady)
+	defer func() {
+		r.mu.Lock()
+		r.local = nil
+		r.mu.Unlock()
+	}()
+	for {
+		select {
+		case <-r.ctx.Done():
+			return r.ctx.Err()
+		case <-r.Local.Done():
+			return r.Local.Err()
+		case p := <-pushes:
+			data, err := p.Bytes()
+			if err != nil {
+				continue
+			}
+			r.mu.Lock()
+			_, err = r.doc.Import(data)
+			r.mu.Unlock()
+			if err != nil {
+				return err
+			}
+			r.emit(false)
+		}
+	}
+}
+
 // upload appends the document's changes since before.
 func (r *Replica) upload(ctx context.Context, before *loro.VersionVector) error {
 	r.mu.Lock()
 	update, err := r.doc.Export(loro.UpdatesMode(before))
-	client := r.client
+	client, room, have := r.client, r.local, ""
+	if room != nil {
+		have = base64.StdEncoding.EncodeToString(r.doc.OplogVv().Encode())
+	}
 	r.mu.Unlock()
 	if err != nil {
 		return err
+	}
+	if room != nil {
+		// Through the daemon, which takes it on to the cloud when it can.
+		return r.Local.Update(*room, have, localplane.DocUpdate(update))
 	}
 	_, err = client.Append(ctx, "application/octet-stream", streams.EncodeFrame(update))
 	return err
@@ -452,7 +547,7 @@ func (r *Replica) Send(ctx context.Context, t Turn) (string, error) {
 	if err := t.MarkDispatch(ctx, r.ID, turnID, false); err != nil {
 		return Uploaded, err
 	}
-	reply, err := r.Conn.MachineRPC(ctx, t.MachineID, "session/dispatch-turn", map[string]any{
+	reply, err := r.machineRPC(ctx, t.MachineID, "session/dispatch-turn", map[string]any{
 		"sessionId":   r.ID,
 		"userTurnId":  turnID,
 		"userId":      t.UserID,
@@ -685,7 +780,7 @@ func (r *Replica) Stop(ctx context.Context, machineID string) error {
 	if turnID == "" {
 		return errors.New("session: nothing is running")
 	}
-	reply, err := r.Conn.MachineRPC(ctx, machineID, "session/cancel", map[string]any{"sessionId": r.ID, "turnId": turnID}, 35*time.Second)
+	reply, err := r.machineRPC(ctx, machineID, "session/cancel", map[string]any{"sessionId": r.ID, "turnId": turnID}, 35*time.Second)
 	if err != nil {
 		return err
 	}

@@ -107,6 +107,13 @@ func (a *App) preferencesPage(c *ui.Context, p *palette) {
 	})
 	a.quickRepliesSection(c, p)
 	prefSection(c, p, locales.PrefAdvanced(), false, func() {
+		settingRow(c.Key("localOnly"), p, locales.PrefLocalOnly(), locales.PrefLocalOnlyHelp(), func() {
+			on := a.localOnly
+			lodySwitch(c, &on, false).Label(locales.PrefLocalOnly())
+			if on != a.localOnly {
+				a.setLocalOnly(on)
+			}
+		})
 		a.switchRow(c, p, locales.PrefExperimental(), locales.PrefExperimentalHelp(), &a.experimental)
 		settingRow(c, p, locales.PrefClearCache(), locales.PrefClearCacheHelp(), func() {
 			outlineButton(c, p, iconTrash, locales.PrefClearCacheButton()).OnClick(func() {

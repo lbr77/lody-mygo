@@ -43,7 +43,7 @@ func (a *App) workspaceTier(watch bool) string {
 	if t.workspace != a.workspaceID {
 		*t = planTier{workspace: a.workspaceID}
 	}
-	if watch && !t.asking && time.Since(t.at) > time.Minute && a.convex != nil && !a.offline && a.workspaceID != "" {
+	if watch && !t.asking && time.Since(t.at) > time.Minute && a.convex != nil && !a.noCloud() && a.workspaceID != "" {
 		t.asking = true
 		convex, ws := a.convex, a.workspaceID
 		go func() {
