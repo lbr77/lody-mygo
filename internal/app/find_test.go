@@ -15,6 +15,7 @@ import (
 	"github.com/egoist/mygo/ui"
 
 	"github.com/lbr77/lody-mygo/internal/catalog"
+	"github.com/lbr77/lody-mygo/internal/cloud"
 	"github.com/lbr77/lody-mygo/internal/session"
 )
 
@@ -452,4 +453,31 @@ func TestMermaid(t *testing.T) {
 	a.view.Entries = a.view.Entries[:2]
 	a.view.Entries[1].Items = []session.Item{{ID: "m", Type: "text", Text: "```mermaid\nflowchart TD\n  A[Write code] --> B{Tests pass?}\n  B -->|yes| C(Commit)\n  B -->|no| A\n```\n\n```mermaid\nsequenceDiagram\n  participant U as User\n  U->>Lody: send\n  Lody-->>U: reply\n```"}}
 	snap(t, a, "mermaid", false, nil)
+}
+
+func TestHTMLPreview(t *testing.T) {
+	a := fixture()
+	a.view.Working = false
+	a.view.Entries = a.view.Entries[:2]
+	a.conn = &cloud.Conn{ID: "w1"}
+	a.panelOpen = true
+	in := a.inspectFor("s1")
+	in.openPanel(tabFiles)
+	in.file = "site/index.html"
+	in.preview = &filePreview{path: "site/index.html", text: "<h1>Hello</h1>"}
+	tt := ui.NewTester(a.render, 1100, 720)
+	tt.Frame()
+	tt.Advance(400 * time.Millisecond)
+	tt.Frame()
+	// Source first; Preview renders it, here without a window to hold it.
+	if !tt.HasText("Preview") {
+		t.Fatalf("%q", tt.Texts())
+	}
+	if err := tt.Click("Preview"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if !in.preview.htmlPreview || !tt.HasText("Source") {
+		t.Fatalf("preview %v: %q", in.preview.htmlPreview, tt.Texts())
+	}
 }

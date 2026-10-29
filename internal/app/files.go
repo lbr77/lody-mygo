@@ -64,6 +64,13 @@ type filePreview struct {
 	code    *editor.State
 	asText  bool // a Markdown file shown as its source
 
+	// An HTML file shown rendered, as lody-ios's preview: in a web view
+	// of its own, untrusted, made between frames.
+	htmlPreview bool
+	web         *mygo.WebView
+	webErr      string
+	webMaking   bool
+
 	// Editing, through Code Collab: the file as opened, its digest the
 	// base a save writes over.
 	editing  bool
@@ -398,6 +405,7 @@ func (a *App) openFile(in *inspectState, s collab.Session, file string) {
 func (a *App) fileView(c *ui.Context, p *palette, in *inspectState, s collab.Session) {
 	fp := in.preview
 	markdownFile := strings.EqualFold(path.Ext(in.file), ".md") || strings.EqualFold(path.Ext(in.file), ".markdown")
+	htmlFile := strings.EqualFold(path.Ext(in.file), ".html") || strings.EqualFold(path.Ext(in.file), ".htm")
 	ui.Row(c).Shrink(0).Height(36).Padding(0, 8).Gap(6).AlignItems(ui.Center).BorderWidth(0, 0, 1, 0).BorderColor(p.Border).Children(func() {
 		iconButton(c, p, iconChevronLeft, locales.NavBack(), p.Hover).OnClick(func() { in.file = "" })
 		ui.Text(c, in.file).Font(fontMono).FontSize(sizeFoot).TextColor(p.Text).SingleLine().Grow(1).MinWidth(0).Tooltip(in.file)
@@ -407,6 +415,20 @@ func (a *App) fileView(c *ui.Context, p *palette, in *inspectState, s collab.Ses
 				label = locales.PanelPreview()
 			}
 			ghostButton(c, p, label).OnClick(func() { fp.asText = !fp.asText })
+		}
+		if htmlFile && fp != nil && fp.text != "" && !fp.editing {
+			// Source first, as lody-ios opens it; Preview renders it.
+			label := locales.PanelPreview()
+			if fp.htmlPreview {
+				label = locales.PanelSource()
+			}
+			ghostButton(c, p, label).OnClick(func() {
+				fp.htmlPreview = !fp.htmlPreview
+				if !fp.htmlPreview && fp.web != nil {
+					fp.web.Destroy()
+					fp.web = nil
+				}
+			})
 		}
 		switch {
 		case fp != nil && fp.editing:
@@ -448,6 +470,8 @@ func (a *App) fileView(c *ui.Context, p *palette, in *inspectState, s collab.Ses
 		})
 	case fp.binary:
 		panelStatus(c, p, false, locales.PanelBinary(), firstNonEmpty(fp.mime, ""))
+	case htmlFile && fp.htmlPreview:
+		a.htmlPreview(c, p, fp)
 	case markdownFile && !fp.asText:
 		ui.Scroll(c).Grow(1).MinHeight(0).Padding(16, 20, 24, 20).Children(func() {
 			markdown.View(c.Key("md/"+in.file), fp.text, &a.md)
@@ -669,4 +693,29 @@ func (a *App) askLanguageServer(fp *filePreview, s collab.Session, what string, 
 			}
 		})
 	}()
+}
+
+// htmlPreview renders an HTML file's text in a web view of its own.
+func (a *App) htmlPreview(c *ui.Context, p *palette, fp *filePreview) {
+	if fp.web == nil && fp.webErr == "" && !fp.webMaking && a.win != nil {
+		fp.webMaking = true
+		win, html := a.win, fp.text
+		a.update(func() {
+			web, err := win.NewWebView(mygo.WebViewOptions{Page: mygo.PageOptions{Untrusted: true}})
+			fp.webMaking, fp.web = false, web
+			if err != nil {
+				fp.webErr = err.Error()
+				return
+			}
+			web.Page().LoadHTML(html, "")
+		})
+	}
+	switch {
+	case fp.webMaking:
+		panelStatus(c, p, true, locales.Loading(), "")
+	case fp.web == nil:
+		panelStatus(c, p, false, locales.PreviewNoWebView(), fp.webErr)
+	default:
+		ui.WebView(c, fp.web).Grow(1).MinHeight(0).FillWidth()
+	}
 }
