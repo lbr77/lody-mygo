@@ -197,12 +197,19 @@ type contextMenu struct {
 // right-clicked (or Control-clicked), rising 4px into place as Lody's
 // context menus do.
 func lodyContextMenu(c *ui.Context, p *palette, el ui.Element, st *contextMenu, rowH float32, fn func(m *lodyMenu)) {
+	lodyContextMenuWith(c, p, el, st, rowH, nil, fn)
+}
+
+// lodyContextMenuWith is lodyContextMenu for an element that takes other
+// input too: other has what the menu leaves, as an element has one input
+// handler.
+func lodyContextMenuWith(c *ui.Context, p *palette, el ui.Element, st *contextMenu, rowH float32, other func(ev ui.InputEvent) bool, fn func(m *lodyMenu)) {
 	el.HandleInput(func(ev ui.InputEvent) bool {
 		if ev.Kind == ui.InputPointerDown && (ev.Button == 1 || ev.Button == 0 && ev.Mods&ui.Ctrl != 0) {
 			st.open, st.sub, st.at = true, "", ui.Point{X: ev.X, Y: ev.Y}
 			return true
 		}
-		return false
+		return other != nil && other(ev)
 	})
 	if !st.open {
 		st.sub = ""

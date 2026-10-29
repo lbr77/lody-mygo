@@ -402,7 +402,13 @@ func (a *App) sessionRow(c *ui.Context, p *palette, r sideRow) {
 		a.open(s.ID)
 	}
 	sess := *s
-	lodyContextMenu(c, p, row, a.rowMenu("row/"+s.ID), 28, func(m *lodyMenu) { a.sessionRowMenu(m, sess) })
+	// The row takes its input once: the context menu, and a sideways
+	// scroll over its title.
+	var title titleBox
+	rowBox := row.Bounds()
+	lodyContextMenuWith(c, p, row, a.rowMenu("row/"+s.ID), 28, func(ev ui.InputEvent) bool {
+		return a.scrubTitle(ev, s.ID, rowBox, &title)
+	}, func(m *lodyMenu) { a.sessionRowMenu(m, sess) })
 	a.sessionHover(c, p, row, s, hovered, row.Pressed() || clicked)
 	ink := p.SideRow
 	if selected {
@@ -423,7 +429,7 @@ func (a *App) sessionRow(c *ui.Context, p *palette, r sideRow) {
 			a.renameField(c, p, s)
 			return
 		}
-		rowTitle(c, s.Title, ink, hovered)
+		title = a.rowTitle(c, s.ID, s.Title, ink, hovered)
 		a.rowEnd(c, p, s, !r.nested && r.depth == 0, hovered)
 	})
 }
@@ -431,25 +437,76 @@ func (a *App) sessionRow(c *ui.Context, p *palette, r sideRow) {
 // rowTitle is a row's title, ellipsized; while the row is hovered, a
 // title too long to show runs back and forth, as Lody's marquee does:
 // after 600ms, over max(3.8s, 2.4s + 1s every 30px it overflows by).
-func rowTitle(c *ui.Context, title string, ink ui.Color, hovered bool) {
+// titleSwipe is a sidebar title moved by a sideways scroll: whose, and by
+// how much.
+type titleSwipe struct {
+	id     string
+	offset float32
+}
+
+// titleBox is where a row's title lies, as the last frame laid it out,
+// and how far the title runs past it.
+type titleBox struct {
+	clip ui.Rect
+	over float32
+}
+
+// scrubTitle moves a long title under a sideways scroll over it, as
+// Lody's: the marquee stops, and the title stays where it was put.
+func (a *App) scrubTitle(ev ui.InputEvent, id string, rb ui.Rect, t *titleBox) bool {
+	if ev.Kind != ui.InputScroll || t.over <= 8 {
+		return false
+	}
+	cb := t.clip
+	x, y := rb.X+ev.X, rb.Y+ev.Y
+	if x < cb.X || x > cb.X+cb.W || y < cb.Y || y > cb.Y+cb.H {
+		return false
+	}
+	delta := ev.DX
+	if delta == 0 && ev.Mods&ui.Shift != 0 {
+		delta = ev.DY
+	}
+	if abs32(delta) < 1 {
+		return false
+	}
+	sw := &a.titleSwipe
+	if sw.id != id {
+		sw.id, sw.offset = id, 0
+	}
+	sw.offset = max(-t.over, min(0, sw.offset-delta))
+	return true
+}
+
+func (a *App) rowTitle(c *ui.Context, id, title string, ink ui.Color, hovered bool) titleBox {
+	sw := &a.titleSwipe
+	if !hovered && sw.id == id {
+		// The pointer leaving puts the title back.
+		sw.id = ""
+	}
 	clip := ui.Column(c.Key("title")).Grow(1).MinWidth(0).ClipX()
+	var over float32
 	clip.Children(func() {
 		var natural float32
 		// The title's own width, measured where it takes no room.
 		ui.Row(c.Key("measure")).FillWidth().Height(0).Opacity(0).Children(func() {
 			natural = ui.Text(c.Key("m"), title).FontSize(sizeSub).SingleLine().Shrink(0).Bounds().W
 		})
-		over := natural - clip.Bounds().W
+		over = natural - clip.Bounds().W
 		if !hovered || over <= 8 {
 			ui.Text(c.Key("t"), title).FontSize(sizeSub).TextColor(ink).SingleLine().FillWidth()
 			return
 		}
 		run := ui.Text(c.Key("run"), title).FontSize(sizeSub).TextColor(ink).SingleLine().Shrink(0)
+		if sw.id == id {
+			run.Translate(sw.offset, 0)
+			return
+		}
 		dur := time.Duration(max(3.8, 2.4+float64(over)/30) * float64(time.Second))
 		k := run.Keyframes("marquee", []ui.Keyframe{{Value: 0}, {At: dur, Value: 1, Ease: cssEaseInOut}},
 			ui.KeyframeOptions{Repeat: ui.RepeatForever, Alternate: true, Delay: 600 * time.Millisecond})
 		run.Translate(-over*k, 0)
 	})
+	return titleBox{clip: clip.Bounds(), over: over}
 }
 
 // archiveArmed is how long an archive button waits for its confirmation.
