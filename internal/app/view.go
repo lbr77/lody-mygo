@@ -39,9 +39,7 @@ func (a *App) render(c *ui.Context) {
 	switch a.phase {
 	case phaseLoading:
 		a.booting = true
-		ui.Column(c.Key("loading")).Fill().Center().Background(p.Canvas).DragWindow().Children(func() {
-			bootMark(c)
-		})
+		a.bootShell(c, p, ui.Column(c.Key("loading")).Fill().DragWindow(), a.workspaceID != "")
 	case phaseSignedOut:
 		a.signInView(c, p)
 	default:
@@ -57,14 +55,61 @@ func (a *App) bootOut(c *ui.Context, p *palette) {
 		return
 	}
 	ui.Overlay(c, func() {
-		shell := ui.Column(c.Key("boot-out")).Absolute().Left(0).Top(0).Right(0).Bottom(0).Center().Background(p.Canvas).PassThrough()
+		shell := ui.Column(c.Key("boot-out")).Absolute().Left(0).Top(0).Right(0).Bottom(0).PassThrough()
 		k := shell.Keyframes("out", []ui.Keyframe{{Value: 1}, {At: 160 * time.Millisecond, Value: 0, Ease: cssEaseOut}})
 		if k <= 0 {
 			a.booting = false
 			return
 		}
-		shell.Opacity(k).Children(func() { bootMark(c) })
+		// Leaving, it takes the layout it leaves to: plain over sign-in.
+		a.bootShell(c, p, shell.Opacity(k), a.phase != phaseSignedOut && a.workspaceID != "")
 	})
+}
+
+// bootShell is Lody's boot shell in el: the sidebar's ground, room for the
+// sidebar where the last session had the workspace, and the workspace
+// card with the launch mark at its middle; plain, the canvas alone. Its
+// layout morphs over 320ms on the sheet curve as it becomes known.
+func (a *App) bootShell(c *ui.Context, p *palette, el ui.Element, workspace bool) {
+	side := float32(0)
+	if workspace && !a.sidebarHidden {
+		side = a.sidebarW()
+	}
+	morph := ui.Animation{Duration: 320 * time.Millisecond, Ease: easeSheet}
+	// A shell first shows the layout as it stands, known before the first
+	// frame as Lody's boot script knows it; a change after morphs.
+	if !a.bootLaid {
+		a.bootSide, a.bootFrame, a.bootLaid = side, b2f(workspace), true
+	}
+	if el.Bounds().W == 0 {
+		el.Jump("boot-side", a.bootSide)
+		el.Jump("boot-frame", a.bootFrame)
+	}
+	w := el.AnimateTo("boot-side", side, morph)
+	frame := el.AnimateTo("boot-frame", b2f(workspace), morph)
+	a.bootSide, a.bootFrame = w, frame
+	el.Background(p.Ground.Mix(p.Canvas, 1-frame)).Children(func() {
+		ui.Row(c.Key("boot-row")).Fill().AlignItems(ui.Stretch).Children(func() { a.bootRow(c, p, w, side, frame) })
+	})
+}
+
+// bootRow is the boot shell's sidebar room and card, w of the side it
+// makes room for, framed as far as frame says.
+func (a *App) bootRow(c *ui.Context, p *palette, w, side, frame float32) {
+	ui.Box(c.Key("boot-sidebar")).Width(w).Shrink(0)
+	// The card's frame, 4 from the window but at the sidebar's side,
+	// rounded and ruled as the workspace's, is there in the workspace
+	// layout alone.
+	gutter := 4 * frame
+	left := gutter
+	if side > 0 {
+		left = gutter * (1 - w/side)
+	}
+	card := ui.Column(c.Key("boot-card")).Grow(1).MinWidth(0).Center().Margin(gutter, gutter, gutter, left).Radius(14 * frame).Background(p.Canvas)
+	if frame > 0 {
+		card.Border(0.5, p.CardRim.Alpha(frame))
+	}
+	card.Children(func() { bootMark(c) })
 }
 
 // signInView follows Lody's login page: a visual panel beside a form

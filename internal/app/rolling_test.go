@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/egoist/mygo/ui"
+
+	"github.com/lbr77/lody-mygo/locales"
 )
 
 // A figure rolls only the digits that changed, the old leaving as the new
@@ -42,4 +44,22 @@ func TestRollingNumber(t *testing.T) {
 	if got := chars(); got != "135" {
 		t.Fatalf("after 900ms %q", got)
 	}
+}
+
+// The boot shell has the last session's layout from its first frame: the
+// sidebar's room and the workspace card, the mark at its middle.
+func TestBootShell(t *testing.T) {
+	a := New()
+	a.phase, a.workspaceID = phaseLoading, "w1"
+	tt := ui.NewTester(a.render, 1100, 720)
+	tt.Frame()
+	snapFrame(t, tt, "boot-workspace")
+	if !tt.HasText(locales.Loading()) {
+		t.Fatalf("no mark: %q", tt.Texts())
+	}
+	b := New()
+	b.phase = phaseLoading
+	tt = ui.NewTester(b.render, 1100, 720)
+	tt.Frame()
+	snapFrame(t, tt, "boot-plain")
 }

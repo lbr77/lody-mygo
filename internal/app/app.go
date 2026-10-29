@@ -83,6 +83,9 @@ type App struct {
 	chatMotion    chatMotion                // what the conversation's motion keeps between frames
 	menus         map[string]*contextMenu   // drawn menus by key: rows' context menus and ⋯
 	booting       bool                      // the boot screen showed, and fades out over the app
+	bootLaid      bool                      // the boot shell's layout is known
+	bootSide      float32                   // the boot shell's sidebar room, as it last showed
+	bootFrame     float32                   // and its card's frame, 0 plain to 1 workspace
 	titleSwipe    titleSwipe                // a sidebar title moved by a sideways scroll
 	changesView   string                    // the Changes panel's Types or Files
 	lastHomeBoard string                    // the home board last unfolded, which the line's end unfolds again
