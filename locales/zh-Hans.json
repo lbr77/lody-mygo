@@ -1091,5 +1091,7 @@
   "previewConnected": "预览已连接",
   "previewConnecting": "正在创建预览链接…",
   "previewClosed": "预览已停止",
-  "previewUnavailable": "预览不可用"
+  "previewUnavailable": "预览不可用",
+  "projectPageFiles": "文件",
+  "projectPageFilesLead": "项目在其机器上的文件夹，只读。"
 }

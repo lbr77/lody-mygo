@@ -11,6 +11,7 @@ import (
 	"github.com/egoist/mygo/ui"
 
 	"github.com/lbr77/lody-mygo/internal/catalog"
+	"github.com/lbr77/lody-mygo/internal/collab"
 	"github.com/lbr77/lody-mygo/internal/flock"
 	"github.com/lbr77/lody-mygo/internal/mention"
 	"github.com/lbr77/lody-mygo/locales"
@@ -46,6 +47,7 @@ type projectWindow struct {
 	cleanup         scriptEditor
 	history         map[string]*historyState // by provider
 	historyProvider string
+	files           *inspectState // the Files page's tree and file
 }
 
 func (a *App) openProject(id string) {
@@ -56,6 +58,7 @@ func (a *App) openProject(id string) {
 func projectWindowPages() []struct{ id, label, lead string } {
 	return []struct{ id, label, lead string }{
 		{"general", locales.ProjectPageGeneral(), locales.ProjectPageGeneralLead()},
+		{"files", locales.ProjectPageFiles(), locales.ProjectPageFilesLead()},
 		{"worktree", "Worktree", locales.ProjectPageWorktreeLead()},
 		{"skills", locales.ProjectPageSkills(), locales.ProjectPageSkillsLead()},
 		{"mcp", locales.ProjectPageMCP(), locales.ProjectPageMCPLead()},
@@ -122,7 +125,7 @@ func (a *App) projectWindow(c *ui.Context, p *palette) {
 				})
 				ui.Scroll(c).Grow(1).MinHeight(0).Padding(12, 24, 24, 24).Gap(14).Children(func() {
 					online := a.presence.IsOnline(project.MachineID)
-					if !online && (w.page == "worktree" || w.page == "skills" || w.page == "conversations") {
+					if !online && (w.page == "worktree" || w.page == "skills" || w.page == "conversations" || w.page == "files") {
 						ui.Text(c, locales.ProjectMachineOffline(a.machineName(project.MachineID))).FontSize(sizeFoot).TextColor(p.Secondary).
 							Padding(10, 12).Radius(8).Background(p.Text.Alpha(0.04))
 						if w.page == "skills" {
@@ -132,6 +135,8 @@ func (a *App) projectWindow(c *ui.Context, p *palette) {
 					switch w.page {
 					case "general":
 						a.projectGeneral(c, p, project)
+					case "files":
+						a.projectFiles(c, p, project, online)
 					case "worktree":
 						a.projectScripts(c, p, project, "setup", &w.setup, online)
 						a.projectScripts(c, p, project, "cleanup", &w.cleanup, online)
@@ -443,4 +448,20 @@ func (a *App) projectMCP(c *ui.Context, p *palette, pr catalog.Project) {
 	if !mine {
 		ui.Text(c, locales.ProjectMCPNotOwner()).FontSize(sizeFoot).TextColor(p.Tertiary)
 	}
+}
+
+// projectFiles browses the project's folder and shows its files, read
+// only, as Lody's project screen does.
+func (a *App) projectFiles(c *ui.Context, p *palette, pr catalog.Project, online bool) {
+	if !online || a.account == nil {
+		return
+	}
+	_, local, _ := strings.Cut(pr.ID, ":local:")
+	w := &a.projectWin
+	if w.files == nil {
+		w.files = &inspectState{session: "project:" + pr.ID, scope: collab.ScopeBranch, dirs: map[string]*dirListing{}, open: map[string]bool{}, changes: map[string]*changesState{}}
+	}
+	in := w.files
+	s := collab.Session{Machine: pr.MachineID, LocalProject: local, User: a.account.User.ID}
+	ui.Column(c).FillWidth().Height(440).Radius(10).Border(1, p.Border).Clip().Children(func() { a.fileBrowser(c, p, in, s) })
 }

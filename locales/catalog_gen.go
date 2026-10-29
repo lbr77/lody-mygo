@@ -11012,3 +11012,23 @@ func PreviewUnavailable() string { return In(i18n.Locale()).PreviewUnavailable()
 func (msgs Messages) PreviewUnavailable() string {
 	return Catalog.Format(msgs.locale, "previewUnavailable", nil)
 }
+
+// ProjectPageFiles says "Files"
+// in the language the app shows.
+func ProjectPageFiles() string { return In(i18n.Locale()).ProjectPageFiles() }
+
+// ProjectPageFiles says "Files"
+// in the language of msgs.
+func (msgs Messages) ProjectPageFiles() string {
+	return Catalog.Format(msgs.locale, "projectPageFiles", nil)
+}
+
+// ProjectPageFilesLead says "The project's folder on its machine, read only."
+// in the language the app shows.
+func ProjectPageFilesLead() string { return In(i18n.Locale()).ProjectPageFilesLead() }
+
+// ProjectPageFilesLead says "The project's folder on its machine, read only."
+// in the language of msgs.
+func (msgs Messages) ProjectPageFilesLead() string {
+	return Catalog.Format(msgs.locale, "projectPageFilesLead", nil)
+}

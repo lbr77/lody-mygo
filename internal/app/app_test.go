@@ -1615,3 +1615,18 @@ func TestShareDialog(t *testing.T) {
 		}
 	}
 }
+
+func TestProjectFiles(t *testing.T) {
+	a := fixture()
+	a.presence = presence.State{Live: true, Online: []string{"m1"}}
+	a.settingsOpen, a.settingsTab = true, "projects"
+	a.openProject("m1:local:p1")
+	a.projectWin.page = "files"
+	a.projectWin.files = &inspectState{session: "project:m1:local:p1", dirs: map[string]*dirListing{
+		"": {entries: []collab.DirEntry{{Name: "internal", Type: "directory"}, {Name: "go.mod", Type: "file"}}},
+	}, open: map[string]bool{}, changes: map[string]*changesState{}, changed: map[string]bool{"go.mod": true}}
+	tt := snap(t, a, "project-files", false, nil)
+	if !tt.HasText("Files") || !tt.HasText("internal") || !tt.HasText("go.mod") {
+		t.Fatalf("files: %q", tt.Texts())
+	}
+}

@@ -2242,5 +2242,7 @@
   "previewConnected": "Preview connected",
   "previewConnecting": "Creating preview link…",
   "previewClosed": "Preview stopped",
-  "previewUnavailable": "Preview unavailable"
+  "previewUnavailable": "Preview unavailable",
+  "projectPageFiles": "Files",
+  "projectPageFilesLead": "The project's folder on its machine, read only."
 }

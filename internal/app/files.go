@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"path"
 	"strings"
@@ -14,6 +15,7 @@ import (
 	"github.com/egoist/mygo/ui/markdown"
 
 	"github.com/lbr77/lody-mygo/internal/collab"
+	"github.com/lbr77/lody-mygo/internal/localterm"
 	"github.com/lbr77/lody-mygo/locales"
 )
 
@@ -37,6 +39,10 @@ type inspectState struct {
 	changes  map[string]*changesState // by scope
 	change   string                   // the file Changes shows
 	turnDiff *turnDiffState           // a reply's change to a file, shown over Changes
+	// The files changed, from the local Lody's file index, for a session
+	// on this machine.
+	changed    map[string]bool
+	indexAsked bool
 }
 
 type dirListing struct {
@@ -103,6 +109,7 @@ func (a *App) collabSession() (collab.Session, bool) {
 func (a *App) refreshInspector(in *inspectState) {
 	if in.tab == tabFiles {
 		in.dirs = map[string]*dirListing{}
+		in.indexAsked = false
 		if in.preview != nil && !in.preview.loading {
 			in.preview = nil
 		}
@@ -234,6 +241,50 @@ func (a *App) filesTab(c *ui.Context, p *palette, in *inspectState) {
 	if !ok {
 		return
 	}
+	a.fileBrowser(c, p, in, s)
+}
+
+// loadFileIndex reads which files a session on this machine changed,
+// from its Lody's file index (code-collab/get-file-index), as Lody's
+// desktop app does before the index's stream catches up.
+func (a *App) loadFileIndex(in *inspectState, s collab.Session) {
+	if in.indexAsked || s.ID == "" || s.Machine != a.localMachine() || a.offline {
+		return
+	}
+	in.indexAsked = true
+	ws := a.workspaceID
+	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 35*time.Second)
+		defer cancel()
+		raw, err := localterm.MachineRPC(ctx, ws, "code-collab/get-file-index", map[string]any{"sessionId": s.ID, "ownerSessionId": s.Owner}, 30*time.Second)
+		var res struct {
+			Status    string                     `json:"status"`
+			FileIndex map[string]json.RawMessage `json:"fileIndex"`
+		}
+		if err != nil || json.Unmarshal(raw, &res) != nil || res.Status != "ok" {
+			return
+		}
+		changed := map[string]bool{}
+		for p, v := range res.FileIndex {
+			var entry struct {
+				Change json.RawMessage `json:"change"`
+			}
+			if json.Unmarshal(v, &entry) == nil && len(entry.Change) > 0 && string(entry.Change) != "null" {
+				changed[p] = true
+				// Its folders hold a change too.
+				for dir := path.Dir(p); dir != "." && dir != "/"; dir = path.Dir(dir) {
+					changed[dir] = true
+				}
+			}
+		}
+		a.update(func() { in.changed = changed })
+	}()
+}
+
+// fileBrowser browses a local project, a session's or one alone, and
+// shows the file chosen.
+func (a *App) fileBrowser(c *ui.Context, p *palette, in *inspectState, s collab.Session) {
+	a.loadFileIndex(in, s)
 	if in.file != "" {
 		a.fileView(c, p, in, s)
 		return
@@ -291,7 +342,11 @@ func (a *App) filesTab(c *ui.Context, p *palette, in *inspectState) {
 					}
 				}
 				ui.Icon(c, icon).Size(15, 15).TextColor(p.Secondary).Shrink(0)
-				ui.Text(c, r.name).FontSize(sizeSub).TextColor(p.Text).SingleLine().MinWidth(0)
+				ink := p.Text
+				if in.changed[r.path] {
+					ink = p.Warning
+				}
+				ui.Text(c, r.name).FontSize(sizeSub).TextColor(ink).SingleLine().MinWidth(0)
 			})
 		}).Fill()
 	})
@@ -309,7 +364,12 @@ func (a *App) openFile(in *inspectState, s collab.Session, file string) {
 	go func() {
 		ctx, cancel := context.WithTimeout(context.Background(), 40*time.Second)
 		defer cancel()
-		res, err := collab.ReadFile(ctx, conn, s, file)
+		read := collab.ReadFile
+		if s.ID == "" {
+			// A project's file, outside any session.
+			read = collab.ReadProjectFile
+		}
+		res, err := read(ctx, conn, s, file)
 		var data []byte
 		if err == nil {
 			data, err = res.Content.Bytes()
@@ -359,7 +419,7 @@ func (a *App) fileView(c *ui.Context, p *palette, in *inspectState, s collab.Ses
 			ghostButton(c, p, locales.Done()).OnClick(func() { fp.stopEditing() })
 			modified := fp.code != nil && fp.code.Buffer.Modified()
 			primaryButton(c, p, locales.Save(), modified && !fp.saving && fp.conflict == nil).OnClick(func() { a.saveFile(fp, s) })
-		case fp.editable() && !(markdownFile && !fp.asText):
+		case fp.editable() && s.ID != "" && !(markdownFile && !fp.asText):
 			if fp.opening {
 				ui.Spinner(c).Size(12, 12)
 			}
@@ -396,6 +456,7 @@ func (a *App) fileView(c *ui.Context, p *palette, in *inspectState, s collab.Ses
 		}
 		editor.View(c, fp.code).Grow(1).MinHeight(0).FillWidth()
 		if fp.editing {
+			c.OnShortcut(ui.Shift, ui.KeyF12, func() { a.askLanguageServer(fp, s, "references", fp.code.Selection().Head) })
 			c.OnShortcut(ui.Cmd, ui.KeyS, func() { a.saveFile(fp, s) })
 			a.watchFile(c, fp, s)
 		}
@@ -575,6 +636,12 @@ func (a *App) editBanner(c *ui.Context, p *palette, fp *filePreview, s collab.Se
 // goToDefinition asks the machine's language server where the word at
 // offset is defined.
 func (a *App) goToDefinition(fp *filePreview, s collab.Session, offset int) {
+	a.askLanguageServer(fp, s, "definition", offset)
+}
+
+// askLanguageServer asks the machine's language server about the symbol at
+// offset: its definition, or its references (Shift+F12).
+func (a *App) askLanguageServer(fp *filePreview, s collab.Session, what string, offset int) {
 	if fp.code == nil {
 		return
 	}
@@ -583,7 +650,7 @@ func (a *App) goToDefinition(fp *filePreview, s collab.Session, offset int) {
 	go func() {
 		ctx, cancel := context.WithTimeout(context.Background(), 35*time.Second)
 		defer cancel()
-		_, err := collab.Lsp(ctx, conn, s, "definition", path, pos.Line, pos.Col)
+		_, err := collab.Lsp(ctx, conn, s, what, path, pos.Line, pos.Col)
 		a.update(func() {
 			switch {
 			case errors.Is(err, collab.ErrNoLanguageServer):

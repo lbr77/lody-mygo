@@ -12,6 +12,8 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"mime"
+	"path"
 	"sort"
 	"strings"
 	"time"
@@ -224,4 +226,45 @@ func SortEntries(entries []DirEntry) {
 		}
 		return strings.ToLower(entries[i].Name) < strings.ToLower(entries[j].Name)
 	})
+}
+
+// ReadProjectFile reads a file of a local project, outside any session,
+// as Lody's project screen does (local-project/read-file): text as is,
+// a binary file in base64.
+func ReadProjectFile(ctx context.Context, conn *cloud.Conn, s Session, rel string) (*Preview, error) {
+	if s.LocalProject == "" {
+		return nil, errors.New("not a local project")
+	}
+	raw, err := conn.ProjectControl(ctx, s.Machine, map[string]any{
+		"type": "local-project/read-file", "localProjectId": s.LocalProject, "relativePath": rel,
+		"maxBytes": MaxPreview, "requestedByUserId": s.User,
+	}, 120*time.Second)
+	if err != nil {
+		return nil, err
+	}
+	var res struct {
+		Path      string `json:"path"`
+		Content   string `json:"content"`
+		Truncated bool   `json:"truncated"`
+		Encoding  string `json:"encoding"`
+	}
+	if err := json.Unmarshal(raw, &res); err != nil {
+		return nil, err
+	}
+	p := &Preview{Status: "ok", Path: firstNonEmptyString(res.Path, rel), Kind: "text", Content: &Text{Encoding: "plain", Text: res.Content}, SizeBytes: len(res.Content)}
+	if res.Encoding == "base64" {
+		p.Kind, p.Content = "binary", &Text{Encoding: "base64", Data: res.Content}
+		p.MimeType = mime.TypeByExtension(strings.ToLower(path.Ext(rel)))
+		p.SizeBytes = base64.StdEncoding.DecodedLen(len(res.Content))
+	}
+	return p, nil
+}
+
+func firstNonEmptyString(s ...string) string {
+	for _, v := range s {
+		if v != "" {
+			return v
+		}
+	}
+	return ""
 }
