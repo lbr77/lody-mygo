@@ -105,7 +105,10 @@ func (a *App) homeTargets(c *ui.Context, p *palette) {
 			ui.Icon(c, iconFolderOpen).Size(16, 16).TextColor(p.Text.Alpha(0.8))
 			ui.Text(c, label).FontSize(12.6).TextColor(p.Text.Alpha(0.8)).SingleLine().MaxWidth(240)
 		})
-		a.optionList(c, p, project, openProject, a.projectOptions(), a.newChat.project, func(id string) { a.newChat.project = id })
+		a.optionList(c, p, project, openProject, a.projectOptions(), a.newChat.project, func(id string) {
+			a.newChat.project, a.newChat.branch = id, ""
+		})
+		a.workdirControls(c, p)
 	})
 }
 

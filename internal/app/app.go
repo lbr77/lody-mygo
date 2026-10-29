@@ -75,7 +75,10 @@ type App struct {
 
 	newChat struct {
 		machine, agent, project string
+		worktree                bool   // the chat gets a worktree of its own
+		branch                  string // the worktree's base, picked
 	}
+	gitStates map[string]*gitState // projects' Git, by project
 
 	sidebarHidden   bool
 	sideOut         float32 // how far the sidebar is out as it slides, 1 shown
@@ -153,6 +156,7 @@ type App struct {
 	role            roleForm
 	password        passwordForm
 	projectWin      projectWindow
+	removal         projectRemoval
 	sidebarWidth    float32 // as dragged; 0 is the default
 	revoking        string  // the share whose revoke awaits confirmation
 	taskOpen        bool    // a task's dialog
@@ -709,8 +713,15 @@ func (a *App) startChat() {
 		title = draftTitle(files[0].Name)
 	}
 	localProject := ""
+	worktree, branch, repo := false, "", ""
 	if p := a.catalog.Project(nc.project); p != nil {
 		_, localProject, _ = strings.Cut(p.ID, ":local:")
+		if st := a.gitStates[p.ID]; localProject != "" && st != nil && st.git {
+			repo = st.repo
+			if nc.worktree {
+				worktree, branch = true, a.newChatBranch(st)
+			}
+		}
 	}
 	a.sending, a.sendError, a.uploading = true, "", ""
 	go func() {
@@ -719,6 +730,7 @@ func (a *App) startChat() {
 		err := sync.CreateSession(ctx, catalog.NewSession{
 			ID: id, MachineID: nc.machine, UserID: userID, Title: title,
 			Agent: *agent, LocalProject: localProject, CreatedAt: time.Now(),
+			Worktree: worktree, Branch: branch, GitHubRepo: repo,
 		})
 		if err != nil {
 			a.update(func() { a.sending, a.sendError = false, locales.FailCreate(err.Error()) })

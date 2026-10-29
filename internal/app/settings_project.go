@@ -197,10 +197,7 @@ func (a *App) projectGeneral(c *ui.Context, p *palette, pr catalog.Project) {
 	settingRow(c, p, locales.ProjectRemove(), hint, func() {
 		b := ghostButton(c, p, locales.ProjectRemove()).Border(1, p.Danger.Alpha(0.4)).Disabled(removing)
 		b.OnClick(func() {
-			a.confirm(locales.ProjectRemoveTitle(project.Name), locales.ProjectRemoveBody(), locales.ProjectRemove(), func() {
-				a.projectWin.open = false
-				a.removeProject(project)
-			})
+			a.askRemoveProject(project)
 		})
 	})
 }

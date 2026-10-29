@@ -1231,20 +1231,11 @@
   "projectParent": "Up one folder",
   "projectAdded": "Added",
   "projectRemove": "Delete project",
-  "projectRemoveTitle": "Delete {name}?",
+  "projectRemoveTitle": "Remove “{name}” from Lody?",
   "@projectRemoveTitle": {
     "placeholders": {
       "name": {
         "type": "String"
-      }
-    }
-  },
-  "projectRemoveBody": "Lody forgets the folder; its files stay on the machine.",
-  "projectRemoveChats": "{n, plural, one {Its chat is archived. Lody forgets the folder; its files stay on the machine.} other {Its # chats are archived. Lody forgets the folder; its files stay on the machine.}}",
-  "@projectRemoveChats": {
-    "placeholders": {
-      "n": {
-        "type": "int"
       }
     }
   },
@@ -1758,5 +1749,60 @@
       }
     }
   },
-  "toolTerminalStreaming": "Terminal output is streaming in your CLI"
+  "toolTerminalStreaming": "Terminal output is streaming in your CLI",
+  "workdirChecking": "Checking whether this project is a git repository.",
+  "workdirMode": "Working directory mode",
+  "workdirLocal": "Local",
+  "workdirWorktree": "Worktree",
+  "workdirLocalHint": "Use the original local project folder.",
+  "workdirWorktreeHint": "Create an isolated git worktree for this session.",
+  "projectRemoveLead": "This removes the project from Lody.",
+  "projectRemoveArchive": "{n, plural, one {# conversation will move to Archive.} other {# conversations will move to Archive.}}",
+  "@projectRemoveArchive": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "projectRemoveArchiveEmpty": "Any conversations in this project will move to Archive.",
+  "projectRemoveRunning": "{n, plural, one {# conversation is still running. Removing the project will stop it.} other {# conversations are still running. Removing the project will stop them.}}",
+  "@projectRemoveRunning": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "projectRemoveOffline": "The device is offline; removal starts when it reconnects.",
+  "projectCleanupWorktrees": "Also delete session worktrees created by Lody",
+  "projectCleanupHelper": "Only clean worktrees are deleted. Worktrees with changes stay on disk.",
+  "projectCleanupUnavailable": "Connect the device to inspect worktrees. You can still remove the project.",
+  "projectCheckingWorktrees": "Checking each worktree for changes…",
+  "projectCleanWorktrees": "{n, plural, one {# clean worktree will be deleted.} other {# clean worktrees will be deleted.}}",
+  "@projectCleanWorktrees": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "projectDirtyWorktrees": "{n, plural, one {# worktree has changes and will stay on disk} other {# worktrees have changes and will stay on disk}}",
+  "@projectDirtyWorktrees": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "projectInspectFailed": "{n, plural, one {# worktree could not be inspected and will be kept on disk.} other {# worktrees could not be inspected and will be kept on disk.}}",
+  "@projectInspectFailed": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "projectFolderSafe": "Lody never deletes the original project folder or its files.",
+  "projectNewFolder": "New folder"
 }

@@ -544,6 +544,11 @@ type NewSession struct {
 	Agent        AgentConfig
 	LocalProject string // local project id, for a session in a project
 	CreatedAt    time.Time
+	// A project session in a worktree of its own, from Branch; GitHubRepo
+	// names the project's repository.
+	Worktree   bool
+	Branch     string
+	GitHubRepo string
 }
 
 // CreateSession creates the session's stream and its catalog entry.
@@ -569,7 +574,17 @@ func (s *Sync) CreateSession(ctx context.Context, n NewSession) error {
 		"agentConfigId": n.Agent.ID,
 	}
 	if n.LocalProject != "" {
-		meta["project"] = map[string]any{"kind": "local", "localProjectId": n.LocalProject}
+		project := map[string]any{"kind": "local", "localProjectId": n.LocalProject}
+		if n.Worktree {
+			project["useWorktree"] = true
+			if n.Branch != "" {
+				project["branch"] = n.Branch
+			}
+		}
+		if n.GitHubRepo != "" {
+			project["githubRepoFullName"] = n.GitHubRepo
+		}
+		meta["project"] = project
 	}
 	return s.Write(ctx, func(f *flock.Flock) error {
 		if err := f.Put([]any{"e", room(n.ID)}, true); err != nil {

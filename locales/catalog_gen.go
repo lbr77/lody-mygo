@@ -5899,34 +5899,14 @@ func (msgs Messages) ProjectRemove() string {
 	return Catalog.Format(msgs.locale, "projectRemove", nil)
 }
 
-// ProjectRemoveTitle says "Delete {name}?"
+// ProjectRemoveTitle says "Remove “{name}” from Lody?"
 // in the language the app shows.
 func ProjectRemoveTitle(name string) string { return In(i18n.Locale()).ProjectRemoveTitle(name) }
 
-// ProjectRemoveTitle says "Delete {name}?"
+// ProjectRemoveTitle says "Remove “{name}” from Lody?"
 // in the language of msgs.
 func (msgs Messages) ProjectRemoveTitle(name string) string {
 	return Catalog.Format(msgs.locale, "projectRemoveTitle", map[string]any{"name": name})
-}
-
-// ProjectRemoveBody says "Lody forgets the folder; its files stay on the machine."
-// in the language the app shows.
-func ProjectRemoveBody() string { return In(i18n.Locale()).ProjectRemoveBody() }
-
-// ProjectRemoveBody says "Lody forgets the folder; its files stay on the machine."
-// in the language of msgs.
-func (msgs Messages) ProjectRemoveBody() string {
-	return Catalog.Format(msgs.locale, "projectRemoveBody", nil)
-}
-
-// ProjectRemoveChats says "{n, plural, one {Its chat is archived. Lody forgets the folder; its files stay on the machine.} other {Its # chats ar…"
-// in the language the app shows.
-func ProjectRemoveChats(n int) string { return In(i18n.Locale()).ProjectRemoveChats(n) }
-
-// ProjectRemoveChats says "{n, plural, one {Its chat is archived. Lody forgets the folder; its files stay on the machine.} other {Its # chats ar…"
-// in the language of msgs.
-func (msgs Messages) ProjectRemoveChats(n int) string {
-	return Catalog.Format(msgs.locale, "projectRemoveChats", map[string]any{"n": n})
 }
 
 // ProjectRemoving says "Removing…"
@@ -8469,4 +8449,204 @@ func ToolTerminalStreaming() string { return In(i18n.Locale()).ToolTerminalStrea
 // in the language of msgs.
 func (msgs Messages) ToolTerminalStreaming() string {
 	return Catalog.Format(msgs.locale, "toolTerminalStreaming", nil)
+}
+
+// WorkdirChecking says "Checking whether this project is a git repository."
+// in the language the app shows.
+func WorkdirChecking() string { return In(i18n.Locale()).WorkdirChecking() }
+
+// WorkdirChecking says "Checking whether this project is a git repository."
+// in the language of msgs.
+func (msgs Messages) WorkdirChecking() string {
+	return Catalog.Format(msgs.locale, "workdirChecking", nil)
+}
+
+// WorkdirMode says "Working directory mode"
+// in the language the app shows.
+func WorkdirMode() string { return In(i18n.Locale()).WorkdirMode() }
+
+// WorkdirMode says "Working directory mode"
+// in the language of msgs.
+func (msgs Messages) WorkdirMode() string {
+	return Catalog.Format(msgs.locale, "workdirMode", nil)
+}
+
+// WorkdirLocal says "Local"
+// in the language the app shows.
+func WorkdirLocal() string { return In(i18n.Locale()).WorkdirLocal() }
+
+// WorkdirLocal says "Local"
+// in the language of msgs.
+func (msgs Messages) WorkdirLocal() string {
+	return Catalog.Format(msgs.locale, "workdirLocal", nil)
+}
+
+// WorkdirWorktree says "Worktree"
+// in the language the app shows.
+func WorkdirWorktree() string { return In(i18n.Locale()).WorkdirWorktree() }
+
+// WorkdirWorktree says "Worktree"
+// in the language of msgs.
+func (msgs Messages) WorkdirWorktree() string {
+	return Catalog.Format(msgs.locale, "workdirWorktree", nil)
+}
+
+// WorkdirLocalHint says "Use the original local project folder."
+// in the language the app shows.
+func WorkdirLocalHint() string { return In(i18n.Locale()).WorkdirLocalHint() }
+
+// WorkdirLocalHint says "Use the original local project folder."
+// in the language of msgs.
+func (msgs Messages) WorkdirLocalHint() string {
+	return Catalog.Format(msgs.locale, "workdirLocalHint", nil)
+}
+
+// WorkdirWorktreeHint says "Create an isolated git worktree for this session."
+// in the language the app shows.
+func WorkdirWorktreeHint() string { return In(i18n.Locale()).WorkdirWorktreeHint() }
+
+// WorkdirWorktreeHint says "Create an isolated git worktree for this session."
+// in the language of msgs.
+func (msgs Messages) WorkdirWorktreeHint() string {
+	return Catalog.Format(msgs.locale, "workdirWorktreeHint", nil)
+}
+
+// ProjectRemoveLead says "This removes the project from Lody."
+// in the language the app shows.
+func ProjectRemoveLead() string { return In(i18n.Locale()).ProjectRemoveLead() }
+
+// ProjectRemoveLead says "This removes the project from Lody."
+// in the language of msgs.
+func (msgs Messages) ProjectRemoveLead() string {
+	return Catalog.Format(msgs.locale, "projectRemoveLead", nil)
+}
+
+// ProjectRemoveArchive says "{n, plural, one {# conversation will move to Archive.} other {# conversations will move to Archive.}}"
+// in the language the app shows.
+func ProjectRemoveArchive(n int) string { return In(i18n.Locale()).ProjectRemoveArchive(n) }
+
+// ProjectRemoveArchive says "{n, plural, one {# conversation will move to Archive.} other {# conversations will move to Archive.}}"
+// in the language of msgs.
+func (msgs Messages) ProjectRemoveArchive(n int) string {
+	return Catalog.Format(msgs.locale, "projectRemoveArchive", map[string]any{"n": n})
+}
+
+// ProjectRemoveArchiveEmpty says "Any conversations in this project will move to Archive."
+// in the language the app shows.
+func ProjectRemoveArchiveEmpty() string { return In(i18n.Locale()).ProjectRemoveArchiveEmpty() }
+
+// ProjectRemoveArchiveEmpty says "Any conversations in this project will move to Archive."
+// in the language of msgs.
+func (msgs Messages) ProjectRemoveArchiveEmpty() string {
+	return Catalog.Format(msgs.locale, "projectRemoveArchiveEmpty", nil)
+}
+
+// ProjectRemoveRunning says "{n, plural, one {# conversation is still running. Removing the project will stop it.} other {# conversations are stil…"
+// in the language the app shows.
+func ProjectRemoveRunning(n int) string { return In(i18n.Locale()).ProjectRemoveRunning(n) }
+
+// ProjectRemoveRunning says "{n, plural, one {# conversation is still running. Removing the project will stop it.} other {# conversations are stil…"
+// in the language of msgs.
+func (msgs Messages) ProjectRemoveRunning(n int) string {
+	return Catalog.Format(msgs.locale, "projectRemoveRunning", map[string]any{"n": n})
+}
+
+// ProjectRemoveOffline says "The device is offline; removal starts when it reconnects."
+// in the language the app shows.
+func ProjectRemoveOffline() string { return In(i18n.Locale()).ProjectRemoveOffline() }
+
+// ProjectRemoveOffline says "The device is offline; removal starts when it reconnects."
+// in the language of msgs.
+func (msgs Messages) ProjectRemoveOffline() string {
+	return Catalog.Format(msgs.locale, "projectRemoveOffline", nil)
+}
+
+// ProjectCleanupWorktrees says "Also delete session worktrees created by Lody"
+// in the language the app shows.
+func ProjectCleanupWorktrees() string { return In(i18n.Locale()).ProjectCleanupWorktrees() }
+
+// ProjectCleanupWorktrees says "Also delete session worktrees created by Lody"
+// in the language of msgs.
+func (msgs Messages) ProjectCleanupWorktrees() string {
+	return Catalog.Format(msgs.locale, "projectCleanupWorktrees", nil)
+}
+
+// ProjectCleanupHelper says "Only clean worktrees are deleted. Worktrees with changes stay on disk."
+// in the language the app shows.
+func ProjectCleanupHelper() string { return In(i18n.Locale()).ProjectCleanupHelper() }
+
+// ProjectCleanupHelper says "Only clean worktrees are deleted. Worktrees with changes stay on disk."
+// in the language of msgs.
+func (msgs Messages) ProjectCleanupHelper() string {
+	return Catalog.Format(msgs.locale, "projectCleanupHelper", nil)
+}
+
+// ProjectCleanupUnavailable says "Connect the device to inspect worktrees. You can still remove the project."
+// in the language the app shows.
+func ProjectCleanupUnavailable() string { return In(i18n.Locale()).ProjectCleanupUnavailable() }
+
+// ProjectCleanupUnavailable says "Connect the device to inspect worktrees. You can still remove the project."
+// in the language of msgs.
+func (msgs Messages) ProjectCleanupUnavailable() string {
+	return Catalog.Format(msgs.locale, "projectCleanupUnavailable", nil)
+}
+
+// ProjectCheckingWorktrees says "Checking each worktree for changes…"
+// in the language the app shows.
+func ProjectCheckingWorktrees() string { return In(i18n.Locale()).ProjectCheckingWorktrees() }
+
+// ProjectCheckingWorktrees says "Checking each worktree for changes…"
+// in the language of msgs.
+func (msgs Messages) ProjectCheckingWorktrees() string {
+	return Catalog.Format(msgs.locale, "projectCheckingWorktrees", nil)
+}
+
+// ProjectCleanWorktrees says "{n, plural, one {# clean worktree will be deleted.} other {# clean worktrees will be deleted.}}"
+// in the language the app shows.
+func ProjectCleanWorktrees(n int) string { return In(i18n.Locale()).ProjectCleanWorktrees(n) }
+
+// ProjectCleanWorktrees says "{n, plural, one {# clean worktree will be deleted.} other {# clean worktrees will be deleted.}}"
+// in the language of msgs.
+func (msgs Messages) ProjectCleanWorktrees(n int) string {
+	return Catalog.Format(msgs.locale, "projectCleanWorktrees", map[string]any{"n": n})
+}
+
+// ProjectDirtyWorktrees says "{n, plural, one {# worktree has changes and will stay on disk} other {# worktrees have changes and will stay on disk}}"
+// in the language the app shows.
+func ProjectDirtyWorktrees(n int) string { return In(i18n.Locale()).ProjectDirtyWorktrees(n) }
+
+// ProjectDirtyWorktrees says "{n, plural, one {# worktree has changes and will stay on disk} other {# worktrees have changes and will stay on disk}}"
+// in the language of msgs.
+func (msgs Messages) ProjectDirtyWorktrees(n int) string {
+	return Catalog.Format(msgs.locale, "projectDirtyWorktrees", map[string]any{"n": n})
+}
+
+// ProjectInspectFailed says "{n, plural, one {# worktree could not be inspected and will be kept on disk.} other {# worktrees could not be inspect…"
+// in the language the app shows.
+func ProjectInspectFailed(n int) string { return In(i18n.Locale()).ProjectInspectFailed(n) }
+
+// ProjectInspectFailed says "{n, plural, one {# worktree could not be inspected and will be kept on disk.} other {# worktrees could not be inspect…"
+// in the language of msgs.
+func (msgs Messages) ProjectInspectFailed(n int) string {
+	return Catalog.Format(msgs.locale, "projectInspectFailed", map[string]any{"n": n})
+}
+
+// ProjectFolderSafe says "Lody never deletes the original project folder or its files."
+// in the language the app shows.
+func ProjectFolderSafe() string { return In(i18n.Locale()).ProjectFolderSafe() }
+
+// ProjectFolderSafe says "Lody never deletes the original project folder or its files."
+// in the language of msgs.
+func (msgs Messages) ProjectFolderSafe() string {
+	return Catalog.Format(msgs.locale, "projectFolderSafe", nil)
+}
+
+// ProjectNewFolder says "New folder"
+// in the language the app shows.
+func ProjectNewFolder() string { return In(i18n.Locale()).ProjectNewFolder() }
+
+// ProjectNewFolder says "New folder"
+// in the language of msgs.
+func (msgs Messages) ProjectNewFolder() string {
+	return Catalog.Format(msgs.locale, "projectNewFolder", nil)
 }

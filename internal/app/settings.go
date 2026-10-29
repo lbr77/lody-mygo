@@ -63,6 +63,7 @@ func (a *App) settingsDialog(c *ui.Context, p *palette) {
 					// Keyed by tab, so that each page fades in as it's chosen.
 					ui.Column(c.Key(firstNonEmpty(a.settingsTab, "account"))).FillWidth().MaxWidth(728).Gap(12).Transition(pageIn).Children(func() {
 						a.settingsPage(c, p)
+						a.removalDialog(c, p)
 						a.confirmDialog(c, p)
 					})
 				})

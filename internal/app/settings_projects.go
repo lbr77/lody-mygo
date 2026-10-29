@@ -45,6 +45,9 @@ type addProjectForm struct {
 	loading bool
 	busy    bool
 	err     string
+	// A folder being named, to make in the one shown.
+	naming     bool
+	folderName string
 }
 
 // projectsPage lists each machine's folders, as Lody's: the folder, the
@@ -124,27 +127,10 @@ func (a *App) projectSettingsRow(c *ui.Context, p *palette, pr catalog.Project, 
 			}
 			m.Separator()
 			if m.Item(locales.ProjectRemove()).Chosen() {
-				body := locales.ProjectRemoveBody()
-				if chats > 0 {
-					body = locales.ProjectRemoveChats(chats)
-				}
-				a.confirm(locales.ProjectRemoveTitle(project.Name), body, locales.ProjectRemove(), func() { a.removeProject(project) })
+				a.askRemoveProject(project)
 			}
 		})
 	})
-}
-
-// removeProject asks the machine to archive the project's chats and drop
-// it, as Lody does.
-func (a *App) removeProject(pr catalog.Project) {
-	_, local, _ := strings.Cut(pr.ID, ":local:")
-	row := map[string]any{"v": 1, "requestedAt": nowMs(), "projectName": pr.Name, "originalRootPath": pr.RootPath}
-	if a.account != nil {
-		row["requestedBy"] = a.account.User.ID
-	}
-	a.streamWrite(pr.MachineID, func(f *flock.Flock) error {
-		return f.Put([]any{"cmd", "deleteLocalProject", local}, row)
-	}, nil)
 }
 
 func (a *App) openAddProject(machine string) {
@@ -280,7 +266,17 @@ func (a *App) addProjectDialog(c *ui.Context, p *palette) {
 				if f.loading {
 					ui.Spinner(c).Size(13, 13)
 				}
+				if f.path != "" && !f.naming {
+					outlineButton(c, p, iconPlus, locales.ProjectNewFolder()).OnClick(func() { f.naming = true })
+				}
 			})
+			if f.naming {
+				ui.Row(c).FillWidth().Gap(6).AlignItems(ui.Center).Children(func() {
+					input(c, p, &f.folderName, locales.ProjectNewFolder(), locales.ProjectNewFolder()).Grow(1).AutoFocus()
+					ghostButton(c, p, locales.Cancel()).OnClick(func() { f.naming, f.folderName = false, "" })
+					primaryButton(c, p, locales.ProviderCreate(), strings.TrimSpace(f.folderName) != "" && !f.busy).OnClick(a.newFolder)
+				})
+			}
 		})
 		ui.Scroll(c).FillWidth().Height(min(360, h-300)).Padding(0, 12).Gap(1).Children(func() {
 			if f.listing == nil {

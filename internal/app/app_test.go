@@ -1190,3 +1190,44 @@ func TestToolCommandAndTail(t *testing.T) {
 		t.Fatalf("spans = %+v", spans)
 	}
 }
+
+func TestNewChatWorktree(t *testing.T) {
+	a := fixture()
+	a.selected, a.view = "", nil
+	a.conn = &cloud.Conn{ID: "w1"}
+	a.pickNewChatDefaults()
+	a.newChat.project = "m1:local:p1"
+	a.gitStates = map[string]*gitState{"m1:local:p1": {git: true, branches: []string{"main", "feature/x"}, current: "main", def: "main", repo: "lbr77/lody-mygo"}}
+	tt := snap(t, a, "newchat-local", false, nil)
+	if !tt.HasText("Local") || !tt.HasText("main") {
+		t.Fatalf("local: %q", tt.Texts())
+	}
+	a.newChat.worktree, a.newChat.branch = true, "feature/x"
+	tt = snap(t, a, "newchat-worktree", false, nil)
+	if !tt.HasText("Worktree") || !tt.HasText("feature/x") {
+		t.Fatalf("worktree: %q", tt.Texts())
+	}
+	if b := a.newChatBranch(a.gitStates["m1:local:p1"]); b != "feature/x" {
+		t.Fatalf("branch %q", b)
+	}
+	a.newChat.branch = "gone"
+	if b := a.newChatBranch(a.gitStates["m1:local:p1"]); b != "main" {
+		t.Fatalf("a branch no longer there: %q", b)
+	}
+}
+
+func TestProjectRemoval(t *testing.T) {
+	a := fixture()
+	a.settingsOpen, a.settingsTab = true, "projects"
+	a.catalog.MachineCaps = map[string]map[string]float64{"m1": {"localProjectRemoval": 1}}
+	a.removal = projectRemoval{open: true, project: a.catalog.Projects[0], cleanup: true,
+		preflight: &removalPreflight{Clean: []worktreeItem{{SessionID: "a"}, {SessionID: "b"}}, Dirty: []worktreeItem{{SessionID: "c"}}}}
+	a.presence = presence.State{Live: true, Online: []string{"m1"}}
+	tt := snap(t, a, "project-removal", false, nil)
+	for _, want := range []string{"Remove “lody-mygo” from Lody?", "2 conversations will move to Archive.", "1 conversation is still running",
+		"Also delete session worktrees created by Lody", "2 clean worktrees will be deleted.", "1 worktree has changes", "never deletes the original project folder"} {
+		if !tt.HasText(want) {
+			t.Fatalf("no %q in %q", want, tt.Texts())
+		}
+	}
+}
