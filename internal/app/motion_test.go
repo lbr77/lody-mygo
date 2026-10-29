@@ -118,3 +118,24 @@ func TestScrollToLatest(t *testing.T) {
 		t.Fatal("didn't go back to the end")
 	}
 }
+
+// While a message's attachments upload they stay in the composer, an
+// image washed over what is still to go and a file with its bar.
+func TestUploadProgress(t *testing.T) {
+	a := fixture()
+	a.view.Entries, a.view.Working = a.view.Entries[:2], false
+	files := []pendingFile{{Path: "/tmp/a.png", Name: "a.png", Image: true, Size: 10}, {Path: "/tmp/notes.txt", Name: "notes.txt", Size: 2048}}
+	a.sending, a.sendingID = true, a.selected
+	a.sendingAttachments(files)
+	a.fileProgress["/tmp/a.png"], a.fileProgress["/tmp/notes.txt"] = 100, 40
+	tt := snap(t, a, "upload-progress", false, nil)
+	if !tt.HasText("notes.txt") || tt.HasText("Remove notes.txt") {
+		t.Fatalf("uploading chips: %q", tt.Texts())
+	}
+	a.sentAttachments()
+	a.sending = false
+	tt.Frame()
+	if tt.HasText("notes.txt") {
+		t.Fatal("chips stay after sending")
+	}
+}

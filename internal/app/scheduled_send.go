@@ -194,6 +194,8 @@ func (a *App) sendScheduled(d *schedSendDraft) {
 	}
 	mcp := a.mcpSelection(sid)
 	a.sending, a.sendError = true, ""
+	a.sendingID = sid
+	a.sendingAttachments(files)
 	a.draft, a.attachments = "", nil
 	delete(a.drafts, sid)
 	delete(a.attachDrafts, sid)
@@ -230,6 +232,7 @@ func (a *App) sendScheduled(d *schedSendDraft) {
 		}
 		a.update(func() {
 			a.sending = false
+			a.sentAttachments()
 			if err != nil {
 				// The draft comes back, and the same reservation is
 				// tried again.

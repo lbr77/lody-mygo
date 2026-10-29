@@ -72,9 +72,13 @@ type App struct {
 	sched     schedState // the Schedules page
 	// schedSends are the times chosen for chats' next messages, and
 	// schedSendDlg the picker.
-	schedSends    map[string]*schedSendDraft
-	schedSendDlg  schedSendDialog
-	capRetries    map[string]*capRetry          // capacity retries, by chat
+	schedSends   map[string]*schedSendDraft
+	schedSendDlg schedSendDialog
+	capRetries   map[string]*capRetry // capacity retries, by chat
+	// sendingFiles are a message's attachments as they upload, and
+	// fileProgress how far each has gone, 0 to 100, by path.
+	sendingFiles  []pendingFile
+	fileProgress  map[string]float32
 	proposals     map[string]*proposalEdit      // schedule proposals being edited, by notice
 	roleProposals map[string]*roleProposalState // Agent Role proposals being saved, by notice
 	local         *localplane.Conn
@@ -717,6 +721,7 @@ func (a *App) send() {
 	a.composerFull = false
 	a.sending, a.sendError, a.uploading = true, "", ""
 	a.sendingID = a.selected
+	a.sendingAttachments(files)
 	a.draft, a.attachments = "", nil
 	delete(a.drafts, a.selected)
 	delete(a.attachDrafts, a.selected)
@@ -735,6 +740,7 @@ func (a *App) send() {
 		}
 		a.update(func() {
 			a.sending, a.uploading = false, ""
+			a.sentAttachments()
 			if err != nil && state == session.NotSent {
 				// Nothing was written: give the message back.
 				if a.replica == r && a.draft == "" && len(a.attachments) == 0 {
@@ -922,12 +928,17 @@ func (a *App) createAndSend(n catalog.NewSession, m chatSend, created func()) {
 	sync, userID, workspace, conn := a.sync, a.account.User.ID, a.conn.ID, a.conn
 	id, agent, text, files := n.ID, n.Agent, m.text, m.files
 	a.sending, a.sendError, a.uploading = true, "", ""
+	a.sendingID = a.selected
+	a.sendingAttachments(files)
 	go func() {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
 		defer cancel()
 		err := sync.CreateSession(ctx, n)
 		if err != nil {
-			a.update(func() { a.sending, a.sendError = false, locales.FailCreate(err.Error()) })
+			a.update(func() {
+				a.sending, a.sendError = false, locales.FailCreate(err.Error())
+				a.sentAttachments()
+			})
 			return
 		}
 		opened := make(chan *session.Replica, 1)
@@ -957,6 +968,7 @@ func (a *App) createAndSend(n catalog.NewSession, m chatSend, created func()) {
 		}
 		a.update(func() {
 			a.sending, a.uploading = false, ""
+			a.sentAttachments()
 			if err != nil && state == session.NotSent {
 				if a.draft == "" && len(a.attachments) == 0 {
 					a.draft, a.attachments = text, files

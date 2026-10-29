@@ -105,15 +105,25 @@ func (a *App) loadLocalThumb(path string) {
 	}()
 }
 
-// attachmentChips shows the composer's attachments, each removable.
+// attachmentChips shows the composer's attachments, each removable; while
+// a message's attachments upload, those, each with its progress.
 func (a *App) attachmentChips(c *ui.Context, p *palette) {
-	if len(a.attachments) == 0 {
+	files, uploading := a.attachments, false
+	if a.sending && len(a.sendingFiles) > 0 && a.sendingID == a.selected {
+		files, uploading = a.sendingFiles, true
+	}
+	if len(files) == 0 {
 		return
 	}
+	// Progress moves as Lody's transition-[clip-path] and -[width] do.
+	progress := func(f pendingFile) float32 { return min(100, max(0, a.fileProgress[f.Path])) }
 	ui.Row(c).Wrap().Gap(8).Padding(2, 2, 6, 2).Children(func() {
-		for i, f := range a.attachments {
+		for i, f := range files {
 			index := i
 			remove := func() { a.attachments = append(a.attachments[:index:index], a.attachments[index+1:]...) }
+			if uploading {
+				remove = nil
+			}
 			if f.Image {
 				img := a.images["file:"+f.Path]
 				open := a.popover("peek/" + f.Path)
@@ -125,6 +135,13 @@ func (a *App) attachmentChips(c *ui.Context, p *palette) {
 					} else {
 						ui.Box(c).Size(56, 56).Center().Children(func() { ui.Icon(c, iconImage).Size(20, 20).TextColor(p.Secondary) })
 					}
+					if uploading {
+						// A wash over what is still to go, receding from the top.
+						left := 56 * (100 - progress(f)) / 100
+						ui.Box(c.Key("wash")).Absolute().Left(0).Right(0).Bottom(0).Height(left).Background(ui.RGBA(0, 0, 0, 0.45)).
+							Transition(ui.ElementTransition{Size: true, Duration: 150 * time.Millisecond, Ease: ui.CubicBezier(0.4, 0, 0.2, 1)})
+						return
+					}
 					removeButton(c, p, f.Name, remove)
 				})
 				if img != nil && img.bitmap != nil {
@@ -132,12 +149,23 @@ func (a *App) attachmentChips(c *ui.Context, p *palette) {
 				}
 				continue
 			}
-			ui.Row(c.Key(f.Path)).Height(44).Padding(0, 28, 0, 10).Radius(10).Gap(8).AlignItems(ui.Center).Background(p.Text.Alpha(0.05)).MaxWidth(240).Children(func() {
+			chip := ui.Row(c.Key(f.Path)).Height(44).Padding(0, 28, 0, 10).Radius(10).Gap(8).AlignItems(ui.Center).Background(p.Text.Alpha(0.05)).MaxWidth(240)
+			if uploading {
+				chip.Clip() // the bar keeps to the chip's corners
+			}
+			chip.Children(func() {
 				ui.Icon(c, iconFile).Size(18, 18).TextColor(p.Secondary)
 				ui.Column(c).MinWidth(0).Gap(1).Children(func() {
 					ui.Text(c, f.Name).FontSize(sizeFoot).FontWeight(500).TextColor(p.Text).SingleLine()
 					ui.Text(c, byteSize(f.Size)).FontSize(sizeCaption).TextColor(p.Secondary)
 				})
+				if uploading {
+					ui.Box(c.Key("bar")).Absolute().Left(0).Right(0).Bottom(0).Height(4).Background(p.Text.Alpha(0.08)).Children(func() {
+						ui.Box(c).Height(4).WidthPercent(progress(f)).Background(p.Primary).
+							Transition(ui.ElementTransition{Size: true, Duration: 150 * time.Millisecond, Ease: ui.CubicBezier(0.4, 0, 0.2, 1)})
+					})
+					return
+				}
 				removeButton(c, p, f.Name, remove)
 			})
 		}
@@ -183,15 +211,23 @@ func byteSize(n int64) string {
 func (a *App) upload(ctx context.Context, workspace, sessionID string, files []pendingFile) ([]map[string]any, error) {
 	var blocks []map[string]any
 	for i, f := range files {
+		path := f.Path
 		progress := func(sent, total int64) {
 			label := locales.Uploading()
 			if len(files) > 1 {
 				label = locales.UploadingCount(i+1, len(files))
 			}
+			var pct float32
 			if total > 0 {
 				label += fmt.Sprintf(" · %d%%", sent*100/total)
+				pct = float32(sent) * 100 / float32(total)
 			}
-			a.update(func() { a.uploading = label })
+			a.update(func() {
+				a.uploading = label
+				if a.fileProgress != nil {
+					a.fileProgress[path] = pct
+				}
+			})
 		}
 		progress(0, 0)
 		block, err := a.api.UploadAttachment(ctx, a.tokenNow(), workspace, sessionID, f.Path, progress)
@@ -199,8 +235,25 @@ func (a *App) upload(ctx context.Context, workspace, sessionID string, files []p
 			return nil, fmt.Errorf("%s: %w", f.Name, err)
 		}
 		blocks = append(blocks, block)
+		a.update(func() {
+			if a.fileProgress != nil {
+				a.fileProgress[path] = 100
+			}
+		})
 	}
 	return blocks, nil
+}
+
+// sendingAttachments keeps a message's attachments in the composer while
+// they upload, as Lody's: they take no edits then, and show how far each
+// has gone.
+func (a *App) sendingAttachments(files []pendingFile) {
+	a.sendingFiles = files
+	a.fileProgress = map[string]float32{}
+}
+
+func (a *App) sentAttachments() {
+	a.sendingFiles, a.fileProgress = nil, nil
 }
 
 // urlImage fetches a picture by URL once and keeps it; Lody's own URLs get

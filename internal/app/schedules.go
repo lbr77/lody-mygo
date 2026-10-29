@@ -74,6 +74,7 @@ type schedForm struct {
 	options           map[string]any
 	memory            *schedule.Memory
 	attempted         bool
+	shown             bool // built once: rows that come later reveal
 	err               string
 	enabled           bool
 	destOpen, recOpen bool
@@ -1258,11 +1259,20 @@ func (a *App) schedHeader(c *ui.Context, p *palette, f *schedForm, row *schedule
 }
 
 // propertyRow is a labelled row of the schedule's card.
-func propertyRow(c *ui.Context, p *palette, key, label string, control func()) {
-	ui.Row(c.Key(key)).FillWidth().MinHeight(40).Padding(6, 14).Gap(12).AlignItems(ui.Center).Children(func() {
+func propertyRow(c *ui.Context, p *palette, key, label string, control func()) ui.Element {
+	return ui.Row(c.Key(key)).FillWidth().MinHeight(40).Padding(6, 14).Gap(12).AlignItems(ui.Center).Children(func() {
 		ui.Text(c, label).FontSize(sizeSub).TextColor(p.Secondary).Grow(1)
 		ui.Row(c).Gap(6).AlignItems(ui.Center).Shrink(0).Children(control)
 	})
+}
+
+// revealRow is a row that comes and goes with what is chosen: it grows
+// in and out over 180ms, easing out, as Lody's Reveal — but not while the
+// form first shows (initial={false}).
+func revealRow(row ui.Element, f *schedForm) {
+	if f.shown {
+		row.ClipY().Transition(ui.ElementTransition{Colors: true, Size: true, Duration: durRegular, Ease: ui.EaseOut, Enter: &ui.Motion{Collapse: true}, Exit: &ui.Motion{Collapse: true}})
+	}
 }
 
 // selectButton is a value that opens its choices.
@@ -1288,6 +1298,7 @@ func (a *App) schedFormView(c *ui.Context, p *palette, f *schedForm, row *schedu
 	now := time.Now()
 	owner := f.create || f.owner == "" || f.owner == a.userID()
 	zone := a.machineZone(f.machine)
+	defer func() { f.shown = true }()
 	ui.Column(c).FillWidth().Gap(14).Padding(0, 0, 16, 0).Children(func() {
 		// One box, as the composer: name, a hairline, the prompt, and the
 		// Agent's controls along its bottom.
@@ -1413,7 +1424,7 @@ func (a *App) schedFormView(c *ui.Context, p *palette, f *schedForm, row *schedu
 				if s := a.catalog.Session(f.session); s != nil {
 					label = s.Title
 				}
-				propertyRow(c, p, "chat", locales.SchedOpenChatPlain(), func() {
+				revealRow(propertyRow(c, p, "chat", locales.SchedOpenChatPlain(), func() {
 					if len(chats) == 0 {
 						ui.Text(c, locales.SchedDestNoChats()).FontSize(sizeSub).TextColor(p.Secondary)
 						return
@@ -1422,7 +1433,7 @@ func (a *App) schedFormView(c *ui.Context, p *palette, f *schedForm, row *schedu
 						issueMark(c, p, locales.SchedDestChoose())
 					}
 					a.selectButton(c, p, "sched/chat", label, chats, f.session, func(id string) { f.session = id })
-				})
+				}), f)
 			}
 			mode := "timed"
 			if f.manual {
@@ -1608,14 +1619,14 @@ func (a *App) schedRecurrence(c *ui.Context, p *palette, f *schedForm, zone stri
 		for _, s := range steps {
 			opts = append(opts, option{strconv.Itoa(s), durationText(s, r.Kind == "hours")})
 		}
-		propertyRow(c, p, "every", locales.SchedEvery(), func() {
+		revealRow(propertyRow(c, p, "every", locales.SchedEvery(), func() {
 			a.selectButton(c, p, "sched/every", durationText(r.Every, r.Kind == "hours"), opts, strconv.Itoa(r.Every), func(v string) {
 				r.Every, _ = strconv.Atoi(v)
 				edited()
 			})
-		})
+		}), f)
 	case "weekly":
-		propertyRow(c, p, "on", locales.SchedOn(), func() {
+		revealRow(propertyRow(c, p, "on", locales.SchedOn(), func() {
 			for d := 0; d < 7; d++ {
 				day := d
 				on := false
@@ -1631,9 +1642,11 @@ func (a *App) schedRecurrence(c *ui.Context, p *palette, f *schedForm, zone stri
 					edited()
 				})
 			}
-		})
+		}), f)
 	case "monthly":
-		ui.Row(c.Key("days")).FillWidth().Padding(6, 14).Gap(12).AlignItems(ui.Start).Children(func() {
+		days := ui.Row(c.Key("days")).FillWidth().Padding(6, 14).Gap(12).AlignItems(ui.Start)
+		revealRow(days, f)
+		days.Children(func() {
 			ui.Text(c, locales.SchedOnDays()).FontSize(sizeSub).TextColor(p.Secondary).Grow(1).Padding(6, 0, 0, 0)
 			ui.Column(c).Gap(4).Shrink(0).Children(func() {
 				for w := 0; w < 5; w++ {
@@ -1656,7 +1669,7 @@ func (a *App) schedRecurrence(c *ui.Context, p *palette, f *schedForm, zone stri
 	}
 	switch r.Kind {
 	case "daily", "weekdays", "weekly", "monthly":
-		propertyRow(c, p, "at", locales.SchedAt(), func() {
+		revealRow(propertyRow(c, p, "at", locales.SchedAt(), func() {
 			before := f.timeText
 			ui.TextInput(c.Key("sched/time"), &f.timeText).Label(locales.SchedAt()).FontSize(sizeSub).Width(64).Height(28).Padding(0, 8).Radius(8).Border(1, p.Border).TextAlign(ui.Center)
 			if f.timeText != before {
@@ -1665,15 +1678,15 @@ func (a *App) schedRecurrence(c *ui.Context, p *palette, f *schedForm, zone stri
 					edited()
 				}
 			}
-		})
+		}), f)
 	case "once":
-		propertyRow(c, p, "runAt", locales.SchedRunAt(), func() {
+		revealRow(propertyRow(c, p, "runAt", locales.SchedRunAt(), func() {
 			before := f.onceText
 			ui.TextInput(c.Key("sched/once"), &f.onceText).Label(locales.SchedRunAt()).Placeholder("2026-10-30 09:00").FontSize(sizeSub).Width(150).Height(28).Padding(0, 8).Radius(8).Border(1, p.Border)
 			if f.onceText != before {
 				edited()
 			}
-		})
+		}), f)
 	}
 }
 
