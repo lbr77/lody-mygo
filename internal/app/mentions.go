@@ -157,16 +157,19 @@ func (a *App) mentionSource(kind string, t mentionTarget) *mentionSource {
 	return src
 }
 
-// fetchFiles lists a local project's files. A GitHub project's worktree
-// isn't listed over the cloud.
+// fetchFiles lists a local project's files, or the files of a GitHub
+// project's chat worktree, as lody-ios asks.
 func fetchFiles(ctx context.Context, conn *cloud.Conn, user string, t mentionTarget) ([]mention.Item, error) {
-	id := t.localProject()
-	if id == "" {
+	var req map[string]any
+	if id := t.localProject(); id != "" {
+		req = map[string]any{"type": "local-project/list-files", "localProjectId": id, "maxFiles": mention.MaxFiles, "requestedByUserId": user}
+	} else if repo, ok := strings.CutPrefix(t.project, "github:"); ok && t.session != "" {
+		req = map[string]any{"type": "worktree/list-files", "repoFullName": repo, "sessionId": t.session, "maxFiles": mention.MaxFiles, "requestedByUserId": user}
+	}
+	if req == nil {
 		return nil, nil
 	}
-	raw, err := conn.ProjectControl(ctx, t.machine, map[string]any{
-		"type": "local-project/list-files", "localProjectId": id, "maxFiles": mention.MaxFiles, "requestedByUserId": user,
-	}, 15*time.Second)
+	raw, err := conn.ProjectControl(ctx, t.machine, req, 15*time.Second)
 	if err != nil {
 		return nil, err
 	}

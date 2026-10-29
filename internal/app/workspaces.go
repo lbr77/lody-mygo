@@ -566,7 +566,9 @@ func (a *App) membershipSync(c *ui.Context) {
 // which this client can't open; "unknown" for a mode it doesn't know,
 // which fails closed.
 func (a *App) workspaceMode() string {
-	if a.convex == nil || a.workspaceID == "" {
+	// Local-only mode reads through this machine's daemon, the workspace's
+	// member, as Lody's local route does; there is nothing to ask the cloud.
+	if a.convex == nil || a.workspaceID == "" || a.localOnly {
 		return ""
 	}
 	convex, ws := a.convex, a.workspaceID

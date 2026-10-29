@@ -1,11 +1,14 @@
 package app
 
 import (
+	"context"
+	"encoding/json"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/lbr77/lody-mygo/internal/catalog"
+	"github.com/lbr77/lody-mygo/internal/cloud"
 	"github.com/lbr77/lody-mygo/internal/session"
 )
 
@@ -178,5 +181,22 @@ func TestRoleProposal(t *testing.T) {
 		if !tt.HasText(want) {
 			t.Errorf("missing %q in %q", want, tt.Texts())
 		}
+	}
+}
+
+// A GitHub project's chat lists its worktree's files for @, as lody-ios
+// asks the machine.
+func TestWorktreeFileMentions(t *testing.T) {
+	var asked map[string]any
+	conn := &cloud.Conn{ID: "w1", Local: func(ctx context.Context, method string, params any, timeout time.Duration) (json.RawMessage, error) {
+		asked = params.(map[string]any)["request"].(map[string]any)
+		return json.RawMessage(`{"ok":true,"type":"worktree/list-files","result":{"paths":["README.md","cmd/main.go"]}}`), nil
+	}}
+	items, err := fetchFiles(context.Background(), conn, "u1", mentionTarget{machine: "m1", project: "github:acme/app", session: "s1"})
+	if err != nil || asked["type"] != "worktree/list-files" || asked["repoFullName"] != "acme/app" || asked["sessionId"] != "s1" {
+		t.Fatalf("asked %+v, %v", asked, err)
+	}
+	if len(items) != 3 || items[2].Path != "cmd/main.go" {
+		t.Fatalf("items %+v", items)
 	}
 }
