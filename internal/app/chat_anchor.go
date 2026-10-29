@@ -152,7 +152,8 @@ func (a *App) holdSent(list ui.Element) {
 		s.room = room
 		a.redraw()
 	}
-	switch delta := s.top - target; {
+	// The layout read predates the scroll this build took.
+	switch delta := s.top - a.chatMotion.inflight - target; {
 	case !s.glided && st.Y+delta > st.MaxY+0.5:
 		// A glide stops where the content ends: it waits for the room to
 		// be laid out.
@@ -162,6 +163,6 @@ func (a *App) holdSent(list ui.Element) {
 		s.glided = true
 	case !st.Scrolling() && abs32(delta) > 0.5:
 		// What came before changed: the message stays where it is held.
-		st.Y += delta
+		a.chatMotion.nudge = delta
 	}
 }

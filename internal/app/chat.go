@@ -260,6 +260,7 @@ func (a *App) conversation(c *ui.Context, p *palette, sess *catalog.Session) {
 	// press on it picks the message, as Lody's rows are select-none.
 	a.md.ShareSelection = a.shareImg.picking(a.selected)
 	a.indexFind(entries)
+	a.chatMotion.rows = len(entries) + 1
 	a.revealFind()
 	defer func() {
 		if a.find.reveal > 0 {
@@ -286,14 +287,18 @@ func (a *App) conversation(c *ui.Context, p *palette, sess *catalog.Session) {
 	}
 	// Keyed by session, so that each conversation fades in as it opens.
 	frame := ui.Box(c.Key("chat-frame/" + a.selected)).FillWidth().Grow(1).MinHeight(0)
-	// Scrolling lets a message just sent go.
+	// Scrolling lets a message just sent go, and stops a search result's
+	// glide.
 	frame.HandleInput(func(ev ui.InputEvent) bool {
 		if ev.Kind == ui.InputScroll {
 			sent.letGo()
+			a.find.glide = findGlide{}
 		}
 		return false
 	})
 	frame.Children(func() {
+		a.stepFindGlide(c)
+		a.chatMotion.applyNudge(a.selected, c.Now())
 		list := ui.List(c.Key("chat/"+a.selected), &a.chatList, len(entries)+1, func(i int) {
 			if i == len(entries) {
 				sent.noteEnd(a.liveStatus(c, p, v).Bounds())
@@ -312,6 +317,7 @@ func (a *App) conversation(c *ui.Context, p *palette, sess *catalog.Session) {
 			ui.Text(c, locales.SendToStart()).FontSize(sizeSub).TextColor(p.Secondary).Margin(ui.Auto)
 		})
 		a.holdSent(list)
+		a.chatMotion.viewH = list.Bounds().H
 		a.outline.top = list.Bounds().Y
 		a.chatEdges(c, p, v, len(entries))
 		a.shareMarquee(c, p)

@@ -156,13 +156,16 @@ func TestFindGlides(t *testing.T) {
 	if st == nil {
 		t.Fatal("the conversation's scroll is not tracked")
 	}
-	if !st.Scrolling() {
-		t.Fatalf("no glide: at %v of %v", st.Y, st.MaxY)
+	from := st.Y
+	tt.Advance(100 * time.Millisecond)
+	tt.Frame()
+	if mid := st.Y; mid >= from || mid <= 40 {
+		t.Fatalf("no glide: at %v from %v", mid, from)
 	}
 	tt.Advance(400 * time.Millisecond)
 	tt.Frame()
 	tt.Frame()
-	if st.Scrolling() || st.Y > 40 {
+	if st.Scrolling() || a.find.glide.on || st.Y > 40 {
 		t.Fatalf("the glide outlasts 360ms, or ends away from the result: at %v", st.Y)
 	}
 }
@@ -317,35 +320,60 @@ func TestFindGlidesFromAfar(t *testing.T) {
 	tt.Frame()
 	tt.Advance(400 * time.Millisecond)
 	tt.Frame()
-	seek := func(query string, row int) (start, mid, end float32) {
+	// seek shows the result for query, the first of its row, and reports
+	// the scroll offsets along the way, every 30ms, and where the row ends.
+	seek := func(query string, row int) (ys []float32, end float32) {
 		t.Helper()
 		a.openFind()
 		a.find.query = query
 		a.find.active = 0
 		a.find.reveal = 3
-		tt.Frame() // brought near
-		tt.Frame() // the glide starts from there
-		start = a.outline.tops[row]
-		tt.Advance(120 * time.Millisecond)
 		tt.Frame()
-		mid = a.outline.tops[row]
-		tt.Advance(time.Second)
+		if !a.find.glide.on {
+			t.Fatalf("%q: no glide from afar", query)
+		}
+		st := a.chatMotion.scroll
+		for range 14 {
+			ys = append(ys, st.Y)
+			tt.Advance(30 * time.Millisecond)
+			tt.Frame()
+		}
+		tt.Advance(200 * time.Millisecond)
 		tt.Frame()
 		tt.Frame()
-		return start, mid, a.outline.tops[row]
+		if a.find.glide.on {
+			t.Fatalf("%q: still gliding after 600ms", query)
+		}
+		return ys, a.outline.tops[row]
 	}
 	// The block holding the result ends at the top; its row's meta line
 	// and spacing sit above it.
 	top := func() float32 { return a.outline.top + chatPadTop }
 	near := func(y float32) bool { return y <= top()+40 && y >= top()-100 }
+	// The whole way in one direction, most of it early, as an ease-out.
+	glides := func(ys []float32, up bool) bool {
+		steps := 0
+		for i := 1; i < len(ys); i++ {
+			d := ys[i] - ys[i-1]
+			if up && d > 0.5 || !up && d < -0.5 {
+				return false
+			}
+			if abs32(d) > 0.5 {
+				steps++
+			}
+		}
+		total := abs32(ys[len(ys)-1] - ys[0])
+		third := abs32(ys[4] - ys[0]) // 120ms in
+		return steps >= 5 && total > 1000 && third > total/2
+	}
 
-	start, mid, end := seek("Question pad0", 0)
-	if !(start < mid && mid < end) || !near(end) {
-		t.Fatalf("from above: at %v, then %v, then %v; want it coming down to about %v", start, mid, end, top())
+	ys, end := seek("Question pad0", 0)
+	if !glides(ys, true) || !near(end) {
+		t.Fatalf("from above: offsets %v, row at %v; want a glide up the conversation to about %v", ys, end, top())
 	}
 	a.find.open = false
-	start, mid, end = seek("Question pad11", 22)
-	if !(start > mid && mid > end) || !near(end) {
-		t.Fatalf("from below: at %v, then %v, then %v; want it rising to about %v", start, mid, end, top())
+	ys, end = seek("Question pad11", 22)
+	if !glides(ys, false) || !near(end) {
+		t.Fatalf("from below: offsets %v, row at %v; want a glide down the conversation to about %v", ys, end, top())
 	}
 }

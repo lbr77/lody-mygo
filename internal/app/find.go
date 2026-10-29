@@ -20,10 +20,11 @@ import (
 type findState struct {
 	open    bool
 	query   string
-	active  int  // the result shown, of the results
-	reveal  int  // frames left to scroll it into view
-	jumped  bool // the list was brought near the result this reveal
-	focus   bool // the field takes the focus as it builds
+	active  int // the result shown, of the results
+	reveal  int // frames left to scroll it into view
+	glide   findGlide
+	handoff ui.Animation // the rest of a glide from afar, once laid out
+	focus   bool         // the field takes the focus as it builds
 	results []findResult
 	blocks  map[string]findBlock // by block, for the views marking them
 }
@@ -284,7 +285,7 @@ func (a *App) stepFind(step int) {
 		return
 	}
 	f.active = (f.active + step + n) % n
-	f.reveal = 3
+	f.reveal, f.handoff = 3, ui.Animation{}
 }
 
 // revealFind opens what folds the result shown and scrolls the list to its
@@ -299,19 +300,117 @@ func (a *App) revealFind() {
 		for _, key := range r.folds {
 			a.expanded[key] = true
 		}
-		// A message out of view is brought to the edge it lies beyond at
-		// once, below at the foot, above just past the top; its block then
-		// glides to the top from there (findRing), as Lody's search
-		// glides the whole way.
-		first, last := a.chatList.Visible()
-		f.jumped = r.entry < first || r.entry > last
-		switch {
-		case r.entry > last:
-			a.chatList.ScrollTo(r.entry, ui.End)
-		case r.entry < first:
-			a.chatList.ScrollTo(r.entry+1, ui.Start)
+		// A message out of view glides the whole way from where it lies
+		// (stepFindGlide); one in view, from where it shows (findRing).
+		if first, last := a.chatList.Visible(); r.entry < first || r.entry > last {
+			a.startFindGlide(r.entry)
 		}
 	}
+}
+
+// findGlide is a search result gliding into view from out of it, as Lody's
+// jump: the conversation moves so that its block goes from where it lay
+// to the top over 360ms, easing out as a cubic. Until the list builds its
+// row, where it lies is reckoned from what the list reckons, and the
+// conversation is scrolled along the curve; once its block is laid out,
+// the scroll glides the rest of the way to it in the time left (findRing),
+// the rest of the curve, which starts as fast as it was going.
+type findGlide struct {
+	on    bool
+	entry int
+	start time.Time
+	frame time.Time // the frame last stepped
+	// dir is the way the conversation moves it, down positive; e is how
+	// far along its curve the glide was as of the last frame.
+	dir    float32
+	e      float32
+	frames int // since the glide's time ran out
+}
+
+// findGlideTime is how long a search result takes to glide into view.
+const findGlideTime = 360 * time.Millisecond
+
+// rowEstimate is where entry's row lay in the window as the list last laid
+// the conversation out, as it reckoned it: the rows above the first it
+// showed take as much room as it had scrolled past, and those below the
+// last share what it had left under it, evenly.
+func (a *App) rowEstimate(entry int) float32 {
+	m := &a.chatMotion
+	top := a.outline.top + chatPadTop
+	first, last := a.chatList.Visible()
+	if last < first || m.scroll == nil {
+		return top
+	}
+	tf, tl := a.outline.tops[first], a.outline.tops[last]
+	// Scrolled as it was laid out, before what the last frame scrolled it.
+	y := m.scroll.Y - m.inflight
+	if entry < first {
+		above := y + tf - top
+		return tf - above*float32(first-entry)/float32(first)
+	}
+	below := m.scroll.MaxY + m.viewH - (y + tl - a.outline.top)
+	return tl + below*float32(entry-last)/float32(max(1, m.rows-last))
+}
+
+// startFindGlide glides the result in entry to the top from where it is
+// reckoned to lie.
+func (a *App) startFindGlide(entry int) {
+	a.find.glide = findGlide{on: true, entry: entry, dir: sign32(a.outline.top + chatPadTop - a.rowEstimate(entry))}
+}
+
+// stepFindGlide scrolls the conversation as far along the curve as the
+// glide has come by this frame, before the list builds so that the frame
+// lays it out there. Scrolling stops it.
+func (a *App) stepFindGlide(c *ui.Context) {
+	g := &a.find.glide
+	m := &a.chatMotion
+	if !g.on || m.scroll == nil {
+		return
+	}
+	now := c.Now()
+	if now.Equal(g.frame) {
+		return // built again in the frame: stepped already
+	}
+	g.frame = now
+	if g.start.IsZero() {
+		g.start = now
+	}
+	k := min(1, float32(now.Sub(g.start))/float32(findGlideTime))
+	e := 1 - (1-k)*(1-k)*(1-k)
+	// What is left, reckoned again each frame as the rows it passes are
+	// laid out: the frame moves it the share of that the curve covers.
+	left := a.outline.top + chatPadTop - (a.rowEstimate(g.entry) - m.inflight)
+	var step float32
+	if g.e < 1 {
+		step = left * (e - g.e) / (1 - g.e)
+	}
+	g.e = e
+	if k == 1 {
+		// Further than reckoned: on the same way, a quarter view a frame.
+		if g.frames++; g.frames > 60 {
+			a.chatList.ScrollTo(g.entry, ui.Start)
+			*g = findGlide{}
+			return
+		}
+		step = m.viewH / 4 * g.dir
+	}
+	// Steps under two views move the rows by as much (ListState); one
+	// further jumps where the list reckons. Never back.
+	if step = max(-1.8*m.viewH, min(1.8*m.viewH, step)); step*g.dir > 0 {
+		m.nudge -= step
+	}
+	a.redraw()
+}
+
+// sign32 is -1, 0 or 1, as v is negative, zero or positive.
+func sign32(v float32) float32 {
+	switch {
+	case v < 0:
+		return -1
+	case v > 0:
+		return 1
+	}
+	return 0
 }
 
 // findMark is the look of a search mark: amber, stronger for the result
@@ -366,8 +465,25 @@ func (a *App) findRing(p *palette, id string, e ui.Element) {
 		return
 	}
 	e.Radius(6).Shadow(0, 0, 0, 1, p.Primary.Alpha(0.25))
-	if a.find.reveal == 0 || a.find.reveal == 3 && a.find.jumped {
-		// Brought near this frame: it glides from where that lays it out.
+	anim := chatGlide
+	if g := &a.find.glide; g.on {
+		b := e.Bounds()
+		if b.H == 0 {
+			return // gliding from afar, not laid out yet
+		}
+		// Laid out at last: the rest of the way in the time left.
+		left := findGlideTime - time.Since(g.start)
+		if !g.frame.IsZero() {
+			left = findGlideTime - g.frame.Sub(g.start)
+		}
+		a.find.handoff = ui.Animation{Duration: max(120*time.Millisecond, left), Ease: chatGlide.Ease}
+		*g = findGlide{}
+		a.find.reveal = 2
+	}
+	if a.find.handoff.Duration > 0 {
+		anim = a.find.handoff
+	}
+	if a.find.reveal == 0 {
 		return
 	}
 	// As Lody's search, the block holding the result glides to the top
@@ -379,7 +495,7 @@ func (a *App) findRing(p *palette, id string, e ui.Element) {
 		e.ScrollIntoView()
 		return
 	}
-	st.ScrollTo(0, max(0, st.Y+b.Y-a.outline.top-chatPadTop), chatGlide)
+	st.ScrollTo(0, max(0, st.Y+b.Y-a.outline.top-chatPadTop), anim)
 }
 
 // findBar floats over the conversation's top end: the field, the count,
@@ -415,7 +531,7 @@ func (a *App) findBar(c *ui.Context, p *palette) {
 			Label(locales.FindInSession()).Grow(1).MinWidth(0).Padding(0, 6).
 			OnChange(func() {
 				f.active = 0
-				f.reveal = 3
+				f.reveal, f.handoff = 3, ui.Animation{}
 			}).
 			OnTextKey(func(k ui.TextKey) bool {
 				switch {

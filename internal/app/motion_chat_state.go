@@ -23,6 +23,33 @@ type chatMotion struct {
 	scrollFor string
 	// sent is the message just sent, held near the top as the reply comes.
 	sent sentAnchor
+	// nudge is how far the next frame scrolls the conversation: an offset
+	// set once the list is built is written over as it is laid out, so it
+	// is set before the list builds (applyNudge).
+	nudge float32
+	// inflight is how far this frame has scrolled the conversation so far:
+	// a frame builds up to three times before it is laid out, so what its
+	// builds read of the layout is the last frame's, and so far off.
+	inflight   float32
+	inflightAt time.Time
+	// viewH is how tall the conversation shows, and rows how many rows its
+	// list has, as the last build had them.
+	viewH float32
+	rows  int
+}
+
+// applyNudge scrolls session's conversation by the nudge asked for, in
+// the frame of now.
+func (m *chatMotion) applyNudge(session string, now time.Time) {
+	if !now.Equal(m.inflightAt) {
+		m.inflight, m.inflightAt = 0, now
+	}
+	if st := m.scroll; st != nil && m.scrollFor == session && m.nudge != 0 {
+		y := max(0, min(st.MaxY, st.Y+m.nudge))
+		m.inflight += y - st.Y
+		st.Y = y
+	}
+	m.nudge = 0
 }
 
 // chatScroll is the ScrollState the open chat's list tracks: a fresh one
