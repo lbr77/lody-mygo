@@ -117,7 +117,15 @@ func (a *App) sessionTab(c *ui.Context, p *palette, s *catalog.Session) {
 
 // sessionView is the conversation, with the inspector beside it when open.
 func (a *App) sessionView(c *ui.Context, p *palette) {
-	if !a.panelOpen {
+	// The panel slides in from the right as its room opens, over 220ms on
+	// the iOS sheet curve, as Lody's right panel does, and out the same way.
+	host := ui.Column(c.Key("session-split")).Fill()
+	k := host.AnimateTo("panel", b2f(a.panelOpen), slideSpring)
+	host.Children(func() { a.sessionSplit(c, p, k) })
+}
+
+func (a *App) sessionSplit(c *ui.Context, p *palette, k float32) {
+	if k <= 0 {
 		ui.Column(c).Fill().Children(func() { a.sessionMain(c, p) })
 		return
 	}
@@ -134,10 +142,22 @@ func (a *App) sessionView(c *ui.Context, p *palette) {
 	if card > 0 {
 		a.panelPercent = min(a.panelPercent, max(50, 100-280/card*100))
 	}
-	ui.SplitPercent(c, &a.panelPercent, func() {
+	percent := &a.panelPercent
+	if k < 1 {
+		moving := 100 - (100-a.panelPercent)*k
+		percent = &moving
+	}
+	ui.SplitPercent(c, percent, func() {
 		ui.Column(c).Fill().MinWidth(0).Children(func() { a.sessionMain(c, p) })
 	}, func() {
-		ui.Column(c).Fill().MinWidth(0).Children(func() { a.inspector(c, p) })
+		panel := ui.Column(c.Key("panel")).Fill().MinWidth(0).ClipX()
+		panel.Children(func() {
+			inner := ui.Column(c).Fill().MinWidth(0)
+			if k < 1 {
+				inner.Translate(panel.Bounds().W*(1-k), 0)
+			}
+			inner.Children(func() { a.inspector(c, p) })
+		})
 	}).Fill()
 }
 
@@ -145,7 +165,15 @@ func (a *App) sessionMain(c *ui.Context, p *palette) {
 	sess := a.catalog.Session(a.selected)
 	a.tabBar(c, p, sess)
 	a.goalBanner(c, p)
-	if !a.term.open || sess == nil || a.localMachine() == "" {
+	// The terminal dock grows into its height over 200ms, easing out, and
+	// shrinks away the same way.
+	host := ui.Column(c.Key("term-split")).Grow(1).MinHeight(0).FillWidth()
+	k := host.AnimateWith("dock", b2f(a.term.open && sess != nil && a.localMachine() != ""), 200*time.Millisecond, ui.EaseOut)
+	host.Children(func() { a.sessionDock(c, p, sess, k) })
+}
+
+func (a *App) sessionDock(c *ui.Context, p *palette, sess *catalog.Session, k float32) {
+	if k <= 0 || sess == nil || a.localMachine() == "" {
 		a.conversation(c, p, sess)
 		return
 	}
@@ -156,7 +184,12 @@ func (a *App) sessionMain(c *ui.Context, p *palette) {
 	if _, h := c.Size(); h > 0 {
 		a.term.percent = min(max(a.term.percent, 140/h*100), 100-140/h*100)
 	}
-	ui.SplitVerticalPercent(c, &a.term.percent, func() {
+	percent := &a.term.percent
+	if k < 1 {
+		moving := 100 - (100-a.term.percent)*k
+		percent = &moving
+	}
+	ui.SplitVerticalPercent(c, percent, func() {
 		ui.Column(c).Fill().MinHeight(0).Children(func() { a.conversation(c, p, sess) })
 	}, func() {
 		ui.Column(c).Fill().MinHeight(0).Children(func() { a.terminalDock(c, p, sess) })
@@ -461,6 +494,9 @@ func (a *App) syncMarkdown(p *palette) {
 	t.QuoteBar = p.Border
 	t.QuoteText = p.Secondary
 	a.md.Theme = t
+	// A reply streams in as Lody's Streamdown reveals it: a character at a
+	// time, nothing waiting longer than 160ms, each fading in.
+	a.md.Reveal = &streamReveal
 
 	muted := *t
 	muted.FontSize = sizeSub

@@ -487,6 +487,8 @@ func TestChangesPanel(t *testing.T) {
 			t.Fatal(err)
 		}
 		tt.Frame()
+		tt.Advance(300 * time.Millisecond) // as it slides in
+		tt.Frame()
 		if !tt.HasText("Open a panel") {
 			t.Fatalf("no chooser: %q", tt.Texts())
 		}
@@ -628,6 +630,8 @@ func TestTerminalDock(t *testing.T) {
 		if err := tt.Click("Toggle terminal"); err != nil {
 			t.Fatal(err)
 		}
+		tt.Frame()
+		tt.Advance(300 * time.Millisecond) // as it grows in
 	})
 	if !a.term.open || !tt.HasText("Terminal is only available on the machine that owns this session (Studio).") {
 		t.Fatalf("remote session: %q", tt.Texts())

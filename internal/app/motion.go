@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/egoist/mygo/ui"
+	"github.com/egoist/mygo/ui/markdown"
 )
 
 // Lody's motion, as @lody/ui's tokens set it: colors fade over 120ms,
@@ -28,6 +29,8 @@ var (
 
 	// pressMotion sinks a button a pixel while it is held, as Lody's.
 	pressMotion = ui.Animation{Duration: fadeTime, Ease: easeStandard}
+	// streamReveal paces a streaming reply.
+	streamReveal = markdown.Reveal{Unit: markdown.ByCharacter, CatchUp: 160 * time.Millisecond}
 	// chatGlide scrolls the conversation to what arrives.
 	chatGlide = ui.Animation{Duration: 360 * time.Millisecond, Ease: ui.CubicBezier(0.33, 1, 0.68, 1)}
 	// slideSpring opens and closes the sidebar, over 220ms.
