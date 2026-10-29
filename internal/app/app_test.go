@@ -1294,3 +1294,43 @@ func TestQuotasBugReportPi(t *testing.T) {
 		t.Fatal("validPiPath")
 	}
 }
+
+// The revision hash matches Lody's, so clients agree when the review's
+// sources changed.
+func TestReviewRevision(t *testing.T) {
+	if got := reviewRevision([]string{"members:u1,u2", "machines:m1", "projects:m1:p1", "no-local:0", "empty:0"}); got != "v1-2955884c3a5d08c1" {
+		t.Fatalf("revision = %s", got)
+	}
+	if got := reviewRevision([]string{"members:用户", "machines:", "projects:", "no-local:1", "empty:1"}); got != "v1-e2392db184931c79" {
+		t.Fatalf("revision = %s", got)
+	}
+}
+
+func TestInbox(t *testing.T) {
+	a := fixture()
+	read := 1.0
+	a.fetches = map[string]*fetched{
+		"w1|inbox": {value: []inboxItem{
+			{ID: "i1", Kind: "permission_requested", Title: "Fix the flaky upload test", Route: "/analytical/sessions/s3", UpdatedAt: float64(time.Now().Add(-5 * time.Minute).UnixMilli()), ToolLabel: "rm -rf build/"},
+			{ID: "i2", Kind: "session_completed", Title: "Sidebar status marks", Route: "/analytical/sessions/s2?tab=x", UpdatedAt: 1, ReadAt: &read},
+			{ID: "i3", Kind: "sharing_review"},
+		}},
+	}
+	tt := snap(t, a, "inbox-sidebar", false, nil)
+	if !tt.HasText("Inbox") || !tt.HasText("1") {
+		t.Fatalf("sidebar: %q", tt.Texts())
+	}
+	a.page = "inbox"
+	tt = snap(t, a, "inbox", false, nil)
+	for _, want := range []string{"Approval needed: rm -rf build/", "Session completed.", "Fix the flaky upload test"} {
+		if !tt.HasText(want) {
+			t.Fatalf("no %q in %q", want, tt.Texts())
+		}
+	}
+	if tt.HasText("Review what your team can see") {
+		t.Fatal("the review shows only while it applies")
+	}
+	if (inboxItem{Route: "/w/sessions/s2?tab=x"}).session() != "s2" {
+		t.Fatal("session from route")
+	}
+}

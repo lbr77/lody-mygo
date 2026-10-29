@@ -159,6 +159,10 @@ type App struct {
 	projectWin      projectWindow
 	removal         projectRemoval
 	bug             bugReport
+	reviewSent      string // the sharing review last reconciled
+	reviewWriter    string
+	reviewAttempt   int
+	inboxAt         time.Time             // when the inbox was last asked for
 	pings           map[string]*pingState // machines' round trips
 	sidebarWidth    float32               // as dragged; 0 is the default
 	revoking        string                // the share whose revoke awaits confirmation

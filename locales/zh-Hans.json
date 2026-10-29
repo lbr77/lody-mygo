@@ -900,5 +900,20 @@
   "piInvalidPath": "请输入绝对路径或 ~/路径，最长 4096 个字符。",
   "piLimit": "最多选择 32 个扩展。",
   "machinePing": "往返延迟 {ms} ms",
-  "machinePingFailed": "机器没有响应 ping。"
+  "machinePingFailed": "机器没有响应 ping。",
+  "inbox": "收件箱",
+  "inboxEmpty": "目前没有需要你处理的事项。",
+  "inboxReviewTitle": "检查团队可见范围",
+  "inboxReviewPrivate": "{n, plural, other {你有 # 个私密机器或项目资源，目前只有你能看到。}}",
+  "inboxReviewEmpty": "这个多人工作区里暂时看不到任何内容。如果你原本预期能看到队友的对话，请让对方共享机器或项目。",
+  "inboxReviewNoLocal": "你目前看不到任何团队机器或本地项目。队友可能需要先共享它们，对应的本地对话才会出现。",
+  "inboxReviewLanding": "私密机器和项目只有你能看到。请共享需要让队友使用的项目。",
+  "inboxReviewProjects": "检查项目",
+  "inboxReviewMachines": "检查机器",
+  "inboxNeverRemind": "不再提醒",
+  "inboxPermission": "Agent 正在等待你的批准。",
+  "inboxQuestion": "Agent 有一个问题需要你回答。",
+  "inboxPermissionTool": "需要批准：{tool}",
+  "inboxCompleted": "会话已完成。",
+  "untitled": "未命名会话"
 }

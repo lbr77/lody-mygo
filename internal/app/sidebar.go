@@ -172,6 +172,10 @@ func (a *App) sidebar(c *ui.Context, p *palette) ui.Element {
 				a.searchOpen, a.searchText = !a.searchOpen, ""
 			})
 			popup(c, search, &a.searchOpen, func() { a.searchPanel(c, p) })
+			navRowCount(c, p, iconInbox, locales.Inbox(), a.page == "inbox", a.inboxUnread()).OnClick(func() {
+				a.page = "inbox"
+				a.refetchKey("inbox")
+			})
 		})
 		rows := a.sideRows()
 		a.sessionList.Key = func(i int) any {
@@ -216,6 +220,11 @@ func (a *App) sidebar(c *ui.Context, p *palette) ui.Element {
 
 // navRow is a 28px sidebar navigation row.
 func navRow(c *ui.Context, p *palette, icon *ui.SVG, label string, selected bool) ui.Element {
+	return navRowCount(c, p, icon, label, selected, 0)
+}
+
+// navRowCount is a nav row with a count at its end, as the Inbox's.
+func navRowCount(c *ui.Context, p *palette, icon *ui.SVG, label string, selected bool, count int) ui.Element {
 	row := ui.ButtonBase(c).Height(28).Padding(4, 9).Radius(8).Gap(6).Justify(ui.Start).Cursor(ui.CursorPointer).Label(label).Transition(colorFade)
 	ink, iconInk := p.SideRow, p.SideMuted
 	switch {
@@ -228,7 +237,10 @@ func navRow(c *ui.Context, p *palette, icon *ui.SVG, label string, selected bool
 	}
 	row.Children(func() {
 		ui.Box(c).Size(16, 20).Center().Children(func() { ui.Icon(c, icon).Size(16, 16).TextColor(iconInk) })
-		ui.Text(c, label).FontSize(sizeSub).TextColor(ink)
+		ui.Text(c, label).FontSize(sizeSub).TextColor(ink).Grow(1)
+		if count > 0 {
+			ui.Text(c, itoa(count)).FontSize(sizeCaption).FontWeight(600).TextColor(p.Primary).Padding(0, 6).Radius(8).Background(p.Primary.Alpha(0.12))
+		}
 	})
 	return row
 }

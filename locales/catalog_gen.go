@@ -9082,3 +9082,153 @@ func MachinePingFailed() string { return In(i18n.Locale()).MachinePingFailed() }
 func (msgs Messages) MachinePingFailed() string {
 	return Catalog.Format(msgs.locale, "machinePingFailed", nil)
 }
+
+// Inbox says "Inbox"
+// in the language the app shows.
+func Inbox() string { return In(i18n.Locale()).Inbox() }
+
+// Inbox says "Inbox"
+// in the language of msgs.
+func (msgs Messages) Inbox() string {
+	return Catalog.Format(msgs.locale, "inbox", nil)
+}
+
+// InboxEmpty says "Nothing needs you right now."
+// in the language the app shows.
+func InboxEmpty() string { return In(i18n.Locale()).InboxEmpty() }
+
+// InboxEmpty says "Nothing needs you right now."
+// in the language of msgs.
+func (msgs Messages) InboxEmpty() string {
+	return Catalog.Format(msgs.locale, "inboxEmpty", nil)
+}
+
+// InboxReviewTitle says "Review what your team can see"
+// in the language the app shows.
+func InboxReviewTitle() string { return In(i18n.Locale()).InboxReviewTitle() }
+
+// InboxReviewTitle says "Review what your team can see"
+// in the language of msgs.
+func (msgs Messages) InboxReviewTitle() string {
+	return Catalog.Format(msgs.locale, "inboxReviewTitle", nil)
+}
+
+// InboxReviewPrivate says "{n, plural, one {# private machine or project resource is only visible to you.} other {# private machine or project r…"
+// in the language the app shows.
+func InboxReviewPrivate(n int) string { return In(i18n.Locale()).InboxReviewPrivate(n) }
+
+// InboxReviewPrivate says "{n, plural, one {# private machine or project resource is only visible to you.} other {# private machine or project r…"
+// in the language of msgs.
+func (msgs Messages) InboxReviewPrivate(n int) string {
+	return Catalog.Format(msgs.locale, "inboxReviewPrivate", map[string]any{"n": n})
+}
+
+// InboxReviewEmpty says "Nothing is visible in this team workspace yet. Ask a teammate to share a machine or project if you expected to see th…"
+// in the language the app shows.
+func InboxReviewEmpty() string { return In(i18n.Locale()).InboxReviewEmpty() }
+
+// InboxReviewEmpty says "Nothing is visible in this team workspace yet. Ask a teammate to share a machine or project if you expected to see th…"
+// in the language of msgs.
+func (msgs Messages) InboxReviewEmpty() string {
+	return Catalog.Format(msgs.locale, "inboxReviewEmpty", nil)
+}
+
+// InboxReviewNoLocal says "No team machines or local projects are visible to you. A teammate may need to share them before their local conversat…"
+// in the language the app shows.
+func InboxReviewNoLocal() string { return In(i18n.Locale()).InboxReviewNoLocal() }
+
+// InboxReviewNoLocal says "No team machines or local projects are visible to you. A teammate may need to share them before their local conversat…"
+// in the language of msgs.
+func (msgs Messages) InboxReviewNoLocal() string {
+	return Catalog.Format(msgs.locale, "inboxReviewNoLocal", nil)
+}
+
+// InboxReviewLanding says "Private machines and projects are only visible to you. Share the ones your teammates should be able to use."
+// in the language the app shows.
+func InboxReviewLanding() string { return In(i18n.Locale()).InboxReviewLanding() }
+
+// InboxReviewLanding says "Private machines and projects are only visible to you. Share the ones your teammates should be able to use."
+// in the language of msgs.
+func (msgs Messages) InboxReviewLanding() string {
+	return Catalog.Format(msgs.locale, "inboxReviewLanding", nil)
+}
+
+// InboxReviewProjects says "Review projects"
+// in the language the app shows.
+func InboxReviewProjects() string { return In(i18n.Locale()).InboxReviewProjects() }
+
+// InboxReviewProjects says "Review projects"
+// in the language of msgs.
+func (msgs Messages) InboxReviewProjects() string {
+	return Catalog.Format(msgs.locale, "inboxReviewProjects", nil)
+}
+
+// InboxReviewMachines says "Review machines"
+// in the language the app shows.
+func InboxReviewMachines() string { return In(i18n.Locale()).InboxReviewMachines() }
+
+// InboxReviewMachines says "Review machines"
+// in the language of msgs.
+func (msgs Messages) InboxReviewMachines() string {
+	return Catalog.Format(msgs.locale, "inboxReviewMachines", nil)
+}
+
+// InboxNeverRemind says "Don't remind me again"
+// in the language the app shows.
+func InboxNeverRemind() string { return In(i18n.Locale()).InboxNeverRemind() }
+
+// InboxNeverRemind says "Don't remind me again"
+// in the language of msgs.
+func (msgs Messages) InboxNeverRemind() string {
+	return Catalog.Format(msgs.locale, "inboxNeverRemind", nil)
+}
+
+// InboxPermission says "The agent is waiting for your approval."
+// in the language the app shows.
+func InboxPermission() string { return In(i18n.Locale()).InboxPermission() }
+
+// InboxPermission says "The agent is waiting for your approval."
+// in the language of msgs.
+func (msgs Messages) InboxPermission() string {
+	return Catalog.Format(msgs.locale, "inboxPermission", nil)
+}
+
+// InboxQuestion says "The agent has a question for you."
+// in the language the app shows.
+func InboxQuestion() string { return In(i18n.Locale()).InboxQuestion() }
+
+// InboxQuestion says "The agent has a question for you."
+// in the language of msgs.
+func (msgs Messages) InboxQuestion() string {
+	return Catalog.Format(msgs.locale, "inboxQuestion", nil)
+}
+
+// InboxPermissionTool says "Approval needed: {tool}"
+// in the language the app shows.
+func InboxPermissionTool(tool string) string { return In(i18n.Locale()).InboxPermissionTool(tool) }
+
+// InboxPermissionTool says "Approval needed: {tool}"
+// in the language of msgs.
+func (msgs Messages) InboxPermissionTool(tool string) string {
+	return Catalog.Format(msgs.locale, "inboxPermissionTool", map[string]any{"tool": tool})
+}
+
+// InboxCompleted says "Session completed."
+// in the language the app shows.
+func InboxCompleted() string { return In(i18n.Locale()).InboxCompleted() }
+
+// InboxCompleted says "Session completed."
+// in the language of msgs.
+func (msgs Messages) InboxCompleted() string {
+	return Catalog.Format(msgs.locale, "inboxCompleted", nil)
+}
+
+// Untitled says "Untitled session"
+// in the language the app shows.
+func Untitled() string { return In(i18n.Locale()).Untitled() }
+
+// Untitled says "Untitled session"
+// in the language of msgs.
+func (msgs Messages) Untitled() string {
+	return Catalog.Format(msgs.locale, "untitled", nil)
+}

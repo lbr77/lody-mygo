@@ -36,6 +36,7 @@ func (a *App) homeView(c *ui.Context, p *palette) {
 		return
 	}
 	agent := a.agent(a.newChat.machine, a.newChat.agent)
+	a.sharingNotice(c, p)
 	a.composerBox(c, p, composerOptions{
 		canSend:  agent != nil && !a.sending,
 		onSend:   a.startChat,

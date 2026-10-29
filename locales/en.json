@@ -1889,5 +1889,34 @@
       }
     }
   },
-  "machinePingFailed": "The machine didn't answer a ping."
+  "machinePingFailed": "The machine didn't answer a ping.",
+  "inbox": "Inbox",
+  "inboxEmpty": "Nothing needs you right now.",
+  "inboxReviewTitle": "Review what your team can see",
+  "inboxReviewPrivate": "{n, plural, one {# private machine or project resource is only visible to you.} other {# private machine or project resources are only visible to you.}}",
+  "@inboxReviewPrivate": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "inboxReviewEmpty": "Nothing is visible in this team workspace yet. Ask a teammate to share a machine or project if you expected to see their conversations.",
+  "inboxReviewNoLocal": "No team machines or local projects are visible to you. A teammate may need to share them before their local conversations appear.",
+  "inboxReviewLanding": "Private machines and projects are only visible to you. Share the ones your teammates should be able to use.",
+  "inboxReviewProjects": "Review projects",
+  "inboxReviewMachines": "Review machines",
+  "inboxNeverRemind": "Don't remind me again",
+  "inboxPermission": "The agent is waiting for your approval.",
+  "inboxQuestion": "The agent has a question for you.",
+  "inboxPermissionTool": "Approval needed: {tool}",
+  "@inboxPermissionTool": {
+    "placeholders": {
+      "tool": {
+        "type": "String"
+      }
+    }
+  },
+  "inboxCompleted": "Session completed.",
+  "untitled": "Untitled session"
 }

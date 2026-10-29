@@ -50,6 +50,8 @@ func (a *App) mainView(c *ui.Context, p *palette) {
 			switch {
 			case a.page == "archive":
 				page, key = a.archiveView, "archive"
+			case a.page == "inbox":
+				page, key = a.inboxPage, "inbox"
 			case a.selected == "":
 				page, key = a.homeView, "home"
 			}
