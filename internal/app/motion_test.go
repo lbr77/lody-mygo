@@ -517,27 +517,38 @@ func TestHeaderMenu(t *testing.T) {
 	s := &a.catalog.Sessions[0]
 	s.BranchName, s.BaseBranch = "lody/flock", "main"
 	s.Project = map[string]any{"kind": "local", "localProjectId": "p1"}
-	tt := snap(t, a, "header-menu", false, nil)
+	tt := snap(t, a, "header-menu-closed", false, nil)
 	if err := tt.Click("More actions"); err != nil {
 		t.Fatal(err)
 	}
-	items := strings.Join(tt.Menu(), "|")
-	for _, want := range []string{"lody/flock  ·  Base branch: main", "Machine: Studio · Local", "Full width", "Find in session", "Fork session", "Rename Chat", "Copy", "Archive session"} {
-		if !strings.Contains(items, want) {
-			t.Errorf("menu misses %q: %s", want, items)
+	tt.Frame()
+	tt.Advance(300 * time.Millisecond)
+	tt.Frame()
+	for _, want := range []string{"lody/flock", "Base branch: main", "Studio", "Local", "Full width", "Find in session", "Fork session", "Rename Chat", "Archive session"} {
+		if !tt.HasText(want) {
+			t.Errorf("menu misses %q in %q", want, tt.Texts())
 		}
 	}
+	// The copies open beside their row.
+	a.hmenu.sub = "copy"
+	tt.Frame()
+	tt.Advance(300 * time.Millisecond)
+	tt.Frame()
+	snapFrame(t, tt, "header-menu")
 	var copied string
 	old := writeClipboard
 	writeClipboard = func(s string) { copied = s }
 	defer func() { writeClipboard = old }()
 	wait := pumpUpdates(t, a)
-	if err := tt.ChooseMenuItem("Copy", "Copy as Markdown"); err != nil {
-		t.Fatal(err)
+	if err := tt.Click("Copy as Markdown"); err != nil {
+		t.Fatalf("%v in %q", err, tt.Texts())
 	}
 	tt.Frame()
 	wait("the copy", func() bool { return copied != "" })
 	if !strings.Contains(copied, "Port the Flock catalog runtime") || !strings.Contains(copied, "# Port the Flock runtime to Go") {
 		t.Fatalf("copied %q", copied)
+	}
+	if a.hmenu.open {
+		t.Fatal("menu still open after a choice")
 	}
 }

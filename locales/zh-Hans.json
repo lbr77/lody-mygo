@@ -1766,5 +1766,9 @@
   "trimToolCalls": "工具调用详情",
   "trimThinking": "思考过程",
   "trimTerminal": "终端输出",
-  "trimToolResults": "{value} 处工具结果"
+  "trimToolResults": "{value} 处工具结果",
+  "forkNewTabHint": "在当前会话中打开新标签页，在同一目录下工作，共享文件和未提交的改动。",
+  "forkNewWorktreeHint": "在独立的 Git worktree 中新建会话，基于最新提交的 HEAD；未提交的改动留在这里。",
+  "hmPathUnavailable": "工作区路径不可用",
+  "hmBaseBranchOnly": "基础分支：{base}"
 }

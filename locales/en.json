@@ -3523,5 +3523,16 @@
         "type": "int"
       }
     }
+  },
+  "forkNewTabHint": "Opens a new tab in this session that works in the same directory, sharing its files and uncommitted changes.",
+  "forkNewWorktreeHint": "Starts a new session in a separate Git worktree from the latest committed HEAD. Uncommitted changes stay here.",
+  "hmPathUnavailable": "Workspace path unavailable",
+  "hmBaseBranchOnly": "Base branch: {base}",
+  "@hmBaseBranchOnly": {
+    "placeholders": {
+      "base": {
+        "type": "String"
+      }
+    }
   }
 }

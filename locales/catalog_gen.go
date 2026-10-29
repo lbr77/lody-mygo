@@ -17808,3 +17808,43 @@ func TrimToolResults(value int) string { return In(i18n.Locale()).TrimToolResult
 func (msgs Messages) TrimToolResults(value int) string {
 	return Catalog.Format(msgs.locale, "trimToolResults", map[string]any{"value": value})
 }
+
+// ForkNewTabHint says "Opens a new tab in this session that works in the same directory, sharing its files and uncommitted changes."
+// in the language the app shows.
+func ForkNewTabHint() string { return In(i18n.Locale()).ForkNewTabHint() }
+
+// ForkNewTabHint says "Opens a new tab in this session that works in the same directory, sharing its files and uncommitted changes."
+// in the language of msgs.
+func (msgs Messages) ForkNewTabHint() string {
+	return Catalog.Format(msgs.locale, "forkNewTabHint", nil)
+}
+
+// ForkNewWorktreeHint says "Starts a new session in a separate Git worktree from the latest committed HEAD. Uncommitted changes stay here."
+// in the language the app shows.
+func ForkNewWorktreeHint() string { return In(i18n.Locale()).ForkNewWorktreeHint() }
+
+// ForkNewWorktreeHint says "Starts a new session in a separate Git worktree from the latest committed HEAD. Uncommitted changes stay here."
+// in the language of msgs.
+func (msgs Messages) ForkNewWorktreeHint() string {
+	return Catalog.Format(msgs.locale, "forkNewWorktreeHint", nil)
+}
+
+// HmPathUnavailable says "Workspace path unavailable"
+// in the language the app shows.
+func HmPathUnavailable() string { return In(i18n.Locale()).HmPathUnavailable() }
+
+// HmPathUnavailable says "Workspace path unavailable"
+// in the language of msgs.
+func (msgs Messages) HmPathUnavailable() string {
+	return Catalog.Format(msgs.locale, "hmPathUnavailable", nil)
+}
+
+// HmBaseBranchOnly says "Base branch: {base}"
+// in the language the app shows.
+func HmBaseBranchOnly(base string) string { return In(i18n.Locale()).HmBaseBranchOnly(base) }
+
+// HmBaseBranchOnly says "Base branch: {base}"
+// in the language of msgs.
+func (msgs Messages) HmBaseBranchOnly(base string) string {
+	return Catalog.Format(msgs.locale, "hmBaseBranchOnly", map[string]any{"base": base})
+}

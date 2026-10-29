@@ -79,6 +79,7 @@ type App struct {
 	card         hoverCard            // the sidebar's info card
 	outline      outlineRail          // the conversation's outline rail
 	access       accessPanel          // the header's access panel
+	hmenu        menuState            // the header's session menu
 	attachPrev   attachPreview        // a text file's preview
 	downloads    map[string]bool      // the files downloading
 	notifyAsk    notifyAsk            // the prompt to turn notifications on

@@ -18,12 +18,21 @@ import (
 // what it opened, Share, Find, the forks, Rename, the owner, sharing with
 // the team, the copies, and archiving.
 
-// headerMenu builds the menu of the open chat s.
-func (a *App) headerMenu(m *ui.Menu, s catalog.Session) {
+// headerMenu builds the menu of the open chat s, drawn as Lody's: 290
+// wide at most, its rows 32 high.
+func (a *App) headerMenu(c *ui.Context, p *palette, s catalog.Session) {
+	button := iconButton(c.Key("header-menu"), p, iconMore, locales.MoreActions(), p.Hover)
+	lodyMenuButton(c, p, button, &a.hmenu, 200, 290, 32, func(m *lodyMenu) { a.headerMenuRows(m, s) })
+}
+
+// headerMenuRows are the menu's rows.
+func (a *App) headerMenuRows(m *lodyMenu, s catalog.Session) {
+	c, p := m.c, m.p
 	copied := func(text, message string) {
 		writeClipboard(text)
 		a.toast("success", message)
 	}
+	copyMark := func() { ui.Icon(c, iconCopy).Size(12, 12).TextColor(p.Secondary).Shrink(0) }
 	kind, _ := s.Project["kind"].(string)
 	repo := s.RepoFullName
 	if strings.HasPrefix(s.ProjectID, "github:") {
@@ -53,18 +62,19 @@ func (a *App) headerMenu(m *ui.Menu, s catalog.Session) {
 	}
 	access := a.sessionAccess(&s)
 
-	// Who and where.
+	// Who and where: identity stays inline, each copied on a click.
 	if github && repo != "" || showBranch || showPath || machine != "" || access != nil {
-		if github && repo != "" && m.Item(repo).Chosen() {
+		if github && repo != "" && m.item("repo", iconGithub, repo, menuItem{tip: repo, end: copyMark}) {
 			copied(repo, locales.HmRepoCopied())
 		}
 		switch {
 		case showBranch:
-			label := branch
+			o := menuItem{tip: branch, end: copyMark}
 			if baseContext {
-				label = locales.HmBaseBranchLine(branch, base)
+				o.tip = branch + "\n" + locales.HmBaseBranchOnly(base)
+				o.detail = locales.HmBaseBranchOnly(base)
 			}
-			if m.Item(label).Chosen() {
+			if m.item("branch", iconBranch, branch, o) {
 				if current != "" {
 					copied(branch, locales.CmdBranchCopied())
 				} else {
@@ -72,36 +82,40 @@ func (a *App) headerMenu(m *ui.Menu, s catalog.Session) {
 				}
 			}
 		case showPath:
-			if m.Item(root).Chosen() {
+			if m.item("path", iconFolder, root, menuItem{tip: root, end: copyMark}) {
 				copied(root, locales.HmProjectPathCopied())
 			}
 		}
 		if machine != "" {
-			line := locales.HmMachineLine(machine)
-			if kind == "local" {
+			m.static("machine", iconMonitor, machine, func() {
+				if kind != "local" {
+					return
+				}
 				where := locales.WorkdirLocal()
 				if a.sessionWorktree(&s) {
 					where = locales.WorkdirWorktree()
 				}
-				line = locales.HmMachineLineKind(machine, where)
-			}
-			m.Item(line).Disabled(true)
+				ui.Text(c, where).FontSize(sizeCaption).FontWeight(500).TextColor(p.Secondary).Padding(1, 6).Radius(6).
+					Background(p.Text.Alpha(0.06)).Shrink(0)
+			}).Label(locales.HmMachineLine(machine))
 		}
 		if access != nil {
-			label := locales.AccessChecking()
+			icon, label := iconLockKeyhole, locales.AccessChecking()
 			switch access.visibility {
 			case "team":
-				label = locales.AccessTeamLabel()
+				icon, label = iconUsers, locales.AccessTeamLabel()
 			case "private":
 				label = locales.AccessPrivate()
 			}
-			m.Item(label).Disabled(true)
+			row := m.static("access", icon, label, nil)
+			lodyTooltip(c, p, row, access.description())
 		}
-		m.Separator()
+		m.sep()
 	}
 
-	// The page's own display option.
-	if m.Item(locales.PrefWide()).Checked(a.wideMode).Chosen() {
+	// The page's own display option, a switch that stays open.
+	wide := a.wideMode
+	if m.item("wide", iconMoveHorizontal, locales.PrefWide(), menuItem{keepOpen: true, end: func() { menuSwitch(c, p, wide) }}) {
 		a.wideMode = !a.wideMode
 		a.savePrefs()
 	}
@@ -113,7 +127,7 @@ func (a *App) headerMenu(m *ui.Menu, s catalog.Session) {
 		if opener != nil {
 			title = firstNonEmpty(opener.Title, title)
 		}
-		if m.Item(locales.HmOpenedBy(title)).Disabled(opener == nil).Chosen() {
+		if m.item("opened-by", iconGitBranchPlus, locales.HmOpenedBy(title), menuItem{disabled: opener == nil}) {
 			a.open(s.OpenedBySessionID)
 		}
 	}
@@ -124,19 +138,19 @@ func (a *App) headerMenu(m *ui.Menu, s catalog.Session) {
 		}
 	}
 	if len(opened) > 0 {
-		m.Submenu(locales.HmOpenedSessions(len(opened)), func(m *ui.Menu) {
+		m.submenu("opened", iconGitBranchPlus, locales.HmOpenedSessions(len(opened)), menuItem{}, 200, func(sm *lodyMenu) {
 			for _, o := range opened {
-				if m.Item(firstNonEmpty(o.Title, locales.UntitledSession())).Chosen() {
+				if sm.item("open/"+o.ID, nil, firstNonEmpty(o.Title, locales.UntitledSession()), menuItem{}) {
 					a.open(o.ID)
 				}
 			}
 		})
 	}
 
-	if !a.noCloud() && a.account != nil && m.Item(locales.ShareTitle()).Chosen() {
+	if !a.noCloud() && a.account != nil && m.item("share", iconShare, locales.ShareTitle(), menuItem{}) {
 		a.openShare(s.ID)
 	}
-	if m.Item(locales.FindInSession()).Chosen() {
+	if m.item("find", iconSearch, locales.FindInSession(), menuItem{}) {
 		a.openFind()
 	}
 
@@ -145,31 +159,38 @@ func (a *App) headerMenu(m *ui.Menu, s catalog.Session) {
 	canFork := !s.Archived && turn != "" && a.sessionForkable(&s)
 	if canFork || a.view != nil {
 		_, forking := a.forks[s.ID]
-		m.Submenu(locales.ForkSession(), func(m *ui.Menu) {
+		icon := iconGitFork
+		m.submenu("fork", icon, locales.ForkSession(), menuItem{}, 208, func(sm *lodyMenu) {
 			if canFork {
-				if m.Item(locales.ForkNewTab()).Disabled(forking).Chosen() {
+				if sm.item("fork-tab", iconFolder, locales.ForkNewTab(), menuItem{disabled: forking, tip: locales.ForkNewTabHint()}) {
 					a.fork(turn, false, false, "")
 				}
-				if s.ProjectID != "" && m.Item(locales.ForkNewWorktree()).Disabled(forking).Chosen() {
+				if s.ProjectID != "" && sm.item("fork-worktree", iconWorktree, locales.ForkNewWorktree(), menuItem{disabled: forking, tip: locales.ForkNewWorktreeHint()}) {
 					a.fork(turn, true, false, "")
 				}
 			}
-			if m.Item(locales.HmCopyContext()).Disabled(a.view == nil).Chosen() {
+			if sm.item("copy-context", iconCopy, locales.HmCopyContext(), menuItem{disabled: a.view == nil}) {
 				a.copyConversation(s.ID)
 			}
 		})
 	}
 
-	if !s.Archived && m.Item(locales.HmRenameChat()).Chosen() {
+	if !s.Archived && m.item("rename", iconPencil, locales.HmRenameChat(), menuItem{}) {
 		a.renaming, a.renameText = s.ID, s.Title
 	}
 
 	// The owner, in a workspace of more than one.
 	if members, mf := a.members(); !s.Archived && mf != nil && len(members) > 1 {
-		m.Submenu(locales.HmChangeOwner(), func(m *ui.Menu) {
+		m.submenu("owner", iconUserRoundCog, locales.HmChangeOwner(), menuItem{}, 200, func(sm *lodyMenu) {
 			for _, id := range sortedMemberIDs(members) {
 				name := a.memberName(id, members)
-				if m.Item(name).Radio(id == s.UserID).Chosen() && id != s.UserID {
+				owner := id == s.UserID
+				end := func() {
+					if owner {
+						ui.Icon(c, iconCheck).Size(14, 14).TextColor(p.Text).Shrink(0)
+					}
+				}
+				if sm.item("owner/"+id, nil, name, menuItem{end: end}) && !owner {
 					a.changeOwner(s.ID, id, name)
 				}
 			}
@@ -178,57 +199,73 @@ func (a *App) headerMenu(m *ui.Menu, s catalog.Session) {
 
 	// Sharing with the team, while it isn't.
 	if access != nil && access.visibility != "team" {
-		label := locales.AccessShareWithTeam()
+		label, icon := locales.AccessShareWithTeam(), iconUsers
 		disabled := access.visibility == "unknown" || access.reason == "machine-not-registered" || !access.canManage
 		switch {
 		case access.visibility == "unknown":
 			label = locales.HmCheckingSharing()
 		case access.reason == "machine-not-registered":
-			label = locales.AccessRegisterDevice()
+			label, icon = locales.AccessRegisterDevice(), iconMonitor
 		case !access.canManage:
-			label = locales.AccessOnlyOwner()
+			label, icon = locales.AccessOnlyOwner(), iconLockKeyhole
 		}
-		if m.Item(label).Disabled(disabled).Chosen() {
+		if m.item("share-team", icon, label, menuItem{disabled: disabled}) {
 			a.shareWithTeam(&s, access)
 		}
 	}
 
-	m.Submenu(locales.Copy(), func(m *ui.Menu) {
+	m.submenu("copy", iconCopy, locales.Copy(), menuItem{}, 200, func(sm *lodyMenu) {
 		if baseContext {
-			if m.Item(locales.HmCopyBaseBranch()).Chosen() {
+			if sm.item("copy-base", iconBranch, locales.HmCopyBaseBranch(), menuItem{tip: base}) {
 				copied(base, locales.HmBaseBranchCopied())
 			}
-			m.Separator()
+			sm.sep()
 		}
 		path := a.sessionWorkspacePath(&s)
-		if m.Item(locales.HmCopyPath()).Disabled(path == "").Chosen() {
+		if sm.item("copy-path", iconCopy, locales.HmCopyPath(), menuItem{disabled: path == "", tip: firstNonEmpty(path, locales.HmPathUnavailable())}) {
 			copied(path, locales.HmPathCopied())
 		}
-		if m.Item(locales.AccessCopyMarkdown()).Disabled(a.view == nil).Chosen() {
+		if sm.item("copy-markdown", iconCopy, locales.AccessCopyMarkdown(), menuItem{disabled: a.view == nil}) {
 			a.copyConversation(s.ID)
 		}
-		if m.Item(locales.AccessCopyURL()).Chosen() {
+		if sm.item("copy-url", iconCopy, locales.AccessCopyURL(), menuItem{}) {
 			a.copySessionLink(s.ID)
 		}
 	})
 
-	m.Separator()
+	m.sep()
 	if s.Archived {
-		if m.Item(locales.HmRestore()).Chosen() {
+		if m.item("restore", iconArchiveRestore, locales.HmRestore(), menuItem{}) {
 			id := s.ID
 			a.catalogAction(locales.FailRestore(), func(ctx context.Context, sync *catalog.Sync) error {
 				return sync.Archive(ctx, id, false)
 			})
 		}
-		if m.Item(locales.ArchiveDelete()).Chosen() {
+		if m.item("delete", iconTrash, locales.ArchiveDelete(), menuItem{destructive: true}) {
 			sess := s
 			a.deleting, a.deleteOpen = &sess, true
 		}
 		return
 	}
-	if m.Item(locales.HmArchive()).Chosen() {
+	if m.item("archive", iconArchive, locales.HmArchive(), menuItem{}) {
 		a.archiveSession(s.ID)
 	}
+}
+
+// menuSwitch is the small switch at a menu row's end.
+func menuSwitch(c *ui.Context, p *palette, on bool) {
+	track := ui.Box(c.Key("switch")).Size(28, 16).Radius(8).Shrink(0).Transition(colorFade)
+	knob := float32(2)
+	if on {
+		track.Background(p.Text)
+		knob = 14
+	} else {
+		track.Background(p.Text.Alpha(0.15))
+	}
+	track.Children(func() {
+		k := ui.Box(c.Key("knob")).Size(12, 12).Radius(6).Absolute().Top(2).Background(raisedGround(p)).Shadow(0, 1, 2, 0, ui.RGBA(0, 0, 0, 0.2))
+		k.Left(k.AnimateWith("x", knob, durRegular, easeStandard))
+	})
 }
 
 // lastFinishedTurn is the conversation's last finished reply, which a fork

@@ -104,7 +104,7 @@ func (a *App) tabBar(c *ui.Context, p *palette, sess *catalog.Session) {
 				archivedBadge(c, p)
 			}
 			a.accessControl(c, p, sess)
-			iconButton(c, p, iconMore, locales.MoreActions(), p.Hover).Menu(func(m *ui.Menu) { a.headerMenu(m, s) })
+			a.headerMenu(c, p, s)
 			if a.localMachine() != "" {
 				iconButton(c, p, iconSquareTerminal, locales.TerminalToggle(), p.Hover).OnClick(a.toggleTerminal)
 			}
