@@ -117,14 +117,41 @@ func (a *App) homeTargets(c *ui.Context, p *palette) {
 		} else if repo, ok := strings.CutPrefix(a.newChat.project, "github:"); ok {
 			label = repo
 		}
-		project := ui.ButtonBase(c).Height(24).Padding(0, 8).Radius(12).Gap(4).Cursor(ui.CursorPointer).
-			Label(locales.HomeProject()).OnClick(func() { *openProject = !*openProject }).Transition(colorFade)
-		if project.Hovered() {
-			project.Background(p.Text.Alpha(0.06))
-		}
-		project.Children(func() {
-			ui.Icon(c, iconFolderOpen).Size(16, 16).TextColor(p.Text.Alpha(0.8))
-			ui.Text(c, label).FontSize(12.6).TextColor(p.Text.Alpha(0.8)).SingleLine().MaxWidth(240)
+		// With a project chosen, the pointer on the pill swaps its folder
+		// for a clear button in the same place, each fading over 150ms, as
+		// Tailwind's transition-opacity.
+		group := ui.Row(c.Key("project-group")).AlignItems(ui.Center)
+		chosen := a.newChat.project != ""
+		var project ui.Element
+		group.Children(func() {
+			project = ui.ButtonBase(c.Key("project")).Height(24).Padding(0, 8).Radius(12).Gap(4).Cursor(ui.CursorPointer).
+				Label(locales.HomeProject()).OnClick(func() { *openProject = !*openProject }).Transition(colorFade)
+			if project.Hovered() {
+				project.Background(p.Text.Alpha(0.06))
+			}
+			swap := float32(0)
+			if chosen {
+				swap = group.AnimateWith("clear", b2f(group.Hovered() || group.FocusWithin()), 150*time.Millisecond, twEase)
+			}
+			project.Children(func() {
+				ui.Icon(c, iconFolderOpen).Size(16, 16).TextColor(p.Text.Alpha(0.8)).Opacity(1 - swap)
+				ui.Text(c, label).FontSize(12.6).TextColor(p.Text.Alpha(0.8)).SingleLine().MaxWidth(240)
+			})
+			if !chosen {
+				return
+			}
+			clear := ui.ButtonBase(c.Key("clear")).Absolute().Left(8).Top(4).Size(16, 16).Radius(8).Center().Cursor(ui.CursorPointer).
+				Label(locales.ProjectPickerClear()).Opacity(swap)
+			ink := p.Secondary
+			if clear.Hovered() {
+				clear.Background(p.Hover)
+				ink = p.Text
+			}
+			clear.Children(func() { ui.Icon(c, iconX).Size(12, 12).TextColor(ink) })
+			clear.OnClick(func() {
+				a.newChat.project, a.newChat.branch = "", ""
+				*openProject = false
+			})
 		})
 		a.optionList(c, p, project, openProject, a.projectOptions(), a.newChat.project, func(id string) {
 			a.newChat.project, a.newChat.branch = id, ""

@@ -18732,3 +18732,13 @@ func CopyTable() string { return In(i18n.Locale()).CopyTable() }
 func (msgs Messages) CopyTable() string {
 	return Catalog.Format(msgs.locale, "copyTable", nil)
 }
+
+// ProjectPickerClear says "Don't work in a project"
+// in the language the app shows.
+func ProjectPickerClear() string { return In(i18n.Locale()).ProjectPickerClear() }
+
+// ProjectPickerClear says "Don't work in a project"
+// in the language of msgs.
+func (msgs Messages) ProjectPickerClear() string {
+	return Catalog.Format(msgs.locale, "projectPickerClear", nil)
+}

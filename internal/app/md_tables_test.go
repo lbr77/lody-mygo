@@ -91,3 +91,33 @@ func TestTableCopy(t *testing.T) {
 		t.Fatal("still says copied after 1.5s")
 	}
 }
+
+// With a project chosen on Home, the pointer on its pill swaps the folder
+// for Lody's clear button, which leaves the project.
+func TestHomeProjectClear(t *testing.T) {
+	a := fixture()
+	a.selected = ""
+	a.newChat.machine, a.newChat.project = "m1", "m1:local:p1"
+	tt := ui.NewTester(a.render, 1100, 720)
+	tt.Frame()
+	tt.Advance(400 * time.Millisecond)
+	tt.Frame()
+	r, ok := tt.Find("Project")
+	if !ok {
+		t.Fatalf("no project pill: %q", tt.Texts())
+	}
+	tt.Move(r.X+r.W/2, r.Y+r.H/2)
+	tt.Frame()
+	tt.Advance(200 * time.Millisecond)
+	tt.Frame()
+	if err := tt.Click("Don't work in a project"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if a.newChat.project != "" {
+		t.Fatalf("still in %q", a.newChat.project)
+	}
+	if _, ok := tt.Find("Don't work in a project"); ok {
+		t.Fatal("a clear button with nothing to clear")
+	}
+}

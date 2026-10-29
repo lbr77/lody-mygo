@@ -3657,5 +3657,6 @@
   "diagramDownloadSource": "Mermaid source",
   "copyCode": "Copy code",
   "copied": "Copied",
-  "copyTable": "Copy table"
+  "copyTable": "Copy table",
+  "projectPickerClear": "Don't work in a project"
 }

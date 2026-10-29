@@ -1858,5 +1858,6 @@
   "diagramDownloadSource": "Mermaid 源码",
   "copyCode": "复制代码",
   "copied": "已复制",
-  "copyTable": "复制表格"
+  "copyTable": "复制表格",
+  "projectPickerClear": "不在项目中工作"
 }
