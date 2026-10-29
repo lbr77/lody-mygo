@@ -1862,3 +1862,16 @@ func TestPRPanel(t *testing.T) {
 		t.Fatalf("changes: %q", tt.Texts())
 	}
 }
+
+func TestGitHubRepoTargets(t *testing.T) {
+	a := fixture()
+	a.convex = &cloud.Convex{}
+	a.fetches = map[string]*fetched{"w1|github-repos": {value: []workspaceRepository{{ID: 1, Name: "lody-mygo", FullName: "lbr77/lody-mygo"}}}}
+	found := false
+	for _, o := range a.projectOptions() {
+		found = found || o.id == "github:lbr77/lody-mygo"
+	}
+	if !found {
+		t.Fatalf("no repo target: %+v", a.projectOptions())
+	}
+}

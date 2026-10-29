@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"github.com/lbr77/lody-mygo/locales"
 	"strings"
 	"time"
@@ -95,6 +96,8 @@ func (a *App) homeTargets(c *ui.Context, p *palette) {
 		label := locales.SelectProject()
 		if pr := a.catalog.Project(a.newChat.project); pr != nil {
 			label = pr.Name
+		} else if repo, ok := strings.CutPrefix(a.newChat.project, "github:"); ok {
+			label = repo
 		}
 		project := ui.ButtonBase(c).Height(24).Padding(0, 8).Radius(12).Gap(4).Cursor(ui.CursorPointer).
 			Label(locales.HomeProject()).OnClick(func() { *openProject = !*openProject }).Transition(colorFade)
@@ -143,5 +146,33 @@ func (a *App) projectOptions() []option {
 			out = append(out, option{pr.ID, pr.Name})
 		}
 	}
+	// The workspace's GitHub repositories, which the machine checks out.
+	for _, r := range a.githubRepos() {
+		out = append(out, option{"github:" + r.FullName, r.FullName})
+	}
 	return out
+}
+
+// workspaceRepository is a repository the workspace's GitHub App reaches.
+type workspaceRepository struct {
+	ID       float64 `json:"id"`
+	Name     string  `json:"name"`
+	FullName string  `json:"fullName"`
+	Private  bool    `json:"private"`
+}
+
+// githubRepos are the workspace's repositories new chats can start in
+// (github:getWorkspaceRepositories).
+func (a *App) githubRepos() []workspaceRepository {
+	if a.convex == nil {
+		return nil
+	}
+	convex, ws := a.convex, a.workspaceID
+	f := a.fetch("github-repos", func(ctx context.Context) (any, error) {
+		var out []workspaceRepository
+		err := convex.Query(ctx, "github:getWorkspaceRepositories", map[string]any{"workspaceId": ws}, &out)
+		return out, err
+	})
+	repos, _ := f.value.([]workspaceRepository)
+	return repos
 }

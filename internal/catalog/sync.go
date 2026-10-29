@@ -549,6 +549,9 @@ type NewSession struct {
 	Worktree   bool
 	Branch     string
 	GitHubRepo string
+	// GitHubProject runs the session in a checkout of a workspace
+	// repository the machine makes, rather than in a local project.
+	GitHubProject string
 }
 
 // CreateSession creates the session's stream and its catalog entry.
@@ -585,6 +588,9 @@ func (s *Sync) CreateSession(ctx context.Context, n NewSession) error {
 			project["githubRepoFullName"] = n.GitHubRepo
 		}
 		meta["project"] = project
+	} else if n.GitHubProject != "" {
+		meta["project"] = map[string]any{"kind": "github", "repoFullName": n.GitHubProject, "branch": n.Branch}
+		meta["repoFullName"] = n.GitHubProject
 	}
 	return s.Write(ctx, func(f *flock.Flock) error {
 		if err := f.Put([]any{"e", room(n.ID)}, true); err != nil {

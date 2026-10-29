@@ -780,8 +780,11 @@ func (a *App) startChat() {
 	if title == "" && len(files) > 0 {
 		title = draftTitle(files[0].Name)
 	}
-	localProject := ""
+	localProject, githubProject := "", ""
 	worktree, branch, repo := false, "", ""
+	if r, ok := strings.CutPrefix(nc.project, "github:"); ok {
+		githubProject = r
+	}
 	if p := a.catalog.Project(nc.project); p != nil {
 		_, localProject, _ = strings.Cut(p.ID, ":local:")
 		if st := a.gitStates[p.ID]; localProject != "" && st != nil && st.git {
@@ -797,7 +800,7 @@ func (a *App) startChat() {
 		defer cancel()
 		err := sync.CreateSession(ctx, catalog.NewSession{
 			ID: id, MachineID: nc.machine, UserID: userID, Title: title,
-			Agent: *agent, LocalProject: localProject, CreatedAt: time.Now(),
+			Agent: *agent, LocalProject: localProject, CreatedAt: time.Now(), GitHubProject: githubProject,
 			Worktree: worktree, Branch: branch, GitHubRepo: repo,
 		})
 		if err != nil {

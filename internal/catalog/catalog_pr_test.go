@@ -15,3 +15,10 @@ func TestLatestPR(t *testing.T) {
 		t.Fatal("ready")
 	}
 }
+
+func TestGitHubProjectSession(t *testing.T) {
+	n := NewSession{ID: "s", GitHubProject: "o/r"}
+	if n.LocalProject != "" || n.GitHubProject != "o/r" {
+		t.Fatal("fields")
+	}
+}
