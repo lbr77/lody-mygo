@@ -1455,5 +1455,43 @@
         "type": "int"
       }
     }
+  },
+  "machineRestart": "Restart Lody on the machine",
+  "machineRestartTitle": "Restart Lody on {name}?",
+  "@machineRestartTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "machineRestartBody": "Running chats stop for a moment and resume once it's back.",
+  "machineUpgrade": "Update to v{version} and restart",
+  "@machineUpgrade": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "machineUpgradeTitle": "Update Lody on {name} to v{version}?",
+  "@machineUpgradeTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "machineLifecycleRefused": "The machine refused.",
+  "machineLifecycleStarted": "{name} is restarting.",
+  "@machineLifecycleStarted": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   }
 }

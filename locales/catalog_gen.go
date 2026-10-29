@@ -6844,3 +6844,77 @@ func HistorySummary(imported int, refreshed int, skipped int, conflicted int, fa
 func (msgs Messages) HistorySummary(imported int, refreshed int, skipped int, conflicted int, failed int) string {
 	return Catalog.Format(msgs.locale, "historySummary", map[string]any{"imported": imported, "refreshed": refreshed, "skipped": skipped, "conflicted": conflicted, "failed": failed})
 }
+
+// MachineRestart says "Restart Lody on the machine"
+// in the language the app shows.
+func MachineRestart() string { return In(i18n.Locale()).MachineRestart() }
+
+// MachineRestart says "Restart Lody on the machine"
+// in the language of msgs.
+func (msgs Messages) MachineRestart() string {
+	return Catalog.Format(msgs.locale, "machineRestart", nil)
+}
+
+// MachineRestartTitle says "Restart Lody on {name}?"
+// in the language the app shows.
+func MachineRestartTitle(name string) string { return In(i18n.Locale()).MachineRestartTitle(name) }
+
+// MachineRestartTitle says "Restart Lody on {name}?"
+// in the language of msgs.
+func (msgs Messages) MachineRestartTitle(name string) string {
+	return Catalog.Format(msgs.locale, "machineRestartTitle", map[string]any{"name": name})
+}
+
+// MachineRestartBody says "Running chats stop for a moment and resume once it's back."
+// in the language the app shows.
+func MachineRestartBody() string { return In(i18n.Locale()).MachineRestartBody() }
+
+// MachineRestartBody says "Running chats stop for a moment and resume once it's back."
+// in the language of msgs.
+func (msgs Messages) MachineRestartBody() string {
+	return Catalog.Format(msgs.locale, "machineRestartBody", nil)
+}
+
+// MachineUpgrade says "Update to v{version} and restart"
+// in the language the app shows.
+func MachineUpgrade(version string) string { return In(i18n.Locale()).MachineUpgrade(version) }
+
+// MachineUpgrade says "Update to v{version} and restart"
+// in the language of msgs.
+func (msgs Messages) MachineUpgrade(version string) string {
+	return Catalog.Format(msgs.locale, "machineUpgrade", map[string]any{"version": version})
+}
+
+// MachineUpgradeTitle says "Update Lody on {name} to v{version}?"
+// in the language the app shows.
+func MachineUpgradeTitle(name string, version string) string {
+	return In(i18n.Locale()).MachineUpgradeTitle(name, version)
+}
+
+// MachineUpgradeTitle says "Update Lody on {name} to v{version}?"
+// in the language of msgs.
+func (msgs Messages) MachineUpgradeTitle(name string, version string) string {
+	return Catalog.Format(msgs.locale, "machineUpgradeTitle", map[string]any{"name": name, "version": version})
+}
+
+// MachineLifecycleRefused says "The machine refused."
+// in the language the app shows.
+func MachineLifecycleRefused() string { return In(i18n.Locale()).MachineLifecycleRefused() }
+
+// MachineLifecycleRefused says "The machine refused."
+// in the language of msgs.
+func (msgs Messages) MachineLifecycleRefused() string {
+	return Catalog.Format(msgs.locale, "machineLifecycleRefused", nil)
+}
+
+// MachineLifecycleStarted says "{name} is restarting."
+// in the language the app shows.
+func MachineLifecycleStarted(name string) string {
+	return In(i18n.Locale()).MachineLifecycleStarted(name)
+}
+
+// MachineLifecycleStarted says "{name} is restarting."
+// in the language of msgs.
+func (msgs Messages) MachineLifecycleStarted(name string) string {
+	return Catalog.Format(msgs.locale, "machineLifecycleStarted", map[string]any{"name": name})
+}

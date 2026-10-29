@@ -678,5 +678,12 @@
   "historyConflict": "冲突",
   "historyResolve": "解决",
   "historySyncFailed": "同步 {provider} 历史失败",
-  "historySummary": "已导入 {imported}，已刷新 {refreshed}，已跳过 {skipped}，冲突 {conflicted}，失败 {failed}"
+  "historySummary": "已导入 {imported}，已刷新 {refreshed}，已跳过 {skipped}，冲突 {conflicted}，失败 {failed}",
+  "machineRestart": "重启机器上的 Lody",
+  "machineRestartTitle": "重启 {name} 上的 Lody？",
+  "machineRestartBody": "正在运行的对话会短暂停止，重启后继续。",
+  "machineUpgrade": "更新到 v{version} 并重启",
+  "machineUpgradeTitle": "将 {name} 上的 Lody 更新到 v{version}？",
+  "machineLifecycleRefused": "机器拒绝了请求。",
+  "machineLifecycleStarted": "{name} 正在重启。"
 }

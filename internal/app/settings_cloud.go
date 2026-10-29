@@ -139,6 +139,9 @@ func (a *App) settingsErrorLine(c *ui.Context, p *palette) {
 	if a.settingsError != "" {
 		ui.Text(c, a.settingsError).FontSize(sizeFoot).TextColor(p.Danger).Selectable()
 	}
+	if a.settingsNotice != "" {
+		ui.Text(c, a.settingsNotice).FontSize(sizeFoot).TextColor(p.Secondary)
+	}
 }
 
 // members is the workspace's members, by user id.

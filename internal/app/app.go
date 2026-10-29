@@ -121,6 +121,7 @@ type App struct {
 	offline         bool                // fetch nothing from the cloud, as in tests
 	toggles         map[string]bool     // cloud switches flipped, until they settle
 	settingsError   string
+	settingsNotice  string // what a settings action did
 	usageRange      string
 	usageCost       bool // the usage charts show cost rather than tokens
 	editingName     bool

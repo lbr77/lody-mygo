@@ -603,6 +603,7 @@ func (a *App) machineActions(c *ui.Context, p *palette, id string, m visibleMach
 					map[string]any{"workspaceId": ws, "machineId": id, "sharedWithTeam": on}, nil, "machines", key, nil)
 			}
 		}
+		a.lifecycleButtons(c, p, id)
 		if n, _ := cf.value.(float64); n > 0 {
 			iconButton(c, p, iconUnplug, locales.MachinesRevoke(), p.Hover).OnClick(func() {
 				a.confirm(locales.MachinesRevokeTitle(a.machineName(id)), locales.MachinesRevokeBody(), locales.MachinesRevoke(), func() {

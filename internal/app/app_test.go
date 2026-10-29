@@ -920,3 +920,15 @@ func TestSidebarResize(t *testing.T) {
 		t.Fatalf("width past the end = %v", w)
 	}
 }
+
+func TestOlderVersion(t *testing.T) {
+	cases := []struct {
+		a, b string
+		want bool
+	}{{"0.108.1", "0.109.0", true}, {"0.108.1", "0.108.1", false}, {"1.0.0", "0.99.9", false}, {"v0.9.10", "0.10.0", true}, {"", "1.0.0", false}}
+	for _, c := range cases {
+		if got := olderVersion(c.a, c.b); got != c.want {
+			t.Errorf("olderVersion(%q, %q) = %v", c.a, c.b, got)
+		}
+	}
+}
