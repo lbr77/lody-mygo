@@ -261,13 +261,22 @@ func shareMarkdown(dark bool) *markdown.Options {
 	// An image has no scrollbar and nothing in it can be pressed: the
 	// code wraps, and its block keeps the language but not the button.
 	md.CodeBlock = func(c *ui.Context, b *markdown.CodeBlockView) {
-		em := func(v float32) float32 { return v * t.FontSize }
 		ui.Column(c).Direction(ui.LeftToRight).Background(t.CodeBlockBackground).Border(1, t.CodeBlockBorder).Radius(t.CodeBlockRadius).
 			AlignSelf(ui.Stretch).Clip().Children(func() {
-			ui.Row(c).AlignItems(ui.Center).MinHeight(em(0.35)+em(1.35)).Padding(em(0.35), em(0.4), 0, em(t.CodeBlockPadding)).Children(func() {
-				ui.Text(c, b.Language).FontSize(em(0.8)).TextColor(t.Muted)
+			// Lody's toolbar row, its actions hidden: the language in the
+			// mono caption, over a hairline.
+			ui.Row(c).FillWidth().MinHeight(28).Padding(0, 12).AlignItems(ui.Center).BorderWidth(0, 0, 0.5, 0).BorderColor(t.Rule).Children(func() {
+				if b.Language != "" {
+					ui.Text(c, b.Language).Font(fontMono).FontSize(11).LetterSpacing(0.22).TextColor(t.Code.Alpha(0.55)).SingleLine()
+				}
 			})
-			b.Body(c)
+			// A labelled block starts its first line 1.5rem lower, as the
+			// card's code style has it.
+			body := ui.Column(c).FillWidth()
+			if b.Language != "" {
+				body.Padding(24, 0, 0, 0)
+			}
+			body.Children(func() { b.Body(c) })
 		})
 	}
 	return md
