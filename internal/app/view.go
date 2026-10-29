@@ -13,13 +13,14 @@ const titleBarHeight = 44
 
 func (a *App) render(c *ui.Context) {
 	p := applyTheme(c)
+	spinnerInk = p.Secondary
 	// The overlay layer stays built while nothing is in it, so that what
 	// leaves it, as a dialog closing, fades out rather than vanishing.
 	ui.Overlay(c, func() {})
 	switch a.phase {
 	case phaseLoading:
 		ui.Column(c.Key("loading")).Fill().Center().Background(p.Ground).DragWindow().Children(func() {
-			ui.Spinner(c).Label(locales.Loading())
+			spinner(c).Label(locales.Loading())
 		})
 	case phaseSignedOut:
 		a.signInView(c, p)
@@ -63,7 +64,7 @@ func (a *App) deviceCodeCard(c *ui.Context, p *palette) {
 	ui.Column(c).Gap(12).Padding(16).Radius(12).Border(1, p.Border).Background(p.Popover).Children(func() {
 		if a.signIn.code == "" {
 			ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
-				ui.Spinner(c).Size(14, 14)
+				spinner(c).Size(14, 14)
 				ui.Text(c, locales.SignInContacting()).FontSize(sizeSub).TextColor(p.Secondary)
 			})
 			return
@@ -71,7 +72,7 @@ func (a *App) deviceCodeCard(c *ui.Context, p *palette) {
 		ui.Text(c, locales.SignInConfirmCode()).FontSize(sizeSub).FontWeight(500).TextColor(p.Text)
 		ui.Text(c, a.signIn.code).Font(fontMono).FontSize(24).FontWeight(600).LetterSpacing(2).TextColor(p.Strong).Selectable()
 		ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
-			ui.Spinner(c).Size(12, 12)
+			spinner(c).Size(12, 12)
 			ui.Text(c, locales.SignInWaiting()).FontSize(sizeFoot).TextColor(p.Secondary).Grow(1)
 			ghostButton(c, p, locales.SignInReopen()).OnClick(func() { mygo.Shell.OpenExternal(a.signIn.url) })
 			if ghostButton(c, p, locales.Cancel()).Clicked() {

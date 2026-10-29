@@ -197,7 +197,7 @@ func (a *App) shortcutDialog(c *ui.Context, p *palette) {
 				ui.Text(c, locales.ShortcutsPromptHint()).FontSize(sizeCaption).LineHeight(1.45).TextColor(p.Secondary)
 			})
 			if f.loading {
-				ui.Spinner(c).Size(14, 14)
+				spinner(c).Size(14, 14)
 			} else {
 				area(c, p, &f.prompt, locales.ShortcutsPromptPlaceholder(), "Prompt", 6)
 			}
@@ -219,7 +219,7 @@ func (a *App) shortcutDialog(c *ui.Context, p *palette) {
 		ui.Row(c).FillWidth().Padding(12, 20, 16, 20).Gap(8).Justify(ui.End).Children(func() {
 			ghostButton(c, p, locales.Cancel()).Border(1, p.Border).OnClick(func() { f.open = false })
 			if f.busy {
-				ui.Spinner(c).Size(14, 14)
+				spinner(c).Size(14, 14)
 			}
 			label := locales.ProviderCreate()
 			if f.base != nil {

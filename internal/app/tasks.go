@@ -176,7 +176,7 @@ func (a *App) taskPanel(c *ui.Context, p *palette, e session.Entry, tasks []*ses
 		head.Children(func() {
 			ui.Box(c).Size(14, 14).Center().Shrink(0).Children(func() {
 				if running > 0 {
-					ui.Spinner(c).Size(13, 13)
+					spinner(c).Size(13, 13)
 					return
 				}
 				icon := iconChevronRight
@@ -252,7 +252,7 @@ func taskMark(c *ui.Context, p *palette, state string) {
 	ui.Box(c).Size(14, 14).Center().Shrink(0).Children(func() {
 		switch state {
 		case "running", "pending":
-			ui.Spinner(c).Size(13, 13)
+			spinner(c).Size(13, 13)
 		case "completed":
 			ui.Icon(c, iconCircleCheck).Size(14, 14).TextColor(p.Success)
 		case "failed":

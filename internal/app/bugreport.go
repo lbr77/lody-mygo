@@ -184,7 +184,7 @@ func (a *App) bugReportDialog(c *ui.Context, p *palette) {
 				label = locales.BugReportSubmit()
 			}
 			if b.busy {
-				ui.Spinner(c).Size(14, 14)
+				spinner(c).Size(14, 14)
 				label = locales.BugReportSubmittingNoLogs()
 				if b.machine != "" {
 					label = locales.BugReportSubmitting()

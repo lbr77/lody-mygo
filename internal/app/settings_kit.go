@@ -150,7 +150,7 @@ func primaryButton(c *ui.Context, p *palette, label string, enabled bool) ui.Ele
 	b := ui.ButtonBase(c.Key(label)).Height(30).Padding(0, 14).Radius(8).Background(p.Text).Cursor(ui.CursorPointer).Label(label).Disabled(!enabled)
 	pressable(b, 0.97)
 	if !enabled {
-		b.Opacity(0.4)
+		b.Opacity(0.45)
 	}
 	b.Children(func() { ui.Text(c, label).FontSize(sizeSub).FontWeight(500).TextColor(p.Canvas) })
 	return b

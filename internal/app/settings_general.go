@@ -451,7 +451,7 @@ func (a *App) transferDialog(c *ui.Context, p *palette, mf *fetched) {
 			ok := g.transferTo != "" && g.typedName == ws.Name
 			b := ui.ButtonBase(c).Height(30).Padding(0, 14).Radius(8).Background(p.Danger).Cursor(ui.CursorPointer).Label(locales.WorkspaceTransferButton()).Disabled(!ok)
 			if !ok {
-				b.Opacity(0.4)
+				b.Opacity(0.45)
 			}
 			to := g.transferTo
 			b.OnClick(func() {
@@ -504,7 +504,7 @@ func (a *App) deleteWorkspaceDialog(c *ui.Context, p *palette) {
 			ok := g.typedName == ws.Name
 			del := ui.ButtonBase(c).Height(30).Padding(0, 14).Radius(8).Background(p.Danger).Cursor(ui.CursorPointer).Label(locales.WorkspaceDelete()).Disabled(!ok)
 			if !ok {
-				del.Opacity(0.4)
+				del.Opacity(0.45)
 			}
 			del.OnClick(func() {
 				g.deleteOpen = false

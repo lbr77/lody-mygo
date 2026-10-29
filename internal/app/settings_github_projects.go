@@ -278,7 +278,7 @@ func (a *App) githubScriptsEditor(c *ui.Context, p *palette, repo workspaceRepo,
 				ui.Spacer(c)
 			}
 			if e.saving {
-				ui.Spinner(c).Size(12, 12)
+				spinner(c).Size(12, 12)
 				ui.Text(c, locales.WorktreeSaving()).FontSize(sizeFoot).TextColor(p.Secondary)
 			}
 			dirty := e.bash != cfg.Scripts.Bash || e.ps != cfg.Scripts.PowerShell

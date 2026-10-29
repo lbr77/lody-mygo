@@ -305,7 +305,7 @@ func (a *App) fileBrowser(c *ui.Context, p *palette, in *inspectState, s collab.
 			if r.status != "" {
 				ui.Row(c.Key(r.path)).Height(24).Padding(0, 8, 0, indent+18).Gap(6).AlignItems(ui.Center).Children(func() {
 					if r.loading {
-						ui.Spinner(c).Size(11, 11)
+						spinner(c).Size(11, 11)
 					}
 					ui.Text(c, r.status).FontSize(sizeFoot).TextColor(p.Tertiary).SingleLine()
 				})
@@ -414,14 +414,14 @@ func (a *App) fileView(c *ui.Context, p *palette, in *inspectState, s collab.Ses
 				ui.Text(c, locales.FileUnsaved()).FontSize(sizeCaption).TextColor(p.Warning)
 			}
 			if fp.saving {
-				ui.Spinner(c).Size(12, 12)
+				spinner(c).Size(12, 12)
 			}
 			ghostButton(c, p, locales.Done()).OnClick(func() { fp.stopEditing() })
 			modified := fp.code != nil && fp.code.Buffer.Modified()
 			primaryButton(c, p, locales.Save(), modified && !fp.saving && fp.conflict == nil).OnClick(func() { a.saveFile(fp, s) })
 		case fp.editable() && s.ID != "" && !(markdownFile && !fp.asText):
 			if fp.opening {
-				ui.Spinner(c).Size(12, 12)
+				spinner(c).Size(12, 12)
 			}
 			iconButton(c, p, iconPencil, locales.EditFile(), p.Hover).Tooltip(locales.EditFile()).OnClick(func() { a.editFile(fp, s) })
 		}

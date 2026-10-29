@@ -202,7 +202,7 @@ func (a *App) memoryDialog(c *ui.Context, p *palette, machine string) {
 				ui.Row(c).FillWidth().Padding(12, 20, 16, 20).Gap(8).Justify(ui.End).Shrink(0).Children(func() {
 					ghostButton(c, p, locales.Cancel()).Border(1, p.Border).OnClick(func() { f.open = false })
 					if f.busy {
-						ui.Spinner(c).Size(14, 14)
+						spinner(c).Size(14, 14)
 					}
 					if f.importing {
 						n := 0

@@ -163,7 +163,7 @@ func (a *App) projectHistory(c *ui.Context, p *palette, pr catalog.Project) {
 			ui.Text(c, synced).FontSize(sizeFoot).TextColor(p.Secondary)
 		})
 		if st.syncing {
-			ui.Spinner(c).Size(14, 14)
+			spinner(c).Size(14, 14)
 		}
 		label := locales.HistorySync()
 		if st.catalog != nil {
@@ -234,7 +234,7 @@ func (a *App) projectHistory(c *ui.Context, p *palette, pr catalog.Project) {
 		}
 		ui.Spacer(c)
 		if st.importing {
-			ui.Spinner(c).Size(14, 14)
+			spinner(c).Size(14, 14)
 		}
 		primaryButton(c, p, locales.HistoryImportCount(picked), picked > 0 && !st.importing && !st.syncing && online).OnClick(func() {
 			a.importHistory(pr, current, st)
@@ -270,7 +270,7 @@ func (a *App) projectHistory(c *ui.Context, p *palette, pr catalog.Project) {
 				case "sync_conflict":
 					ui.Text(c, locales.HistoryConflict()).FontSize(sizeCaption).TextColor(p.Warning).Padding(1, 6).Radius(5).Background(p.Warning.Alpha(0.12))
 					if st.resolving[item.AcpSessionID] {
-						ui.Spinner(c).Size(12, 12)
+						spinner(c).Size(12, 12)
 					} else if online {
 						ghostButton(c, p, locales.HistoryResolve()).Border(1, p.Border).OnClick(func() { a.resolveHistory(pr, current, st, item) })
 					}

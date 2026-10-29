@@ -236,7 +236,7 @@ func (a *App) sessionImage(c *ui.Context, p *palette, sessionID string, it sessi
 		case img != nil && img.bitmap != nil:
 			ui.Image(c, img.bitmap).Size(size, size).Fit(ui.Cover)
 		case img != nil && img.loading:
-			ui.Box(c).Size(size, size).Center().Children(func() { ui.Spinner(c).Size(14, 14) })
+			ui.Box(c).Size(size, size).Center().Children(func() { spinner(c).Size(14, 14) })
 		default:
 			ui.Box(c).Size(size, size).Center().Children(func() { ui.Icon(c, iconImage).Size(20, 20).TextColor(p.Secondary) })
 		}

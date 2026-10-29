@@ -3,7 +3,6 @@ package app
 import (
 	"fmt"
 	"github.com/lbr77/lody-mygo/locales"
-	"math"
 	"path"
 	"strings"
 	"time"
@@ -147,10 +146,7 @@ func disclosure(c *ui.Context, p *palette, label string, open, live bool, toggle
 		if hovered {
 			ink = p.Text
 		}
-		text := ui.Text(c, label).FontSize(sizeSub).TextColor(ink).SingleLine().MinWidth(0)
-		if live {
-			shimmer(c, text)
-		}
+		shimmerIf(c, p, live, func() { ui.Text(c, label).FontSize(sizeSub).TextColor(ink).SingleLine().MinWidth(0) })
 		if hovered {
 			ui.Icon(c, iconChevronRight).Size(13, 13).TextColor(ink).Rotate(90 * shown)
 		}
@@ -158,11 +154,29 @@ func disclosure(c *ui.Context, p *palette, label string, open, live bool, toggle
 	return shown
 }
 
-// shimmer pulses text that is in progress, as Lody's shimmering labels.
-func shimmer(c *ui.Context, text ui.Element) {
-	phase := float64(time.Now().UnixMilli()%2200) / 2200
-	text.Opacity(float32(0.55 + 0.45*(0.5+0.5*math.Cos(2*math.Pi*phase))))
-	c.After(60 * time.Millisecond)
+// shimmerIf builds a label, with Lody's agent shimmer over it while live:
+// a band of the page's color, 60% of the label wide, sliding across it
+// every 2.2s, fading the glyphs it passes.
+func shimmerIf(c *ui.Context, p *palette, live bool, label func()) {
+	if !live {
+		label()
+		return
+	}
+	wrap := ui.Row(c.Key("shimmer")).MinWidth(0).Shrink(1).ClipX()
+	k := wrap.Keyframes("sweep", []ui.Keyframe{{Value: 0}, {At: 2200 * time.Millisecond, Value: 1}}, ui.KeyframeOptions{Repeat: ui.RepeatForever})
+	wrap.Children(func() {
+		label()
+		w := wrap.Bounds().W
+		if w <= 0 {
+			return
+		}
+		band := 0.6 * w
+		clear := p.Canvas.Alpha(0)
+		ui.Row(c.Key("band")).Absolute().Top(0).Bottom(0).Left(band * (-1 + 2.67*k)).Width(band).Children(func() {
+			ui.Box(c).Grow(1).Basis(0).FillHeight().LinearGradient(ui.LinearGradient{From: clear, To: p.Canvas.Alpha(0.78), Angle: 90})
+			ui.Box(c).Grow(1).Basis(0).FillHeight().LinearGradient(ui.LinearGradient{From: p.Canvas.Alpha(0.78), To: clear, Angle: 90})
+		})
+	})
 }
 
 // thought is one thinking step in a group: a collapsed row, its text shown
@@ -261,10 +275,9 @@ func (a *App) step(c *ui.Context, p *palette, key string, it session.Item) {
 			if hovered {
 				ink = p.Text
 			}
-			text := ui.Text(c, strings.TrimSpace(toolVerb(it)+" "+title)).FontSize(sizeSub).TextColor(ink).SingleLine().MinWidth(0).Shrink(1)
-			if running {
-				shimmer(c, text)
-			}
+			shimmerIf(c, p, running, func() {
+				ui.Text(c, strings.TrimSpace(toolVerb(it)+" "+title)).FontSize(sizeSub).TextColor(ink).SingleLine().MinWidth(0).Shrink(1)
+			})
 			if it.Added > 0 || it.Removed > 0 {
 				ui.Text(c, fmt.Sprintf("+%d", it.Added)).FontSize(sizeFoot).Font(fontMono).TextColor(p.DiffAdd).Shrink(0)
 				ui.Text(c, fmt.Sprintf("-%d", it.Removed)).FontSize(sizeFoot).Font(fontMono).TextColor(p.DiffDel).Shrink(0)
@@ -457,7 +470,8 @@ func (a *App) liveStatus(c *ui.Context, p *palette, v *session.View) {
 		if last.Role == "assistant" && !last.Finished {
 			return // the reply shows its own progress
 		}
-		text := ui.Text(c, locales.WorkingDots()).FontSize(sizeSub).TextColor(p.Secondary).Padding(36, 4, 0, 4)
-		shimmer(c, text)
+		ui.Row(c).Padding(36, 4, 0, 4).Children(func() {
+			shimmerIf(c, p, true, func() { ui.Text(c, locales.WorkingDots()).FontSize(sizeSub).TextColor(p.Secondary) })
+		})
 	})
 }

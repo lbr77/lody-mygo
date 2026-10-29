@@ -111,7 +111,7 @@ func (a *App) messageEditor(c *ui.Context, p *palette) {
 		area(c, p, &ed.text, "", locales.EditMessage(), 3).AutoFocus()
 		ui.Row(c).FillWidth().Gap(8).Justify(ui.End).AlignItems(ui.Center).Children(func() {
 			if ed.busy {
-				ui.Spinner(c).Size(13, 13)
+				spinner(c).Size(13, 13)
 			}
 			ghostButton(c, p, locales.Cancel()).Border(1, p.Border).OnClick(func() {
 				if !ed.busy {
@@ -149,7 +149,7 @@ func (a *App) forkButton(c *ui.Context, p *palette, e session.Entry) {
 		return
 	}
 	if f, ok := a.forks[sess.ID]; ok && f.turn == e.ID {
-		ui.Box(c).Size(24, 24).Center().Children(func() { ui.Spinner(c).Size(12, 12) })
+		ui.Box(c).Size(24, 24).Center().Children(func() { spinner(c).Size(12, 12) })
 		return
 	}
 	turn := e.ID
@@ -333,7 +333,7 @@ func (a *App) goalBanner(c *ui.Context, p *palette) {
 				return false
 			}
 			if a.goalPending != "" {
-				ui.Spinner(c).Size(12, 12)
+				spinner(c).Size(12, 12)
 			}
 			if g.Status == "active" && has("pause") {
 				button("pause", locales.GoalPause(), iconPause)

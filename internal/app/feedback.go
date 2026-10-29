@@ -1,6 +1,7 @@
 package app
 
 import (
+	"math"
 	"time"
 
 	"github.com/egoist/mygo/ui"
@@ -177,5 +178,34 @@ func segmented(c *ui.Context, p *palette, key string, options []option, selected
 		x := pill.AnimateWith("x", sel.X-first.X, durRegular, easeLody)
 		w := pill.AnimateWith("w", sel.W, durRegular, easeLody)
 		pill.Left(2 + x).Width(w)
+	})
+}
+
+// spinnerInk is the ink spinners turn in, the frame's secondary text: as
+// Lody's take currentColor, mostly a label's.
+var spinnerInk = ui.RGBA(0, 0, 0, 0.5)
+
+// spinner is Lody's: a faint ring, and a quarter of it turning once every
+// 900ms. Size it as any element; it is 16 across unless told.
+func spinner(c *ui.Context) ui.Element {
+	s := ui.Box(c.Key("spinner")).Size(16, 16).Shrink(0).Label(locales.Loading())
+	k := s.Keyframes("turn", []ui.Keyframe{{Value: 0}, {At: 900 * time.Millisecond, Value: 1}}, ui.KeyframeOptions{Repeat: ui.RepeatForever})
+	ink := spinnerInk
+	return s.Draw(func(pt *ui.Painter, r ui.Rect) {
+		u := min(r.W, r.H) / 16
+		cx, cy := r.X+r.W/2, r.Y+r.H/2
+		arc := func(from, sweep float64) [][2]float32 {
+			n := max(4, int(64*sweep))
+			pts := make([][2]float32, 0, n+1)
+			for i := 0; i <= n; i++ {
+				a := 2 * math.Pi * (from + sweep*float64(i)/float64(n))
+				pts = append(pts, [2]float32{cx + 6.5*u*float32(math.Cos(a)), cy + 6.5*u*float32(math.Sin(a))})
+			}
+			return pts
+		}
+		width := max(1, 1.6*u)
+		pt.StrokePolyline(arc(0, 1), width, ink.Alpha(0.25*float32(ink.A)/255))
+		// The quarter from the top round to the right, as the path draws it.
+		pt.StrokePolyline(arc(-0.25+float64(k), 0.25), width, ink)
 	})
 }

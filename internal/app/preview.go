@@ -250,7 +250,7 @@ func (a *App) previewTab(c *ui.Context, p *palette) {
 		viewer := ps.url
 		iconButton(c, p, iconExternal, locales.OpenInBrowser(), p.Hover).OnClick(func() { mygo.Shell.OpenExternal(viewer) })
 		if ps.stopping {
-			ui.Spinner(c).Size(14, 14).Margin(0, 7)
+			spinner(c).Size(14, 14).Margin(0, 7)
 		} else if s.UserID == "" || s.UserID == a.account.User.ID {
 			iconButton(c, p, iconCircleStop, locales.PreviewStop(), p.Hover).OnClick(func() { a.stopPreview(s, ps) })
 		}
@@ -302,7 +302,7 @@ func (a *App) previewStart(c *ui.Context, p *palette, s *catalog.Session, ps *pr
 			ui.TextInput(c, &ps.address).Placeholder("localhost:3000").Font(fontMono).FontSize(sizeSub).Grow(1).
 				Label(locales.PreviewAddress()).Disabled(!owner || ps.starting).OnSubmit(func() { a.startPreview(s, ps) })
 			if ps.starting {
-				ui.Spinner(c).Size(14, 14)
+				spinner(c).Size(14, 14)
 				return
 			}
 			inkButton(c, p, locales.PreviewOpen(), nil, 30).Disabled(!owner || !a.presence.IsOnline(s.MachineID)).OnClick(func() { a.startPreview(s, ps) })

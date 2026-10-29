@@ -169,7 +169,7 @@ func (a *App) mcpToolList(c *ui.Context, p *palette, m catalog.MCPServer, t *mcp
 	ui.Row(c).FillWidth().Wrap().Gap(6).AlignItems(ui.Center).Padding(0, 14, 12, 54).Children(func() {
 		switch {
 		case t.loading:
-			ui.Spinner(c).Size(13, 13)
+			spinner(c).Size(13, 13)
 			ui.Text(c, locales.McpToolsLoading()).FontSize(sizeFoot).TextColor(p.Secondary)
 		case t.oauth:
 			ui.Text(c, t.err).FontSize(sizeFoot).TextColor(p.Secondary)
@@ -547,7 +547,7 @@ func (a *App) mcpDialog(c *ui.Context, p *palette) {
 			ghostButton(c, p, locales.Close()).Border(1, p.Border).OnClick(func() { f.open = false })
 			label := locales.McpSaveConfiguration()
 			if f.busy {
-				ui.Spinner(c).Size(14, 14)
+				spinner(c).Size(14, 14)
 				label = locales.McpSaving()
 			}
 			primaryButton(c, p, label, strings.TrimSpace(f.name) != "" && !f.busy).OnClick(a.saveMCP)

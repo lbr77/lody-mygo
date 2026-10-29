@@ -262,11 +262,11 @@ func (a *App) addProjectDialog(c *ui.Context, p *palette) {
 					parent := *f.listing.ParentPath
 					up.OnClick(func() { a.browseFolder(parent) })
 				} else {
-					up.Disabled(true).Opacity(0.4)
+					up.Disabled(true).Opacity(0.45)
 				}
 				ui.Text(c, f.path).Font(fontMono).FontSize(sizeFoot).TextColor(p.Text).SingleLine().Grow(1).MinWidth(0)
 				if f.loading {
-					ui.Spinner(c).Size(13, 13)
+					spinner(c).Size(13, 13)
 				}
 				if f.path != "" && !f.naming {
 					outlineButton(c, p, iconPlus, locales.ProjectNewFolder()).OnClick(func() { f.naming = true })
@@ -316,7 +316,7 @@ func (a *App) addProjectDialog(c *ui.Context, p *palette) {
 		ui.Row(c).FillWidth().Padding(12, 20, 16, 20).Gap(8).Justify(ui.End).Children(func() {
 			ghostButton(c, p, locales.Cancel()).Border(1, p.Border).OnClick(func() { f.open = false })
 			if f.busy {
-				ui.Spinner(c).Size(14, 14)
+				spinner(c).Size(14, 14)
 			}
 			primaryButton(c, p, locales.ProjectAddThis(), f.path != "" && !f.busy && !f.loading).OnClick(a.registerFolder)
 		})

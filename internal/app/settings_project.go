@@ -265,7 +265,7 @@ func (a *App) projectScripts(c *ui.Context, p *palette, pr catalog.Project, phas
 		})
 		if e.loading {
 			ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
-				ui.Spinner(c).Size(12, 12)
+				spinner(c).Size(12, 12)
 				ui.Text(c, locales.Loading()).FontSize(sizeFoot).TextColor(p.Secondary)
 			})
 			return

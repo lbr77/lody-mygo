@@ -381,7 +381,7 @@ func panelStatus(c *ui.Context, p *palette, loading bool, title, hint string) {
 	ui.Column(c).Grow(1).Center().Padding(24).Gap(6).Children(func() {
 		ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
 			if loading {
-				ui.Spinner(c).Size(13, 13)
+				spinner(c).Size(13, 13)
 			}
 			ui.Text(c, title).FontSize(sizeSub).FontWeight(500).TextColor(p.Text)
 		})

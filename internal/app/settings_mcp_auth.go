@@ -480,7 +480,7 @@ func (a *App) mcpAuthPanel(c *ui.Context, p *palette, m catalog.MCPServer, dirty
 		ui.Text(c, mcpAuthMessage(res, available, dirty, http)).FontSize(sizeFoot).TextColor(p.Secondary)
 		ui.Row(c).FillWidth().Wrap().Gap(8).AlignItems(ui.Center).Children(func() {
 			if st.busy {
-				ui.Spinner(c).Size(13, 13)
+				spinner(c).Size(13, 13)
 			}
 			enabled := available && !st.busy
 			button := func(b ui.Element, ok bool, click func()) {

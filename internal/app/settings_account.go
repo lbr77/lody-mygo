@@ -53,7 +53,7 @@ func (a *App) accountPage(c *ui.Context, p *palette) {
 	settingRow(c, p, locales.SettingsAvatar(), "", func() {
 		ui.Row(c).Gap(10).AlignItems(ui.Center).Children(func() {
 			if a.avatarBusy {
-				ui.Spinner(c).Size(14, 14)
+				spinner(c).Size(14, 14)
 			}
 			ghostButton(c, p, locales.AvatarChange()).Border(1, p.Border).OnClick(func() { a.pickAvatar("user") })
 			a.accountAvatar(c, p, 32)
@@ -696,7 +696,7 @@ func (a *App) resourcePanels(c *ui.Context, p *palette, id string) {
 	s := m.sample
 	if s == nil {
 		ui.Row(c).FillWidth().Padding(14).Radius(8).Gap(8).AlignItems(ui.Center).Justify(ui.Center).Background(p.Text.Alpha(0.035)).Children(func() {
-			ui.Spinner(c).Size(13, 13)
+			spinner(c).Size(13, 13)
 			ui.Text(c, locales.MonitorWaiting()).FontSize(sizeFoot).TextColor(p.Secondary)
 		})
 		return
@@ -794,7 +794,7 @@ func (a *App) passwordDialog(c *ui.Context, p *palette) {
 		ui.Row(c).FillWidth().Padding(12, 20, 16, 20).Gap(8).Justify(ui.End).Children(func() {
 			ghostButton(c, p, locales.Cancel()).Border(1, p.Border).OnClick(func() { f.open = false })
 			if f.busy {
-				ui.Spinner(c).Size(14, 14)
+				spinner(c).Size(14, 14)
 			}
 			ok := f.current != "" && len(f.next) >= 8 && f.next == f.confirmed && !f.busy
 			primaryButton(c, p, locales.PasswordChange(), ok).OnClick(func() {
@@ -936,7 +936,7 @@ func (a *App) accountDeletionRow(c *ui.Context, p *palette) {
 		ui.Row(c).FillWidth().Padding(12, 20, 16, 20).Gap(8).Justify(ui.End).AlignItems(ui.Center).Children(func() {
 			ghostButton(c, p, locales.Cancel()).Border(1, p.Border).OnClick(func() { d.open = false })
 			if d.busy {
-				ui.Spinner(c).Size(14, 14)
+				spinner(c).Size(14, 14)
 			}
 			ready := strings.TrimSpace(d.confirm) == email && !d.busy
 			b := ghostButton(c, p, locales.AccountDeletionConfirmButton()).Border(1, p.Danger.Alpha(0.6))

@@ -124,7 +124,7 @@ func pending(c *ui.Context, p *palette, f *fetched) bool {
 	switch {
 	case f.loading:
 		ui.Row(c).Gap(8).AlignItems(ui.Center).Padding(8, 0).Children(func() {
-			ui.Spinner(c).Size(13, 13)
+			spinner(c).Size(13, 13)
 			ui.Text(c, locales.Loading()).FontSize(sizeFoot).TextColor(p.Secondary)
 		})
 		return false

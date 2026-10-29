@@ -911,7 +911,7 @@ func (a *App) providerFormView(c *ui.Context, p *palette) {
 		switch {
 		case f.testing:
 			ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
-				ui.Spinner(c).Size(13, 13)
+				spinner(c).Size(13, 13)
 				ui.Text(c, locales.ProviderTesting()).FontSize(sizeFoot).TextColor(p.Secondary)
 			})
 		case f.tested != "":

@@ -146,7 +146,7 @@ func (a *App) removalDialog(c *ui.Context, p *palette) {
 						line(locales.ProjectCleanupUnavailable(), p.Secondary)
 					case st.loading:
 						ui.Row(c).Gap(6).AlignItems(ui.Center).Children(func() {
-							ui.Spinner(c).Size(12, 12)
+							spinner(c).Size(12, 12)
 							line(locales.ProjectCheckingWorktrees(), p.Secondary)
 						})
 					case st.err != "":

@@ -325,7 +325,7 @@ func (a *App) inboxPage(c *ui.Context, p *palette) {
 		ui.Column(c).FillWidth().MaxWidth(720).AlignSelf(ui.Center).Gap(2).Children(func() {
 			switch {
 			case f.loading && len(items) == 0:
-				ui.Row(c).FillWidth().Justify(ui.Center).Padding(40).Children(func() { ui.Spinner(c).Size(16, 16) })
+				ui.Row(c).FillWidth().Justify(ui.Center).Padding(40).Children(func() { spinner(c).Size(16, 16) })
 				return
 			case len(shown) == 0:
 				ui.Column(c).FillWidth().AlignItems(ui.Center).Gap(8).Padding(60, 0).Children(func() {

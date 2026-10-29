@@ -395,10 +395,10 @@ func (a *App) binaryField(c *ui.Context, p *palette) {
 		var text string
 		switch st.status {
 		case "checking":
-			ui.Spinner(c).Size(13, 13)
+			spinner(c).Size(13, 13)
 			text = locales.BinaryChecking()
 		case "downloading":
-			ui.Spinner(c).Size(13, 13)
+			spinner(c).Size(13, 13)
 			switch st.phase {
 			case "verifying":
 				text = locales.BinaryVerifying()

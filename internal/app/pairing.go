@@ -229,7 +229,7 @@ func (a *App) pairingDialog(c *ui.Context, p *palette) {
 			}
 			switch {
 			case pr.creating:
-				center(func() { ui.Spinner(c).Size(20, 20) })
+				center(func() { spinner(c).Size(20, 20) })
 			case pr.createErr != "":
 				center(func() {
 					ui.Text(c, locales.PairingCreateFailed()).FontSize(sizeSub).TextColor(p.Danger)
@@ -244,7 +244,7 @@ func (a *App) pairingDialog(c *ui.Context, p *palette) {
 						ui.Text(c, locales.PairingClaimed()).FontSize(sizeSub).FontWeight(500).TextColor(p.Text)
 						ui.Text(c, locales.PairingPreparingAgents()).FontSize(sizeCaption).TextColor(p.Secondary)
 					})
-					ui.Spinner(c).Size(16, 16)
+					spinner(c).Size(16, 16)
 				})
 			default:
 				center(func() {
@@ -406,7 +406,7 @@ func (a *App) deviceAuthDialog(c *ui.Context, p *palette) {
 		ui.Row(c).FillWidth().Padding(12, 20, 16, 20).Gap(8).Justify(ui.End).AlignItems(ui.Center).Children(func() {
 			label := locales.DeviceVerifyButton()
 			if d.verifying {
-				ui.Spinner(c).Size(14, 14)
+				spinner(c).Size(14, 14)
 				label = locales.DeviceVerifying()
 			}
 			primaryButton(c, p, label, len(normalizeDeviceCode(d.code)) == 8 && !d.verifying).OnClick(a.approveDevice)

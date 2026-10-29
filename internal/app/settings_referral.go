@@ -244,7 +244,7 @@ func (a *App) referralCard(c *ui.Context, p *palette, canManage bool) {
 				b := outlineButton(c, p, nil, locales.ReferralGenerate()).Disabled(st.linkPending)
 				if st.linkPending {
 					b.Opacity(0.45)
-					ui.Spinner(c).Size(13, 13)
+					spinner(c).Size(13, 13)
 				}
 				b.OnClick(a.createReferralLink)
 			})

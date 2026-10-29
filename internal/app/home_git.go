@@ -115,7 +115,7 @@ func (a *App) workdirControls(c *ui.Context, p *palette) {
 	st := a.projectGit(pr.ID)
 	if st.loading {
 		ui.Row(c).Gap(6).AlignItems(ui.Center).Padding(0, 6).Tooltip(locales.WorkdirChecking()).Children(func() {
-			ui.Spinner(c).Size(11, 11)
+			spinner(c).Size(11, 11)
 		})
 		return
 	}

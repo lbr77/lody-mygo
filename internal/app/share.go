@@ -723,7 +723,7 @@ func (a *App) shareFooter(c *ui.Context, p *palette, job *shareJob, d *shareDial
 		label = locales.ShareUpdate()
 	}
 	if job.busy {
-		ui.Spinner(c).Size(14, 14)
+		spinner(c).Size(14, 14)
 	}
 	primaryButton(c, p, label, !job.busy && a.canCapture(job)).OnClick(func() { a.publishShare(job) })
 }

@@ -104,7 +104,7 @@ func (a *App) sessionTab(c *ui.Context, p *palette, s *catalog.Session) {
 			case s.Waiting():
 				ui.Icon(c, iconHand).Size(12, 12).TextColor(p.Warning)
 			case s.Working():
-				ui.Spinner(c).Size(12, 12)
+				spinner(c).Size(12, 12)
 			case s.Unread() && a.selected != s.ID:
 				ui.Box(c).Size(8, 8).Radius(4).Background(p.Primary)
 			default:
@@ -170,7 +170,7 @@ func (a *App) conversation(c *ui.Context, p *palette, sess *catalog.Session) {
 		// The spinner fades in only for a slow load, so that switching to
 		// a session that loads at once shows no flash of it.
 		ui.Column(c.Key("loading")).Grow(1).Center().Gap(10).Transition(lateIn).Children(func() {
-			ui.Spinner(c).Size(18, 18)
+			spinner(c).Size(18, 18)
 			msg := locales.LoadingConversation()
 			if v != nil && v.Reason != "" {
 				msg = locales.Reconnecting(v.Reason)

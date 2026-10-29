@@ -210,7 +210,7 @@ func (a *App) composerBox(c *ui.Context, p *palette, o composerOptions) {
 					if a.uploading != "" {
 						ui.Text(c, a.uploading).FontSize(sizeFoot).TextColor(p.Secondary).Shrink(0)
 					} else {
-						ui.Spinner(c).Size(14, 14)
+						spinner(c).Size(14, 14)
 					}
 				}
 				empty := strings.TrimSpace(a.draft) == "" && !hasFiles

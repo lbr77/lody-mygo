@@ -424,7 +424,7 @@ func (a *App) mentionPanel(c *ui.Context, p *palette, box, input ui.Element) {
 					ui.Row(c).Height(30).Padding(0, 10).Gap(8).AlignItems(ui.Center).Children(func() {
 						switch {
 						case loading:
-							ui.Spinner(c).Size(12, 12)
+							spinner(c).Size(12, 12)
 							ui.Text(c, locales.Loading()).FontSize(sizeSub).TextColor(p.Secondary)
 						case status != "":
 							ui.Text(c, status).FontSize(sizeSub).TextColor(p.Danger).SingleLine().Grow(1).MinWidth(0)

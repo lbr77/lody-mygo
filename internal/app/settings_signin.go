@@ -399,7 +399,7 @@ func (a *App) signInPanel(c *ui.Context, p *palette, interactive bool) {
 					label = locales.CodexVerifyingKey()
 				}
 				ui.Row(c).Gap(6).AlignItems(ui.Center).Height(30).Padding(0, 10).Radius(7).Background(p.Text.Alpha(0.05)).Children(func() {
-					ui.Spinner(c).Size(12, 12)
+					spinner(c).Size(12, 12)
 					ui.Text(c, label).FontSize(sizeFoot).TextColor(p.Secondary)
 				})
 				ghostButton(c, p, locales.Cancel()).OnClick(a.stopSignIn)

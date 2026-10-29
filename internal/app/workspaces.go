@@ -233,7 +233,7 @@ func (a *App) createWorkspaceDialog(c *ui.Context, p *palette) {
 		ui.Row(c).FillWidth().Padding(12, 20, 16, 20).Gap(8).Justify(ui.End).AlignItems(ui.Center).Children(func() {
 			ghostButton(c, p, locales.Cancel()).Border(1, p.Border).OnClick(func() { w.open = false })
 			if w.busy {
-				ui.Spinner(c).Size(14, 14)
+				spinner(c).Size(14, 14)
 			}
 			ready := strings.TrimSpace(w.name) != "" && slugRuleError(w.slug) == "" && w.checked == w.slug && w.available && !w.busy
 			primaryButton(c, p, locales.WorkspaceCreate(), ready).OnClick(a.createWorkspace)
@@ -393,7 +393,7 @@ func (a *App) joinWorkspaceDialog(c *ui.Context, p *palette) {
 			})
 			if j.loading {
 				ui.Row(c).Gap(6).AlignItems(ui.Center).Children(func() {
-					ui.Spinner(c).Size(12, 12)
+					spinner(c).Size(12, 12)
 					ui.Text(c, locales.JoinChecking()).FontSize(sizeFoot).TextColor(p.Secondary)
 				})
 			}
@@ -445,7 +445,7 @@ func (a *App) joinPreview(c *ui.Context, p *palette, j *workspaceJoin, pv map[st
 			}
 			ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
 				if j.busy {
-					ui.Spinner(c).Size(13, 13)
+					spinner(c).Size(13, 13)
 				}
 				primaryButton(c, p, locales.InviteAccept(), !j.busy).OnClick(a.submitJoin)
 			})
@@ -485,7 +485,7 @@ func (a *App) joinPreview(c *ui.Context, p *palette, j *workspaceJoin, pv map[st
 			ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
 				label := locales.JoinSubmit()
 				if j.busy {
-					ui.Spinner(c).Size(13, 13)
+					spinner(c).Size(13, 13)
 					label = locales.JoinSubmitting()
 				}
 				primaryButton(c, p, label, !j.busy).OnClick(a.submitJoin)
