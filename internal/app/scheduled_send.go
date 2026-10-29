@@ -286,7 +286,8 @@ func (a *App) scheduledQueue(c *ui.Context, p *palette, sess *catalog.Session) {
 			when := upcomingText(at, now, loc)
 			when = strings.ToUpper(when[:1]) + when[1:]
 			r := ui.Row(c.Key(row.ScheduleID)).FillWidth().MinHeight(30).Padding(4, 6, 4, 10).Gap(6).Radius(8).AlignItems(ui.Center).
-				Background(p.Text.Alpha(0.035)).Tooltip(row.Title)
+				Background(p.Text.Alpha(0.035))
+			tip(c, p, r, row.Title)
 			r.Children(func() {
 				label := when
 				if failed {
@@ -306,7 +307,7 @@ func (a *App) scheduledQueue(c *ui.Context, p *palette, sess *catalog.Session) {
 					ui.Text(c, when).FontSize(sizeFoot).FontWeight(500).TextColor(ink)
 				})
 				ui.Text(c, row.Title).FontSize(sizeFoot).TextColor(p.Text).Grow(1).SingleLine().MinWidth(0)
-				iconButton(c.Key("cancel"), p, iconX, locales.SmCancel(), p.Hover).Size(22, 22).Tooltip(locales.SmCancel()).OnClick(func() {
+				iconButton(c.Key("cancel"), p, iconX, locales.SmCancel(), p.Hover).Size(22, 22).OnClick(func() {
 					user := a.userID()
 					a.schedAct(func(ctx context.Context, s *schedule.Store) error {
 						return s.SetEnabled(ctx, row.ScheduleID, false, user, time.Now())

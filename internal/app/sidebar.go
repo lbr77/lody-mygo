@@ -574,7 +574,7 @@ func (a *App) rowEnd(c *ui.Context, p *palette, s *catalog.Session, age, hovered
 func (a *App) statusMark(c *ui.Context, p *palette, s *catalog.Session, age bool) {
 	switch {
 	case s.Waiting():
-		ui.Icon(c, iconHand).Size(12, 12).TextColor(p.Primary).Tooltip(locales.StatusWaiting())
+		tip(c, p, ui.Icon(c, iconHand).Size(12, 12).TextColor(p.Primary), locales.StatusWaiting())
 	case a.sending && a.sendingID == s.ID && !s.Working():
 		progress, known := a.sendProgress()
 		sendRing(c, p, progress, known)

@@ -221,7 +221,12 @@ func lodyTooltip(c *ui.Context, p *palette, anchor ui.Element, label string) {
 	if label == "" {
 		return
 	}
-	ui.TooltipBase(c, anchor, func(tip ui.Element) {
+	anchor.Description(label)
+	if !tips.show(c, anchor, label) {
+		return
+	}
+	ui.Overlay(c, func() {
+		tip := ui.Column(c.Key("lody-tip")).Absolute().PassThrough().Role(ui.RoleTooltip).AttachTo(anchor, ui.AnchorTop, ui.AnchorBottom).Margin(0, 0, 6, 0)
 		away := float32(-4)
 		if tb, ab := tip.Bounds(), anchor.Bounds(); tb.H > 0 && tb.Y >= ab.Y+ab.H-1 {
 			away = 4 // it landed below its anchor

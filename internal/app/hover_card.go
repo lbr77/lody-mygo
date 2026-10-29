@@ -129,7 +129,7 @@ func (a *App) sessionCard(c *ui.Context, p *palette, row ui.Element, s *catalog.
 		})
 		fact := func(key string, icon *ui.SVG, label string, value func()) {
 			ui.Row(c.Key(key)).FillWidth().Gap(8).AlignItems(ui.Center).Children(func() {
-				ui.Icon(c, icon).Size(14, 14).TextColor(p.Secondary).Label(label).Tooltip(label).Shrink(0)
+				tip(c, p, ui.Icon(c, icon).Size(14, 14).TextColor(p.Secondary).Label(label).Shrink(0), label)
 				value()
 			})
 		}
@@ -158,10 +158,11 @@ func (a *App) sessionCard(c *ui.Context, p *palette, row ui.Element, s *catalog.
 				fact("branch", iconBranch, label, func() {
 					branch := s.BranchName
 					b := ui.ButtonBase(c.Key("copy-branch")).Padding(0, 4).Margin(0, 0, 0, -4).Radius(4).MinWidth(0).Cursor(ui.CursorPointer).Gap(6).
-						Label(locales.InfoCopy()).Tooltip(locales.InfoCopy()).OnClick(func() {
+						Label(locales.InfoCopy()).OnClick(func() {
 						writeClipboard(branch)
 						hc.copied = time.Now()
 					})
+					tip(c, p, b, locales.InfoCopy())
 					if b.Hovered() {
 						b.Background(p.Text.Alpha(0.06))
 					}
@@ -180,7 +181,7 @@ func (a *App) sessionCard(c *ui.Context, p *palette, row ui.Element, s *catalog.
 				fact("author", iconUser, locales.InfoAuthor(), func() {
 					text(a.authorName(s.UserID))
 					if machine != "" {
-						ui.Row(c).Gap(4).AlignItems(ui.Center).MinWidth(0).Tooltip(locales.InfoMachine()).Children(func() {
+						tip(c, p, ui.Row(c.Key("machine")).Gap(4).AlignItems(ui.Center).MinWidth(0), locales.InfoMachine()).Children(func() {
 							ui.Icon(c, iconMonitor).Size(12, 12).TextColor(p.Secondary)
 							ui.Text(c, machine).FontSize(sizeFoot).TextColor(p.Secondary).SingleLine().MinWidth(0)
 						})
@@ -227,7 +228,7 @@ func (a *App) sessionCard(c *ui.Context, p *palette, row ui.Element, s *catalog.
 			}
 			ui.Spacer(c)
 			if changes {
-				ui.Row(c).Gap(4).Tooltip(locales.InfoChanges()).Children(func() {
+				tip(c, p, ui.Row(c.Key("changes")).Gap(4), locales.InfoChanges()).Children(func() {
 					ui.Text(c, "+"+itoa(int(s.DiffAdd))).FontSize(sizeFoot).Font(fontMono).TextColor(p.DiffAdd)
 					ui.Text(c, "−"+itoa(int(s.DiffDel))).FontSize(sizeFoot).Font(fontMono).TextColor(p.DiffDel)
 				})

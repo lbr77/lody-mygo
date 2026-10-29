@@ -37,7 +37,7 @@ func (a *App) mainView(c *ui.Context, p *palette) {
 			// Stretched, so the sidebar runs the window's height rather than
 			// sitting centered in it.
 			ui.Row(c).Width(w * out).Shrink(0).AlignItems(ui.Stretch).ClipX().Children(func() {
-				a.sidebar(c, p).Translate(-w*(1-out), 0)
+				withTipDelay(400*time.Millisecond, func() { a.sidebar(c, p).Translate(-w*(1-out), 0) })
 			})
 			if out == 1 {
 				a.sidebarHandle(c, p)
@@ -65,10 +65,14 @@ func (a *App) mainView(c *ui.Context, p *palette) {
 				page, key = a.homeView, "home"
 			}
 			// Pages and sessions cut over, as Lody's routes do.
-			ui.Column(c.Key(key)).Fill().Children(func() { page(c, p) })
+			delay := tipDelay
+			if key == "archive" {
+				delay = 300 * time.Millisecond
+			}
+			ui.Column(c.Key(key)).Fill().Children(func() { withTipDelay(delay, func() { page(c, p) }) })
 		})
 	})
-	a.settingsDialog(c, p)
+	withTipDelay(250*time.Millisecond, func() { a.settingsDialog(c, p) })
 	a.bugReportDialog(c, p)
 	a.createWorkspaceDialog(c, p)
 	a.joinWorkspaceDialog(c, p)
@@ -560,15 +564,17 @@ func (a *App) userMessage(c *ui.Context, p *palette, e session.Entry, firstQueue
 				})
 			}
 			if e.Queued && a.view != nil && a.view.Working {
-				a.queuedActions(c, p, e, firstQueued)
+				withTipDelay(300*time.Millisecond, func() { a.queuedActions(c, p, e, firstQueued) })
 			}
 			if canEdit && !editing {
 				entry := e
-				b := iconButton(c, p, iconPencil, locales.EditMessage(), p.Hover).Size(24, 24).
-					Transition(colorFade).OnClick(func() { a.startEdit(entry) })
-				// The message's actions fade in with the pointer over 150ms,
-				// as Tailwind's transition-opacity.
-				b.Opacity(b.AnimateWith("shown", b2f(hovered), 150*time.Millisecond, twEase))
+				withTipDelay(500*time.Millisecond, func() {
+					b := iconButton(c, p, iconPencil, locales.EditMessage(), p.Hover).Size(24, 24).
+						Transition(colorFade).OnClick(func() { a.startEdit(entry) })
+					// The message's actions fade in with the pointer over 150ms,
+					// as Tailwind's transition-opacity.
+					b.Opacity(b.AnimateWith("shown", b2f(hovered), 150*time.Millisecond, twEase))
+				})
 			}
 		})
 		ui.Box(c).Margin(28, 0, 0, 0).Children(func() {

@@ -46,6 +46,8 @@ type schedState struct {
 	chatID   string
 	chat     *session.Replica
 	chatView *session.View
+	// info is the Scheduled messages section's word on what it holds.
+	info hoverPop
 }
 
 // newScheduleID marks the modal as a new schedule's form.
@@ -662,6 +664,11 @@ func (a *App) schedSection(c *ui.Context, p *palette, key, title, destTitle stri
 		ui.Row(c).MinHeight(28).Padding(0, 0, 6, 4).AlignItems(ui.Center).Children(func() {
 			ui.Text(c, title).FontSize(sizeFoot + 0.5).FontWeight(500).TextColor(p.Text)
 			ui.Text(c, strconv.Itoa(total)).FontSize(sizeFoot+0.5).TextColor(p.Secondary).Margin(0, 0, 0, 6)
+			// Tasks are the page's own subject; only the one-off messages
+			// need a word.
+			if key == "messages" {
+				a.schedInfo(c, p, title, locales.SchedMessagesInfo())
+			}
 		})
 		box := ui.Column(c).FillWidth().Radius(12).Border(0.5, p.Border).Background(p.Popover).Clip().Dividers(0.5, p.Border)
 		if !p.Dark {
@@ -682,6 +689,41 @@ func (a *App) schedSection(c *ui.Context, p *palette, key, title, destTitle stri
 			}
 		})
 	})
+}
+
+// schedInfo is Lody's SectionInfo: a muted info mark that opens what a
+// section holds once the pointer has rested on it 150ms, rising 4px into
+// place below it.
+func (a *App) schedInfo(c *ui.Context, p *palette, title, info string) {
+	st := &a.sched.info
+	what := locales.SchedWhatIs(title)
+	b := ui.ButtonBase(c.Key("info")).Size(24, 24).Margin(0, 0, 0, 4).Radius(6).Center().Cursor(ui.CursorPointer).Label(what).Transition(colorFade)
+	st.update(c, b, 150*time.Millisecond)
+	if b.Hovered() || st.open {
+		b.Background(p.Hover)
+	}
+	b.Children(func() { ui.Icon(c, iconInfo).Size(14, 14).TextColor(p.Secondary) })
+	ui.PopoverBase(c, b, &st.open, func(panel ui.Element) {
+		panel.Padding(12).MaxWidth(324).Radius(14).Background(raisedGround(p)).
+			Border(0.5, p.CardRim).Shadow(0, 12, 32, -6, ui.RGBA(28, 28, 28, 0.16)).
+			AttachTo(b, ui.AnchorBottomStart, ui.AnchorTopStart).Margin(4, 0, 0, 0).
+			Transition(ui.ElementTransition{Colors: true, Duration: popTime, Ease: easeStandard, Exit: &ui.Motion{Y: 4}})
+		if k := panel.Keyframes("in", []ui.Keyframe{{Value: 0}, {At: popTime, Value: 1, Ease: easeStandard}}); k < 1 {
+			panel.Translate(0, 4*(1-k)).Opacity(k)
+		}
+		st.overPanel = panel.Hovered()
+		// The popover's prose is 14px; its paragraph 0.9em of that.
+		size := float32(sizeBody) * 0.9
+		panel.Children(func() {
+			ui.Column(c).MaxWidth(300).Gap(2).Children(func() {
+				ui.Text(c, what).FontSize(size).LineHeight(1.55).FontWeight(500).TextColor(p.Text)
+				ui.Text(c, info).FontSize(size).LineHeight(1.55).TextColor(p.Secondary)
+			})
+		})
+	})
+	if !st.open {
+		st.overPanel = false
+	}
 }
 
 // schedAction is one thing a schedule's menus offer.

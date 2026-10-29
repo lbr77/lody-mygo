@@ -225,7 +225,7 @@ func (a *App) previewTab(c *ui.Context, p *palette) {
 	}
 	a.checkPreview(c, s, ps)
 	ui.Row(c).Shrink(0).Height(36).Padding(0, 6, 0, 10).Gap(4).AlignItems(ui.Center).BorderWidth(0, 0, 1, 0).BorderColor(p.Border).Children(func() {
-		ui.Icon(c, iconGlobe).Size(14, 14).TextColor(p.Secondary).Shrink(0).Tooltip(previewStatusLabel(ps))
+		tip(c, p, ui.Icon(c, iconGlobe).Size(14, 14).TextColor(p.Secondary).Shrink(0), previewStatusLabel(ps))
 		label := ps.url
 		if u, err := url.Parse(ps.url); err == nil {
 			label = u.Host + u.Path

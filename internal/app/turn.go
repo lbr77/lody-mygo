@@ -143,7 +143,7 @@ func (a *App) assistantMessage(c *ui.Context, p *palette, e session.Entry) {
 		if len(e.FileDiffs) > 0 {
 			ui.Column(c).FillWidth().Margin(12, 0, 0, 0).Children(func() { a.editedFiles(c, p, e) })
 		}
-		ui.Column(c).Margin(4, 0, 0, 0).Children(func() { a.turnFooter(c, p, e, hovered) })
+		ui.Column(c).Margin(4, 0, 0, 0).Children(func() { withTipDelay(500*time.Millisecond, func() { a.turnFooter(c, p, e, hovered) }) })
 		a.planActions(c, p, e)
 	})
 }

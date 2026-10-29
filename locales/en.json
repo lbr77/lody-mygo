@@ -3641,5 +3641,14 @@
   "homeBoardUnfold": "Unfold",
   "deviceMarkLabel": "Terminal and Lody",
   "schedLoading": "Loading schedules…",
-  "schedMachineOfflineHint": "The target machine is not connected right now."
+  "schedMachineOfflineHint": "The target machine is not connected right now.",
+  "schedWhatIs": "What are {title}?",
+  "@schedWhatIs": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "schedMessagesInfo": "A message written in a chat with “Schedule send…”, sent to that chat once at the chosen time."
 }

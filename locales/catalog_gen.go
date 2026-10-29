@@ -18642,3 +18642,23 @@ func SchedMachineOfflineHint() string { return In(i18n.Locale()).SchedMachineOff
 func (msgs Messages) SchedMachineOfflineHint() string {
 	return Catalog.Format(msgs.locale, "schedMachineOfflineHint", nil)
 }
+
+// SchedWhatIs says "What are {title}?"
+// in the language the app shows.
+func SchedWhatIs(title string) string { return In(i18n.Locale()).SchedWhatIs(title) }
+
+// SchedWhatIs says "What are {title}?"
+// in the language of msgs.
+func (msgs Messages) SchedWhatIs(title string) string {
+	return Catalog.Format(msgs.locale, "schedWhatIs", map[string]any{"title": title})
+}
+
+// SchedMessagesInfo says "A message written in a chat with “Schedule send…”, sent to that chat once at the chosen time."
+// in the language the app shows.
+func SchedMessagesInfo() string { return In(i18n.Locale()).SchedMessagesInfo() }
+
+// SchedMessagesInfo says "A message written in a chat with “Schedule send…”, sent to that chat once at the chosen time."
+// in the language of msgs.
+func (msgs Messages) SchedMessagesInfo() string {
+	return Catalog.Format(msgs.locale, "schedMessagesInfo", nil)
+}

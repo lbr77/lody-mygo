@@ -1849,5 +1849,7 @@
   "homeBoardUnfold": "展开",
   "deviceMarkLabel": "终端与 Lody",
   "schedLoading": "正在加载定时任务…",
-  "schedMachineOfflineHint": "目标机器当前未连接。"
+  "schedMachineOfflineHint": "目标机器当前未连接。",
+  "schedWhatIs": "什么是{title}？",
+  "schedMessagesInfo": "在对话输入框里用「定时发送…」写好的一条消息，到点只发送一次。"
 }

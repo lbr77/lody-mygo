@@ -95,7 +95,8 @@ func (a *App) quickReplyRow(c *ui.Context, p *palette, sess *catalog.Session, v 
 			for _, q := range a.quickReplyList() {
 				message := q.Message
 				b := ui.ButtonBase(c.Key("quick/"+q.ID)).Height(32).Padding(0, 12).Radius(16).Border(1, p.Border).Background(p.Composer).
-					Cursor(ui.CursorPointer).Label(q.Label).Tooltip(locales.QuickSendHint()).Transition(colorFade)
+					Cursor(ui.CursorPointer).Label(q.Label).Transition(colorFade)
+				tip(c, p, b, locales.QuickSendHint())
 				pressable(b, 0.96)
 				if b.Hovered() {
 					b.Background(p.Hover)
