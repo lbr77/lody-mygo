@@ -18852,3 +18852,133 @@ func SidebarNavigationMenu() string { return In(i18n.Locale()).SidebarNavigation
 func (msgs Messages) SidebarNavigationMenu() string {
 	return Catalog.Format(msgs.locale, "sidebarNavigationMenu", nil)
 }
+
+// SessionNotFoundTitle says "This session isn't here"
+// in the language the app shows.
+func SessionNotFoundTitle() string { return In(i18n.Locale()).SessionNotFoundTitle() }
+
+// SessionNotFoundTitle says "This session isn't here"
+// in the language of msgs.
+func (msgs Messages) SessionNotFoundTitle() string {
+	return Catalog.Format(msgs.locale, "sessionNotFoundTitle", nil)
+}
+
+// SessionNotFoundDescription says "It may have been deleted, or the link that opened it is out of date."
+// in the language the app shows.
+func SessionNotFoundDescription() string { return In(i18n.Locale()).SessionNotFoundDescription() }
+
+// SessionNotFoundDescription says "It may have been deleted, or the link that opened it is out of date."
+// in the language of msgs.
+func (msgs Messages) SessionNotFoundDescription() string {
+	return Catalog.Format(msgs.locale, "sessionNotFoundDescription", nil)
+}
+
+// SessionNotFoundBack says "Back to sessions"
+// in the language the app shows.
+func SessionNotFoundBack() string { return In(i18n.Locale()).SessionNotFoundBack() }
+
+// SessionNotFoundBack says "Back to sessions"
+// in the language of msgs.
+func (msgs Messages) SessionNotFoundBack() string {
+	return Catalog.Format(msgs.locale, "sessionNotFoundBack", nil)
+}
+
+// MessageListFailedTitle says "Messages couldn't be displayed"
+// in the language the app shows.
+func MessageListFailedTitle() string { return In(i18n.Locale()).MessageListFailedTitle() }
+
+// MessageListFailedTitle says "Messages couldn't be displayed"
+// in the language of msgs.
+func (msgs Messages) MessageListFailedTitle() string {
+	return Catalog.Format(msgs.locale, "messageListFailedTitle", nil)
+}
+
+// MessageListFailed says "The message list failed to render. Your draft below is safe."
+// in the language the app shows.
+func MessageListFailed() string { return In(i18n.Locale()).MessageListFailed() }
+
+// MessageListFailed says "The message list failed to render. Your draft below is safe."
+// in the language of msgs.
+func (msgs Messages) MessageListFailed() string {
+	return Catalog.Format(msgs.locale, "messageListFailed", nil)
+}
+
+// ErrorCopyDetails says "Copy error details"
+// in the language the app shows.
+func ErrorCopyDetails() string { return In(i18n.Locale()).ErrorCopyDetails() }
+
+// ErrorCopyDetails says "Copy error details"
+// in the language of msgs.
+func (msgs Messages) ErrorCopyDetails() string {
+	return Catalog.Format(msgs.locale, "errorCopyDetails", nil)
+}
+
+// ErrorTechnicalDetails says "Technical details"
+// in the language the app shows.
+func ErrorTechnicalDetails() string { return In(i18n.Locale()).ErrorTechnicalDetails() }
+
+// ErrorTechnicalDetails says "Technical details"
+// in the language of msgs.
+func (msgs Messages) ErrorTechnicalDetails() string {
+	return Catalog.Format(msgs.locale, "errorTechnicalDetails", nil)
+}
+
+// RecoverySlowTitleWorkspace says "This workspace is taking too long to open"
+// in the language the app shows.
+func RecoverySlowTitleWorkspace() string { return In(i18n.Locale()).RecoverySlowTitleWorkspace() }
+
+// RecoverySlowTitleWorkspace says "This workspace is taking too long to open"
+// in the language of msgs.
+func (msgs Messages) RecoverySlowTitleWorkspace() string {
+	return Catalog.Format(msgs.locale, "recoverySlowTitleWorkspace", nil)
+}
+
+// RecoveryStillStuck says "Still stuck? {reset}."
+// in the language the app shows.
+func RecoveryStillStuck(reset string) string { return In(i18n.Locale()).RecoveryStillStuck(reset) }
+
+// RecoveryStillStuck says "Still stuck? {reset}."
+// in the language of msgs.
+func (msgs Messages) RecoveryStillStuck(reset string) string {
+	return Catalog.Format(msgs.locale, "recoveryStillStuck", map[string]any{"reset": reset})
+}
+
+// RecoveryClearAll says "Clear all local data and sign out"
+// in the language the app shows.
+func RecoveryClearAll() string { return In(i18n.Locale()).RecoveryClearAll() }
+
+// RecoveryClearAll says "Clear all local data and sign out"
+// in the language of msgs.
+func (msgs Messages) RecoveryClearAll() string {
+	return Catalog.Format(msgs.locale, "recoveryClearAll", nil)
+}
+
+// HardResetTitle says "Clear all local data and sign out?"
+// in the language the app shows.
+func HardResetTitle() string { return In(i18n.Locale()).HardResetTitle() }
+
+// HardResetTitle says "Clear all local data and sign out?"
+// in the language of msgs.
+func (msgs Messages) HardResetTitle() string {
+	return Catalog.Format(msgs.locale, "hardResetTitle", nil)
+}
+
+// HardResetBody says "This signs you out and deletes everything Lody stored on this device — local caches, offline copies, and preference…"
+// in the language the app shows.
+func HardResetBody() string { return In(i18n.Locale()).HardResetBody() }
+
+// HardResetBody says "This signs you out and deletes everything Lody stored on this device — local caches, offline copies, and preference…"
+// in the language of msgs.
+func (msgs Messages) HardResetBody() string {
+	return Catalog.Format(msgs.locale, "hardResetBody", nil)
+}
+
+// HardResetButton says "Clear and sign out"
+// in the language the app shows.
+func HardResetButton() string { return In(i18n.Locale()).HardResetButton() }
+
+// HardResetButton says "Clear and sign out"
+// in the language of msgs.
+func (msgs Messages) HardResetButton() string {
+	return Catalog.Format(msgs.locale, "hardResetButton", nil)
+}

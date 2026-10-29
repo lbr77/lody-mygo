@@ -1870,5 +1870,18 @@
   "archiveSelectRow": "选择 {title}",
   "archiveSelectGroup": "全选 {label}",
   "panelResize": "调整面板大小",
-  "sidebarNavigationMenu": "导航菜单"
+  "sidebarNavigationMenu": "导航菜单",
+  "sessionNotFoundTitle": "这个会话不在这里",
+  "sessionNotFoundDescription": "它可能已被删除，或者打开它的链接已经过期。",
+  "sessionNotFoundBack": "返回会话列表",
+  "messageListFailedTitle": "消息无法显示",
+  "messageListFailed": "消息列表渲染失败，你的草稿已在下方保留。",
+  "errorCopyDetails": "复制错误详情",
+  "errorTechnicalDetails": "技术详情",
+  "recoverySlowTitleWorkspace": "打开此工作区的时间过长",
+  "recoveryStillStuck": "仍然无法打开？{reset}。",
+  "recoveryClearAll": "清除全部本地数据并退出登录",
+  "hardResetTitle": "确定要清理所有缓存并退出登录吗？",
+  "hardResetBody": "这会退出登录，并删除 Lody 在这台设备上保存的所有内容——本地缓存、离线副本和偏好设置——然后重启应用。已同步到账号的内容不受影响，重新登录后会再次下载；这台设备上尚未同步的本地草稿会丢失。",
+  "hardResetButton": "清理并退出登录"
 }

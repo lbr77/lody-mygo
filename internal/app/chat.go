@@ -125,6 +125,10 @@ func (a *App) tabBar(c *ui.Context, p *palette, sess *catalog.Session) {
 
 // sessionView is the conversation, with the inspector beside it when open.
 func (a *App) sessionView(c *ui.Context, p *palette) {
+	if a.sessionMissing() {
+		a.sessionNotFound(c, p)
+		return
+	}
 	// The panel slides in from the right as its room opens, over 220ms on
 	// the iOS sheet curve, as Lody's right panel does, and out the same way.
 	host := ui.Column(c.Key("session-split")).Fill()
@@ -194,6 +198,10 @@ func (a *App) sessionDock(c *ui.Context, p *palette, sess *catalog.Session, k fl
 // conversation is the session's entries over the composer.
 func (a *App) conversation(c *ui.Context, p *palette, sess *catalog.Session) {
 	v := a.view
+	if listFailed(v) {
+		a.messageListFailed(c, p, sess, v)
+		return
+	}
 	if v == nil || (v.Status != "live" && len(v.Entries) == 0) {
 		// Lody's conversation skeleton: shape, not text, breathing every
 		// 1.6s where the exchange will be.

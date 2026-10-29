@@ -273,10 +273,17 @@ func TestStuckConnection(t *testing.T) {
 		t.Fatal(err)
 	}
 	tt.Frame()
-	tt.Advance(400 * time.Millisecond)
+	tt.Advance(2 * time.Second)
 	tt.Frame()
-	if !tt.HasText("Lody is taking too long to open") || !tt.HasText("Reload Lody") || !tt.HasText("Clear local cache and retry") {
-		t.Fatalf("no recovery in %q", tt.Texts())
+	snapFrame(t, tt, "stuck-recovery")
+	for _, want := range []string{"This workspace is taking too long to open", "Reload Lody", "Clear local cache and retry", "Technical details", "Clear all local data and sign out"} {
+		if !tt.HasText(want) {
+			t.Fatalf("no %q in the recovery: %q", want, tt.Texts())
+		}
+	}
+	// The page is the window: the sidebar is under it.
+	if r, ok := tt.Find("This workspace is taking too long to open"); !ok || r.X+r.W/2 < 540 || r.X+r.W/2 > 560 {
+		t.Fatalf("the page isn't centred in the window: %v", r)
 	}
 	var copied string
 	old := writeClipboard
@@ -288,9 +295,31 @@ func TestStuckConnection(t *testing.T) {
 	if !strings.Contains(copied, "Workspace: w1") || !strings.Contains(copied, "Catalog live: false") {
 		t.Fatalf("diagnostics %q", copied)
 	}
-	a.syncState.Live = true
-	a.stuck.recovery = false
 	tt.Frame()
+	if !tt.HasText("Copied") {
+		t.Fatalf("not marked copied: %q", tt.Texts())
+	}
+	if err := tt.Click("Technical details"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if !tt.HasText("Catalog live: false") {
+		t.Fatalf("no diagnostics in the details: %q", tt.Texts())
+	}
+	if err := tt.Click("Clear all local data and sign out"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if !a.confirming.open || a.confirming.title != "Clear all local data and sign out?" || a.confirming.action != "Clear and sign out" {
+		t.Fatalf("the reset doesn't ask first: %+v", a.confirming)
+	}
+	a.confirming.open = false
+	// It closes on its own once the connection is live.
+	a.syncState.Live = true
+	tt.Frame()
+	if tt.HasText("This workspace is taking too long to open") || a.stuck.recovery {
+		t.Fatal("the recovery stays once live")
+	}
 	if tt.HasText("Still connecting…") || !a.stuck.since.IsZero() {
 		t.Fatal("still stuck once live")
 	}

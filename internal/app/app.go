@@ -76,6 +76,7 @@ type App struct {
 	schedSendDlg  schedSendDialog
 	capRetries    map[string]*capRetry      // capacity retries, by chat
 	stuck         stuckState                // a connection that has been connecting too long
+	listFail      listFailure               // a conversation that failed to load, as its page keeps it
 	card          hoverCard                 // the sidebar's info card
 	outline       outlineRail               // the conversation's outline rail
 	access        accessPanel               // the header's access panel

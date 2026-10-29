@@ -3697,5 +3697,25 @@
     }
   },
   "panelResize": "Resize panel",
-  "sidebarNavigationMenu": "Navigation Menu"
+  "sidebarNavigationMenu": "Navigation Menu",
+  "sessionNotFoundTitle": "This session isn't here",
+  "sessionNotFoundDescription": "It may have been deleted, or the link that opened it is out of date.",
+  "sessionNotFoundBack": "Back to sessions",
+  "messageListFailedTitle": "Messages couldn't be displayed",
+  "messageListFailed": "The message list failed to render. Your draft below is safe.",
+  "errorCopyDetails": "Copy error details",
+  "errorTechnicalDetails": "Technical details",
+  "recoverySlowTitleWorkspace": "This workspace is taking too long to open",
+  "recoveryStillStuck": "Still stuck? {reset}.",
+  "@recoveryStillStuck": {
+    "placeholders": {
+      "reset": {
+        "type": "String"
+      }
+    }
+  },
+  "recoveryClearAll": "Clear all local data and sign out",
+  "hardResetTitle": "Clear all local data and sign out?",
+  "hardResetBody": "This signs you out and deletes everything Lody stored on this device — local caches, offline copies, and preferences — then restarts the app. Work already synced to your account stays safe and downloads again after you sign in. Unsynced local drafts on this device are lost.",
+  "hardResetButton": "Clear and sign out"
 }
