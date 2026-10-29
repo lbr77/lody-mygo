@@ -18982,3 +18982,697 @@ func HardResetButton() string { return In(i18n.Locale()).HardResetButton() }
 func (msgs Messages) HardResetButton() string {
 	return Catalog.Format(msgs.locale, "hardResetButton", nil)
 }
+
+// ProjectAddFolder says "Add a folder"
+// in the language the app shows.
+func ProjectAddFolder() string { return In(i18n.Locale()).ProjectAddFolder() }
+
+// ProjectAddFolder says "Add a folder"
+// in the language of msgs.
+func (msgs Messages) ProjectAddFolder() string {
+	return Catalog.Format(msgs.locale, "projectAddFolder", nil)
+}
+
+// ProjectAddFolderHint says "Browse the machine and pick a folder"
+// in the language the app shows.
+func ProjectAddFolderHint() string { return In(i18n.Locale()).ProjectAddFolderHint() }
+
+// ProjectAddFolderHint says "Browse the machine and pick a folder"
+// in the language of msgs.
+func (msgs Messages) ProjectAddFolderHint() string {
+	return Catalog.Format(msgs.locale, "projectAddFolderHint", nil)
+}
+
+// ProjectAddGitHub says "Add a GitHub repository"
+// in the language the app shows.
+func ProjectAddGitHub() string { return In(i18n.Locale()).ProjectAddGitHub() }
+
+// ProjectAddGitHub says "Add a GitHub repository"
+// in the language of msgs.
+func (msgs Messages) ProjectAddGitHub() string {
+	return Catalog.Format(msgs.locale, "projectAddGitHub", nil)
+}
+
+// ProjectAddGitHubHint says "Connect a GitHub repository"
+// in the language the app shows.
+func ProjectAddGitHubHint() string { return In(i18n.Locale()).ProjectAddGitHubHint() }
+
+// ProjectAddGitHubHint says "Connect a GitHub repository"
+// in the language of msgs.
+func (msgs Messages) ProjectAddGitHubHint() string {
+	return Catalog.Format(msgs.locale, "projectAddGitHubHint", nil)
+}
+
+// ProjectCreateMulti says "Several repositories or folders"
+// in the language the app shows.
+func ProjectCreateMulti() string { return In(i18n.Locale()).ProjectCreateMulti() }
+
+// ProjectCreateMulti says "Several repositories or folders"
+// in the language of msgs.
+func (msgs Messages) ProjectCreateMulti() string {
+	return Catalog.Format(msgs.locale, "projectCreateMulti", nil)
+}
+
+// ProjectCreateMultiHint says "One conversation works across all of them"
+// in the language the app shows.
+func ProjectCreateMultiHint() string { return In(i18n.Locale()).ProjectCreateMultiHint() }
+
+// ProjectCreateMultiHint says "One conversation works across all of them"
+// in the language of msgs.
+func (msgs Messages) ProjectCreateMultiHint() string {
+	return Catalog.Format(msgs.locale, "projectCreateMultiHint", nil)
+}
+
+// ProjectAnyMachine says "Any machine"
+// in the language the app shows.
+func ProjectAnyMachine() string { return In(i18n.Locale()).ProjectAnyMachine() }
+
+// ProjectAnyMachine says "Any machine"
+// in the language of msgs.
+func (msgs Messages) ProjectAnyMachine() string {
+	return Catalog.Format(msgs.locale, "projectAnyMachine", nil)
+}
+
+// ProjectAnyMachineHint says "Projects of several repositories, run wherever a copy is"
+// in the language the app shows.
+func ProjectAnyMachineHint() string { return In(i18n.Locale()).ProjectAnyMachineHint() }
+
+// ProjectAnyMachineHint says "Projects of several repositories, run wherever a copy is"
+// in the language of msgs.
+func (msgs Messages) ProjectAnyMachineHint() string {
+	return Catalog.Format(msgs.locale, "projectAnyMachineHint", nil)
+}
+
+// ProjectRepositoryCount says "{count, plural, one {# repository or folder} other {# repositories or folders}}"
+// in the language the app shows.
+func ProjectRepositoryCount(count int) string { return In(i18n.Locale()).ProjectRepositoryCount(count) }
+
+// ProjectRepositoryCount says "{count, plural, one {# repository or folder} other {# repositories or folders}}"
+// in the language of msgs.
+func (msgs Messages) ProjectRepositoryCount(count int) string {
+	return Catalog.Format(msgs.locale, "projectRepositoryCount", map[string]any{"count": count})
+}
+
+// WizardProgress says "Step {step} of {count}"
+// in the language the app shows.
+func WizardProgress(step int, count int) string { return In(i18n.Locale()).WizardProgress(step, count) }
+
+// WizardProgress says "Step {step} of {count}"
+// in the language of msgs.
+func (msgs Messages) WizardProgress(step int, count int) string {
+	return Catalog.Format(msgs.locale, "wizardProgress", map[string]any{"step": step, "count": count})
+}
+
+// WizardBack says "Back"
+// in the language the app shows.
+func WizardBack() string { return In(i18n.Locale()).WizardBack() }
+
+// WizardBack says "Back"
+// in the language of msgs.
+func (msgs Messages) WizardBack() string {
+	return Catalog.Format(msgs.locale, "wizardBack", nil)
+}
+
+// WizardNext says "Next"
+// in the language the app shows.
+func WizardNext() string { return In(i18n.Locale()).WizardNext() }
+
+// WizardNext says "Next"
+// in the language of msgs.
+func (msgs Messages) WizardNext() string {
+	return Catalog.Format(msgs.locale, "wizardNext", nil)
+}
+
+// WizardSelectedCount says "{count, plural, one {# selected} other {# selected}}"
+// in the language the app shows.
+func WizardSelectedCount(count int) string { return In(i18n.Locale()).WizardSelectedCount(count) }
+
+// WizardSelectedCount says "{count, plural, one {# selected} other {# selected}}"
+// in the language of msgs.
+func (msgs Messages) WizardSelectedCount(count int) string {
+	return Catalog.Format(msgs.locale, "wizardSelectedCount", map[string]any{"count": count})
+}
+
+// WizardKindTitle says "What will this project contain?"
+// in the language the app shows.
+func WizardKindTitle() string { return In(i18n.Locale()).WizardKindTitle() }
+
+// WizardKindTitle says "What will this project contain?"
+// in the language of msgs.
+func (msgs Messages) WizardKindTitle() string {
+	return Catalog.Format(msgs.locale, "wizardKindTitle", nil)
+}
+
+// WizardKindDescription says "A project puts several repositories or folders side by side, so one conversation can work across all of them."
+// in the language the app shows.
+func WizardKindDescription() string { return In(i18n.Locale()).WizardKindDescription() }
+
+// WizardKindDescription says "A project puts several repositories or folders side by side, so one conversation can work across all of them."
+// in the language of msgs.
+func (msgs Messages) WizardKindDescription() string {
+	return Catalog.Format(msgs.locale, "wizardKindDescription", nil)
+}
+
+// WizardKindLocal says "Includes local folders"
+// in the language the app shows.
+func WizardKindLocal() string { return In(i18n.Locale()).WizardKindLocal() }
+
+// WizardKindLocal says "Includes local folders"
+// in the language of msgs.
+func (msgs Messages) WizardKindLocal() string {
+	return Catalog.Format(msgs.locale, "wizardKindLocal", nil)
+}
+
+// WizardKindLocalHint says "Pick folders on one machine, optionally with GitHub repositories. Conversations run on that machine and work directly…"
+// in the language the app shows.
+func WizardKindLocalHint() string { return In(i18n.Locale()).WizardKindLocalHint() }
+
+// WizardKindLocalHint says "Pick folders on one machine, optionally with GitHub repositories. Conversations run on that machine and work directly…"
+// in the language of msgs.
+func (msgs Messages) WizardKindLocalHint() string {
+	return Catalog.Format(msgs.locale, "wizardKindLocalHint", nil)
+}
+
+// WizardKindNoMachines says "Connect a machine first to use its folders."
+// in the language the app shows.
+func WizardKindNoMachines() string { return In(i18n.Locale()).WizardKindNoMachines() }
+
+// WizardKindNoMachines says "Connect a machine first to use its folders."
+// in the language of msgs.
+func (msgs Messages) WizardKindNoMachines() string {
+	return Catalog.Format(msgs.locale, "wizardKindNoMachines", nil)
+}
+
+// WizardKindGithub says "GitHub repositories only"
+// in the language the app shows.
+func WizardKindGithub() string { return In(i18n.Locale()).WizardKindGithub() }
+
+// WizardKindGithub says "GitHub repositories only"
+// in the language of msgs.
+func (msgs Messages) WizardKindGithub() string {
+	return Catalog.Format(msgs.locale, "wizardKindGithub", nil)
+}
+
+// WizardKindGithubHint says "Conversations can run on any machine. Each one checks the repositories out into its own worktree, leaving your folder…"
+// in the language the app shows.
+func WizardKindGithubHint() string { return In(i18n.Locale()).WizardKindGithubHint() }
+
+// WizardKindGithubHint says "Conversations can run on any machine. Each one checks the repositories out into its own worktree, leaving your folder…"
+// in the language of msgs.
+func (msgs Messages) WizardKindGithubHint() string {
+	return Catalog.Format(msgs.locale, "wizardKindGithubHint", nil)
+}
+
+// WizardMachineTitle says "Which machine are the folders on?"
+// in the language the app shows.
+func WizardMachineTitle() string { return In(i18n.Locale()).WizardMachineTitle() }
+
+// WizardMachineTitle says "Which machine are the folders on?"
+// in the language of msgs.
+func (msgs Messages) WizardMachineTitle() string {
+	return Catalog.Format(msgs.locale, "wizardMachineTitle", nil)
+}
+
+// WizardMachineDescription says "Local folders exist on one machine, so this project’s conversations will run there."
+// in the language the app shows.
+func WizardMachineDescription() string { return In(i18n.Locale()).WizardMachineDescription() }
+
+// WizardMachineDescription says "Local folders exist on one machine, so this project’s conversations will run there."
+// in the language of msgs.
+func (msgs Messages) WizardMachineDescription() string {
+	return Catalog.Format(msgs.locale, "wizardMachineDescription", nil)
+}
+
+// WizardMachineFolders says "{count, plural, one {# folder} other {# folders}}"
+// in the language the app shows.
+func WizardMachineFolders(count int) string { return In(i18n.Locale()).WizardMachineFolders(count) }
+
+// WizardMachineFolders says "{count, plural, one {# folder} other {# folders}}"
+// in the language of msgs.
+func (msgs Messages) WizardMachineFolders(count int) string {
+	return Catalog.Format(msgs.locale, "wizardMachineFolders", map[string]any{"count": count})
+}
+
+// WizardThisMachine says "This machine"
+// in the language the app shows.
+func WizardThisMachine() string { return In(i18n.Locale()).WizardThisMachine() }
+
+// WizardThisMachine says "This machine"
+// in the language of msgs.
+func (msgs Messages) WizardThisMachine() string {
+	return Catalog.Format(msgs.locale, "wizardThisMachine", nil)
+}
+
+// WizardSourcesLocalTitle says "Choose folders and repositories"
+// in the language the app shows.
+func WizardSourcesLocalTitle() string { return In(i18n.Locale()).WizardSourcesLocalTitle() }
+
+// WizardSourcesLocalTitle says "Choose folders and repositories"
+// in the language of msgs.
+func (msgs Messages) WizardSourcesLocalTitle() string {
+	return Catalog.Format(msgs.locale, "wizardSourcesLocalTitle", nil)
+}
+
+// WizardSourcesLocalDescription says "Tick what this project needs on {machine}. GitHub repositories can be mixed in from the other tab."
+// in the language the app shows.
+func WizardSourcesLocalDescription(machine string) string {
+	return In(i18n.Locale()).WizardSourcesLocalDescription(machine)
+}
+
+// WizardSourcesLocalDescription says "Tick what this project needs on {machine}. GitHub repositories can be mixed in from the other tab."
+// in the language of msgs.
+func (msgs Messages) WizardSourcesLocalDescription(machine string) string {
+	return Catalog.Format(msgs.locale, "wizardSourcesLocalDescription", map[string]any{"machine": machine})
+}
+
+// WizardSourcesGithubTitle says "Choose GitHub repositories"
+// in the language the app shows.
+func WizardSourcesGithubTitle() string { return In(i18n.Locale()).WizardSourcesGithubTitle() }
+
+// WizardSourcesGithubTitle says "Choose GitHub repositories"
+// in the language of msgs.
+func (msgs Messages) WizardSourcesGithubTitle() string {
+	return Catalog.Format(msgs.locale, "wizardSourcesGithubTitle", nil)
+}
+
+// WizardSourcesGithubDescription says "Tick every repository this project needs. Each conversation gets its own copy of each one."
+// in the language the app shows.
+func WizardSourcesGithubDescription() string {
+	return In(i18n.Locale()).WizardSourcesGithubDescription()
+}
+
+// WizardSourcesGithubDescription says "Tick every repository this project needs. Each conversation gets its own copy of each one."
+// in the language of msgs.
+func (msgs Messages) WizardSourcesGithubDescription() string {
+	return Catalog.Format(msgs.locale, "wizardSourcesGithubDescription", nil)
+}
+
+// WizardBrowse says "Browse…"
+// in the language the app shows.
+func WizardBrowse() string { return In(i18n.Locale()).WizardBrowse() }
+
+// WizardBrowse says "Browse…"
+// in the language of msgs.
+func (msgs Messages) WizardBrowse() string {
+	return Catalog.Format(msgs.locale, "wizardBrowse", nil)
+}
+
+// WizardBrowseUnavailable says "Folders can be browsed on a machine you added while it is online."
+// in the language the app shows.
+func WizardBrowseUnavailable() string { return In(i18n.Locale()).WizardBrowseUnavailable() }
+
+// WizardBrowseUnavailable says "Folders can be browsed on a machine you added while it is online."
+// in the language of msgs.
+func (msgs Messages) WizardBrowseUnavailable() string {
+	return Catalog.Format(msgs.locale, "wizardBrowseUnavailable", nil)
+}
+
+// WizardFoldersTab says "Folders on {machine}"
+// in the language the app shows.
+func WizardFoldersTab(machine string) string { return In(i18n.Locale()).WizardFoldersTab(machine) }
+
+// WizardFoldersTab says "Folders on {machine}"
+// in the language of msgs.
+func (msgs Messages) WizardFoldersTab(machine string) string {
+	return Catalog.Format(msgs.locale, "wizardFoldersTab", map[string]any{"machine": machine})
+}
+
+// WizardGithubTab says "GitHub repositories"
+// in the language the app shows.
+func WizardGithubTab() string { return In(i18n.Locale()).WizardGithubTab() }
+
+// WizardGithubTab says "GitHub repositories"
+// in the language of msgs.
+func (msgs Messages) WizardGithubTab() string {
+	return Catalog.Format(msgs.locale, "wizardGithubTab", nil)
+}
+
+// WizardFoldersNote says "Folders with a GitHub remote use a worktree of your copy. Other folders are edited in place."
+// in the language the app shows.
+func WizardFoldersNote() string { return In(i18n.Locale()).WizardFoldersNote() }
+
+// WizardFoldersNote says "Folders with a GitHub remote use a worktree of your copy. Other folders are edited in place."
+// in the language of msgs.
+func (msgs Messages) WizardFoldersNote() string {
+	return Catalog.Format(msgs.locale, "wizardFoldersNote", nil)
+}
+
+// WizardGithubNote says "Repositories ticked here are cloned for each conversation. If the matching folder is also ticked, the GitHub reposito…"
+// in the language the app shows.
+func WizardGithubNote() string { return In(i18n.Locale()).WizardGithubNote() }
+
+// WizardGithubNote says "Repositories ticked here are cloned for each conversation. If the matching folder is also ticked, the GitHub reposito…"
+// in the language of msgs.
+func (msgs Messages) WizardGithubNote() string {
+	return Catalog.Format(msgs.locale, "wizardGithubNote", nil)
+}
+
+// WizardNoFolders says "No folders on {machine} yet. Add one from Settings › Projects."
+// in the language the app shows.
+func WizardNoFolders(machine string) string { return In(i18n.Locale()).WizardNoFolders(machine) }
+
+// WizardNoFolders says "No folders on {machine} yet. Add one from Settings › Projects."
+// in the language of msgs.
+func (msgs Messages) WizardNoFolders(machine string) string {
+	return Catalog.Format(msgs.locale, "wizardNoFolders", map[string]any{"machine": machine})
+}
+
+// WizardNoFoldersBrowse says "No folders on {machine} yet. Use Browse… to pick one."
+// in the language the app shows.
+func WizardNoFoldersBrowse(machine string) string {
+	return In(i18n.Locale()).WizardNoFoldersBrowse(machine)
+}
+
+// WizardNoFoldersBrowse says "No folders on {machine} yet. Use Browse… to pick one."
+// in the language of msgs.
+func (msgs Messages) WizardNoFoldersBrowse(machine string) string {
+	return Catalog.Format(msgs.locale, "wizardNoFoldersBrowse", map[string]any{"machine": machine})
+}
+
+// WizardNoRepositories says "No GitHub repositories are connected yet."
+// in the language the app shows.
+func WizardNoRepositories() string { return In(i18n.Locale()).WizardNoRepositories() }
+
+// WizardNoRepositories says "No GitHub repositories are connected yet."
+// in the language of msgs.
+func (msgs Messages) WizardNoRepositories() string {
+	return Catalog.Format(msgs.locale, "wizardNoRepositories", nil)
+}
+
+// WizardNoMatches says "Nothing matches"
+// in the language the app shows.
+func WizardNoMatches() string { return In(i18n.Locale()).WizardNoMatches() }
+
+// WizardNoMatches says "Nothing matches"
+// in the language of msgs.
+func (msgs Messages) WizardNoMatches() string {
+	return Catalog.Format(msgs.locale, "wizardNoMatches", nil)
+}
+
+// WizardBothSelected says "{count, plural, one {{names} is selected both as a folder and as a GitHub repository. The project keeps one copy and …"
+// in the language the app shows.
+func WizardBothSelected(names string, count int) string {
+	return In(i18n.Locale()).WizardBothSelected(names, count)
+}
+
+// WizardBothSelected says "{count, plural, one {{names} is selected both as a folder and as a GitHub repository. The project keeps one copy and …"
+// in the language of msgs.
+func (msgs Messages) WizardBothSelected(names string, count int) string {
+	return Catalog.Format(msgs.locale, "wizardBothSelected", map[string]any{"names": names, "count": count})
+}
+
+// WizardSingleHint says "Only one selected: it is added as an ordinary project."
+// in the language the app shows.
+func WizardSingleHint() string { return In(i18n.Locale()).WizardSingleHint() }
+
+// WizardSingleHint says "Only one selected: it is added as an ordinary project."
+// in the language of msgs.
+func (msgs Messages) WizardSingleHint() string {
+	return Catalog.Format(msgs.locale, "wizardSingleHint", nil)
+}
+
+// WizardSingleFolder says "“{name}” is in your projects"
+// in the language the app shows.
+func WizardSingleFolder(name string) string { return In(i18n.Locale()).WizardSingleFolder(name) }
+
+// WizardSingleFolder says "“{name}” is in your projects"
+// in the language of msgs.
+func (msgs Messages) WizardSingleFolder(name string) string {
+	return Catalog.Format(msgs.locale, "wizardSingleFolder", map[string]any{"name": name})
+}
+
+// WizardSingleRepository says "“{name}” is already available as a project"
+// in the language the app shows.
+func WizardSingleRepository(name string) string {
+	return In(i18n.Locale()).WizardSingleRepository(name)
+}
+
+// WizardSingleRepository says "“{name}” is already available as a project"
+// in the language of msgs.
+func (msgs Messages) WizardSingleRepository(name string) string {
+	return Catalog.Format(msgs.locale, "wizardSingleRepository", map[string]any{"name": name})
+}
+
+// WizardDetailsTitle says "Name the project"
+// in the language the app shows.
+func WizardDetailsTitle() string { return In(i18n.Locale()).WizardDetailsTitle() }
+
+// WizardDetailsTitle says "Name the project"
+// in the language of msgs.
+func (msgs Messages) WizardDetailsTitle() string {
+	return Catalog.Format(msgs.locale, "wizardDetailsTitle", nil)
+}
+
+// WizardDetailsDescription says "Check what it includes, then create it. You can change all of this later."
+// in the language the app shows.
+func WizardDetailsDescription() string { return In(i18n.Locale()).WizardDetailsDescription() }
+
+// WizardDetailsDescription says "Check what it includes, then create it. You can change all of this later."
+// in the language of msgs.
+func (msgs Messages) WizardDetailsDescription() string {
+	return Catalog.Format(msgs.locale, "wizardDetailsDescription", nil)
+}
+
+// WizardName says "Project name"
+// in the language the app shows.
+func WizardName() string { return In(i18n.Locale()).WizardName() }
+
+// WizardName says "Project name"
+// in the language of msgs.
+func (msgs Messages) WizardName() string {
+	return Catalog.Format(msgs.locale, "wizardName", nil)
+}
+
+// WizardNamePlaceholder says "e.g. Shop"
+// in the language the app shows.
+func WizardNamePlaceholder() string { return In(i18n.Locale()).WizardNamePlaceholder() }
+
+// WizardNamePlaceholder says "e.g. Shop"
+// in the language of msgs.
+func (msgs Messages) WizardNamePlaceholder() string {
+	return Catalog.Format(msgs.locale, "wizardNamePlaceholder", nil)
+}
+
+// WizardNameTaken says "Another project already has this name."
+// in the language the app shows.
+func WizardNameTaken() string { return In(i18n.Locale()).WizardNameTaken() }
+
+// WizardNameTaken says "Another project already has this name."
+// in the language of msgs.
+func (msgs Messages) WizardNameTaken() string {
+	return Catalog.Format(msgs.locale, "wizardNameTaken", nil)
+}
+
+// WizardMembers says "{count, plural, one {Includes # item} other {Includes # items}}"
+// in the language the app shows.
+func WizardMembers(count int) string { return In(i18n.Locale()).WizardMembers(count) }
+
+// WizardMembers says "{count, plural, one {Includes # item} other {Includes # items}}"
+// in the language of msgs.
+func (msgs Messages) WizardMembers(count int) string {
+	return Catalog.Format(msgs.locale, "wizardMembers", map[string]any{"count": count})
+}
+
+// WizardRemove says "Remove {name}"
+// in the language the app shows.
+func WizardRemove(name string) string { return In(i18n.Locale()).WizardRemove(name) }
+
+// WizardRemove says "Remove {name}"
+// in the language of msgs.
+func (msgs Messages) WizardRemove(name string) string {
+	return Catalog.Format(msgs.locale, "wizardRemove", map[string]any{"name": name})
+}
+
+// WizardInstructions says "Instructions for the agent (optional)"
+// in the language the app shows.
+func WizardInstructions() string { return In(i18n.Locale()).WizardInstructions() }
+
+// WizardInstructions says "Instructions for the agent (optional)"
+// in the language of msgs.
+func (msgs Messages) WizardInstructions() string {
+	return Catalog.Format(msgs.locale, "wizardInstructions", nil)
+}
+
+// WizardInstructionsLabel says "Instructions"
+// in the language the app shows.
+func WizardInstructionsLabel() string { return In(i18n.Locale()).WizardInstructionsLabel() }
+
+// WizardInstructionsLabel says "Instructions"
+// in the language of msgs.
+func (msgs Messages) WizardInstructionsLabel() string {
+	return Catalog.Format(msgs.locale, "wizardInstructionsLabel", nil)
+}
+
+// WizardInstructionsHint says "Sent to the agent at the start of every new conversation in this project."
+// in the language the app shows.
+func WizardInstructionsHint() string { return In(i18n.Locale()).WizardInstructionsHint() }
+
+// WizardInstructionsHint says "Sent to the agent at the start of every new conversation in this project."
+// in the language of msgs.
+func (msgs Messages) WizardInstructionsHint() string {
+	return Catalog.Format(msgs.locale, "wizardInstructionsHint", nil)
+}
+
+// WizardInstructionsPlaceholder says "Describe what each repository does and how they relate. For example: web is the Next.js frontend; api is the Go backe…"
+// in the language the app shows.
+func WizardInstructionsPlaceholder() string { return In(i18n.Locale()).WizardInstructionsPlaceholder() }
+
+// WizardInstructionsPlaceholder says "Describe what each repository does and how they relate. For example: web is the Next.js frontend; api is the Go backe…"
+// in the language of msgs.
+func (msgs Messages) WizardInstructionsPlaceholder() string {
+	return Catalog.Format(msgs.locale, "wizardInstructionsPlaceholder", nil)
+}
+
+// WizardCreate says "Create"
+// in the language the app shows.
+func WizardCreate() string { return In(i18n.Locale()).WizardCreate() }
+
+// WizardCreate says "Create"
+// in the language of msgs.
+func (msgs Messages) WizardCreate() string {
+	return Catalog.Format(msgs.locale, "wizardCreate", nil)
+}
+
+// WizardMemberErrorLine says "{name}: {reason}"
+// in the language the app shows.
+func WizardMemberErrorLine(name string, reason string) string {
+	return In(i18n.Locale()).WizardMemberErrorLine(name, reason)
+}
+
+// WizardMemberErrorLine says "{name}: {reason}"
+// in the language of msgs.
+func (msgs Messages) WizardMemberErrorLine(name string, reason string) string {
+	return Catalog.Format(msgs.locale, "wizardMemberErrorLine", map[string]any{"name": name, "reason": reason})
+}
+
+// WizardErrDirInvalid says "the directory name is not valid"
+// in the language the app shows.
+func WizardErrDirInvalid() string { return In(i18n.Locale()).WizardErrDirInvalid() }
+
+// WizardErrDirInvalid says "the directory name is not valid"
+// in the language of msgs.
+func (msgs Messages) WizardErrDirInvalid() string {
+	return Catalog.Format(msgs.locale, "wizardErrDirInvalid", nil)
+}
+
+// WizardErrDirDuplicate says "another repository uses this directory"
+// in the language the app shows.
+func WizardErrDirDuplicate() string { return In(i18n.Locale()).WizardErrDirDuplicate() }
+
+// WizardErrDirDuplicate says "another repository uses this directory"
+// in the language of msgs.
+func (msgs Messages) WizardErrDirDuplicate() string {
+	return Catalog.Format(msgs.locale, "wizardErrDirDuplicate", nil)
+}
+
+// WizardErrDuplicateRepository says "this repository is already in the project"
+// in the language the app shows.
+func WizardErrDuplicateRepository() string { return In(i18n.Locale()).WizardErrDuplicateRepository() }
+
+// WizardErrDuplicateRepository says "this repository is already in the project"
+// in the language of msgs.
+func (msgs Messages) WizardErrDuplicateRepository() string {
+	return Catalog.Format(msgs.locale, "wizardErrDuplicateRepository", nil)
+}
+
+// WizardErrMachineMismatch says "it is on a different machine from the project's other local folders"
+// in the language the app shows.
+func WizardErrMachineMismatch() string { return In(i18n.Locale()).WizardErrMachineMismatch() }
+
+// WizardErrMachineMismatch says "it is on a different machine from the project's other local folders"
+// in the language of msgs.
+func (msgs Messages) WizardErrMachineMismatch() string {
+	return Catalog.Format(msgs.locale, "wizardErrMachineMismatch", nil)
+}
+
+// WizardInvalid says "This project cannot be saved. Check the repositories and their directories."
+// in the language the app shows.
+func WizardInvalid() string { return In(i18n.Locale()).WizardInvalid() }
+
+// WizardInvalid says "This project cannot be saved. Check the repositories and their directories."
+// in the language of msgs.
+func (msgs Messages) WizardInvalid() string {
+	return Catalog.Format(msgs.locale, "wizardInvalid", nil)
+}
+
+// WizardFolderUpdateRequired says "Update Lody on this machine to select folders directly."
+// in the language the app shows.
+func WizardFolderUpdateRequired() string { return In(i18n.Locale()).WizardFolderUpdateRequired() }
+
+// WizardFolderUpdateRequired says "Update Lody on this machine to select folders directly."
+// in the language of msgs.
+func (msgs Messages) WizardFolderUpdateRequired() string {
+	return Catalog.Format(msgs.locale, "wizardFolderUpdateRequired", nil)
+}
+
+// WizardFolderChanged says "The selected folder changed. Remove it and select it again."
+// in the language the app shows.
+func WizardFolderChanged() string { return In(i18n.Locale()).WizardFolderChanged() }
+
+// WizardFolderChanged says "The selected folder changed. Remove it and select it again."
+// in the language of msgs.
+func (msgs Messages) WizardFolderChanged() string {
+	return Catalog.Format(msgs.locale, "wizardFolderChanged", nil)
+}
+
+// WizardTimeout says "The machine did not respond in time."
+// in the language the app shows.
+func WizardTimeout() string { return In(i18n.Locale()).WizardTimeout() }
+
+// WizardTimeout says "The machine did not respond in time."
+// in the language of msgs.
+func (msgs Messages) WizardTimeout() string {
+	return Catalog.Format(msgs.locale, "wizardTimeout", nil)
+}
+
+// WizardSelectFolders says "Select local folders"
+// in the language the app shows.
+func WizardSelectFolders() string { return In(i18n.Locale()).WizardSelectFolders() }
+
+// WizardSelectFolders says "Select local folders"
+// in the language of msgs.
+func (msgs Messages) WizardSelectFolders() string {
+	return Catalog.Format(msgs.locale, "wizardSelectFolders", nil)
+}
+
+// WizardSelectFolder says "Select this folder"
+// in the language the app shows.
+func WizardSelectFolder() string { return In(i18n.Locale()).WizardSelectFolder() }
+
+// WizardSelectFolder says "Select this folder"
+// in the language of msgs.
+func (msgs Messages) WizardSelectFolder() string {
+	return Catalog.Format(msgs.locale, "wizardSelectFolder", nil)
+}
+
+// WizardMissingLocal says "Removed local project"
+// in the language the app shows.
+func WizardMissingLocal() string { return In(i18n.Locale()).WizardMissingLocal() }
+
+// WizardMissingLocal says "Removed local project"
+// in the language of msgs.
+func (msgs Messages) WizardMissingLocal() string {
+	return Catalog.Format(msgs.locale, "wizardMissingLocal", nil)
+}
+
+// WizardGithubOnly says "Only on GitHub"
+// in the language the app shows.
+func WizardGithubOnly() string { return In(i18n.Locale()).WizardGithubOnly() }
+
+// WizardGithubOnly says "Only on GitHub"
+// in the language of msgs.
+func (msgs Messages) WizardGithubOnly() string {
+	return Catalog.Format(msgs.locale, "wizardGithubOnly", nil)
+}
+
+// WizardMoreMachines says "{machines} +{count}"
+// in the language the app shows.
+func WizardMoreMachines(machines string, count int) string {
+	return In(i18n.Locale()).WizardMoreMachines(machines, count)
+}
+
+// WizardMoreMachines says "{machines} +{count}"
+// in the language of msgs.
+func (msgs Messages) WizardMoreMachines(machines string, count int) string {
+	return Catalog.Format(msgs.locale, "wizardMoreMachines", map[string]any{"machines": machines, "count": count})
+}

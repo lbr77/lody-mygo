@@ -10,7 +10,8 @@ import (
 )
 
 // The workspace stream, "wf:workspace", holds what the workspace shares
-// beyond its sessions: its MCP servers and agent roles. Machines' streams
+// beyond its sessions: its MCP servers, agent roles and projects of
+// several repositories. Machines' streams
 // hold the memory each machine links and the projects it is removing.
 
 // MCPServer is an MCP server the workspace offers its sessions.
@@ -95,6 +96,48 @@ type RoleTarget struct {
 	MemoryProvider string
 }
 
+// ProjectGroup is a project of several repositories or folders, Lody's
+// WorkspaceProject: a row ['project', id] of the workspace stream that
+// one conversation works across, each member a GitHub repository or one
+// machine's folder in its own directory.
+type ProjectGroup struct {
+	ID          string
+	Name        string
+	OwnerUserID string
+	Members     []ProjectGroupMember
+	// Row is the project as the workspace stream stores it.
+	Row map[string]any
+}
+
+// ProjectGroupMember is a project's repository or folder: a GitHub
+// repository, cloned for each conversation or, preferring a local copy,
+// a machine's copy of it; or a machine's local project.
+type ProjectGroupMember struct {
+	ID             string
+	Kind           string // github or local
+	RepoFullName   string
+	PreferLocal    bool
+	MachineID      string
+	LocalProjectID string
+}
+
+// BoundMachine is the one machine a project's folders put it on, as
+// Lody's getProjectBoundMachineId: none when it runs anywhere, or its
+// folders disagree.
+func (g ProjectGroup) BoundMachine() string {
+	machine := ""
+	for _, m := range g.Members {
+		if m.Kind != "local" {
+			continue
+		}
+		if machine != "" && machine != m.MachineID {
+			return ""
+		}
+		machine = m.MachineID
+	}
+	return machine
+}
+
 // Memory is a memory a machine links to Lody from a provider.
 type Memory struct {
 	ProviderID  string
@@ -166,8 +209,27 @@ func projectWorkspace(rows []flock.Row) Catalog {
 				r.Targets = append(r.Targets, target(v))
 			}
 			c.Roles = append(c.Roles, r)
+		case "project":
+			g := ProjectGroup{ID: id, Name: strings.TrimSpace(text(v["name"])), OwnerUserID: text(v["ownerUserId"]), Row: v}
+			for _, raw := range anyList(v["members"]) {
+				m := object(raw)
+				src := object(m["source"])
+				member := ProjectGroupMember{ID: text(m["id"]), Kind: text(src["kind"]), RepoFullName: text(src["repoFullName"]),
+					PreferLocal: src["preferLocal"] == true, MachineID: text(src["machineId"]), LocalProjectID: text(src["localProjectId"])}
+				if member.ID == "" || (member.Kind != "github" && member.Kind != "local") {
+					continue
+				}
+				g.Members = append(g.Members, member)
+			}
+			if g.Name == "" || g.OwnerUserID == "" || len(g.Members) == 0 {
+				continue
+			}
+			c.Groups = append(c.Groups, g)
 		}
 	}
+	sort.SliceStable(c.Groups, func(i, j int) bool {
+		return strings.ToLower(c.Groups[i].Name) < strings.ToLower(c.Groups[j].Name)
+	})
 	sort.SliceStable(c.MCPServers, func(i, j int) bool {
 		a, b := strings.ToLower(c.MCPServers[i].Name), strings.ToLower(c.MCPServers[j].Name)
 		if a != b {

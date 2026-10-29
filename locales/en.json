@@ -3717,5 +3717,190 @@
   "recoveryClearAll": "Clear all local data and sign out",
   "hardResetTitle": "Clear all local data and sign out?",
   "hardResetBody": "This signs you out and deletes everything Lody stored on this device — local caches, offline copies, and preferences — then restarts the app. Work already synced to your account stays safe and downloads again after you sign in. Unsynced local drafts on this device are lost.",
-  "hardResetButton": "Clear and sign out"
+  "hardResetButton": "Clear and sign out",
+  "projectAddFolder": "Add a folder",
+  "projectAddFolderHint": "Browse the machine and pick a folder",
+  "projectAddGitHub": "Add a GitHub repository",
+  "projectAddGitHubHint": "Connect a GitHub repository",
+  "projectCreateMulti": "Several repositories or folders",
+  "projectCreateMultiHint": "One conversation works across all of them",
+  "projectAnyMachine": "Any machine",
+  "projectAnyMachineHint": "Projects of several repositories, run wherever a copy is",
+  "projectRepositoryCount": "{count, plural, one {# repository or folder} other {# repositories or folders}}",
+  "@projectRepositoryCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "wizardProgress": "Step {step} of {count}",
+  "@wizardProgress": {
+    "placeholders": {
+      "step": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "wizardBack": "Back",
+  "wizardNext": "Next",
+  "wizardSelectedCount": "{count, plural, one {# selected} other {# selected}}",
+  "@wizardSelectedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "wizardKindTitle": "What will this project contain?",
+  "wizardKindDescription": "A project puts several repositories or folders side by side, so one conversation can work across all of them.",
+  "wizardKindLocal": "Includes local folders",
+  "wizardKindLocalHint": "Pick folders on one machine, optionally with GitHub repositories. Conversations run on that machine and work directly in those folders.",
+  "wizardKindNoMachines": "Connect a machine first to use its folders.",
+  "wizardKindGithub": "GitHub repositories only",
+  "wizardKindGithubHint": "Conversations can run on any machine. Each one checks the repositories out into its own worktree, leaving your folders untouched.",
+  "wizardMachineTitle": "Which machine are the folders on?",
+  "wizardMachineDescription": "Local folders exist on one machine, so this project’s conversations will run there.",
+  "wizardMachineFolders": "{count, plural, one {# folder} other {# folders}}",
+  "@wizardMachineFolders": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "wizardThisMachine": "This machine",
+  "wizardSourcesLocalTitle": "Choose folders and repositories",
+  "wizardSourcesLocalDescription": "Tick what this project needs on {machine}. GitHub repositories can be mixed in from the other tab.",
+  "@wizardSourcesLocalDescription": {
+    "placeholders": {
+      "machine": {
+        "type": "String"
+      }
+    }
+  },
+  "wizardSourcesGithubTitle": "Choose GitHub repositories",
+  "wizardSourcesGithubDescription": "Tick every repository this project needs. Each conversation gets its own copy of each one.",
+  "wizardBrowse": "Browse…",
+  "wizardBrowseUnavailable": "Folders can be browsed on a machine you added while it is online.",
+  "wizardFoldersTab": "Folders on {machine}",
+  "@wizardFoldersTab": {
+    "placeholders": {
+      "machine": {
+        "type": "String"
+      }
+    }
+  },
+  "wizardGithubTab": "GitHub repositories",
+  "wizardFoldersNote": "Folders with a GitHub remote use a worktree of your copy. Other folders are edited in place.",
+  "wizardGithubNote": "Repositories ticked here are cloned for each conversation. If the matching folder is also ticked, the GitHub repository is used.",
+  "wizardNoFolders": "No folders on {machine} yet. Add one from Settings › Projects.",
+  "@wizardNoFolders": {
+    "placeholders": {
+      "machine": {
+        "type": "String"
+      }
+    }
+  },
+  "wizardNoFoldersBrowse": "No folders on {machine} yet. Use Browse… to pick one.",
+  "@wizardNoFoldersBrowse": {
+    "placeholders": {
+      "machine": {
+        "type": "String"
+      }
+    }
+  },
+  "wizardNoRepositories": "No GitHub repositories are connected yet.",
+  "wizardNoMatches": "Nothing matches",
+  "wizardBothSelected": "{count, plural, one {{names} is selected both as a folder and as a GitHub repository. The project keeps one copy and uses the GitHub repository.} other {{names} are selected both as folders and as GitHub repositories. The project keeps one copy of each and uses the GitHub repositories.}}",
+  "@wizardBothSelected": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "wizardSingleHint": "Only one selected: it is added as an ordinary project.",
+  "wizardSingleFolder": "“{name}” is in your projects",
+  "@wizardSingleFolder": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "wizardSingleRepository": "“{name}” is already available as a project",
+  "@wizardSingleRepository": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "wizardDetailsTitle": "Name the project",
+  "wizardDetailsDescription": "Check what it includes, then create it. You can change all of this later.",
+  "wizardName": "Project name",
+  "wizardNamePlaceholder": "e.g. Shop",
+  "wizardNameTaken": "Another project already has this name.",
+  "wizardMembers": "{count, plural, one {Includes # item} other {Includes # items}}",
+  "@wizardMembers": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "wizardRemove": "Remove {name}",
+  "@wizardRemove": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "wizardInstructions": "Instructions for the agent (optional)",
+  "wizardInstructionsLabel": "Instructions",
+  "wizardInstructionsHint": "Sent to the agent at the start of every new conversation in this project.",
+  "wizardInstructionsPlaceholder": "Describe what each repository does and how they relate. For example: web is the Next.js frontend; api is the Go backend serving the REST API; proto holds the interface definitions both share, so change proto first when an interface changes.",
+  "wizardCreate": "Create",
+  "wizardMemberErrorLine": "{name}: {reason}",
+  "@wizardMemberErrorLine": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "wizardErrDirInvalid": "the directory name is not valid",
+  "wizardErrDirDuplicate": "another repository uses this directory",
+  "wizardErrDuplicateRepository": "this repository is already in the project",
+  "wizardErrMachineMismatch": "it is on a different machine from the project's other local folders",
+  "wizardInvalid": "This project cannot be saved. Check the repositories and their directories.",
+  "wizardFolderUpdateRequired": "Update Lody on this machine to select folders directly.",
+  "wizardFolderChanged": "The selected folder changed. Remove it and select it again.",
+  "wizardTimeout": "The machine did not respond in time.",
+  "wizardSelectFolders": "Select local folders",
+  "wizardSelectFolder": "Select this folder",
+  "wizardMissingLocal": "Removed local project",
+  "wizardGithubOnly": "Only on GitHub",
+  "wizardMoreMachines": "{machines} +{count}",
+  "@wizardMoreMachines": {
+    "placeholders": {
+      "machines": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }
