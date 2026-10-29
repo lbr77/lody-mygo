@@ -8,6 +8,7 @@ import (
 
 	"github.com/egoist/mygo/ui"
 
+	"github.com/lbr77/lody-mygo/internal/catalog"
 	"github.com/lbr77/lody-mygo/internal/session"
 )
 
@@ -249,5 +250,40 @@ func TestContextChips(t *testing.T) {
 	a.view.Preview.Target.Host = "example.com"
 	if _, _, ok := previewResource(a.view.Preview); ok {
 		t.Fatal("non-loopback preview offered")
+	}
+}
+
+func TestModelMemory(t *testing.T) {
+	a := fixture()
+	a.selected = ""
+	a.catalog.Capabilities = map[string]catalog.Capability{"a1": {
+		Models: []catalog.Model{{ModelID: "opus"}, {ModelID: "haiku"}},
+		Modes:  []catalog.Mode{{ID: "default"}, {ID: "plan"}},
+		Options: []catalog.ConfigOption{{ID: "reasoning_effort", Category: "thought_level", Type: "select", Choices: []catalog.Choice{{Value: "low"}, {Value: "high"}}},
+			{ID: "fast", Type: "boolean"}},
+		Efforts: map[string][]string{"haiku": {"low"}},
+	}}
+	a.newChat.machine, a.newChat.agent, a.newChat.project = "m1", "a1", "m1:local:p1"
+	tt := ui.NewTester(a.render, 1100, 720)
+	tt.Frame()
+	a.models[""], a.modes[""] = "opus", "plan"
+	a.setRunValue("", "reasoning_effort", "high")
+	a.setRunValue("", "fast", true)
+	tt.Frame()
+	// Another project starts from what it had, here nothing.
+	a.newChat.project = "m1:local:p2"
+	tt.Frame()
+	a.models[""], a.modes[""] = "haiku", "default"
+	delete(a.runValues, "")
+	tt.Frame()
+	a.newChat.project = "m1:local:p1"
+	tt.Frame()
+	if a.models[""] != "opus" || a.modes[""] != "plan" || a.runValues[""]["reasoning_effort"] != "high" || a.runValues[""]["fast"] != true {
+		t.Fatalf("p1 restored model %q mode %q values %v", a.models[""], a.modes[""], a.runValues[""])
+	}
+	// An effort the model doesn't allow is not given back.
+	a.applyModelChoice(modelChoice{Model: "haiku", Values: map[string]any{"reasoning_effort": "high", "fast": "yes"}})
+	if a.models[""] != "haiku" || a.runValues[""]["reasoning_effort"] != nil || a.runValues[""]["fast"] != nil {
+		t.Fatalf("validated: %q %v", a.models[""], a.runValues[""])
 	}
 }

@@ -111,9 +111,12 @@ type App struct {
 	history          []string // sessions shown, for Back and Forward
 	histPos          int
 	palette          paletteState
-	tier             planTier     // the workspace's plan, for the Free quota
-	quotaAnnounced   string       // the session whose closed composer was explained
-	quickReplies     []quickReply // as edited; nil for the defaults
+	createMem        map[string]*createMemory // New chat's remembered choices, by user and workspace
+	memProject       string                   // the project New chat last restored for
+	memAgentModel    string                   // the agent and model it last remembered
+	tier             planTier                 // the workspace's plan, for the Free quota
+	quotaAnnounced   string                   // the session whose closed composer was explained
+	quickReplies     []quickReply             // as edited; nil for the defaults
 	quickForm        quickReplyForm
 	composerFocused  bool      // the composer had the focus last frame
 	plan             planState // proposed plans' panels and decisions
@@ -278,6 +281,7 @@ func (a *App) Start(win *mygo.Window) {
 	if prefs.QuickReplies != nil {
 		a.quickReplies = *prefs.QuickReplies
 	}
+	a.createMem = prefs.CreateMemory
 	if a.language != "" {
 		mygo.App.SetLocale(a.language)
 	}
@@ -947,6 +951,8 @@ type prefs struct {
 	Experimental  bool    `json:"experimental,omitempty"`
 	// QuickReplies are the quick replies as edited; absent for lody-ios's.
 	QuickReplies *[]quickReply `json:"quickReplies,omitempty"`
+	// CreateMemory is New chat's remembered choices, as lody-ios's.
+	CreateMemory map[string]*createMemory `json:"createMemory,omitempty"`
 }
 
 func dataDir() string {
@@ -993,7 +999,7 @@ func (a *App) savePrefs() {
 	writeJSON("prefs.json", prefs{Workspace: a.workspaceID, Collapsed: a.collapsed, Appearance: a.appearance, Busy: a.busyBehavior, Sidebar: a.sidebarWidth, HomeBoard: a.homeBoard, Keys: a.keyOverrides,
 		Language: a.language, FontSize: a.fontSize, Wide: a.wideMode, InlineMath: a.inlineMath, ExtendedCode: a.extendedCode,
 		NoLigatures: !a.ligatures, CodeOnly: a.codeOnly, Notifications: a.notifications, Experimental: a.experimental,
-		QuickReplies: quick})
+		QuickReplies: quick, CreateMemory: a.createMem})
 }
 
 func loadAccount() *cloud.Account {
