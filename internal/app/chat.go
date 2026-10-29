@@ -189,6 +189,9 @@ func (a *App) conversation(c *ui.Context, p *palette, sess *catalog.Session) {
 		return i
 	}
 	a.chatList.FollowEnd = true
+	// What arrives glides up from below over 360ms, easing out as a cubic,
+	// as Lody scrolls to a message sent.
+	a.chatList.FollowAnimation = &chatGlide
 	// Keyed by session, so that each conversation fades in as it opens.
 	ui.List(c.Key("chat/"+a.selected), &a.chatList, len(entries)+1, func(i int) {
 		if i == len(entries) {
@@ -347,9 +350,8 @@ func (a *App) userMessage(c *ui.Context, p *palette, e session.Entry, firstQueue
 				entry := e
 				b := iconButton(c, p, iconPencil, locales.EditMessage(), p.Hover).Size(24, 24).Tooltip(locales.EditMessage()).
 					Transition(colorFade).OnClick(func() { a.startEdit(entry) })
-				if !hovered {
-					b.Opacity(0)
-				}
+				// The message's actions fade in with the pointer, over 150ms.
+				b.Opacity(b.AnimateWith("shown", b2f(hovered), 150*time.Millisecond, easeStandard))
 			}
 		})
 		ui.Box(c).Margin(28, 0, 0, 0).Children(func() {

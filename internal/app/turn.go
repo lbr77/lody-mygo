@@ -141,14 +141,18 @@ func disclosure(c *ui.Context, p *palette, label string, open, live bool, toggle
 	head := ui.Row(c).MinHeight(24).Gap(6).AlignItems(ui.Center).Cursor(ui.CursorPointer).Label(label).OnClick(toggle)
 	shown := head.AnimateWith("open", b2f(open), foldTime, easeStandard)
 	hovered := head.Hovered()
+	// Lody's chevron turns over 200ms easing out, and fades in with the
+	// pointer over 150ms.
+	turn := head.AnimateWith("chevron", b2f(open), 200*time.Millisecond, ui.EaseOut)
+	reveal := head.AnimateWith("reveal", b2f(hovered), 150*time.Millisecond, easeStandard)
 	head.Children(func() {
 		ink := p.Secondary
 		if hovered {
 			ink = p.Text
 		}
 		shimmerIf(c, p, live, func() { ui.Text(c, label).FontSize(sizeSub).TextColor(ink).SingleLine().MinWidth(0) })
-		if hovered {
-			ui.Icon(c, iconChevronRight).Size(13, 13).TextColor(ink).Rotate(90 * shown)
+		if reveal > 0 {
+			ui.Icon(c, iconChevronRight).Size(13, 13).TextColor(ink).Rotate(90 * turn).Opacity(reveal)
 		}
 	})
 	return shown
@@ -435,9 +439,8 @@ func diffCounts(c *ui.Context, p *palette, add, del int) {
 // it took.
 func (a *App) turnFooter(c *ui.Context, p *palette, e session.Entry, hovered bool) {
 	row := ui.Row(c).Height(24).Gap(4).AlignItems(ui.Center)
-	if !hovered {
-		row.Opacity(0)
-	}
+	// The reply's meta row fades in with the pointer, over 150ms.
+	row.Opacity(row.AnimateWith("shown", b2f(hovered), 150*time.Millisecond, easeStandard))
 	row.Children(func() {
 		iconButton(c, p, iconCopy, locales.Copy(), p.Hover).Size(24, 24).OnClick(func() {
 			var parts []string

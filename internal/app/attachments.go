@@ -234,7 +234,9 @@ func (a *App) sessionImage(c *ui.Context, p *palette, sessionID string, it sessi
 	ui.Box(c.Key(key)).Size(size, size).Radius(12).Clip().Background(p.Text.Alpha(0.05)).Label(firstNonEmpty(it.FileName, locales.Image())).Children(func() {
 		switch {
 		case img != nil && img.bitmap != nil:
-			ui.Image(c, img.bitmap).Size(size, size).Fit(ui.Cover)
+			// An image fades in as it arrives, over 180ms.
+			ui.Image(c.Key("bitmap"), img.bitmap).Size(size, size).Fit(ui.Cover).
+				Transition(ui.ElementTransition{Duration: durRegular, Ease: easeStandard, Enter: &ui.Motion{}})
 		case img != nil && img.loading:
 			ui.Box(c).Size(size, size).Center().Children(func() { spinner(c).Size(14, 14) })
 		default:

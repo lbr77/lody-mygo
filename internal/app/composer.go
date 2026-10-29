@@ -430,7 +430,10 @@ func (a *App) permissionCard(c *ui.Context, p *palette, e session.Entry, it sess
 			allow = append(allow, o)
 		}
 	}
-	card := ui.Column(c).FillWidth().Padding(12).Gap(8).Radius(14).Border(1, p.ComposerBorder).Background(p.Composer)
+	// The card comes up 8px as it fades in, over 320ms, as Lody's
+	// question cards arrive.
+	card := ui.Column(c.Key("ask/"+it.Permission.RequestID)).FillWidth().Padding(12).Gap(8).Radius(14).Border(1, p.ComposerBorder).Background(p.Composer).
+		Transition(ui.ElementTransition{Duration: durSlow, Ease: easeStandard, Enter: &ui.Motion{Y: 8}})
 	if !p.Dark {
 		card.Shadow(0, 10, 28, -14, ui.RGBA(0, 0, 0, 0.16))
 	}

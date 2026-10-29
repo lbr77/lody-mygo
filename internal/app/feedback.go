@@ -209,3 +209,12 @@ func spinner(c *ui.Context) ui.Element {
 		pt.StrokePolyline(arc(-0.25+float64(k), 0.25), width, ink)
 	})
 }
+
+// pulse breathes an element as Tailwind's animate-pulse, which Lody's live
+// marks use: to half opacity and back every 2s.
+func pulse(e ui.Element) ui.Element {
+	ease := ui.CubicBezier(0.4, 0, 0.6, 1)
+	k := e.Keyframes("pulse", []ui.Keyframe{{Value: 1}, {At: time.Second, Value: 0.5, Ease: ease}, {At: 2 * time.Second, Value: 1, Ease: ease}},
+		ui.KeyframeOptions{Repeat: ui.RepeatForever})
+	return e.Opacity(k)
+}

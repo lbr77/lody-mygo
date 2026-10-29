@@ -28,6 +28,8 @@ var (
 
 	// pressMotion sinks a button a pixel while it is held, as Lody's.
 	pressMotion = ui.Animation{Duration: fadeTime, Ease: easeStandard}
+	// chatGlide scrolls the conversation to what arrives.
+	chatGlide = ui.Animation{Duration: 360 * time.Millisecond, Ease: ui.CubicBezier(0.33, 1, 0.68, 1)}
 	// slideSpring opens and closes the sidebar, over 220ms.
 	slideSpring = ui.Animation{Duration: 220 * time.Millisecond, Ease: easeSheet}
 )

@@ -302,7 +302,10 @@ func (a *App) goalBanner(c *ui.Context, p *palette) {
 	open := a.expanded[key]
 	ui.Column(c).FillWidth().Padding(10, 16).Gap(6).Background(ink.Alpha(0.08)).BorderWidth(0, 0, 1, 0).BorderColor(ink.Alpha(0.3)).Children(func() {
 		ui.Row(c).FillWidth().Gap(8).AlignItems(ui.Center).Children(func() {
-			ui.Icon(c, iconTarget).Size(14, 14).TextColor(ink)
+			icon := ui.Icon(c.Key("goal-icon"), iconTarget).Size(14, 14).TextColor(ink)
+			if tone == "info" {
+				pulse(icon)
+			}
 			ui.Text(c, "Goal").FontSize(sizeFoot).FontWeight(600).TextColor(p.Text)
 			ui.Text(c, label).FontSize(sizeCaption).FontWeight(500).TextColor(ink).Padding(1, 7).Radius(9).Background(ink.Alpha(0.12))
 			var metrics []string
