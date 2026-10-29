@@ -164,7 +164,7 @@ type App struct {
 	wsJoin          workspaceJoin
 	referral        referrals
 	toasts          []ui.Toast // to show with the next frame
-	reviewSent      string // the sharing review last reconciled
+	reviewSent      string     // the sharing review last reconciled
 	reviewWriter    string
 	reviewAttempt   int
 	inboxAt         time.Time             // when the inbox was last asked for

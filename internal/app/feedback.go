@@ -66,7 +66,7 @@ func (a *App) toastViewport(c *ui.Context, p *palette) {
 			tt.Root.Children(func() {
 				ui.Icon(c, mark).Size(16, 16).TextColor(ink).Margin(1, 0, 0, 0)
 				ui.Column(c).Grow(1).MinWidth(0).Gap(4).Children(func() {
-					ui.Text(c, t.Title).FontSize(sizeSub).LineHeight(18.0/float32(sizeSub)).FontWeight(500).TextColor(p.Text)
+					ui.Text(c, t.Title).FontSize(sizeSub).LineHeight(18.0 / float32(sizeSub)).FontWeight(500).TextColor(p.Text)
 					if t.Description != "" {
 						ui.Text(c, t.Description).FontSize(sizeFoot).TextColor(p.Secondary)
 					}
@@ -83,7 +83,7 @@ func (a *App) toastViewport(c *ui.Context, p *palette) {
 // skeleton holds the room of something on its way, breathing from full to
 // .55 and back every 1.6s.
 func skeleton(c *ui.Context, p *palette, key string, height float32) ui.Element {
-	s := ui.Column(c.Key("skeleton-"+key)).Height(height).Radius(4).Background(p.Text.Alpha(0.08))
+	s := ui.Column(c.Key("skeleton-" + key)).Height(height).Radius(4).Background(p.Text.Alpha(0.08))
 	k := s.Keyframes("pulse", []ui.Keyframe{{Value: 1}, {At: 800 * time.Millisecond, Value: 0.55, Ease: easeLody}, {At: 1600 * time.Millisecond, Value: 1, Ease: easeLody}},
 		ui.KeyframeOptions{Repeat: ui.RepeatForever})
 	return s.Opacity(k)

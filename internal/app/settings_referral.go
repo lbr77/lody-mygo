@@ -211,7 +211,7 @@ func (a *App) referralCard(c *ui.Context, p *palette, canManage bool) {
 				}
 			})
 			ui.Column(c).AlignItems(ui.End).Shrink(0).Gap(2).Children(func() {
-				ui.Text(c, formatMoney(r.Available, "usd")).FontSize(sizeBody*1.25).FontWeight(500).TextColor(p.Strong).FontFeatures("tnum")
+				ui.Text(c, formatMoney(r.Available, "usd")).FontSize(sizeBody * 1.25).FontWeight(500).TextColor(p.Strong).FontFeatures("tnum")
 				ui.Row(c).Gap(4).AlignItems(ui.Center).Children(func() {
 					ui.Text(c, locales.ReferralAvailable()).FontSize(sizeFoot).TextColor(p.Secondary)
 					ui.Text(c, "·").FontSize(sizeFoot).TextColor(p.Secondary)
