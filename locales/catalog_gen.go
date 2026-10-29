@@ -18852,3 +18852,113 @@ func SidebarNavigationMenu() string { return In(i18n.Locale()).SidebarNavigation
 func (msgs Messages) SidebarNavigationMenu() string {
 	return Catalog.Format(msgs.locale, "sidebarNavigationMenu", nil)
 }
+
+// AskAnswered says "Answered"
+// in the language the app shows.
+func AskAnswered() string { return In(i18n.Locale()).AskAnswered() }
+
+// AskAnswered says "Answered"
+// in the language of msgs.
+func (msgs Messages) AskAnswered() string {
+	return Catalog.Format(msgs.locale, "askAnswered", nil)
+}
+
+// AskContinuesIn says "Continues in {seconds}s"
+// in the language the app shows.
+func AskContinuesIn(seconds int) string { return In(i18n.Locale()).AskContinuesIn(seconds) }
+
+// AskContinuesIn says "Continues in {seconds}s"
+// in the language of msgs.
+func (msgs Messages) AskContinuesIn(seconds int) string {
+	return Catalog.Format(msgs.locale, "askContinuesIn", map[string]any{"seconds": seconds})
+}
+
+// AskContinuing says "Continuing"
+// in the language the app shows.
+func AskContinuing() string { return In(i18n.Locale()).AskContinuing() }
+
+// AskContinuing says "Continuing"
+// in the language of msgs.
+func (msgs Messages) AskContinuing() string {
+	return Catalog.Format(msgs.locale, "askContinuing", nil)
+}
+
+// AskNoteLabel says "Additional context (optional)"
+// in the language the app shows.
+func AskNoteLabel() string { return In(i18n.Locale()).AskNoteLabel() }
+
+// AskNoteLabel says "Additional context (optional)"
+// in the language of msgs.
+func (msgs Messages) AskNoteLabel() string {
+	return Catalog.Format(msgs.locale, "askNoteLabel", nil)
+}
+
+// AskGoToQuestion says "Go to question {n}"
+// in the language the app shows.
+func AskGoToQuestion(n int) string { return In(i18n.Locale()).AskGoToQuestion(n) }
+
+// AskGoToQuestion says "Go to question {n}"
+// in the language of msgs.
+func (msgs Messages) AskGoToQuestion(n int) string {
+	return Catalog.Format(msgs.locale, "askGoToQuestion", map[string]any{"n": n})
+}
+
+// AskNext says "Next"
+// in the language the app shows.
+func AskNext() string { return In(i18n.Locale()).AskNext() }
+
+// AskNext says "Next"
+// in the language of msgs.
+func (msgs Messages) AskNext() string {
+	return Catalog.Format(msgs.locale, "askNext", nil)
+}
+
+// AskPrev says "Prev"
+// in the language the app shows.
+func AskPrev() string { return In(i18n.Locale()).AskPrev() }
+
+// AskPrev says "Prev"
+// in the language of msgs.
+func (msgs Messages) AskPrev() string {
+	return Catalog.Format(msgs.locale, "askPrev", nil)
+}
+
+// AskProgress says "Progress"
+// in the language the app shows.
+func AskProgress() string { return In(i18n.Locale()).AskProgress() }
+
+// AskProgress says "Progress"
+// in the language of msgs.
+func (msgs Messages) AskProgress() string {
+	return Catalog.Format(msgs.locale, "askProgress", nil)
+}
+
+// AskSubmit says "Submit"
+// in the language the app shows.
+func AskSubmit() string { return In(i18n.Locale()).AskSubmit() }
+
+// AskSubmit says "Submit"
+// in the language of msgs.
+func (msgs Messages) AskSubmit() string {
+	return Catalog.Format(msgs.locale, "askSubmit", nil)
+}
+
+// AskCustomAnswer says "Type a custom answer..."
+// in the language the app shows.
+func AskCustomAnswer() string { return In(i18n.Locale()).AskCustomAnswer() }
+
+// AskCustomAnswer says "Type a custom answer..."
+// in the language of msgs.
+func (msgs Messages) AskCustomAnswer() string {
+	return Catalog.Format(msgs.locale, "askCustomAnswer", nil)
+}
+
+// AskSendFailed says "Your answer didn't reach the agent. Try again."
+// in the language the app shows.
+func AskSendFailed() string { return In(i18n.Locale()).AskSendFailed() }
+
+// AskSendFailed says "Your answer didn't reach the agent. Try again."
+// in the language of msgs.
+func (msgs Messages) AskSendFailed() string {
+	return Catalog.Format(msgs.locale, "askSendFailed", nil)
+}

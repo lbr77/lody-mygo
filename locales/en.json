@@ -3697,5 +3697,30 @@
     }
   },
   "panelResize": "Resize panel",
-  "sidebarNavigationMenu": "Navigation Menu"
+  "sidebarNavigationMenu": "Navigation Menu",
+  "askAnswered": "Answered",
+  "askContinuesIn": "Continues in {seconds}s",
+  "@askContinuesIn": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "askContinuing": "Continuing",
+  "askNoteLabel": "Additional context (optional)",
+  "askGoToQuestion": "Go to question {n}",
+  "@askGoToQuestion": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "askNext": "Next",
+  "askPrev": "Prev",
+  "askProgress": "Progress",
+  "askSubmit": "Submit",
+  "askCustomAnswer": "Type a custom answer...",
+  "askSendFailed": "Your answer didn't reach the agent. Try again."
 }

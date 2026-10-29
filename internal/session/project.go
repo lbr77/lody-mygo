@@ -59,6 +59,10 @@ type Permission struct {
 	Pending   bool
 	Question  bool
 	Options   []Option
+	// Questions are what an AskUserQuestion request asks, and Answers
+	// what its outcome answered; nil for other requests.
+	Questions *AskQuestions
+	Answers   AskAnswers
 }
 
 type Option struct {
@@ -362,10 +366,13 @@ func summarizeItem(raw map[string]any, identity string) Item {
 		it.Content, it.RawInput, it.RawOutput = list(raw["content"]), raw["rawInput"], raw["rawOutput"]
 		it.HasDetail = len(it.Content) > 0 || it.RawInput != nil || it.RawOutput != nil
 		if req := obj(raw["permissionRequest"]); req != nil {
+			qs := ParseAskQuestions(obj(req["_meta"]))
 			p := &Permission{
 				RequestID: fmt.Sprint(orEmpty(req["requestId"])),
 				Pending:   req["outcome"] == nil,
-				Question:  req["kind"] == "ask_user_question" || raw["kind"] == "ask_user_question" || req["_meta"] != nil && obj(req["_meta"])["questions"] != nil,
+				Question:  qs != nil || req["kind"] == "ask_user_question" || raw["kind"] == "ask_user_question",
+				Questions: qs,
+				Answers:   ExtractAskAnswers(qs, obj(req["outcome"])),
 			}
 			for _, o := range list(req["options"]) {
 				opt := obj(o)
