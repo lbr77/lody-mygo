@@ -20220,3 +20220,145 @@ func GroupUnsupportedRepositoryMembers() string {
 func (msgs Messages) GroupUnsupportedRepositoryMembers() string {
 	return Catalog.Format(msgs.locale, "groupUnsupportedRepositoryMembers", nil)
 }
+
+// RunMembers says "Repositories"
+// in the language the app shows.
+func RunMembers() string { return In(i18n.Locale()).RunMembers() }
+
+// RunMembers says "Repositories"
+// in the language of msgs.
+func (msgs Messages) RunMembers() string {
+	return Catalog.Format(msgs.locale, "runMembers", nil)
+}
+
+// RunMembersSummary says "{repos} repositories · {prs} PRs"
+// in the language the app shows.
+func RunMembersSummary(repos int, prs int) string {
+	return In(i18n.Locale()).RunMembersSummary(repos, prs)
+}
+
+// RunMembersSummary says "{repos} repositories · {prs} PRs"
+// in the language of msgs.
+func (msgs Messages) RunMembersSummary(repos int, prs int) string {
+	return Catalog.Format(msgs.locale, "runMembersSummary", map[string]any{"repos": repos, "prs": prs})
+}
+
+// RunOpenPr says "Open pull request #{number}"
+// in the language the app shows.
+func RunOpenPr(number int) string { return In(i18n.Locale()).RunOpenPr(number) }
+
+// RunOpenPr says "Open pull request #{number}"
+// in the language of msgs.
+func (msgs Messages) RunOpenPr(number int) string {
+	return Catalog.Format(msgs.locale, "runOpenPr", map[string]any{"number": number})
+}
+
+// RunInPlace says "Original directory · not isolated"
+// in the language the app shows.
+func RunInPlace() string { return In(i18n.Locale()).RunInPlace() }
+
+// RunInPlace says "Original directory · not isolated"
+// in the language of msgs.
+func (msgs Messages) RunInPlace() string {
+	return Catalog.Format(msgs.locale, "runInPlace", nil)
+}
+
+// InfoCreatePr says "Create PR"
+// in the language the app shows.
+func InfoCreatePr() string { return In(i18n.Locale()).InfoCreatePr() }
+
+// InfoCreatePr says "Create PR"
+// in the language of msgs.
+func (msgs Messages) InfoCreatePr() string {
+	return Catalog.Format(msgs.locale, "infoCreatePr", nil)
+}
+
+// InfoCreateDraftPr says "Create Draft PR"
+// in the language the app shows.
+func InfoCreateDraftPr() string { return In(i18n.Locale()).InfoCreateDraftPr() }
+
+// InfoCreateDraftPr says "Create Draft PR"
+// in the language of msgs.
+func (msgs Messages) InfoCreateDraftPr() string {
+	return Catalog.Format(msgs.locale, "infoCreateDraftPr", nil)
+}
+
+// InfoCommitAndPush says "Commit & Push"
+// in the language the app shows.
+func InfoCommitAndPush() string { return In(i18n.Locale()).InfoCommitAndPush() }
+
+// InfoCommitAndPush says "Commit & Push"
+// in the language of msgs.
+func (msgs Messages) InfoCommitAndPush() string {
+	return Catalog.Format(msgs.locale, "infoCommitAndPush", nil)
+}
+
+// PromptCreatePr says "Create a PR for the current worktree (a regular PR, not a draft). Use `gh` from the current PATH. `gh` signs in with …"
+// in the language the app shows.
+func PromptCreatePr() string { return In(i18n.Locale()).PromptCreatePr() }
+
+// PromptCreatePr says "Create a PR for the current worktree (a regular PR, not a draft). Use `gh` from the current PATH. `gh` signs in with …"
+// in the language of msgs.
+func (msgs Messages) PromptCreatePr() string {
+	return Catalog.Format(msgs.locale, "promptCreatePr", nil)
+}
+
+// PromptCreateDraftPr says "Create a draft PR for the current worktree. Use `gh` from the current PATH. `gh` signs in with the GitHub login saved…"
+// in the language the app shows.
+func PromptCreateDraftPr() string { return In(i18n.Locale()).PromptCreateDraftPr() }
+
+// PromptCreateDraftPr says "Create a draft PR for the current worktree. Use `gh` from the current PATH. `gh` signs in with the GitHub login saved…"
+// in the language of msgs.
+func (msgs Messages) PromptCreateDraftPr() string {
+	return Catalog.Format(msgs.locale, "promptCreateDraftPr", nil)
+}
+
+// PromptCommitAndPush says "Publish the current branch: commit anything uncommitted, then push to the remote branch.\n\nInstructions:\n- Generate a …"
+// in the language the app shows.
+func PromptCommitAndPush() string { return In(i18n.Locale()).PromptCommitAndPush() }
+
+// PromptCommitAndPush says "Publish the current branch: commit anything uncommitted, then push to the remote branch.\n\nInstructions:\n- Generate a …"
+// in the language of msgs.
+func (msgs Messages) PromptCommitAndPush() string {
+	return Catalog.Format(msgs.locale, "promptCommitAndPush", nil)
+}
+
+// PromptPrUpkeep says "After the PR exists, keep it current: at the end of every turn in this conversation, commit any outstanding changes a…"
+// in the language the app shows.
+func PromptPrUpkeep() string { return In(i18n.Locale()).PromptPrUpkeep() }
+
+// PromptPrUpkeep says "After the PR exists, keep it current: at the end of every turn in this conversation, commit any outstanding changes a…"
+// in the language of msgs.
+func (msgs Messages) PromptPrUpkeep() string {
+	return Catalog.Format(msgs.locale, "promptPrUpkeep", nil)
+}
+
+// PromptCreatePrOrigin says "(Sent by the **Create PR** button in Lody.)"
+// in the language the app shows.
+func PromptCreatePrOrigin() string { return In(i18n.Locale()).PromptCreatePrOrigin() }
+
+// PromptCreatePrOrigin says "(Sent by the **Create PR** button in Lody.)"
+// in the language of msgs.
+func (msgs Messages) PromptCreatePrOrigin() string {
+	return Catalog.Format(msgs.locale, "promptCreatePrOrigin", nil)
+}
+
+// PromptCreateDraftPrOrigin says "(Sent by the **Create Draft PR** button in Lody.)"
+// in the language the app shows.
+func PromptCreateDraftPrOrigin() string { return In(i18n.Locale()).PromptCreateDraftPrOrigin() }
+
+// PromptCreateDraftPrOrigin says "(Sent by the **Create Draft PR** button in Lody.)"
+// in the language of msgs.
+func (msgs Messages) PromptCreateDraftPrOrigin() string {
+	return Catalog.Format(msgs.locale, "promptCreateDraftPrOrigin", nil)
+}
+
+// SidebarGroupReorder says "Reorder project"
+// in the language the app shows.
+func SidebarGroupReorder() string { return In(i18n.Locale()).SidebarGroupReorder() }
+
+// SidebarGroupReorder says "Reorder project"
+// in the language of msgs.
+func (msgs Messages) SidebarGroupReorder() string {
+	return Catalog.Format(msgs.locale, "sidebarGroupReorder", nil)
+}

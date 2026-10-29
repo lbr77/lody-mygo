@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"path"
+	"slices"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -104,14 +105,17 @@ func (a *App) inspectFor(id string) *inspectState {
 	return a.inspect
 }
 
-// collabSession is where the open session's files are.
+// collabSession is where the open session's files are: in a project of
+// several, with the members that are roots of their own mounted at their
+// directories.
 func (a *App) collabSession() (collab.Session, bool) {
 	s := a.catalog.Session(a.selected)
 	if s == nil || a.conn == nil || a.account == nil {
 		return collab.Session{}, false
 	}
 	_, local, _ := strings.Cut(s.ProjectID, ":local:")
-	return collab.Session{Machine: s.MachineID, LocalProject: local, ID: s.ID, Owner: firstNonEmpty(s.ParentSessionID, s.ID), User: a.account.User.ID}, true
+	return collab.Session{Machine: s.MachineID, LocalProject: local, ID: s.ID, Owner: firstNonEmpty(s.ParentSessionID, s.ID), User: a.account.User.ID,
+		Mounts: a.fileMounts(s)}, true
 }
 
 // refreshInspector forgets what the shown tab fetched, so it fetches anew.
@@ -189,7 +193,9 @@ func (a *App) deferredChange(in *inspectState, cs *changesState, file string) *c
 	return nil
 }
 
-// listDir returns a folder of the project, listing it the first time.
+// listDir returns a folder of the project, listing it the first time. A
+// member mounted at its directory lists from its own folder; the
+// project's top lists those directories too.
 func (a *App) listDir(in *inspectState, s collab.Session, rel string) *dirListing {
 	if l := in.dirs[rel]; l != nil {
 		return l
@@ -197,10 +203,22 @@ func (a *App) listDir(in *inspectState, s collab.Session, rel string) *dirListin
 	l := &dirListing{loading: true}
 	in.dirs[rel] = l
 	conn := a.conn
+	at, within := s, rel
+	if m, inside := s.MountOf(rel); m != nil {
+		at.LocalProject, within = m.LocalProject, inside
+	}
 	go func() {
 		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		defer cancel()
-		entries, truncated, err := collab.ListDir(ctx, conn, s, rel)
+		var entries []collab.DirEntry
+		var truncated bool
+		var err error
+		if at.LocalProject != "" {
+			entries, truncated, err = collab.ListDir(ctx, conn, at, within)
+		}
+		if rel == "" {
+			entries = mountEntries(entries, s.Mounts)
+		}
 		a.update(func() {
 			l.loading, l.entries, l.truncated = false, entries, truncated
 			if err != nil {
@@ -209,6 +227,25 @@ func (a *App) listDir(in *inspectState, s collab.Session, rel string) *dirListin
 		})
 	}()
 	return l
+}
+
+// mountEntries are a top's entries with the directories the mounted
+// members show at, as Lody's file tree has them where a link would put
+// them; an entry of the same name gives way.
+func mountEntries(entries []collab.DirEntry, mounts []collab.Mount) []collab.DirEntry {
+	if len(mounts) == 0 {
+		return entries
+	}
+	out := append([]collab.DirEntry(nil), entries...)
+	for _, m := range mounts {
+		if strings.Contains(m.Path, "/") {
+			continue
+		}
+		out = slices.DeleteFunc(out, func(e collab.DirEntry) bool { return e.Name == m.Path })
+		out = append(out, collab.DirEntry{Name: m.Path, Type: "directory"})
+	}
+	collab.SortEntries(out)
+	return out
 }
 
 // treeRow is a row of the file tree: an entry at a depth, or a folder's
@@ -279,6 +316,8 @@ func (a *App) loadFileIndex(in *inspectState, s collab.Session) {
 				Change json.RawMessage `json:"change"`
 			}
 			if json.Unmarshal(v, &entry) == nil && len(entry.Change) > 0 && string(entry.Change) != "null" {
+				// A member's file is marked at its directory.
+				p = s.Display(p)
 				changed[p] = true
 				// Its folders hold a change too.
 				for dir := path.Dir(p); dir != "." && dir != "/"; dir = path.Dir(dir) {
@@ -298,7 +337,7 @@ func (a *App) fileBrowser(c *ui.Context, p *palette, in *inspectState, s collab.
 		a.fileView(c, p, in, s)
 		return
 	}
-	if s.LocalProject == "" {
+	if s.LocalProject == "" && len(s.Mounts) == 0 {
 		panelStatus(c, p, false, locales.PanelNoFiles(), locales.PanelNoFilesHint())
 		return
 	}

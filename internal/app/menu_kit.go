@@ -43,6 +43,9 @@ type menuItem struct {
 	// indicator draws the icon in the label's ink: a tick or a radio dot
 	// saying what is chosen, as @lody/ui's indicator, not a hint.
 	indicator bool
+	// bare leaves out the icon's box, as @lody/ui's row with neither an
+	// icon nor an inset.
+	bare bool
 }
 
 // row lays out a row: its icon box, label and end, highlighted while the
@@ -74,11 +77,13 @@ func (m *lodyMenu) row(key string, icon *ui.SVG, label string, o menuItem, extra
 		ink, hint = p.Danger, p.Danger
 	}
 	r.Children(func() {
-		ui.Box(c).Size(16, 16).Shrink(0).Center().Children(func() {
-			if icon != nil {
-				ui.Icon(c, icon).Size(16, 16).TextColor(hint)
-			}
-		})
+		if !o.bare {
+			ui.Box(c).Size(16, 16).Shrink(0).Center().Children(func() {
+				if icon != nil {
+					ui.Icon(c, icon).Size(16, 16).TextColor(hint)
+				}
+			})
+		}
 		if o.detail == "" {
 			ui.Text(c, label).FontSize(sizeSub).TextColor(ink).SingleLine().Grow(1).MinWidth(0)
 		} else {

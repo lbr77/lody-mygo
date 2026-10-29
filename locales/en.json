@@ -4033,5 +4033,36 @@
     }
   },
   "groupUnsupportedMachine": "Update Lody on this machine to start conversations in multi-repository projects.",
-  "groupUnsupportedRepositoryMembers": "Update Lody on this machine to use its copies of these repositories."
+  "groupUnsupportedRepositoryMembers": "Update Lody on this machine to use its copies of these repositories.",
+  "runMembers": "Repositories",
+  "runMembersSummary": "{repos} repositories · {prs} PRs",
+  "@runMembersSummary": {
+    "placeholders": {
+      "repos": {
+        "type": "int"
+      },
+      "prs": {
+        "type": "int"
+      }
+    }
+  },
+  "runOpenPr": "Open pull request #{number}",
+  "@runOpenPr": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "runInPlace": "Original directory · not isolated",
+  "infoCreatePr": "Create PR",
+  "infoCreateDraftPr": "Create Draft PR",
+  "infoCommitAndPush": "Commit & Push",
+  "promptCreatePr": "Create a PR for the current worktree (a regular PR, not a draft). Use `gh` from the current PATH. `gh` signs in with the GitHub login saved on this machine, which sandboxed commands usually cannot read, so run the `gh` commands that talk to GitHub outside the sandbox (request approval if your tool requires it). Ask the user to log in only if authentication still fails there. Verify that the pushed commit matches the PR head, then report the PR URL.",
+  "promptCreateDraftPr": "Create a draft PR for the current worktree. Use `gh` from the current PATH. `gh` signs in with the GitHub login saved on this machine, which sandboxed commands usually cannot read, so run the `gh` commands that talk to GitHub outside the sandbox (request approval if your tool requires it). Ask the user to log in only if authentication still fails there. Verify that the pushed commit matches the PR head, then report the PR URL.",
+  "promptCommitAndPush": "Publish the current branch: commit anything uncommitted, then push to the remote branch.\n\nInstructions:\n- Generate a concise, descriptive commit message based on the changes\n- Stage all changes (git add -A)\n- Commit with the generated message\n- If the working tree is already clean, skip the commit — the branch may simply\n  hold commits that were never pushed\n- Push to the current branch, and report it if the push fails",
+  "promptPrUpkeep": "After the PR exists, keep it current: at the end of every turn in this conversation, commit any outstanding changes and push them to the PR branch before you finish, so the PR head always matches your latest work. Treat this as the default rather than something to ask about each time. Skip it only when the user interrupts you or asks for something that overrides it — in that case say so instead of pushing silently.",
+  "promptCreatePrOrigin": "(Sent by the **Create PR** button in Lody.)",
+  "promptCreateDraftPrOrigin": "(Sent by the **Create Draft PR** button in Lody.)",
+  "sidebarGroupReorder": "Reorder project"
 }

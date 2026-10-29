@@ -145,12 +145,17 @@ func bottomColumnFull(c *ui.Context, full bool, fn func()) {
 }
 
 // infoBar shows where the session runs: its machine, project, branch and
-// changes.
+// changes. In a project of several, its Repositories follow the machine,
+// as Lody's cluster has them, and the project, branch and changes are
+// the member chosen there's. Its GitHub actions end it.
 func (a *App) infoBar(c *ui.Context, p *palette, s *catalog.Session) {
 	bar := ui.Row(c).Height(32).Radius(8).Border(0.5, p.Text.Alpha(0.1)).Background(p.Composer).Padding(0, 8, 0, 4).Gap(6).AlignItems(ui.Center)
 	if !p.Dark {
 		bar.Shadow(0, 0.5, 1, 1, ui.RGBA(0, 0, 0, 0.04))
 	}
+	ctx := a.infoContext(s)
+	owner, members, picked := a.projectMembers(s)
+	actions := a.infoActions(s)
 	bar.Children(func() {
 		ui.Row(c).Height(24).Padding(0, 6).Radius(6).Gap(4).AlignItems(ui.Center).Shrink(0).Children(func() {
 			ui.Icon(c, iconMonitor).Size(14, 14).TextColor(p.Secondary)
@@ -159,28 +164,27 @@ func (a *App) infoBar(c *ui.Context, p *palette, s *catalog.Session) {
 				offlinePill(c, p)
 			}
 		})
-		project := a.catalog.Project(s.ProjectID)
-		if project != nil || s.BranchName != "" {
+		if len(members) > 0 {
+			a.membersChip(c, p, bar, owner, members, picked)
+		}
+		if ctx.name != "" || ctx.branch != "" {
 			ui.Box(c).Size(1, 14).Background(p.SideMuted.Alpha(0.25)).Shrink(0)
 		}
-		if project != nil {
-			icon := iconFolder
-			if strings.HasPrefix(project.ID, "github:") {
-				icon = iconBranch
-			}
-			ui.Icon(c, icon).Size(14, 14).TextColor(p.Secondary)
-			ui.Text(c, project.Name).FontSize(sizeFoot).TextColor(p.Secondary).SingleLine().MinWidth(0).Shrink(1)
+		if ctx.name != "" {
+			ui.Icon(c, ctx.icon).Size(14, 14).TextColor(p.Secondary)
+			ui.Text(c, ctx.name).FontSize(sizeFoot).TextColor(p.Secondary).SingleLine().MinWidth(0).Shrink(1)
 		}
-		if s.BranchName != "" {
+		if ctx.branch != "" {
 			ui.Icon(c, iconBranch).Size(14, 14).TextColor(p.Secondary)
-			ui.Text(c, s.BranchName).FontSize(sizeFoot).TextColor(p.Reading).SingleLine().MinWidth(0).Shrink(1)
+			ui.Text(c, ctx.branch).FontSize(sizeFoot).TextColor(p.Reading).SingleLine().MinWidth(0).Shrink(1)
 		}
 		ui.Spacer(c)
-		if s.DiffAdd > 0 || s.DiffDel > 0 {
+		if ctx.diff {
 			ui.Row(c).Height(20).Padding(0, 6).Radius(5).Gap(4).AlignItems(ui.Center).Background(p.Text.Alpha(0.06)).Shrink(0).Children(func() {
-				diffCounts(c, p, int(s.DiffAdd), int(s.DiffDel))
+				diffCounts(c, p, ctx.add, ctx.del)
 			})
 		}
+		a.infoActionsView(c, p, s, actions)
 	})
 }
 

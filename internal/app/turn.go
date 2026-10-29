@@ -498,6 +498,9 @@ func (a *App) editedFiles(c *ui.Context, p *palette, e session.Entry) {
 			height = 36
 		}
 		for _, d := range shown {
+			// A member's file of a project of several shows at its
+			// directory, and opens from there.
+			d.Path = a.displayPath(d.Path)
 			dir, file := path.Split(d.Path)
 			full := d.Path
 			// A row fills under the pointer over 150ms, Tailwind's

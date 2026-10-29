@@ -47,6 +47,7 @@ type sideRow struct {
 	top     float32 // space above the row
 	opened  int     // the sessions it opened, nested under it
 	last    bool    // the last nested under its opener, where the trunk ends
+	reorder bool    // a project of several that drags among its machine's others
 }
 
 // machineLabel is a machine's name without the ".local" of mDNS hosts.
@@ -173,11 +174,19 @@ func (a *App) sideRows() []sideRow {
 				addSessions(group, list, true, projectPreview)
 			}
 		}
-		// Its projects of several after its folders, as Lody's.
+		// Its projects of several after its folders, as Lody's; those
+		// still defined reorder, when there are two or more.
+		defined := 0
+		for _, g := range groups[machine] {
+			if !g.removed {
+				defined++
+			}
+		}
 		for _, g := range groups[machine] {
 			group := "group:" + g.id
 			list := byGroup[g.id]
-			rows = append(rows, sideRow{kind: rowGroup, key: "g:" + g.id, group: group, label: g.name, machine: machine, project: g.id, count: len(list)})
+			rows = append(rows, sideRow{kind: rowGroup, key: "g:" + g.id, group: group, label: g.name, machine: machine, project: g.id, count: len(list),
+				reorder: !g.removed && defined > 1})
 			if !a.collapsed[group] {
 				addSessions(group, list, true, projectPreview)
 			}
@@ -190,7 +199,8 @@ func (a *App) sideRows() []sideRow {
 }
 
 func (a *App) sidebar(c *ui.Context, p *palette) ui.Element {
-	return ui.Column(c).Width(a.sidebarW()).Shrink(0).Children(func() {
+	col := ui.Column(c).Width(a.sidebarW()).Shrink(0)
+	return col.Children(func() {
 		// The traffic lights sit on the left of this row.
 		ui.Row(c).Height(titleBarHeight).Shrink(0).AlignItems(ui.Center).Justify(ui.End).Padding(0, 6).Gap(2).DragWindow().Children(func() {
 			iconButton(c, p, iconSidebar, locales.SidebarToggle(), p.SideHover).OnClick(func() { a.sidebarHidden = true })
@@ -219,6 +229,15 @@ func (a *App) sidebar(c *ui.Context, p *palette) ui.Element {
 			})
 		})
 		rows := a.sideRows()
+		// Where the pointer is, asked only while a project's grip is held,
+		// as asking brings a frame on every move over the sidebar.
+		a.groupDrag.pointer = func() (float32, float32) {
+			x, y, _ := col.PointerPosition()
+			b := col.LayoutBounds()
+			return b.X + x, b.Y + y
+		}
+		defer func() { a.groupDrag.pointer = nil }()
+		a.trackGroupDrag(c, rows)
 		a.sessionList.Key = func(i int) any {
 			if i < len(rows) {
 				return rows[i].key
@@ -404,6 +423,7 @@ func (a *App) projectRow(c *ui.Context, p *palette, r sideRow) {
 func (a *App) moreRow(c *ui.Context, p *palette, r sideRow) {
 	row := ui.Row(c.Key(r.key)).Height(28).Padding(4, 8, 4, 37).Radius(6).AlignItems(ui.Center).Cursor(ui.CursorPointer).
 		Label(locales.SidebarShowAll(r.count)).OnClick(func() { a.showAll[r.group] = true }).Transition(twFade)
+	a.groupBlockMotion(row, r)
 	ink := p.SideMuted.Alpha(0.8)
 	if row.Hovered() {
 		row.Background(p.SideHover)
@@ -424,6 +444,7 @@ func (a *App) sessionRow(c *ui.Context, p *palette, r sideRow) {
 	} else {
 		row.Height(26).Padding(3, 8).Radius(8)
 	}
+	a.groupBlockMotion(row, r)
 	hovered := row.Hovered()
 	switch {
 	case selected:
