@@ -155,15 +155,9 @@
       }
     }
   },
-  "deliveryQueued": "Queued",
-  "deliverySendingNext": "Sending next",
   "deliverySteerUnconfirmed": "Steer unconfirmed",
   "deliverySteering": "Steering…",
   "deliverySteered": "Steered",
-  "queuedSteer": "Steer",
-  "queuedSteerTooltip": "Give this message to the running turn",
-  "queuedSendNow": "Send now",
-  "queuedSendNowTooltip": "Stop the running turn and send this next",
   "worked": "Worked",
   "workedFor": "Worked for {duration}",
   "@workedFor": {

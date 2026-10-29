@@ -717,26 +717,6 @@ func (msgs Messages) MessageEarlier(time_ time.Time) string {
 	return Catalog.Format(msgs.locale, "messageEarlier", map[string]any{"time": time_})
 }
 
-// DeliveryQueued says "Queued"
-// in the language the app shows.
-func DeliveryQueued() string { return In(i18n.Locale()).DeliveryQueued() }
-
-// DeliveryQueued says "Queued"
-// in the language of msgs.
-func (msgs Messages) DeliveryQueued() string {
-	return Catalog.Format(msgs.locale, "deliveryQueued", nil)
-}
-
-// DeliverySendingNext says "Sending next"
-// in the language the app shows.
-func DeliverySendingNext() string { return In(i18n.Locale()).DeliverySendingNext() }
-
-// DeliverySendingNext says "Sending next"
-// in the language of msgs.
-func (msgs Messages) DeliverySendingNext() string {
-	return Catalog.Format(msgs.locale, "deliverySendingNext", nil)
-}
-
 // DeliverySteerUnconfirmed says "Steer unconfirmed"
 // in the language the app shows.
 func DeliverySteerUnconfirmed() string { return In(i18n.Locale()).DeliverySteerUnconfirmed() }
@@ -765,46 +745,6 @@ func DeliverySteered() string { return In(i18n.Locale()).DeliverySteered() }
 // in the language of msgs.
 func (msgs Messages) DeliverySteered() string {
 	return Catalog.Format(msgs.locale, "deliverySteered", nil)
-}
-
-// QueuedSteer says "Steer"
-// in the language the app shows.
-func QueuedSteer() string { return In(i18n.Locale()).QueuedSteer() }
-
-// QueuedSteer says "Steer"
-// in the language of msgs.
-func (msgs Messages) QueuedSteer() string {
-	return Catalog.Format(msgs.locale, "queuedSteer", nil)
-}
-
-// QueuedSteerTooltip says "Give this message to the running turn"
-// in the language the app shows.
-func QueuedSteerTooltip() string { return In(i18n.Locale()).QueuedSteerTooltip() }
-
-// QueuedSteerTooltip says "Give this message to the running turn"
-// in the language of msgs.
-func (msgs Messages) QueuedSteerTooltip() string {
-	return Catalog.Format(msgs.locale, "queuedSteerTooltip", nil)
-}
-
-// QueuedSendNow says "Send now"
-// in the language the app shows.
-func QueuedSendNow() string { return In(i18n.Locale()).QueuedSendNow() }
-
-// QueuedSendNow says "Send now"
-// in the language of msgs.
-func (msgs Messages) QueuedSendNow() string {
-	return Catalog.Format(msgs.locale, "queuedSendNow", nil)
-}
-
-// QueuedSendNowTooltip says "Stop the running turn and send this next"
-// in the language the app shows.
-func QueuedSendNowTooltip() string { return In(i18n.Locale()).QueuedSendNowTooltip() }
-
-// QueuedSendNowTooltip says "Stop the running turn and send this next"
-// in the language of msgs.
-func (msgs Messages) QueuedSendNowTooltip() string {
-	return Catalog.Format(msgs.locale, "queuedSendNowTooltip", nil)
 }
 
 // Worked says "Worked"
