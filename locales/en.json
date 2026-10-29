@@ -3658,5 +3658,42 @@
   "copyCode": "Copy code",
   "copied": "Copied",
   "copyTable": "Copy table",
-  "projectPickerClear": "Don't work in a project"
+  "projectPickerClear": "Don't work in a project",
+  "archiveExitSelection": "Exit selection",
+  "archiveSelectedCount": "{count} selected",
+  "@archiveSelectedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "archiveBulkRestore": "Restore",
+  "archiveBulkDelete": "Delete",
+  "archiveBulkDeleteTitle": "Delete {count} sessions permanently?",
+  "@archiveBulkDeleteTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "archiveBulkDeleteMixed": "This will delete the selected sessions. Code sessions will also have their worktree directories removed from your machine.",
+  "archiveBulkDeleteChatOnly": "This will permanently delete the selected sessions.",
+  "archiveSelectRow": "Select {title}",
+  "@archiveSelectRow": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "archiveSelectGroup": "Select all in {label}",
+  "@archiveSelectGroup": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  }
 }

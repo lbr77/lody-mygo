@@ -1859,5 +1859,14 @@
   "copyCode": "复制代码",
   "copied": "已复制",
   "copyTable": "复制表格",
-  "projectPickerClear": "不在项目中工作"
+  "projectPickerClear": "不在项目中工作",
+  "archiveExitSelection": "退出选择",
+  "archiveSelectedCount": "已选择 {count} 项",
+  "archiveBulkRestore": "恢复",
+  "archiveBulkDelete": "删除",
+  "archiveBulkDeleteTitle": "确认永久删除 {count} 个会话？",
+  "archiveBulkDeleteMixed": "此操作将删除所选会话。代码会话还会移除本机上对应的worktree 目录。",
+  "archiveBulkDeleteChatOnly": "此操作将永久删除所选会话。",
+  "archiveSelectRow": "选择 {title}",
+  "archiveSelectGroup": "全选 {label}"
 }

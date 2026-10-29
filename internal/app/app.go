@@ -280,7 +280,10 @@ type App struct {
 	taskID           string
 	page             string // "archive", or "" for chats
 	archiveSearch    string
-	mention          mentionState // the composer's mention panel
+	archivePick      map[string]bool // the archived sessions chosen, while choosing several
+	archiveBulk      string          // the bulk action under way: restore or delete
+	archiveBulkOpen  bool            // the bulk delete's confirmation shows
+	mention          mentionState    // the composer's mention panel
 	mentionSources   map[string]*mentionSource
 	diffs            map[string]*editor.DiffState // tool diffs of the open session
 	md               markdown.Options

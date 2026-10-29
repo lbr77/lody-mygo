@@ -19,9 +19,14 @@ import (
 // its hover actions.
 func (a *App) archiveView(c *ui.Context, p *palette) {
 	left := a.barInset(16)
+	a.pruneArchivePick()
 	ui.Row(c).Height(titleBarHeight).Shrink(0).AlignItems(ui.Center).Padding(0, 12, 0, left).Gap(8).DragWindow().Children(func() {
 		if a.sidebarHidden {
 			iconButton(c, p, iconSidebar, locales.SidebarToggle(), p.Hover).OnClick(func() { a.sidebarHidden = false })
+		}
+		if a.archivePicking() {
+			a.archivePickBar(c, p)
+			return
 		}
 		ui.Icon(c, iconArchive).Size(16, 16).TextColor(p.Text)
 		ui.Text(c, locales.ArchiveTitle()).FontSize(sizeBody).FontWeight(600).TextColor(p.Text)
@@ -73,7 +78,21 @@ func (a *App) archiveView(c *ui.Context, p *palette) {
 		for _, g := range a.archiveGroups(sessions) {
 			folded := a.popover("archive-fold/" + g.id)
 			ui.Column(c.Key("g/" + g.id)).FillWidth().Gap(10).Children(func() {
-				a.archiveGroupHeader(c, p, g, folded)
+				ui.Box(c.Key("head")).FillWidth().Children(func() {
+					a.archiveGroupHeader(c, p, g, folded)
+					if a.archivePicking() {
+						// Over the header, which takes its presses: checking
+						// isn't folding.
+						n := 0
+						for _, s := range g.sessions {
+							if a.archivePick[s.ID] {
+								n++
+							}
+						}
+						sessions := g.sessions
+						a.archiveCheck(c, p, "check", locales.ArchiveSelectGroup(g.name), n == len(sessions), n > 0, 32, func() { a.archivePickGroup(sessions) })
+					}
+				})
 				// A folded group's rows go at once, as Lody's.
 				if *folded {
 					return
@@ -87,6 +106,7 @@ func (a *App) archiveView(c *ui.Context, p *palette) {
 		}
 	})
 	a.deleteDialog(c, p)
+	a.bulkDeleteDialog(c, p)
 }
 
 // archiveGroupHeader is a group's header, as Lody's: a button that folds
@@ -108,8 +128,10 @@ func (a *App) archiveGroupHeader(c *ui.Context, p *palette, g archiveGroup, fold
 			if g.id == "" {
 				icon = iconMessage
 			}
-			ui.Icon(c.Key("kind"), icon).Size(16, 16).Absolute().Left(2).Top(2).TextColor(p.Tertiary).Opacity(1 - fade)
-			ui.Icon(c.Key("fold"), iconChevronDown).Size(16, 16).Absolute().Left(2).Top(2).TextColor(p.Tertiary).Opacity(fade).Rotate(-90 * turn)
+			// While choosing, the check box has their place.
+			shown := 1 - b2f(a.archivePicking())
+			ui.Icon(c.Key("kind"), icon).Size(16, 16).Absolute().Left(2).Top(2).TextColor(p.Tertiary).Opacity((1 - fade) * shown)
+			ui.Icon(c.Key("fold"), iconChevronDown).Size(16, 16).Absolute().Left(2).Top(2).TextColor(p.Tertiary).Opacity(fade * shown).Rotate(-90 * turn)
 		})
 		ui.Text(c, g.name).FontSize(sizeSub).FontWeight(600).TextColor(p.Text).SingleLine().Shrink(0)
 		if g.path != "" {
@@ -191,16 +213,30 @@ func (a *App) archiveGroups(sessions []catalog.Session) []archiveGroup {
 }
 
 func (a *App) archivedRow(c *ui.Context, p *palette, s catalog.Session) {
-	row := ui.Row(c).Height(36).Padding(0, 8, 0, 12).Gap(10).AlignItems(ui.Center).Cursor(ui.CursorPointer).Label(s.Title).Transition(colorFade)
+	row := ui.Row(c).Height(36).Padding(0, 8, 0, 28).Gap(8).AlignItems(ui.Center).Cursor(ui.CursorPointer).Label(s.Title).Transition(colorFade)
 	hovered := row.Hovered()
-	if hovered {
+	picking, picked := a.archivePicking(), a.archivePick[s.ID]
+	switch {
+	case picked:
+		row.Background(selectedFill(p))
+	case hovered:
 		row.Background(p.Hover)
 	}
 	if row.Clicked() {
-		a.open(s.ID)
+		if picking {
+			a.togglePick(s.ID)
+		} else {
+			a.open(s.ID)
+		}
 	}
 	lodyContextMenu(c, p, row, a.rowMenu("archived/"+s.ID), 28, func(m *lodyMenu) { a.sessionRowMenu(m, s) })
 	row.Children(func() {
+		// Until a row is chosen, its check box shows with the pointer.
+		id := s.ID
+		check := a.archiveCheck(c, p, "check", locales.ArchiveSelectRow(s.Title), picked, false, 36, func() { a.togglePick(id) })
+		if !picking {
+			check.Opacity(check.AnimateWith("reveal", b2f(hovered || check.FocusVisible()), durFast, easeStandard))
+		}
 		ui.Box(c).Size(20, 20).Center().Shrink(0).Children(func() {
 			ui.Icon(c, a.sessionMark(&s)).Size(14, 14).TextColor(p.Secondary)
 		})

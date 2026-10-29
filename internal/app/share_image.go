@@ -505,11 +505,17 @@ func (a *App) shareRow(c *ui.Context, p *palette, entries []session.Entry, i int
 	return wrap
 }
 
-// shareCheckbox is @lody/ui's check box: a 16px well, the accent with an
-// ink mark once checked, fading between them over 120ms.
+// shareCheckbox is @lody/ui's check box, as a message's while picking.
 func shareCheckbox(c *ui.Context, p *palette, on bool) ui.Element {
-	b := ui.Box(c.Key("check")).Size(16, 16).Radius(5).Shrink(0).Center().Transition(colorFade)
-	if on {
+	return lodyCheckbox(c, p, "check", on, false)
+}
+
+// lodyCheckbox is @lody/ui's check box: a 16px well, the accent with an
+// ink mark once checked, or a dash when some of what it stands for are,
+// fading between them over 120ms.
+func lodyCheckbox(c *ui.Context, p *palette, key string, on, some bool) ui.Element {
+	b := ui.Box(c.Key(key)).Size(16, 16).Radius(5).Shrink(0).Center().Transition(colorFade)
+	if on || some {
 		top := p.Primary.Mix(ui.Hex("#FFFFFF"), 0.1)
 		bottom := p.Primary
 		if p.Dark {
@@ -530,8 +536,11 @@ func shareCheckbox(c *ui.Context, p *palette, on bool) ui.Element {
 		}
 	}
 	b.Children(func() {
-		if on {
+		switch {
+		case on:
 			ui.Icon(c, shareCheckMark).Size(10, 10).TextColor(p.Canvas)
+		case some:
+			ui.Box(c).Size(8, 1.6).Radius(1).Background(p.Canvas)
 		}
 	})
 	return b

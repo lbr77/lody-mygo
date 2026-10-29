@@ -18742,3 +18742,93 @@ func ProjectPickerClear() string { return In(i18n.Locale()).ProjectPickerClear()
 func (msgs Messages) ProjectPickerClear() string {
 	return Catalog.Format(msgs.locale, "projectPickerClear", nil)
 }
+
+// ArchiveExitSelection says "Exit selection"
+// in the language the app shows.
+func ArchiveExitSelection() string { return In(i18n.Locale()).ArchiveExitSelection() }
+
+// ArchiveExitSelection says "Exit selection"
+// in the language of msgs.
+func (msgs Messages) ArchiveExitSelection() string {
+	return Catalog.Format(msgs.locale, "archiveExitSelection", nil)
+}
+
+// ArchiveSelectedCount says "{count} selected"
+// in the language the app shows.
+func ArchiveSelectedCount(count int) string { return In(i18n.Locale()).ArchiveSelectedCount(count) }
+
+// ArchiveSelectedCount says "{count} selected"
+// in the language of msgs.
+func (msgs Messages) ArchiveSelectedCount(count int) string {
+	return Catalog.Format(msgs.locale, "archiveSelectedCount", map[string]any{"count": count})
+}
+
+// ArchiveBulkRestore says "Restore"
+// in the language the app shows.
+func ArchiveBulkRestore() string { return In(i18n.Locale()).ArchiveBulkRestore() }
+
+// ArchiveBulkRestore says "Restore"
+// in the language of msgs.
+func (msgs Messages) ArchiveBulkRestore() string {
+	return Catalog.Format(msgs.locale, "archiveBulkRestore", nil)
+}
+
+// ArchiveBulkDelete says "Delete"
+// in the language the app shows.
+func ArchiveBulkDelete() string { return In(i18n.Locale()).ArchiveBulkDelete() }
+
+// ArchiveBulkDelete says "Delete"
+// in the language of msgs.
+func (msgs Messages) ArchiveBulkDelete() string {
+	return Catalog.Format(msgs.locale, "archiveBulkDelete", nil)
+}
+
+// ArchiveBulkDeleteTitle says "Delete {count} sessions permanently?"
+// in the language the app shows.
+func ArchiveBulkDeleteTitle(count int) string { return In(i18n.Locale()).ArchiveBulkDeleteTitle(count) }
+
+// ArchiveBulkDeleteTitle says "Delete {count} sessions permanently?"
+// in the language of msgs.
+func (msgs Messages) ArchiveBulkDeleteTitle(count int) string {
+	return Catalog.Format(msgs.locale, "archiveBulkDeleteTitle", map[string]any{"count": count})
+}
+
+// ArchiveBulkDeleteMixed says "This will delete the selected sessions. Code sessions will also have their worktree directories removed from your mac…"
+// in the language the app shows.
+func ArchiveBulkDeleteMixed() string { return In(i18n.Locale()).ArchiveBulkDeleteMixed() }
+
+// ArchiveBulkDeleteMixed says "This will delete the selected sessions. Code sessions will also have their worktree directories removed from your mac…"
+// in the language of msgs.
+func (msgs Messages) ArchiveBulkDeleteMixed() string {
+	return Catalog.Format(msgs.locale, "archiveBulkDeleteMixed", nil)
+}
+
+// ArchiveBulkDeleteChatOnly says "This will permanently delete the selected sessions."
+// in the language the app shows.
+func ArchiveBulkDeleteChatOnly() string { return In(i18n.Locale()).ArchiveBulkDeleteChatOnly() }
+
+// ArchiveBulkDeleteChatOnly says "This will permanently delete the selected sessions."
+// in the language of msgs.
+func (msgs Messages) ArchiveBulkDeleteChatOnly() string {
+	return Catalog.Format(msgs.locale, "archiveBulkDeleteChatOnly", nil)
+}
+
+// ArchiveSelectRow says "Select {title}"
+// in the language the app shows.
+func ArchiveSelectRow(title string) string { return In(i18n.Locale()).ArchiveSelectRow(title) }
+
+// ArchiveSelectRow says "Select {title}"
+// in the language of msgs.
+func (msgs Messages) ArchiveSelectRow(title string) string {
+	return Catalog.Format(msgs.locale, "archiveSelectRow", map[string]any{"title": title})
+}
+
+// ArchiveSelectGroup says "Select all in {label}"
+// in the language the app shows.
+func ArchiveSelectGroup(label string) string { return In(i18n.Locale()).ArchiveSelectGroup(label) }
+
+// ArchiveSelectGroup says "Select all in {label}"
+// in the language of msgs.
+func (msgs Messages) ArchiveSelectGroup(label string) string {
+	return Catalog.Format(msgs.locale, "archiveSelectGroup", map[string]any{"label": label})
+}
