@@ -568,8 +568,8 @@ func (a *App) turnFooter(c *ui.Context, p *palette, e session.Entry, hovered boo
 }
 
 // liveStatus is the last row: what the agent is doing right now.
-func (a *App) liveStatus(c *ui.Context, p *palette, v *session.View) {
-	a.column(c, "status", func() {
+func (a *App) liveStatus(c *ui.Context, p *palette, v *session.View) ui.Element {
+	return a.column(c, "status", func() {
 		if !v.Working || len(v.Entries) == 0 {
 			return
 		}

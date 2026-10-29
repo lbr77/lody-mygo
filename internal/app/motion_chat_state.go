@@ -21,6 +21,8 @@ type chatMotion struct {
 	// to glide a result to the top; scrollFor is the chat it is of.
 	scroll    *ui.ScrollState
 	scrollFor string
+	// sent is the message just sent, held near the top as the reply comes.
+	sent sentAnchor
 }
 
 // chatScroll is the ScrollState the open chat's list tracks: a fresh one

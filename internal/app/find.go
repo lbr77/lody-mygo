@@ -22,6 +22,7 @@ type findState struct {
 	query   string
 	active  int  // the result shown, of the results
 	reveal  int  // frames left to scroll it into view
+	jumped  bool // the list was brought near the result this reveal
 	focus   bool // the field takes the focus as it builds
 	results []findResult
 	blocks  map[string]findBlock // by block, for the views marking them
@@ -298,10 +299,17 @@ func (a *App) revealFind() {
 		for _, key := range r.folds {
 			a.expanded[key] = true
 		}
-		// A message the list has not built is brought near at once; the
-		// block then glides to the top (findRing).
-		if first, last := a.chatList.Visible(); r.entry < first || r.entry > last {
-			a.chatList.ScrollTo(r.entry, ui.Start)
+		// A message out of view is brought to the edge it lies beyond at
+		// once, below at the foot, above just past the top; its block then
+		// glides to the top from there (findRing), as Lody's search
+		// glides the whole way.
+		first, last := a.chatList.Visible()
+		f.jumped = r.entry < first || r.entry > last
+		switch {
+		case r.entry > last:
+			a.chatList.ScrollTo(r.entry, ui.End)
+		case r.entry < first:
+			a.chatList.ScrollTo(r.entry+1, ui.Start)
 		}
 	}
 }
@@ -358,7 +366,8 @@ func (a *App) findRing(p *palette, id string, e ui.Element) {
 		return
 	}
 	e.Radius(6).Shadow(0, 0, 0, 1, p.Primary.Alpha(0.25))
-	if a.find.reveal == 0 {
+	if a.find.reveal == 0 || a.find.reveal == 3 && a.find.jumped {
+		// Brought near this frame: it glides from where that lays it out.
 		return
 	}
 	// As Lody's search, the block holding the result glides to the top

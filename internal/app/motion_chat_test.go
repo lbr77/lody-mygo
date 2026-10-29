@@ -1,6 +1,7 @@
 package app
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -163,5 +164,188 @@ func TestFindGlides(t *testing.T) {
 	tt.Frame()
 	if st.Scrolling() || st.Y > 40 {
 		t.Fatalf("the glide outlasts 360ms, or ends away from the result: at %v", st.Y)
+	}
+}
+
+// A message just sent glides to 100px below the top of the conversation,
+// what came before it showing above, with room made under it; once the
+// reply fills the view, the conversation follows its end again.
+func TestSentMessageHeld(t *testing.T) {
+	a := fixture()
+	a.view.Working = false
+	var long []session.Entry
+	for i := 0; i < 12; i++ {
+		id := fmt.Sprint("pad", i)
+		long = append(long, session.Entry{ID: "u" + id, Role: "user", Items: []session.Item{{ID: "t", Type: "text", Text: "Question " + id}}},
+			session.Entry{ID: "r" + id, Role: "assistant", UserTurnID: "u" + id, Finished: true, Items: []session.Item{{ID: "x", Type: "text", Text: strings.Repeat("A long answer line. ", 40)}}})
+	}
+	a.view.Entries = append(long, a.view.Entries...)
+	tt := ui.NewTester(a.render, 1100, 720)
+	tt.Frame()
+	tt.Advance(400 * time.Millisecond)
+	tt.Frame()
+
+	// Sent, as send does.
+	a.view.Entries = append(a.view.Entries, session.Entry{ID: "u-new", Role: "user", Status: "pending",
+		Items: []session.Item{{ID: "t", Type: "text", Text: "Brand new question"}}})
+	a.sending, a.sendingID = true, a.selected
+	a.chatList.ScrollToEnd()
+	tt.Frame()
+	tt.Frame()
+	s := &a.chatMotion.sent
+	if !s.held || s.id != "u-new" {
+		t.Fatalf("not held: %+v", *s)
+	}
+	tt.Advance(100 * time.Millisecond)
+	tt.Frame()
+	mid := s.top
+	tt.Advance(500 * time.Millisecond)
+	tt.Frame()
+	tt.Frame()
+	target := a.outline.top + chatPadTop + sentContext
+	if abs32(s.top-target) > 1 {
+		t.Fatalf("held at %v, want %v", s.top, target)
+	}
+	if mid <= target+1 {
+		t.Fatalf("didn't glide there: at %v after 100ms", mid)
+	}
+	if s.room <= 0 || a.chatList.FollowEnd {
+		t.Fatalf("no room under it, or following: room %v follow %v", s.room, a.chatList.FollowEnd)
+	}
+	snapFrame(t, tt, "sent-held")
+
+	// The reply streams in under it, the message staying put.
+	reply := session.Entry{ID: "r-new", Role: "assistant", UserTurnID: "u-new", Items: []session.Item{{ID: "x", Type: "text", Text: "Short start."}}}
+	a.sending = false
+	a.view.Entries = append(a.view.Entries, reply)
+	tt.Frame()
+	tt.Frame()
+	tt.Frame()
+	if !s.held || abs32(s.top-target) > 1 {
+		t.Fatalf("a short reply moved it: held %v at %v", s.held, s.top)
+	}
+	// Once it fills the view, the end is followed.
+	a.view.Entries[len(a.view.Entries)-1].Items[0].Text = strings.Repeat("A long streamed line of the reply. ", 120)
+	for range 4 {
+		tt.Frame()
+	}
+	if s.held || s.room != 0 || !a.chatList.FollowEnd || !a.chatList.AtEnd() {
+		t.Fatalf("not following once the reply filled the view: %+v follow %v end %v", *s, a.chatList.FollowEnd, a.chatList.AtEnd())
+	}
+}
+
+// Scrolling lets a message just sent go; the room under it shrinks to
+// what keeps the reader in place, and once the reader is back at the end
+// it is gone and the end followed.
+func TestSentMessageLetGo(t *testing.T) {
+	a := fixture()
+	a.view.Working = false
+	var long []session.Entry
+	for i := 0; i < 12; i++ {
+		id := fmt.Sprint("pad", i)
+		long = append(long, session.Entry{ID: "u" + id, Role: "user", Items: []session.Item{{ID: "t", Type: "text", Text: "Question " + id}}},
+			session.Entry{ID: "r" + id, Role: "assistant", UserTurnID: "u" + id, Finished: true, Items: []session.Item{{ID: "x", Type: "text", Text: strings.Repeat("A long answer line. ", 40)}}})
+	}
+	a.view.Entries = append(long, a.view.Entries...)
+	tt := ui.NewTester(a.render, 1100, 720)
+	tt.Frame()
+	a.view.Entries = append(a.view.Entries, session.Entry{ID: "u-new", Role: "user", Status: "pending",
+		Items: []session.Item{{ID: "t", Type: "text", Text: "Brand new question"}}})
+	a.sending, a.sendingID = true, a.selected
+	a.chatList.ScrollToEnd()
+	tt.Frame()
+	tt.Frame()
+	tt.Advance(time.Second)
+	tt.Frame()
+	s := &a.chatMotion.sent
+	room := s.room
+	if !s.held || room <= 0 {
+		t.Fatalf("not held: %+v", *s)
+	}
+	tt.Move(600, 300)
+	tt.Scroll(600, 300, 0, -200) // up, toward what came before
+	tt.Frame()
+	tt.Frame()
+	if s.held {
+		t.Fatal("still held after scrolling")
+	}
+	if want := max(0, room-200); abs32(s.room-want) > 1 {
+		t.Fatalf("room %v after scrolling 200 up from %v, want %v", s.room, room, want)
+	}
+	// The room stays until the reply takes it, the reader staying where
+	// they are, as Lody's reading place; scrolling to the end then follows
+	// it again.
+	a.view.Entries = append(a.view.Entries, session.Entry{ID: "r-new", Role: "assistant", UserTurnID: "u-new",
+		Items: []session.Item{{ID: "x", Type: "text", Text: strings.Repeat("A long streamed line of the reply. ", 120)}}})
+	for range 4 {
+		tt.Frame()
+	}
+	if s.room != 0 || !a.chatList.FollowEnd {
+		t.Fatalf("the room stayed once the reply took it: %+v follow %v", *s, a.chatList.FollowEnd)
+	}
+	for range 10 {
+		tt.Scroll(600, 300, 0, 2000)
+		tt.Frame()
+	}
+	tt.Advance(time.Second)
+	tt.Frame()
+	if !a.chatList.AtEnd() {
+		t.Fatal("not at the end after scrolling there")
+	}
+	a.view.Entries[len(a.view.Entries)-1].Items[0].Text += strings.Repeat(" More of it.", 200)
+	for range 4 {
+		tt.Frame()
+	}
+	if !a.chatList.AtEnd() {
+		t.Fatal("the end isn't followed after scrolling back to it")
+	}
+}
+
+// A search result the list hasn't built glides in from the side it lies
+// on: one far above comes down into view, one far below rises.
+func TestFindGlidesFromAfar(t *testing.T) {
+	a := fixture()
+	a.view.Working = false
+	var long []session.Entry
+	for i := 0; i < 12; i++ {
+		id := fmt.Sprint("pad", i)
+		long = append(long, session.Entry{ID: "u" + id, Role: "user", Items: []session.Item{{ID: "t", Type: "text", Text: "Question " + id}}},
+			session.Entry{ID: "r" + id, Role: "assistant", UserTurnID: "u" + id, Finished: true, Items: []session.Item{{ID: "x", Type: "text", Text: strings.Repeat("A long answer line. ", 40)}}})
+	}
+	a.view.Entries = append(long, a.view.Entries...)
+	tt := ui.NewTester(a.render, 1100, 720)
+	tt.Frame()
+	tt.Advance(400 * time.Millisecond)
+	tt.Frame()
+	seek := func(query string, row int) (start, mid, end float32) {
+		t.Helper()
+		a.openFind()
+		a.find.query = query
+		a.find.active = 0
+		a.find.reveal = 3
+		tt.Frame() // brought near
+		tt.Frame() // the glide starts from there
+		start = a.outline.tops[row]
+		tt.Advance(120 * time.Millisecond)
+		tt.Frame()
+		mid = a.outline.tops[row]
+		tt.Advance(time.Second)
+		tt.Frame()
+		tt.Frame()
+		return start, mid, a.outline.tops[row]
+	}
+	// The block holding the result ends at the top; its row's meta line
+	// and spacing sit above it.
+	top := func() float32 { return a.outline.top + chatPadTop }
+	near := func(y float32) bool { return y <= top()+40 && y >= top()-100 }
+
+	start, mid, end := seek("Question pad0", 0)
+	if !(start < mid && mid < end) || !near(end) {
+		t.Fatalf("from above: at %v, then %v, then %v; want it coming down to about %v", start, mid, end, top())
+	}
+	a.find.open = false
+	start, mid, end = seek("Question pad11", 22)
+	if !(start > mid && mid > end) || !near(end) {
+		t.Fatalf("from below: at %v, then %v, then %v; want it rising to about %v", start, mid, end, top())
 	}
 }

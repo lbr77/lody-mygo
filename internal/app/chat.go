@@ -273,30 +273,45 @@ func (a *App) conversation(c *ui.Context, p *palette, sess *catalog.Session) {
 		}
 		return i
 	}
-	// Following the end would carry a search away from its result.
-	a.chatList.FollowEnd = !a.find.open
-	// A message just sent glides up from below over 360ms, easing out as a
-	// cubic, as Lody scrolls to a message sent; a reply streaming in is
-	// followed at once.
+	// Following the end would carry a search away from its result, and a
+	// message just sent away from where it is held (holdSent).
+	sendGlide := a.sendGlide(entries)
+	sent := &a.chatMotion.sent
+	a.chatList.FollowEnd = !a.find.open && !sent.holds(a.selected)
+	// A message too tall to hold glides to the end over 360ms; a reply
+	// streaming in is followed at once.
 	a.chatList.FollowAnimation = nil
-	if a.sendGlide(entries) {
+	if sendGlide {
 		a.chatList.FollowAnimation = &chatGlide
 	}
 	// Keyed by session, so that each conversation fades in as it opens.
-	ui.Box(c.Key("chat-frame/" + a.selected)).FillWidth().Grow(1).MinHeight(0).Children(func() {
+	frame := ui.Box(c.Key("chat-frame/" + a.selected)).FillWidth().Grow(1).MinHeight(0)
+	// Scrolling lets a message just sent go.
+	frame.HandleInput(func(ev ui.InputEvent) bool {
+		if ev.Kind == ui.InputScroll {
+			sent.letGo()
+		}
+		return false
+	})
+	frame.Children(func() {
 		list := ui.List(c.Key("chat/"+a.selected), &a.chatList, len(entries)+1, func(i int) {
 			if i == len(entries) {
-				a.liveStatus(c, p, v)
+				sent.noteEnd(a.liveStatus(c, p, v).Bounds())
 				return
 			}
-			// Where each row was, for the outline's reader position.
-			a.outline.tops[i] = a.entry(c, p, entries, i).Bounds().Y
+			// Where each row was, for the outline's reader position and
+			// the message just sent.
+			b := a.entry(c, p, entries, i).Bounds()
+			a.outline.tops[i] = b.Y
+			sent.noteRow(entries[i].ID, b, i == len(entries)-1)
 		})
-		// Tracked, so that a search can glide its result into view.
+		// Tracked, so that a search can glide its result into view, and a
+		// message just sent glide to where it is held.
 		list.TrackScroll(a.chatMotion.chatScroll(a.selected, list.Bounds().H == 0))
-		list.Fill().Padding(chatPadTop, 0, 24, 0).FontFeatures(a.ligatureFeatures()...).Children(func() {
+		list.Fill().Padding(chatPadTop, 0, chatPadBottom+sent.roomIn(a.selected), 0).FontFeatures(a.ligatureFeatures()...).Children(func() {
 			ui.Text(c, locales.SendToStart()).FontSize(sizeSub).TextColor(p.Secondary).Margin(ui.Auto)
 		})
+		a.holdSent(list)
 		a.outline.top = list.Bounds().Y
 		a.chatEdges(c, p, v, len(entries))
 		a.shareMarquee(c, p)
@@ -308,21 +323,22 @@ func (a *App) conversation(c *ui.Context, p *palette, sess *catalog.Session) {
 	a.findBar(c, p)
 }
 
-// sendGlide reports whether the conversation glides to its end in this
-// frame: for 360ms from when the message being sent shows in it.
+// sendGlide holds the message being sent once it shows in the conversation
+// (holdSent), and reports whether the conversation glides to its end in
+// this frame: for 360ms from when a message too tall to hold let go.
 func (a *App) sendGlide(entries []session.Entry) bool {
 	cm := &a.chatMotion
-	last := ""
+	last, id := "", ""
 	for i := len(entries) - 1; i >= 0; i-- {
 		if entries[i].Role == "user" {
-			last = a.selected + "/" + entries[i].ID
+			last, id = a.selected+"/"+entries[i].ID, entries[i].ID
 			break
 		}
 	}
 	if last != cm.lastUser {
 		// A message the user is sending, not one opened with the chat.
 		if cm.lastUser != "" && strings.HasPrefix(cm.lastUser, a.selected+"/") && a.sending && a.sendingID == a.selected {
-			cm.glideUntil = time.Now().Add(chatGlide.Duration)
+			cm.sent.sendAnchor(a.selected, id)
 		}
 		cm.lastUser = last
 	}
@@ -379,7 +395,11 @@ func (a *App) chatEdges(c *ui.Context, p *palette, v *session.View, n int) {
 		a.column(c, "to-latest-col", func() {
 			ui.Row(c).FillWidth().Justify(ui.End).Children(func() {
 				b := ui.ButtonBase(c.Key("scroll-latest")).Size(32, 32).Radius(16).Center().Border(0.5, p.Border).Cursor(ui.CursorPointer).
-					Label(locales.ScrollToLatest()).Transition(colorFade).OnClick(a.chatList.ScrollToEnd)
+					Label(locales.ScrollToLatest()).Transition(colorFade).OnClick(func() {
+					a.chatMotion.sent.letGo()
+					a.chatMotion.sent.room = 0
+					a.chatList.ScrollToEnd()
+				})
 				if p.Dark {
 					b.Background(p.Hover)
 				} else {
