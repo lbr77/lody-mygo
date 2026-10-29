@@ -1398,5 +1398,10 @@
   "msgShareBlockCode": "代码",
   "msgShareBlockTable": "表格",
   "msgShareBlockQuote": "引用",
-  "msgShareBlockDivider": "分隔线"
+  "msgShareBlockDivider": "分隔线",
+  "tabNew": "新标签页",
+  "tabClose": "关闭",
+  "tabSuggestReview": "审查此分支上的改动",
+  "tabSuggestSummarize": "总结此分支上的改动",
+  "tabSuggestSimplify": "简化此分支上的改动"
 }

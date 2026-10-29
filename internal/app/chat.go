@@ -89,8 +89,7 @@ func (a *App) tabBar(c *ui.Context, p *palette, sess *catalog.Session) {
 			iconButton(c, p, iconSidebar, locales.SidebarToggle(), p.Hover).OnClick(func() { a.sidebarHidden = false })
 		}
 		if sess != nil {
-			a.sessionTab(c, p, sess)
-			iconButton(c, p, iconPlus, locales.NewChat(), p.Hover).OnClick(func() { a.open("") })
+			a.tabStrip(c, p, sess)
 		}
 		ui.Spacer(c)
 		if sess != nil {
@@ -103,25 +102,6 @@ func (a *App) tabBar(c *ui.Context, p *palette, sess *catalog.Session) {
 				iconButton(c, p, iconPanelRight, locales.PanelToggle(), p.Hover).OnClick(func() { a.panelOpen = true })
 			}
 		}
-	})
-}
-
-// sessionTab is a session's tab. The only tab has no fill.
-func (a *App) sessionTab(c *ui.Context, p *palette, s *catalog.Session) {
-	ui.Row(c).Height(32).Radius(10).Padding(0, 12).Gap(6).Border(1, ui.Transparent).AlignItems(ui.Center).MinWidth(0).Shrink(1).Children(func() {
-		ui.Box(c).Size(12, 12).Center().Shrink(0).Children(func() {
-			switch {
-			case s.Waiting():
-				ui.Icon(c, iconHand).Size(12, 12).TextColor(p.Warning)
-			case s.Working():
-				spinner(c).Size(12, 12)
-			case s.Unread() && a.selected != s.ID:
-				ui.Box(c).Size(8, 8).Radius(4).Background(p.Primary)
-			default:
-				ui.Icon(c, iconBot).Size(12, 12).TextColor(p.Text).Opacity(0.6)
-			}
-		})
-		ui.Text(c, firstNonEmpty(s.Title, locales.UntitledSession())).FontSize(12.6).TextColor(p.Text).SingleLine().MinWidth(0).MaxWidth(320)
 	})
 }
 
@@ -174,6 +154,13 @@ func (a *App) sessionSplit(c *ui.Context, p *palette, k float32) {
 func (a *App) sessionMain(c *ui.Context, p *palette) {
 	sess := a.catalog.Session(a.selected)
 	a.tabBar(c, p, sess)
+	if root := a.tabRoot(sess); root != nil && a.activeDraft != "" {
+		if d := a.draftFor(root.ID, a.activeDraft); d != nil {
+			a.draftView(c, p, root, d)
+			return
+		}
+		a.activeDraft = ""
+	}
 	a.goalBanner(c, p)
 	// The terminal dock grows into its height over 200ms, easing out, and
 	// shrinks away the same way.

@@ -225,11 +225,7 @@ func (a *App) commands() []command {
 		sess = nil
 	}
 	live := sess != nil && !sess.Archived
-	tabs := 0
-	if sess != nil {
-		// The conversation is its only tab here.
-		tabs = 1
-	}
+	tabs := len(a.orderedTabs(a.tabRoot(sess)))
 	branch := ""
 	if sess != nil {
 		branch = strings.TrimSpace(sess.BranchName)
@@ -299,16 +295,17 @@ func (a *App) commands() []command {
 				a.sidebarHidden = false
 				a.renaming, a.renameText = id, a.catalog.Session(id).Title
 			}},
-		command{id: "session.nextTab", title: locales.CmdNextTab(), category: catNavigation, keys: keyChords("Mod+Shift+."), icon: iconChevronsRight, when: tabs > 1, run: func() {}},
-		command{id: "session.previousTab", title: locales.CmdPreviousTab(), category: catNavigation, keys: keyChords("Mod+Shift+,"), icon: iconChevronsLeft, when: tabs > 1, run: func() {}},
+		command{id: "session.nextTab", title: locales.CmdNextTab(), category: catNavigation, keys: keyChords("Mod+Shift+."), icon: iconChevronsRight, when: tabs > 1, run: func() { a.stepTab(1) }},
+		command{id: "session.previousTab", title: locales.CmdPreviousTab(), category: catNavigation, keys: keyChords("Mod+Shift+,"), icon: iconChevronsLeft, when: tabs > 1, run: func() { a.stepTab(-1) }},
 	)
-	// ⌘1–⌘8 jump to a tab, ⌘9 to the last; the one tab is already shown.
+	// ⌘1–⌘8 jump to a tab, ⌘9 to the last.
 	for n := 1; n <= 8; n++ {
+		index := n - 1
 		cmds = append(cmds, command{id: "session.switchToTab" + string(rune('0'+n)), title: locales.CmdSwitchToTab(n), category: catNavigation,
-			keys: keyChords("Mod+" + string(rune('0'+n))), icon: iconRectangle, when: tabs > n-1, run: func() {}})
+			keys: keyChords("Mod+" + string(rune('0'+n))), icon: iconRectangle, when: tabs > n-1, run: func() { a.switchToTab(index) }})
 	}
 	cmds = append(cmds, command{id: "session.switchToLastTab", title: locales.CmdSwitchToLastTab(), category: catNavigation, keys: keyChords("Mod+9"),
-		icon: iconArrowToLine, when: tabs > 0, run: func() {}})
+		icon: iconArrowToLine, when: tabs > 0, run: func() { a.switchToTab(-1) }})
 	// A rebound command takes the user's chords in place of its own, bound
 	// everywhere, as Lody's overrides drop a default's binding-level when.
 	for i := range cmds {
@@ -470,13 +467,5 @@ func (a *App) newTabOrTerminal(id string) {
 		a.newTerminal(id, a.termSession(id))
 		return
 	}
-	a.newChat.machine, a.newChat.project = sess.MachineID, ""
-	if strings.Contains(sess.ProjectID, ":local:") {
-		a.newChat.project = sess.ProjectID
-	}
-	a.pickNewChatDefaults()
-	if a.agent(sess.MachineID, sess.AgentConfigID) != nil {
-		a.newChat.agent = sess.AgentConfigID
-	}
-	a.open("")
+	a.newTab()
 }

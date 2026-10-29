@@ -2822,5 +2822,10 @@
   "msgShareBlockCode": "Code",
   "msgShareBlockTable": "Table",
   "msgShareBlockQuote": "Quote",
-  "msgShareBlockDivider": "Divider"
+  "msgShareBlockDivider": "Divider",
+  "tabNew": "New Tab",
+  "tabClose": "Close",
+  "tabSuggestReview": "Review the changes on this branch",
+  "tabSuggestSummarize": "Summarize the changes on this branch",
+  "tabSuggestSimplify": "Simplify the changes on this branch"
 }

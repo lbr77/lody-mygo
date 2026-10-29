@@ -111,6 +111,8 @@ type App struct {
 	history          []string // sessions shown, for Back and Forward
 	histPos          int
 	palette          paletteState
+	tabGroups        map[string]*tabGroup     // conversation tabs, by the session they sit beside
+	activeDraft      string                   // the draft tab shown, if one is
 	msgShare         messageShare             // a reply made an image
 	createMem        map[string]*createMemory // New chat's remembered choices, by user and workspace
 	memProject       string                   // the project New chat last restored for
@@ -584,6 +586,7 @@ func (a *App) show(id string) {
 	a.page = ""
 	a.msgEdit = messageEdit{}
 	a.stashDraft()
+	a.activeDraft = ""
 	a.closeSession()
 	a.selected = id
 	a.draft = a.drafts[id]
@@ -619,15 +622,17 @@ func (a *App) closeSession() {
 }
 
 func (a *App) stashDraft() {
+	// Kept by tab: a draft tab's message is its own.
+	key := a.activeTab()
 	if a.draft == "" {
-		delete(a.drafts, a.selected)
+		delete(a.drafts, key)
 	} else {
-		a.drafts[a.selected] = a.draft
+		a.drafts[key] = a.draft
 	}
 	if len(a.attachments) == 0 {
-		delete(a.attachDrafts, a.selected)
+		delete(a.attachDrafts, key)
 	} else {
-		a.attachDrafts[a.selected] = a.attachments
+		a.attachDrafts[key] = a.attachments
 	}
 }
 

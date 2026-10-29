@@ -330,3 +330,48 @@ func TestMessageShare(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestConversationTabs(t *testing.T) {
+	a := fixture()
+	a.view.Working = false
+	a.view.Entries = a.view.Entries[:2]
+	a.catalog.Sessions = append(a.catalog.Sessions, catalog.Session{ID: "s7", MachineID: "m1", Title: "Review the branch", Status: "idle", ProjectID: "m1:local:p1", ParentSessionID: "s1", CreatedAt: "2026-10-29T10:00:00.000Z"})
+	tt := snap(t, a, "conversation-tabs", false, nil)
+	if !tt.HasText("Review the branch") {
+		t.Fatalf("child tab missing: %q", tt.Texts())
+	}
+	if got := strings.Join(a.orderedTabs(a.tabRoot(a.catalog.Session("s1"))), ","); got != "s1,s7" {
+		t.Fatalf("tabs %s", got)
+	}
+	// ⌘2 shows the child; its tabs are its parent's.
+	tt.Key(ui.Cmd, ui.Key2)
+	tt.Frame()
+	if a.selected != "s7" || a.tabRoot(a.catalog.Session("s7")).ID != "s1" {
+		t.Fatalf("⌘2 selected %q", a.selected)
+	}
+	// New Tab is a draft, with what to ask of the branch.
+	a.newTab()
+	tt.Frame()
+	if a.activeDraft == "" || !tt.HasText("Review the changes on this branch") || !tt.HasText("New Tab") {
+		t.Fatalf("draft: %q", tt.Texts())
+	}
+	if err := tt.Click("Summarize the changes on this branch"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if a.draft != "Summarize the changes on this branch" {
+		t.Fatalf("suggestion %q", a.draft)
+	}
+	// Closing the draft shows the tab before it; closing a child keeps it out.
+	draft := a.activeDraft
+	a.closeTab(a.catalog.Session("s1"), draft)
+	tt.Frame()
+	if a.activeDraft != "" || a.selected != "s7" {
+		t.Fatalf("after close: draft %q selected %q", a.activeDraft, a.selected)
+	}
+	a.closeTab(a.catalog.Session("s1"), "s7")
+	tt.Frame()
+	if a.selected != "s1" || len(a.orderedTabs(a.catalog.Session("s1"))) != 1 {
+		t.Fatalf("closing the child: selected %q", a.selected)
+	}
+}

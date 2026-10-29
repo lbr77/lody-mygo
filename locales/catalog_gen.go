@@ -14100,3 +14100,53 @@ func MsgShareBlockDivider() string { return In(i18n.Locale()).MsgShareBlockDivid
 func (msgs Messages) MsgShareBlockDivider() string {
 	return Catalog.Format(msgs.locale, "msgShareBlockDivider", nil)
 }
+
+// TabNew says "New Tab"
+// in the language the app shows.
+func TabNew() string { return In(i18n.Locale()).TabNew() }
+
+// TabNew says "New Tab"
+// in the language of msgs.
+func (msgs Messages) TabNew() string {
+	return Catalog.Format(msgs.locale, "tabNew", nil)
+}
+
+// TabClose says "Close"
+// in the language the app shows.
+func TabClose() string { return In(i18n.Locale()).TabClose() }
+
+// TabClose says "Close"
+// in the language of msgs.
+func (msgs Messages) TabClose() string {
+	return Catalog.Format(msgs.locale, "tabClose", nil)
+}
+
+// TabSuggestReview says "Review the changes on this branch"
+// in the language the app shows.
+func TabSuggestReview() string { return In(i18n.Locale()).TabSuggestReview() }
+
+// TabSuggestReview says "Review the changes on this branch"
+// in the language of msgs.
+func (msgs Messages) TabSuggestReview() string {
+	return Catalog.Format(msgs.locale, "tabSuggestReview", nil)
+}
+
+// TabSuggestSummarize says "Summarize the changes on this branch"
+// in the language the app shows.
+func TabSuggestSummarize() string { return In(i18n.Locale()).TabSuggestSummarize() }
+
+// TabSuggestSummarize says "Summarize the changes on this branch"
+// in the language of msgs.
+func (msgs Messages) TabSuggestSummarize() string {
+	return Catalog.Format(msgs.locale, "tabSuggestSummarize", nil)
+}
+
+// TabSuggestSimplify says "Simplify the changes on this branch"
+// in the language the app shows.
+func TabSuggestSimplify() string { return In(i18n.Locale()).TabSuggestSimplify() }
+
+// TabSuggestSimplify says "Simplify the changes on this branch"
+// in the language of msgs.
+func (msgs Messages) TabSuggestSimplify() string {
+	return Catalog.Format(msgs.locale, "tabSuggestSimplify", nil)
+}
