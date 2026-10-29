@@ -241,7 +241,7 @@ func (a *App) conversation(c *ui.Context, p *palette, sess *catalog.Session) {
 	// as Lody scrolls to a message sent.
 	a.chatList.FollowAnimation = &chatGlide
 	// Keyed by session, so that each conversation fades in as it opens.
-	ui.Box(c.Key("chat-frame/"+a.selected)).FillWidth().Grow(1).MinHeight(0).Children(func() {
+	ui.Box(c.Key("chat-frame/" + a.selected)).FillWidth().Grow(1).MinHeight(0).Children(func() {
 		ui.List(c.Key("chat/"+a.selected), &a.chatList, len(entries)+1, func(i int) {
 			if i == len(entries) {
 				a.liveStatus(c, p, v)
