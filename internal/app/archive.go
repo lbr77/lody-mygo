@@ -267,7 +267,18 @@ func (a *App) deleteDialog(c *ui.Context, p *palette) {
 				a.deleteOpen = false
 				id := s.ID
 				a.catalogAction("delete the session", func(ctx context.Context, sync *catalog.Sync) error {
-					return sync.Delete(ctx, id)
+					err := sync.Delete(ctx, id)
+					if err == nil {
+						// The session open, once deleted, goes back to the
+						// sessions, as Lody's, rather than to its not-found
+						// page.
+						a.update(func() {
+							if a.selected == id {
+								a.open("")
+							}
+						})
+					}
+					return err
 				})
 			})
 			b.Children(func() {

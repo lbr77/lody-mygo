@@ -3,6 +3,7 @@ package app
 import (
 	"fmt"
 	"runtime"
+	"strings"
 	"time"
 
 	"github.com/egoist/mygo/ui"
@@ -11,9 +12,10 @@ import (
 )
 
 // A workspace that stays connecting for 45 seconds says so, as Lody's
-// stuck-connection banner: a card that springs up near the bottom, with a
-// way to recover — reload, clear the local cache, or copy diagnostics.
-// Local-only mode has no cloud connection to get stuck.
+// stuck-connection banner: a card that springs up near the bottom, whose
+// Recover opens the recovery page over the whole window — reload, clear
+// the local cache, copy diagnostics, or, last, clear everything and sign
+// out. Local-only mode has no cloud connection to get stuck.
 
 // stuckAfter is how long connecting takes before the banner shows.
 const stuckAfter = 45 * time.Second
@@ -26,7 +28,8 @@ var stuckSpring = ui.Animation{Spring: ui.SpringOptions{Stiffness: 420, Damping:
 type stuckState struct {
 	since     time.Time
 	dismissed bool
-	recovery  bool
+	recovery  bool // the recovery page is open
+	details   bool // its technical details are
 	copied    time.Time
 }
 
@@ -36,7 +39,9 @@ func (a *App) connectionStuck(c *ui.Context) bool {
 	st := &a.stuck
 	connecting := a.sync != nil && !a.syncState.Live && !a.localOnly && a.tokenNow() != ""
 	if !connecting {
-		st.since, st.dismissed = time.Time{}, false
+		// The recovery page closes on its own, as Lody's does once the
+		// connection leaves loading.
+		st.since, st.dismissed, st.recovery, st.details = time.Time{}, false, false, false
 		return false
 	}
 	if st.since.IsZero() {
@@ -53,7 +58,7 @@ func (a *App) stuckBanner(c *ui.Context, p *palette) {
 	st := &a.stuck
 	stuck := a.connectionStuck(c)
 	if stuck && st.recovery {
-		a.recoveryDialog(c, p)
+		a.recoveryPage(c, p)
 	}
 	if !stuck || st.dismissed || st.recovery {
 		return
@@ -79,37 +84,93 @@ func (a *App) stuckBanner(c *ui.Context, p *palette) {
 	})
 }
 
-// recoveryDialog is Lody's recovery page for a slow open, as a sheet.
-func (a *App) recoveryDialog(c *ui.Context, p *palette) {
+// recoveryPage is Lody's RecoveryPage, which the banner's Recover opens
+// over the whole window: what is happening, and the ways out — reload,
+// clear the local cache, copy diagnostics — then the diagnostics behind a
+// disclosure and, last and quiet, the way out of last resort. It has no
+// close: it closes on its own once the connection leaves connecting.
+func (a *App) recoveryPage(c *ui.Context, p *palette) {
 	st := &a.stuck
-	open := true
-	sheet(c, p, &open, 520, func() {
-		sheetHeader(c, p, locales.RecoverySlowTitle(), locales.RecoveryDescription(), func() { st.recovery = false })
-		ui.Row(c).FillWidth().Wrap().Gap(8).Padding(8, 20, 20, 20).Children(func() {
-			primaryButton(c, p, locales.RecoveryReload(), true).OnClick(func() {
-				st.recovery = false
-				if a.workspaceID != "" {
-					a.connect(a.workspaceID)
+	// It names the workspace when one is opening, as Lody's names the one
+	// its route targets.
+	title := locales.RecoverySlowTitleWorkspace()
+	if a.workspaceID == "" {
+		title = locales.RecoverySlowTitle()
+	}
+	ui.Overlay(c, func() {
+		statusPage(c, p, "recovery", statusWindow, artBroken, true, title, locales.RecoveryDescription(), func() {
+			statusActions(c, func() {
+				lodyButton(c, p, "primary", "reload", nil, locales.RecoveryReload(), true).OnClick(a.reloadWorkspace)
+				lodyButton(c, p, "secondary", "clear-cache", nil, locales.RecoveryClearCache(), true).OnClick(func() {
+					a.confirm(locales.PrefClearCacheTitle(), locales.PrefClearCacheBody(), locales.PrefClearCacheButton(), func() {
+						// A clear starts the wait over, as Lody's reloads
+						// into it.
+						a.stuck = stuckState{}
+						a.clearCache()
+					})
+				})
+				// "Copied" for 2s, as Lody's.
+				label := locales.RecoveryCopyDiagnostics()
+				if left := 2*time.Second - time.Since(st.copied); left > 0 {
+					label = locales.RecoveryCopied()
+					c.After(left)
 				}
+				lodyButton(c, p, "ghost", "copy-diagnostics", nil, label, true).OnClick(func() {
+					writeClipboard(a.diagnostics())
+					st.copied = time.Now()
+				})
 			})
-			outlineButton(c, p, nil, locales.RecoveryClearCache()).OnClick(func() {
-				st.recovery = false
-				a.confirm(locales.PrefClearCacheTitle(), locales.PrefClearCacheBody(), locales.PrefClearCacheButton(), a.clearCache)
+			statusDetails(c, p, "diagnostics", locales.ErrorTechnicalDetails(), &st.details, func() {
+				statusCode(c, p, "diagnostics", a.diagnostics(), true, nil)
 			})
-			label := locales.RecoveryCopyDiagnostics()
-			if time.Since(st.copied) < 2*time.Second {
-				label = locales.RecoveryCopied()
-				c.After(2*time.Second - time.Since(st.copied))
-			}
-			ghostButton(c, p, label).OnClick(func() {
-				writeClipboard(a.diagnostics())
-				st.copied = time.Now()
-			})
+			a.stillStuck(c, p)
 		})
 	})
-	if !open {
-		st.recovery = false
+}
+
+// stillStuck is the recovery's last line, in the footnote type and the
+// tertiary ink, with the way out of last resort in it as a quiet link,
+// semibold and underlined, secondary until hovered: clear everything this
+// Mac keeps and sign out, asked first.
+func (a *App) stillStuck(c *ui.Context, p *palette) {
+	before, after, _ := strings.Cut(locales.RecoveryStillStuck("\x00"), "\x00")
+	ui.RichText(c.Key("still-stuck")).FontSize(sizeFoot).LineHeight(16.0 / 12).TextColor(p.Tertiary).TextAlign(ui.Center).Children(func() {
+		if before != "" {
+			ui.Text(c, before)
+		}
+		link := ui.Text(c.Key("hard-reset"), locales.RecoveryClearAll()).FontWeight(500).Underline().Cursor(ui.CursorPointer).
+			OnClick(func() {
+				a.confirm(locales.HardResetTitle(), locales.HardResetBody(), locales.HardResetButton(), a.hardReset)
+			})
+		ink := p.Secondary
+		if link.Hovered() {
+			ink = p.Text
+		}
+		link.TextColor(ink)
+		if after != "" {
+			ui.Text(c, after)
+		}
+	})
+}
+
+// reloadWorkspace is the recovery's Reload: the workspace connects again
+// from the start, and the wait with it, as Lody's page reloads.
+func (a *App) reloadWorkspace() {
+	a.stuck = stuckState{}
+	if a.workspaceID != "" && !a.offline {
+		a.connect(a.workspaceID)
 	}
+}
+
+// hardReset is "Clear all local data and sign out": what Lody keeps on
+// this Mac goes, its caches, preferences and sign-in with them, and it
+// starts over at signing in.
+func (a *App) hardReset() {
+	a.stuck = stuckState{}
+	a.images = map[string]*remoteImage{}
+	a.mentionSources = nil
+	a.fetches = map[string]*fetched{}
+	a.signOut()
 }
 
 // diagnostics is what the recovery copies: the client, the workspace and
