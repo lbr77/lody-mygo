@@ -1658,5 +1658,9 @@
   "recoveryReload": "重新加载 Lody",
   "recoveryClearCache": "清除本地缓存并重试",
   "recoveryCopyDiagnostics": "复制诊断信息",
-  "recoveryCopied": "已复制"
+  "recoveryCopied": "已复制",
+  "notifyPromptTitle": "开启通知？",
+  "notifyPromptDescription": "在 AI 任务完成时收到通知提醒。",
+  "notifyPromptEnable": "开启",
+  "notifyPromptDontRemind": "不再提醒"
 }

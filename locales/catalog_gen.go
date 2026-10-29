@@ -16710,3 +16710,43 @@ func RecoveryCopied() string { return In(i18n.Locale()).RecoveryCopied() }
 func (msgs Messages) RecoveryCopied() string {
 	return Catalog.Format(msgs.locale, "recoveryCopied", nil)
 }
+
+// NotifyPromptTitle says "Enable notifications?"
+// in the language the app shows.
+func NotifyPromptTitle() string { return In(i18n.Locale()).NotifyPromptTitle() }
+
+// NotifyPromptTitle says "Enable notifications?"
+// in the language of msgs.
+func (msgs Messages) NotifyPromptTitle() string {
+	return Catalog.Format(msgs.locale, "notifyPromptTitle", nil)
+}
+
+// NotifyPromptDescription says "Get notified when your AI tasks complete."
+// in the language the app shows.
+func NotifyPromptDescription() string { return In(i18n.Locale()).NotifyPromptDescription() }
+
+// NotifyPromptDescription says "Get notified when your AI tasks complete."
+// in the language of msgs.
+func (msgs Messages) NotifyPromptDescription() string {
+	return Catalog.Format(msgs.locale, "notifyPromptDescription", nil)
+}
+
+// NotifyPromptEnable says "Enable"
+// in the language the app shows.
+func NotifyPromptEnable() string { return In(i18n.Locale()).NotifyPromptEnable() }
+
+// NotifyPromptEnable says "Enable"
+// in the language of msgs.
+func (msgs Messages) NotifyPromptEnable() string {
+	return Catalog.Format(msgs.locale, "notifyPromptEnable", nil)
+}
+
+// NotifyPromptDontRemind says "Don't remind me"
+// in the language the app shows.
+func NotifyPromptDontRemind() string { return In(i18n.Locale()).NotifyPromptDontRemind() }
+
+// NotifyPromptDontRemind says "Don't remind me"
+// in the language of msgs.
+func (msgs Messages) NotifyPromptDontRemind() string {
+	return Catalog.Format(msgs.locale, "notifyPromptDontRemind", nil)
+}

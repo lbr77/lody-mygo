@@ -63,6 +63,7 @@ func (a *App) bottom(c *ui.Context, p *palette, sess *catalog.Session, v *sessio
 		onSend:      a.send,
 		onStop:      a.stop,
 		above: func() {
+			a.notifyPrompt(c, p, sess, v)
 			a.scheduledQueue(c, p, sess)
 			a.quickReplyRow(c, p, sess, v)
 			if sess != nil {

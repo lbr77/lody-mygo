@@ -3263,5 +3263,9 @@
   "recoveryReload": "Reload Lody",
   "recoveryClearCache": "Clear local cache and retry",
   "recoveryCopyDiagnostics": "Copy diagnostics",
-  "recoveryCopied": "Copied"
+  "recoveryCopied": "Copied",
+  "notifyPromptTitle": "Enable notifications?",
+  "notifyPromptDescription": "Get notified when your AI tasks complete.",
+  "notifyPromptEnable": "Enable",
+  "notifyPromptDontRemind": "Don't remind me"
 }

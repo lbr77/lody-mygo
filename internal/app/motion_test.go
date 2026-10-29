@@ -236,3 +236,39 @@ func TestStuckConnection(t *testing.T) {
 		t.Fatal("still stuck once live")
 	}
 }
+
+// A second after a reply finishes, the composer asks whether to turn
+// notifications on, once a chat, as Lody's prompt.
+func TestNotifyPrompt(t *testing.T) {
+	a := fixture()
+	a.view.Entries, a.view.Working = a.view.Entries[:2], false
+	a.catalog.Sessions[0].Status = "idle"
+	tt := snap(t, a, "notify-ask-early", false, nil)
+	if tt.HasText("Enable notifications?") {
+		t.Fatal("asked at once")
+	}
+	a.notifyAsk.since = time.Now().Add(-2 * time.Second)
+	tt.Frame()
+	tt.Advance(400 * time.Millisecond)
+	tt.Frame()
+	snapFrame(t, tt, "notify-ask")
+	if !tt.HasText("Enable notifications?") || !tt.HasText("Don't remind me") {
+		t.Fatalf("no prompt in %q", tt.Texts())
+	}
+	if err := tt.Click("Don't remind me"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if !a.notifyAsk.never || tt.HasText("Enable notifications?") {
+		t.Fatal("still asks")
+	}
+	// Notifications on: it never asks.
+	b := fixture()
+	b.notifications = true
+	b.view.Working = false
+	b.catalog.Sessions[0].Status = "idle"
+	b.notifyAsk.since, b.notifyAsk.pending = time.Now().Add(-2*time.Second), "s1"
+	if tt := snap(t, b, "notify-ask-on", false, nil); tt.HasText("Enable notifications?") {
+		t.Fatal("asked with notifications on")
+	}
+}

@@ -76,6 +76,7 @@ type App struct {
 	schedSendDlg schedSendDialog
 	capRetries   map[string]*capRetry // capacity retries, by chat
 	stuck        stuckState           // a connection that has been connecting too long
+	notifyAsk    notifyAsk            // the prompt to turn notifications on
 	// sendingFiles are a message's attachments as they upload, and
 	// fileProgress how far each has gone, 0 to 100, by path.
 	sendingFiles  []pendingFile
@@ -311,6 +312,7 @@ func (a *App) Start(win *mygo.Window) {
 	}
 	a.createMem = prefs.CreateMemory
 	a.localOnly = prefs.LocalOnly
+	a.notifyAsk.never = prefs.NoNotifyAsk
 	if a.language != "" {
 		mygo.App.SetLocale(a.language)
 	}
@@ -1015,6 +1017,7 @@ type prefs struct {
 	Notifications bool    `json:"notifications,omitempty"`
 	Experimental  bool    `json:"experimental,omitempty"`
 	LocalOnly     bool    `json:"localOnly,omitempty"`
+	NoNotifyAsk   bool    `json:"noNotifyAsk,omitempty"`
 	// QuickReplies are the quick replies as edited; absent for lody-ios's.
 	QuickReplies *[]quickReply `json:"quickReplies,omitempty"`
 	// CreateMemory is New chat's remembered choices, as lody-ios's.
@@ -1065,7 +1068,7 @@ func (a *App) savePrefs() {
 	writeJSON("prefs.json", prefs{Workspace: a.workspaceID, Collapsed: a.collapsed, Appearance: a.appearance, Busy: a.busyBehavior, Sidebar: a.sidebarWidth, HomeBoard: a.homeBoard, Keys: a.keyOverrides,
 		Language: a.language, FontSize: a.fontSize, Wide: a.wideMode, InlineMath: a.inlineMath, ExtendedCode: a.extendedCode,
 		NoLigatures: !a.ligatures, CodeOnly: a.codeOnly, Notifications: a.notifications, Experimental: a.experimental,
-		LocalOnly: a.localOnly, QuickReplies: quick, CreateMemory: a.createMem})
+		LocalOnly: a.localOnly, NoNotifyAsk: a.notifyAsk.never, QuickReplies: quick, CreateMemory: a.createMem})
 }
 
 func loadAccount() *cloud.Account {
