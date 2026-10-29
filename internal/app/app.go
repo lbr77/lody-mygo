@@ -124,6 +124,7 @@ type App struct {
 	composerFocused  bool      // the composer had the focus last frame
 	plan             planState // proposed plans' panels and decisions
 	mdSize           float32   // the text size the Markdown themes were made for
+	mdMath           bool      // whether the Markdown themes set math
 	language         string    // the app's language; "" follows the system
 	fontSize         float32   // the conversation's text size; 0 is the default
 	wideMode         bool      // the conversation spans the window

@@ -375,3 +375,30 @@ func TestConversationTabs(t *testing.T) {
 		t.Fatalf("closing the child: selected %q", a.selected)
 	}
 }
+
+func TestTeXMath(t *testing.T) {
+	for _, tex := range []string{`e^{i\pi} + 1 = 0`, `\frac{a}{b}`, `\sqrt{x^2+y^2}`, `\sum_{i=1}^n i`, `\alpha \le \beta`, `\text{if } x \in A`, `\left( x \right)`} {
+		b, ok := typesetTeX(tex, fontUI, 14)
+		if !ok || b.w <= 0 || b.asc <= 0 {
+			t.Errorf("%s: %v %+v", tex, ok, b)
+		}
+	}
+	for _, tex := range []string{`\unknowncommand{x}`, `\frac{a}`, `}`} {
+		if _, ok := typesetTeX(tex, fontUI, 14); ok {
+			t.Errorf("%s typeset", tex)
+		}
+	}
+	// A fraction stands taller than its letters.
+	frac, _ := typesetTeX(`\frac{a}{b}`, fontUI, 14)
+	x, _ := typesetTeX(`x`, fontUI, 14)
+	if frac.asc+frac.desc <= x.asc+x.desc {
+		t.Errorf("fraction %+v, letter %+v", frac, x)
+	}
+	a := fixture()
+	a.view.Working = false
+	a.view.Entries = a.view.Entries[:2]
+	a.inlineMath = true
+	a.view.Entries[1].Items = []session.Item{{ID: "m", Type: "text", Text: "Euler: $e^{i\\pi} + 1 = 0$, a ratio $\\frac{a}{b}$ and $\\sqrt{x^2+y^2}$.\n\n$$\\sum_{i=1}^{n} i = \\frac{n(n+1)}{2}$$"}}
+	a.view.Entries[1].Finished = true
+	snap(t, a, "tex-math", false, nil)
+}

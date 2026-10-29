@@ -10,6 +10,7 @@ import (
 
 	"github.com/egoist/mygo/ui"
 	"github.com/egoist/mygo/ui/markdown"
+	"github.com/egoist/mygo/ui/markdown/parser"
 
 	"github.com/lbr77/lody-mygo/internal/catalog"
 	"github.com/lbr77/lody-mygo/internal/session"
@@ -481,10 +482,10 @@ func formatDuration(d time.Duration) string {
 // syncMarkdown keeps the Markdown themes in step with the palette.
 func (a *App) syncMarkdown(p *palette) {
 	// The theme follows the palette and the text size chosen.
-	if a.md.Theme != nil && a.mdDark == p.Dark && a.mdSize == a.convFontSize() {
+	if a.md.Theme != nil && a.mdDark == p.Dark && a.mdSize == a.convFontSize() && a.mdMath == a.inlineMath {
 		return
 	}
-	a.mdDark, a.mdSize = p.Dark, a.convFontSize()
+	a.mdDark, a.mdSize, a.mdMath = p.Dark, a.convFontSize(), a.inlineMath
 	base := ui.LightTheme()
 	if p.Dark {
 		base = ui.DarkTheme()
@@ -518,6 +519,15 @@ func (a *App) syncMarkdown(p *palette) {
 	muted.Text = p.Secondary
 	muted.Strong = p.Secondary
 	a.mdMuted.Theme = &muted
+	// Render inline math: TeX between $…$ and \(…\), and $$…$$ blocks.
+	a.md.Extensions, a.md.InlineMath, a.md.Math = 0, nil, nil
+	a.mdMuted.Extensions, a.mdMuted.InlineMath, a.mdMuted.Math = 0, nil, nil
+	if a.inlineMath {
+		ext := parser.Default | parser.ExtDollarMath | parser.ExtMath
+		a.md.Extensions, a.mdMuted.Extensions = ext, ext
+		a.mathOptions(&a.md, func() ui.Color { return a.md.Theme.Text })
+		a.mathOptions(&a.mdMuted, func() ui.Color { return a.mdMuted.Theme.Text })
+	}
 }
 
 func firstNonEmpty(values ...string) string {
