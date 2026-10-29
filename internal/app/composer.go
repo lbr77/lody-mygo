@@ -450,9 +450,14 @@ func sendDisc(c *ui.Context, p *palette, icon *ui.SVG, label string, enabled boo
 
 // runConfig is the composer's run-config button: the agent's mark and the
 // model, which it chooses among the models the agent reports, each named
-// as Lody names it.
+// as Lody names it. An agent that reports its models only as a model
+// setting offers that setting's choices, as Lody's buildModelOptions does.
 func (a *App) runConfig(c *ui.Context, p *palette, key, agentConfig, current string, last *catalog.Model, pick func(string)) {
 	cap := a.capability(agentConfig)
+	cap.Models = pickerModels(cap)
+	if current == "" {
+		current = modelSettingCurrent(cap)
+	}
 	label := current
 	for _, m := range cap.Models {
 		if m.ModelID == current && m.Name != "" {
@@ -471,6 +476,39 @@ func (a *App) runConfig(c *ui.Context, p *palette, key, agentConfig, current str
 		options = append(options, option{m.ModelID, modelLabel(cap, firstNonEmpty(m.Name, m.ModelID))})
 	}
 	a.picker(c, p, key, iconBot, label, options, pick)
+}
+
+// pickerModels are the models the picker offers: those the agent reports,
+// else the choices of its model setting.
+func pickerModels(cap catalog.Capability) []catalog.Model {
+	if len(cap.Models) > 0 {
+		return cap.Models
+	}
+	for _, o := range cap.Options {
+		if optionKind(o) != "model" {
+			continue
+		}
+		models := make([]catalog.Model, 0, len(o.Choices))
+		for _, ch := range o.Choices {
+			models = append(models, catalog.Model{ModelID: ch.Value, Name: firstNonEmpty(ch.Name, ch.Value), Description: ch.Description})
+		}
+		return models
+	}
+	return nil
+}
+
+// modelSettingCurrent is the model an agent's model setting is on, the
+// default Lody's picker starts from when nothing is chosen.
+func modelSettingCurrent(cap catalog.Capability) string {
+	if len(cap.Models) > 0 {
+		return ""
+	}
+	for _, o := range cap.Options {
+		if optionKind(o) == "model" {
+			return str(o.Current)
+		}
+	}
+	return ""
 }
 
 // agentName is an agent config's display name.

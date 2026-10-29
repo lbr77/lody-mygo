@@ -340,3 +340,23 @@ func TestGrokRunConfig(t *testing.T) {
 		t.Fatalf("values %v", a.runValues["s1"])
 	}
 }
+
+// An agent that reports its models only as a model setting offers that
+// setting's choices in the model picker, from its current one, as Lody's
+// buildModelOptions does; one that reports models keeps them.
+func TestPickerModelsFromSetting(t *testing.T) {
+	cap := catalog.Capability{Options: []catalog.ConfigOption{
+		{ID: "model", Category: "model", Type: "select", Current: "sonnet", Choices: []catalog.Choice{{Value: "sonnet", Name: "Sonnet"}, {Value: "opus", Name: "Opus", Description: "Most capable"}}},
+	}}
+	got := pickerModels(cap)
+	if len(got) != 2 || got[1].ModelID != "opus" || got[1].Name != "Opus" || got[1].Description != "Most capable" {
+		t.Fatalf("models %+v", got)
+	}
+	if modelSettingCurrent(cap) != "sonnet" {
+		t.Fatalf("current %q", modelSettingCurrent(cap))
+	}
+	cap.Models = []catalog.Model{{ModelID: "gpt-5", Name: "GPT-5"}}
+	if got := pickerModels(cap); len(got) != 1 || got[0].ModelID != "gpt-5" || modelSettingCurrent(cap) != "" {
+		t.Fatalf("reported models replaced: %+v", got)
+	}
+}
