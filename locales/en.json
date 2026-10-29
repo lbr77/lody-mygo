@@ -2768,5 +2768,26 @@
   "freeTurnLimitTitle": "Free session limit",
   "freeTurnLimitBody": "This Free session has reached 30 messages, so the message field is closed.",
   "freeTurnOK": "OK",
-  "sendFreeTurnLimit": "This Free session has reached 30 user turns. The message was not sent; your draft is saved."
+  "sendFreeTurnLimit": "This Free session has reached 30 user turns. The message was not sent; your draft is saved.",
+  "chipSubtasks": "{n, plural, =1{1 subtask} other{# subtasks}}",
+  "@chipSubtasks": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "chipCopyLink": "Copy Share Link",
+  "chipStopSharing": "Stop Sharing",
+  "chipConnecting": "Connecting…",
+  "chipOpen": "Open preview {target}",
+  "@chipOpen": {
+    "placeholders": {
+      "target": {
+        "type": "String"
+      }
+    }
+  },
+  "chipCopied": "Share link copied",
+  "chipStopped": "Sharing stopped"
 }

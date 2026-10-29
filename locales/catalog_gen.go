@@ -13798,3 +13798,73 @@ func SendFreeTurnLimit() string { return In(i18n.Locale()).SendFreeTurnLimit() }
 func (msgs Messages) SendFreeTurnLimit() string {
 	return Catalog.Format(msgs.locale, "sendFreeTurnLimit", nil)
 }
+
+// ChipSubtasks says "{n, plural, =1{1 subtask} other{# subtasks}}"
+// in the language the app shows.
+func ChipSubtasks(n int) string { return In(i18n.Locale()).ChipSubtasks(n) }
+
+// ChipSubtasks says "{n, plural, =1{1 subtask} other{# subtasks}}"
+// in the language of msgs.
+func (msgs Messages) ChipSubtasks(n int) string {
+	return Catalog.Format(msgs.locale, "chipSubtasks", map[string]any{"n": n})
+}
+
+// ChipCopyLink says "Copy Share Link"
+// in the language the app shows.
+func ChipCopyLink() string { return In(i18n.Locale()).ChipCopyLink() }
+
+// ChipCopyLink says "Copy Share Link"
+// in the language of msgs.
+func (msgs Messages) ChipCopyLink() string {
+	return Catalog.Format(msgs.locale, "chipCopyLink", nil)
+}
+
+// ChipStopSharing says "Stop Sharing"
+// in the language the app shows.
+func ChipStopSharing() string { return In(i18n.Locale()).ChipStopSharing() }
+
+// ChipStopSharing says "Stop Sharing"
+// in the language of msgs.
+func (msgs Messages) ChipStopSharing() string {
+	return Catalog.Format(msgs.locale, "chipStopSharing", nil)
+}
+
+// ChipConnecting says "Connecting…"
+// in the language the app shows.
+func ChipConnecting() string { return In(i18n.Locale()).ChipConnecting() }
+
+// ChipConnecting says "Connecting…"
+// in the language of msgs.
+func (msgs Messages) ChipConnecting() string {
+	return Catalog.Format(msgs.locale, "chipConnecting", nil)
+}
+
+// ChipOpen says "Open preview {target}"
+// in the language the app shows.
+func ChipOpen(target string) string { return In(i18n.Locale()).ChipOpen(target) }
+
+// ChipOpen says "Open preview {target}"
+// in the language of msgs.
+func (msgs Messages) ChipOpen(target string) string {
+	return Catalog.Format(msgs.locale, "chipOpen", map[string]any{"target": target})
+}
+
+// ChipCopied says "Share link copied"
+// in the language the app shows.
+func ChipCopied() string { return In(i18n.Locale()).ChipCopied() }
+
+// ChipCopied says "Share link copied"
+// in the language of msgs.
+func (msgs Messages) ChipCopied() string {
+	return Catalog.Format(msgs.locale, "chipCopied", nil)
+}
+
+// ChipStopped says "Sharing stopped"
+// in the language the app shows.
+func ChipStopped() string { return In(i18n.Locale()).ChipStopped() }
+
+// ChipStopped says "Sharing stopped"
+// in the language of msgs.
+func (msgs Messages) ChipStopped() string {
+	return Catalog.Format(msgs.locale, "chipStopped", nil)
+}

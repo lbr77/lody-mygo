@@ -221,3 +221,33 @@ func TestFreeQuota(t *testing.T) {
 		t.Fatal("quota on Plus")
 	}
 }
+
+func TestContextChips(t *testing.T) {
+	a := fixture()
+	a.view.Working = false
+	a.view.Entries = a.view.Entries[:2]
+	a.view.Preview = &session.Preview{Candidate: "available", Target: session.PreviewTarget{Protocol: "http", Host: "localhost", Port: 5173}}
+	a.view.Entries[1].Items = append(a.view.Entries[1].Items, session.Item{ID: "task", Type: "subagent_task", Subagent: &session.Subagent{TaskID: "t1", Description: "Index the repo", State: "running"}})
+	tt := snap(t, a, "context-chips", false, nil)
+	if !tt.HasText("localhost:5173") || !tt.HasText("1 subtask") || !tt.HasText("Continue") {
+		t.Fatalf("%q", tt.Texts())
+	}
+	// They stay as the user types; the quick replies go.
+	tt.Type("x")
+	tt.Frame()
+	if !tt.HasText("localhost:5173") || tt.HasText("Review Changes") {
+		t.Fatalf("typing: %q", tt.Texts())
+	}
+	if err := tt.Click("Open preview localhost:5173"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if in := a.inspectFor("s1"); !a.panelOpen || in.tab != tabPreview {
+		t.Fatalf("panel %v tab %q", a.panelOpen, in.tab)
+	}
+	// A server off the loopback is never offered.
+	a.view.Preview.Target.Host = "example.com"
+	if _, _, ok := previewResource(a.view.Preview); ok {
+		t.Fatal("non-loopback preview offered")
+	}
+}

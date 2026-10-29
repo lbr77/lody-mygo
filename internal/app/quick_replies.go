@@ -8,6 +8,7 @@ import (
 	"github.com/egoist/mygo/ui"
 	"github.com/google/uuid"
 
+	"github.com/lbr77/lody-mygo/internal/catalog"
 	"github.com/lbr77/lody-mygo/internal/session"
 	"github.com/lbr77/lody-mygo/locales"
 )
@@ -71,14 +72,26 @@ func (a *App) showQuickReplies(v *session.View) bool {
 	return talked && len(a.quickReplyList()) > 0
 }
 
-// quickReplyRow is the buttons, fading in and out over 150ms.
-func (a *App) quickReplyRow(c *ui.Context, p *palette, v *session.View) {
-	if !a.showQuickReplies(v) {
+// quickReplyRow is the context chips and the quick replies, a hairline
+// between them, fading in and out over 150ms.
+func (a *App) quickReplyRow(c *ui.Context, p *palette, sess *catalog.Session, v *session.View) {
+	chips := a.hasContextChips(v)
+	quick := a.showQuickReplies(v)
+	if !chips && !quick {
 		return
 	}
-	ui.Row(c.Key("quick-replies")).FillWidth().Wrap().Gap(8).Padding(0, 2, 2, 2).
+	ui.Row(c.Key("quick-replies")).FillWidth().Wrap().Gap(8).Padding(0, 2, 2, 2).AlignItems(ui.Center).
 		Transition(ui.ElementTransition{Duration: 150 * time.Millisecond, Ease: ui.EaseOut, Enter: &ui.Motion{}, Exit: &ui.Motion{}}).
 		Children(func() {
+			if chips {
+				a.contextChips(c, p, sess, v)
+			}
+			if chips && quick {
+				ui.Box(c).Size(1, 16).Background(p.Border).Shrink(0)
+			}
+			if !quick {
+				return
+			}
 			for _, q := range a.quickReplyList() {
 				message := q.Message
 				b := ui.ButtonBase(c.Key("quick/"+q.ID)).Height(32).Padding(0, 12).Radius(16).Border(1, p.Border).Background(p.Composer).
@@ -94,6 +107,16 @@ func (a *App) quickReplyRow(c *ui.Context, p *palette, v *session.View) {
 				b.Children(func() { ui.Text(c, q.Label).FontSize(sizeSub).TextColor(p.Text).SingleLine().MaxWidth(240) })
 			}
 		})
+}
+
+// hasContextChips is whether the session has a chip to show.
+func (a *App) hasContextChips(v *session.View) bool {
+	if v == nil {
+		return false
+	}
+	_, _, preview := previewResource(v.Preview)
+	tasks, _ := runningSubtasks(v)
+	return preview || tasks > 0
 }
 
 // quickReplyForm edits one quick reply, or a new one.

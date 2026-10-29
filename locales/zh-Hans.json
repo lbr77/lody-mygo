@@ -1368,5 +1368,12 @@
   "freeTurnLimitTitle": "免费会话已到上限",
   "freeTurnLimitBody": "这个免费会话已达到 30 条消息上限，输入栏已关闭。",
   "freeTurnOK": "好",
-  "sendFreeTurnLimit": "此免费会话已达到 30 轮用户对话上限。消息未发送，草稿已保存。"
+  "sendFreeTurnLimit": "此免费会话已达到 30 轮用户对话上限。消息未发送，草稿已保存。",
+  "chipSubtasks": "{n, plural, other{# 个子任务}}",
+  "chipCopyLink": "复制分享链接",
+  "chipStopSharing": "停止共享",
+  "chipConnecting": "正在连接…",
+  "chipOpen": "打开预览 {target}",
+  "chipCopied": "已复制分享链接",
+  "chipStopped": "已停止共享"
 }
