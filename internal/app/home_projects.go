@@ -342,11 +342,19 @@ func (a *App) homeGroupOption(c *ui.Context, p *palette, g catalog.ProjectGroup,
 	})
 }
 
-// startHomeChat sends New chat's first message: in a project of several
-// as Lody's chat landing starts one, or else as any.
+// startHomeChat sends New chat's first message, once the workspace takes
+// a new session: in a project of several as Lody's chat landing starts
+// one, in a GitHub repository from its branch, or else as any.
 func (a *App) startHomeChat() {
+	if (strings.TrimSpace(a.draft) != "" || len(a.attachments) > 0) && !a.sending && !a.createAllowed() {
+		return
+	}
 	if id, ok := a.newChatGroup(); ok {
 		a.startGroupChat(id)
+		return
+	}
+	if repo, ok := strings.CutPrefix(a.newChat.project, "github:"); ok {
+		a.startRepoChat(repo)
 		return
 	}
 	a.startChat()

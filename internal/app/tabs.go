@@ -336,7 +336,7 @@ func (a *App) draftView(c *ui.Context, p *palette, root *catalog.Session, d *dra
 			a.runOptions(c, p, d.id, agent.ID, a.models[d.id], nil)
 			modes := a.catalog.ModesFor(agent.ID, agent.AgentType)
 			pickMode := func(id string) { a.modes[d.id] = id }
-			a.modeButton(c, p, "mode/"+d.id, modes, a.modes[d.id], pickMode)
+			a.permissionButton(c, p, "mode/"+d.id, d.id, agent.ID, modes, a.modes[d.id], pickMode, nil)
 		},
 	})
 }
@@ -347,7 +347,7 @@ func (a *App) sendDraftTab(root *catalog.Session, d *draftTab) {
 	text := strings.TrimSpace(a.draft)
 	files := a.attachments
 	agent := a.agent(root.MachineID, d.agent)
-	if (text == "" && len(files) == 0) || a.sending || agent == nil || a.sync == nil || a.conn == nil {
+	if (text == "" && len(files) == 0) || a.sending || agent == nil || a.sync == nil || a.conn == nil || !a.createAllowed() {
 		return
 	}
 	a.recordActivity()

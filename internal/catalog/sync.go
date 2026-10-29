@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"strings"
 	"sync"
 	"time"
 
@@ -713,6 +714,9 @@ func (n NewSession) Meta() map[string]any {
 			if n.Branch != "" {
 				project["branch"] = n.Branch
 			}
+			// A worktree of its own makes the session one, as Lody's
+			// session submission marks it.
+			meta["isWorktree"] = true
 		}
 		if n.GitHubRepo != "" {
 			project["githubRepoFullName"] = n.GitHubRepo
@@ -735,8 +739,16 @@ func (n NewSession) Meta() map[string]any {
 		// own, so the session is.
 		meta["isWorktree"] = true
 	} else if n.GitHubProject != "" {
-		meta["project"] = map[string]any{"kind": "github", "repoFullName": n.GitHubProject, "branch": n.Branch}
+		// The machine checks the repository out into a worktree of the
+		// session's own, from Branch, its base; an empty repository has no
+		// branch to start from.
+		branch := strings.TrimSpace(n.Branch)
+		meta["project"] = map[string]any{"kind": "github", "repoFullName": n.GitHubProject, "branch": branch}
 		meta["repoFullName"] = n.GitHubProject
+		if branch != "" {
+			meta["baseBranch"] = branch
+		}
+		meta["isWorktree"] = true
 	}
 	return meta
 }

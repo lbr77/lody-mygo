@@ -3,6 +3,7 @@ package github
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -111,5 +112,52 @@ func TestIssuesAndPRs(t *testing.T) {
 	}
 	if len(got) != 3 || got[0].Number != 7 || !got[0].PR || got[1].Number != 5 || got[1].PR || got[2].Number != 3 {
 		t.Fatalf("%+v", got)
+	}
+}
+
+func TestBranches(t *testing.T) {
+	var pages []string
+	empty := false
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/repos/o/r":
+			w.Write([]byte(`{"default_branch":"trunk"}`))
+		case "/repos/o/r/branches":
+			pages = append(pages, r.URL.Query().Get("page"))
+			if empty {
+				w.Write([]byte(`[]`))
+				return
+			}
+			if r.URL.Query().Get("page") == "1" {
+				var rows []map[string]string
+				for i := 0; i < 100; i++ {
+					rows = append(rows, map[string]string{"name": fmt.Sprintf("b%03d", i)})
+				}
+				json.NewEncoder(w).Encode(rows)
+				return
+			}
+			w.Write([]byte(`[{"name":"a-last"},{"name":" b000 "}]`))
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	defer srv.Close()
+	old := API
+	API = srv.URL
+	defer func() { API = old }()
+	c := &Client{Token: "t"}
+	got, def, err := c.Branches(context.Background(), "o/r")
+	// Every page is read, names deduplicated and sorted, the default
+	// branch among them.
+	if err != nil || def != "trunk" || len(got) != 102 || got[0] != "a-last" || got[1] != "b000" || got[101] != "trunk" || strings.Join(pages, ",") != "1,2" {
+		t.Fatalf("%d %q %v %v", len(got), def, pages, err)
+	}
+	// An empty repository has neither branches nor a default to pick.
+	empty = true
+	if got, def, err := c.Branches(context.Background(), "o/r"); err != nil || len(got) != 0 || def != "" {
+		t.Fatalf("empty: %q %q %v", got, def, err)
+	}
+	if _, _, err := c.Branches(context.Background(), "o/missing"); !IsStatus(err, 404) {
+		t.Fatalf("missing: %v", err)
 	}
 }

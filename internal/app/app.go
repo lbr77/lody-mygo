@@ -168,6 +168,9 @@ type App struct {
 	memAgentModel    string                   // the agent and model it last remembered
 	tier             planTier                 // the workspace's plan, for the Free quota
 	quotaAnnounced   string                   // the session whose closed composer was explained
+	checkoutSeen     map[string]bool          // workspaces whose pending checkout was shown this visit
+	repoBranchLists  map[string]*repoBranches // GitHub repositories' branches, by workspace and repository
+	repoBranchShown  string                   // the repository whose branch New chat last showed, by workspace
 	quickReplies     []quickReply             // as edited; nil for the defaults
 	quickForm        quickReplyForm
 	composerFocused  bool      // the composer had the focus last frame
@@ -970,6 +973,8 @@ func (a *App) recordActivity() {
 	}()
 }
 
+// startChat sends New chat's first message in a folder, or in none; a
+// repository's goes by startRepoChat.
 func (a *App) startChat() {
 	text := strings.TrimSpace(a.draft)
 	nc := a.newChat
@@ -992,11 +997,8 @@ func (a *App) startChat() {
 	if title == "" && len(files) > 0 {
 		title = draftTitle(files[0].Name)
 	}
-	localProject, githubProject := "", ""
+	localProject := ""
 	worktree, branch, repo := false, "", ""
-	if r, ok := strings.CutPrefix(nc.project, "github:"); ok {
-		githubProject = r
-	}
 	if p := a.catalog.Project(nc.project); p != nil {
 		_, localProject, _ = strings.Cut(p.ID, ":local:")
 		if st := a.gitStates[p.ID]; localProject != "" && st != nil && st.git {
@@ -1008,7 +1010,7 @@ func (a *App) startChat() {
 	}
 	a.createAndSend(catalog.NewSession{
 		ID: id, MachineID: nc.machine, UserID: userID, Title: title,
-		Agent: *agent, LocalProject: localProject, CreatedAt: time.Now(), GitHubProject: githubProject,
+		Agent: *agent, LocalProject: localProject, CreatedAt: time.Now(),
 		Worktree: worktree, Branch: branch, GitHubRepo: repo,
 	}, chatSend{key: "", text: text, files: files, model: model, mode: mode, runValues: runValues, mcp: mcp, target: target, skills: skills, sessions: sessions, store: store}, nil)
 }

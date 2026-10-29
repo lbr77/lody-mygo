@@ -90,6 +90,7 @@ func (a *App) mainView(c *ui.Context, p *palette) {
 	a.paletteView(c, p)
 	if !a.settingsOpen {
 		// Settings shows its own; outside it, what the conversation asks.
+		a.checkoutPendingPrompt()
 		a.confirmDialog(c, p)
 	}
 	// Over everything but the toasts, which say what its menu did.

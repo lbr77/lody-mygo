@@ -39,7 +39,10 @@ type menuItem struct {
 	keepOpen    bool // the row acts in place, as a switch
 	tip         string
 	detail      string // a second line, under the label
-	end         func() // what ends the row: a copy mark, a switch, a status
+	// value is what a submenu's row is set to, after its label in the
+	// secondary ink, as @lody/ui's value trigger.
+	value string
+	end   func() // what ends the row: a copy mark, a switch, a status
 	// indicator draws the icon in the label's ink: a tick or a radio dot
 	// saying what is chosen, as @lody/ui's indicator, not a hint.
 	indicator bool
@@ -91,6 +94,9 @@ func (m *lodyMenu) row(key string, icon *ui.SVG, label string, o menuItem, extra
 				ui.Text(c, label).FontSize(sizeSub).TextColor(ink).SingleLine()
 				ui.Text(c, o.detail).FontSize(sizeFoot).TextColor(p.Secondary).SingleLine()
 			})
+		}
+		if o.value != "" {
+			ui.Text(c, o.value).FontSize(sizeSub).TextColor(p.Secondary).SingleLine().MaxWidth(160).Margin(0, 0, 0, 8)
 		}
 		if extra != nil {
 			extra()

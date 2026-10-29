@@ -40,6 +40,7 @@ func (a *App) homeView(c *ui.Context, p *palette) {
 	}
 	agent := a.agent(a.newChat.machine, a.newChat.agent)
 	a.sharingNotice(c, p)
+	a.sessionLimitNotice(c, p)
 	a.composerBox(c, p, composerOptions{
 		canSend:  agent != nil && !a.sending && !a.groupBlocked(),
 		onSend:   a.startHomeChat,
@@ -71,9 +72,8 @@ func (a *App) homeView(c *ui.Context, p *palette) {
 				a.runOptions(c, p, "", agent.ID, a.models[""], nil)
 				modes := a.catalog.ModesFor(agent.ID, agent.AgentType)
 				pickMode := func(id string) { a.modes[""] = id }
-				a.modeButton(c, p, "mode/new", modes, a.modes[""], pickMode)
+				a.surfNext.mode = a.permissionButton(c, p, "mode/new", "", agent.ID, modes, a.modes[""], pickMode, nil)
 				a.surfNext.model = a.modelCycle(agent.ID, a.models[""], pickModel)
-				a.surfNext.mode = modeCycle(modes, a.modes[""], pickMode)
 			}
 		},
 	})

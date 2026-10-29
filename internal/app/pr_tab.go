@@ -12,6 +12,7 @@ import (
 	"github.com/egoist/mygo/ui/markdown"
 
 	"github.com/lbr77/lody-mygo/internal/catalog"
+	"github.com/lbr77/lody-mygo/internal/cloud"
 	"github.com/lbr77/lody-mygo/internal/github"
 	"github.com/lbr77/lody-mygo/locales"
 )
@@ -79,6 +80,11 @@ func (a *App) prPanelFor(s *catalog.Session) *prPanel {
 // githubToken asks the workspace for a token to read the repository, or
 // with operate, to act on it.
 func (a *App) githubToken(ctx context.Context, repo string, operate bool) (string, error) {
+	return workspaceGitHubToken(ctx, a.convex, a.workspaceID, repo, operate)
+}
+
+// workspaceGitHubToken is githubToken for workspace ws, asked of convex.
+func workspaceGitHubToken(ctx context.Context, convex *cloud.Convex, ws, repo string, operate bool) (string, error) {
 	fn := "github:getAccessTokenByRepoNameForClient"
 	if operate {
 		fn = "github:getOperationAccessTokenByRepoNameForClient"
@@ -89,7 +95,7 @@ func (a *App) githubToken(ctx context.Context, repo string, operate bool) (strin
 		ErrorCode    string `json:"errorCode"`
 		ErrorMessage string `json:"errorMessage"`
 	}
-	if err := a.convex.Action(ctx, fn, map[string]any{"workspaceId": a.workspaceID, "repoFullName": repo}, &res); err != nil {
+	if err := convex.Action(ctx, fn, map[string]any{"workspaceId": ws, "repoFullName": repo}, &res); err != nil {
 		return "", err
 	}
 	if !res.Success || res.Token == "" {

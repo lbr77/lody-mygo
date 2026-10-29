@@ -693,7 +693,7 @@ func (a *App) dispatchPrompt(text string) bool {
 	draft, files := a.draft, a.attachments
 	a.draft, a.attachments = text, nil
 	was, held := a.sending, a.pending.seq
-	a.send()
+	a.sendChecked()
 	a.draft, a.attachments = draft, files
 	return !was && a.sending || a.pending.seq != held
 }
