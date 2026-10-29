@@ -191,6 +191,64 @@ func TestNowListFocus(t *testing.T) {
 	}
 }
 
+// Reopened as it lands back, a now list's rows come back from where their
+// fade had got to rather than all at once.
+func TestNowListReopensMidClose(t *testing.T) {
+	a := fixture()
+	a.selected = ""
+	a.homeBoard = "now"
+	now := time.Now()
+	created := now.Add(-48 * time.Hour).UTC().Format(time.RFC3339)
+	for i := 0; i < 14; i++ {
+		a.catalog.Sessions = append(a.catalog.Sessions, catalog.Session{ID: fmt.Sprint("wait", i), MachineID: "m1", UserID: "u1", CreatedAt: created,
+			Title: fmt.Sprint("Waiting chat ", i), Status: "requestPermission", ProjectID: "m1:local:p1", LastMessageAt: float64(now.Add(-time.Duration(i) * time.Minute).UnixMilli())})
+	}
+	for i := range a.catalog.Sessions {
+		a.catalog.Sessions[i].UserID, a.catalog.Sessions[i].CreatedAt = "u1", created
+	}
+	tt := ui.NewTester(a.render, 1100, 720)
+	tt.Frame()
+	var showAll string
+	for _, s := range tt.Texts() {
+		if strings.HasPrefix(s, "Show all") {
+			showAll = s
+		}
+	}
+	if err := tt.Click(showAll); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	tt.Advance(time.Second)
+	tt.Frame()
+	open := a.homeNowOpen
+	if open == "" {
+		t.Fatal("didn't open")
+	}
+	a.homeNowOpen = ""
+	tt.Frame()
+	tt.Advance(120 * time.Millisecond)
+	tt.Frame()
+	mid := a.homeNowFx.rows
+	if mid <= 0.05 || mid >= 0.95 {
+		t.Fatalf("rows not midway out at 120ms: %v", mid)
+	}
+	a.homeNowOpen = open
+	tt.Frame()
+	if got := a.homeNowFx.rows; got > mid+0.1 {
+		t.Fatalf("rows snapped back: %v from %v", got, mid)
+	}
+	tt.Advance(100 * time.Millisecond)
+	tt.Frame()
+	if got := a.homeNowFx.rows; got <= mid || got >= 1 {
+		t.Fatalf("rows not on their way back at 100ms: %v from %v", got, mid)
+	}
+	tt.Advance(200 * time.Millisecond)
+	tt.Frame()
+	if got := a.homeNowFx.rows; got < 0.999 {
+		t.Fatalf("rows not back after 300ms: %v", got)
+	}
+}
+
 // A workspace connecting for 45 seconds says so near the bottom, with a
 // way to recover, as Lody's stuck-connection banner.
 func TestStuckConnection(t *testing.T) {

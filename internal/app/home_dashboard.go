@@ -719,6 +719,7 @@ func (a *App) nowBoard(c *ui.Context, p *palette, lists map[string]*nowList, now
 			k := column.AnimateTo("focus", b2f(focus != nil && a.homeNowOpen == focus.key), focusSpring)
 			if focus != nil && a.homeNowOpen != focus.key && k < 0.002 {
 				a.homeNowFocus, focus = "", nil
+				a.homeNowFx = nowFocusFx{}
 			}
 			var focusTile ui.Element
 			column.Children(func() {
@@ -856,14 +857,35 @@ func (a *App) nowFocus(c *ui.Context, p *palette, col, board, tileEl ui.Element,
 	closing := phaseClock(col, "closing", !opening, focusMoves)
 	opened := phaseClock(col, "opening", opening, 80*time.Millisecond)
 	leaving := max(0, 1-closing/0.35)
+	fx := &a.homeNowFx
+	if fx.key != l.key {
+		*fx = nowFocusFx{key: l.key, opening: opening, rows: 1, standIn: 1, fromRows: 1, fromStandIn: 1}
+	} else if opening && !fx.opening {
+		// Reopened as it lands back: what was going comes back from where
+		// it had got to, rather than from nothing or all at once.
+		fx.fromRows, fx.fromStandIn = fx.rows, fx.standIn
+	}
+	fx.opening = opening
+	// The rows come back over 200ms on ease.standard, as they rise in.
+	var back float32
+	if opening {
+		back = col.Keyframes("back", []ui.Keyframe{{Value: 0}, {At: 200 * time.Millisecond, Value: 1, Ease: easeStandard}}, ui.KeyframeOptions{Run: 1})
+	} else {
+		back = col.Keyframes("back", []ui.Keyframe{{Value: 0}, {At: time.Millisecond, Value: 0}})
+	}
+	rows := leaving
+	if opening {
+		rows = fx.fromRows + (1-fx.fromRows)*back
+	}
+	fx.rows = rows
 	late := func(e ui.Element, i int) {
 		r := e.Keyframes("late", []ui.Keyframe{{Value: 0}, {At: 200 * time.Millisecond, Value: 1, Ease: easeStandard}},
 			ui.KeyframeOptions{Delay: time.Duration(30+14*min(i, 8)) * time.Millisecond})
-		if opening {
+		if opening && fx.fromRows >= 1 {
 			// Rising in a few at a time as it opens.
 			e.Opacity(r).Translate(0, 4*(1-r))
 		} else {
-			e.Opacity(r * leaving)
+			e.Opacity(r * rows)
 		}
 	}
 	var last ui.Rect
@@ -881,10 +903,11 @@ func (a *App) nowFocus(c *ui.Context, p *palette, col, board, tileEl ui.Element,
 			}
 			late(a.nowMore(c, p, locales.HomeNowShowLess(), iconChevronUp, func() { a.homeNowOpen = "" }), len(l.items)-shown)
 		})
-		standIn := 1 - opened
+		standIn := fx.fromStandIn * (1 - opened)
 		if !opening {
 			standIn = min(1, max(0, (closing-0.2)/0.2))
 		}
+		fx.standIn = standIn
 		if fb := frame.Bounds(); standIn > 0 && last.H > 0 && fb.H > 0 {
 			ui.Row(c.Key("stand-in")).Absolute().Left(10).Top(last.Y+last.H+8-fb.Y).Height(22).Padding(0, 6).Gap(4).AlignItems(ui.Center).
 				PassThrough().Opacity(standIn).Children(func() {
@@ -898,6 +921,15 @@ func (a *App) nowFocus(c *ui.Context, p *palette, col, board, tileEl ui.Element,
 // focusMoves is how long the focus spring takes to settle, as Lody's
 // spring(0.4, 0.9) does: what fades with it is timed by it.
 const focusMoves = 662 * time.Millisecond
+
+// nowFocusFx is what an opened now list's fades last drew, and what they
+// came back from when it reopened as it landed back.
+type nowFocusFx struct {
+	key                   string
+	opening               bool
+	rows, standIn         float32
+	fromRows, fromStandIn float32
+}
 
 // phaseClock is how far, 0 to 1 and linearly over d, e is into a phase
 // while on: it starts again each time on turns true, and is 0 while off.
