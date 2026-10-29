@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"encoding/json"
 	"net/url"
 	"strconv"
 	"strings"
@@ -11,6 +12,7 @@ import (
 	"github.com/egoist/mygo/ui"
 
 	"github.com/lbr77/lody-mygo/internal/catalog"
+	"github.com/lbr77/lody-mygo/internal/localterm"
 	"github.com/lbr77/lody-mygo/internal/preview"
 	"github.com/lbr77/lody-mygo/internal/session"
 	"github.com/lbr77/lody-mygo/locales"
@@ -32,6 +34,10 @@ type previewState struct {
 	web      *mygo.WebView
 	creating bool
 	webErr   string
+	endpoint string    // a direct preview on this machine, by its id
+	status   string    // the connection, as last checked
+	checked  time.Time // when it was
+	checking bool
 }
 
 func (a *App) previewFor(id string) *previewState {
@@ -100,18 +106,71 @@ func (a *App) startPreview(s *catalog.Session, ps *previewState) {
 		return
 	}
 	conn, api, req := a.conn, a.api, a.previewRequest(s)
+	local := s.MachineID == a.localMachine()
+	rpc := a.localPreviewRPC()
 	ps.starting, ps.err = true, ""
 	go func() {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 		defer cancel()
-		viewer, err := preview.Start(ctx, conn, api, req, target)
+		var viewer, endpoint string
+		var err error
+		if local {
+			// On this machine the page goes through its Lody directly, as
+			// Lody's desktop app opens it, without a tunnel.
+			var ep *preview.Endpoint
+			if ep, err = preview.Acquire(ctx, rpc, req, target); err == nil {
+				viewer, endpoint = ep.ViewerURL, ep.EndpointID
+			}
+		} else {
+			viewer, err = preview.Start(ctx, conn, api, req, target)
+		}
 		a.update(func() {
 			ps.starting = false
 			if err != nil {
 				ps.err = err.Error()
 				return
 			}
-			ps.url = viewer
+			ps.url, ps.endpoint, ps.status = viewer, endpoint, "active"
+			ps.checked = time.Now()
+		})
+	}()
+}
+
+// localPreviewRPC reaches this machine's Lody.
+func (a *App) localPreviewRPC() preview.LocalRPC {
+	ws := a.workspaceID
+	return func(ctx context.Context, method string, params any, timeout time.Duration) (json.RawMessage, error) {
+		return localterm.MachineRPC(ctx, ws, method, params, timeout)
+	}
+}
+
+// checkPreview asks how the preview is every minute while it shows,
+// renewing a direct preview's endpoint, as Lody's open browser panel does.
+func (a *App) checkPreview(c *ui.Context, s *catalog.Session, ps *previewState) {
+	c.After(time.Minute)
+	if ps.checking || a.conn == nil || a.offline || time.Since(ps.checked) < time.Minute {
+		return
+	}
+	ps.checking = true
+	conn, api, req, endpoint := a.conn, a.api, a.previewRequest(s), ps.endpoint
+	rpc := a.localPreviewRPC()
+	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 45*time.Second)
+		defer cancel()
+		var st *preview.Connection
+		var err error
+		if endpoint != "" {
+			st, err = preview.LocalStatus(ctx, rpc, req, endpoint)
+		} else {
+			st, err = preview.Status(ctx, conn, api, req, "")
+		}
+		a.update(func() {
+			ps.checking, ps.checked = false, time.Now()
+			if err != nil {
+				// A timeout doesn't take the page away.
+				return
+			}
+			ps.status = st.Status
 		})
 	}()
 }
@@ -120,12 +179,18 @@ func (a *App) stopPreview(s *catalog.Session, ps *previewState) {
 	if a.conn == nil || ps.stopping {
 		return
 	}
-	conn, api, req := a.conn, a.api, a.previewRequest(s)
+	conn, api, req, endpoint := a.conn, a.api, a.previewRequest(s), ps.endpoint
+	rpc := a.localPreviewRPC()
 	ps.stopping, ps.err = true, ""
 	go func() {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 		defer cancel()
-		err := preview.Stop(ctx, conn, api, req)
+		var err error
+		if endpoint != "" {
+			err = preview.Release(ctx, rpc, req, endpoint)
+		} else {
+			err = preview.Stop(ctx, conn, api, req)
+		}
 		a.update(func() {
 			ps.stopping = false
 			if err != nil {
@@ -135,7 +200,7 @@ func (a *App) stopPreview(s *catalog.Session, ps *previewState) {
 			if ps.web != nil {
 				ps.web.Destroy()
 			}
-			ps.url, ps.web, ps.webErr = "", nil, ""
+			ps.url, ps.web, ps.webErr, ps.endpoint, ps.status = "", nil, "", "", ""
 		})
 	}()
 }
@@ -158,8 +223,9 @@ func (a *App) previewTab(c *ui.Context, p *palette) {
 		a.previewStart(c, p, s, ps)
 		return
 	}
+	a.checkPreview(c, s, ps)
 	ui.Row(c).Shrink(0).Height(36).Padding(0, 6, 0, 10).Gap(4).AlignItems(ui.Center).BorderWidth(0, 0, 1, 0).BorderColor(p.Border).Children(func() {
-		ui.Icon(c, iconGlobe).Size(14, 14).TextColor(p.Secondary).Shrink(0)
+		ui.Icon(c, iconGlobe).Size(14, 14).TextColor(p.Secondary).Shrink(0).Tooltip(previewStatusLabel(ps))
 		label := ps.url
 		if u, err := url.Parse(ps.url); err == nil {
 			label = u.Host + u.Path
@@ -168,6 +234,16 @@ func (a *App) previewTab(c *ui.Context, p *palette) {
 			}
 		}
 		ui.Text(c, label).Font(fontMono).FontSize(sizeFoot).TextColor(p.Text).SingleLine().Grow(1).MinWidth(0)
+		if st := previewStatusLabel(ps); st != "" {
+			ink := p.Secondary
+			switch ps.status {
+			case "active":
+				ink = p.Success
+			case "failed", "closed":
+				ink = p.Danger
+			}
+			ui.Text(c, st).FontSize(sizeCaption).TextColor(ink).Padding(1, 6).Radius(5).Background(ink.Alpha(0.1)).Shrink(0)
+		}
 		if ps.web != nil {
 			iconButton(c, p, iconRefresh, locales.Refresh(), p.Hover).OnClick(func() { ps.web.Page().Reload() })
 		}
@@ -245,4 +321,21 @@ func (a *App) previewStart(c *ui.Context, p *palette, s *catalog.Session, ps *pr
 			ui.Text(c, ps.err).FontSize(sizeFoot).TextColor(p.Danger).TextAlign(ui.Center).MaxWidth(320).Selectable()
 		}
 	})
+}
+
+// previewStatusLabel says how the preview is connected, as Lody's does.
+func previewStatusLabel(ps *previewState) string {
+	switch {
+	case ps.endpoint != "":
+		return locales.PreviewLocalDirect()
+	case ps.status == "active":
+		return locales.PreviewConnected()
+	case ps.status == "creating":
+		return locales.PreviewConnecting()
+	case ps.status == "closed":
+		return locales.PreviewClosed()
+	case ps.status == "failed":
+		return locales.PreviewUnavailable()
+	}
+	return ""
 }

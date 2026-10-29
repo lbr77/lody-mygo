@@ -10962,3 +10962,53 @@ func SharesLinkOtherDevice() string { return In(i18n.Locale()).SharesLinkOtherDe
 func (msgs Messages) SharesLinkOtherDevice() string {
 	return Catalog.Format(msgs.locale, "sharesLinkOtherDevice", nil)
 }
+
+// PreviewLocalDirect says "Local direct"
+// in the language the app shows.
+func PreviewLocalDirect() string { return In(i18n.Locale()).PreviewLocalDirect() }
+
+// PreviewLocalDirect says "Local direct"
+// in the language of msgs.
+func (msgs Messages) PreviewLocalDirect() string {
+	return Catalog.Format(msgs.locale, "previewLocalDirect", nil)
+}
+
+// PreviewConnected says "Preview connected"
+// in the language the app shows.
+func PreviewConnected() string { return In(i18n.Locale()).PreviewConnected() }
+
+// PreviewConnected says "Preview connected"
+// in the language of msgs.
+func (msgs Messages) PreviewConnected() string {
+	return Catalog.Format(msgs.locale, "previewConnected", nil)
+}
+
+// PreviewConnecting says "Creating preview link…"
+// in the language the app shows.
+func PreviewConnecting() string { return In(i18n.Locale()).PreviewConnecting() }
+
+// PreviewConnecting says "Creating preview link…"
+// in the language of msgs.
+func (msgs Messages) PreviewConnecting() string {
+	return Catalog.Format(msgs.locale, "previewConnecting", nil)
+}
+
+// PreviewClosed says "Preview stopped"
+// in the language the app shows.
+func PreviewClosed() string { return In(i18n.Locale()).PreviewClosed() }
+
+// PreviewClosed says "Preview stopped"
+// in the language of msgs.
+func (msgs Messages) PreviewClosed() string {
+	return Catalog.Format(msgs.locale, "previewClosed", nil)
+}
+
+// PreviewUnavailable says "Preview unavailable"
+// in the language the app shows.
+func PreviewUnavailable() string { return In(i18n.Locale()).PreviewUnavailable() }
+
+// PreviewUnavailable says "Preview unavailable"
+// in the language of msgs.
+func (msgs Messages) PreviewUnavailable() string {
+	return Catalog.Format(msgs.locale, "previewUnavailable", nil)
+}

@@ -166,3 +166,115 @@ func Stop(ctx context.Context, conn *cloud.Conn, api *cloud.API, r Request) erro
 	}
 	return nil
 }
+
+// Connection is the session's preview as the machine reports it.
+type Connection struct {
+	Status       string `json:"status"` // creating, active, closed, failed
+	EndpointID   string `json:"endpointId"`
+	PublicURL    string `json:"publicUrl"`
+	ClosedReason string `json:"closedReason"`
+}
+
+// Status asks the machine how the session's preview is, renewing the
+// endpoint named, as the open page's heartbeat does.
+func Status(ctx context.Context, conn *cloud.Conn, api *cloud.API, r Request, renewEndpointID string) (*Connection, error) {
+	op := map[string]any{"action": "status"}
+	params := map[string]any{"sessionId": r.Session, "requestedByUserId": r.User}
+	if renewEndpointID != "" {
+		op["renewEndpointId"], params["renewEndpointId"] = renewEndpointID, renewEndpointID
+	}
+	p, err := proof(ctx, conn, api, r, op)
+	if err != nil {
+		return nil, err
+	}
+	params["proof"] = p
+	raw, err := conn.MachineRPC(ctx, r.Machine, "session/preview-status", params, 30*time.Second)
+	if err != nil {
+		return nil, err
+	}
+	return statusOf(raw)
+}
+
+func statusOf(raw json.RawMessage) (*Connection, error) {
+	var res struct {
+		result
+		Connection *Connection `json:"connection"`
+	}
+	if err := json.Unmarshal(raw, &res); err != nil {
+		return nil, err
+	}
+	if !res.Success {
+		return nil, res.err()
+	}
+	if res.Connection == nil {
+		return &Connection{}, nil
+	}
+	return res.Connection, nil
+}
+
+// Endpoint is a direct preview on this machine: the page through the
+// local Lody's proxy, without a tunnel.
+type Endpoint struct {
+	EndpointID string `json:"endpointId"`
+	Kind       string `json:"kind"`
+	ViewerURL  string `json:"viewerUrl"`
+}
+
+// LocalRPC sends a method to the Lody daemon on this machine.
+type LocalRPC func(ctx context.Context, method string, params any, timeout time.Duration) (json.RawMessage, error)
+
+// Acquire opens a direct preview of target on this machine.
+func Acquire(ctx context.Context, rpc LocalRPC, r Request, target session.PreviewTarget) (*Endpoint, error) {
+	raw, err := rpc(ctx, "session/preview-endpoint-acquire", map[string]any{"sessionId": r.Session, "requestedByUserId": r.User, "target": target}, 10*time.Second)
+	if err != nil {
+		return nil, err
+	}
+	var res struct {
+		result
+		Endpoint *Endpoint `json:"endpoint"`
+	}
+	if err := json.Unmarshal(raw, &res); err != nil {
+		return nil, err
+	}
+	if !res.Success || res.Endpoint == nil {
+		return nil, res.err()
+	}
+	u, err := url.Parse(res.Endpoint.ViewerURL)
+	if err != nil || res.Endpoint.Kind != "local-proxy" || u.Scheme != "http" && u.Scheme != "https" || u.User != nil {
+		Release(ctx, rpc, r, res.Endpoint.EndpointID)
+		return nil, errors.New("the local preview endpoint is not one this app can show")
+	}
+	return res.Endpoint, nil
+}
+
+// Release closes a direct preview.
+func Release(ctx context.Context, rpc LocalRPC, r Request, endpointID string) error {
+	if endpointID == "" {
+		return nil
+	}
+	raw, err := rpc(ctx, "session/preview-endpoint-release", map[string]any{"sessionId": r.Session, "endpointId": endpointID}, 5*time.Second)
+	if err != nil {
+		return err
+	}
+	var res result
+	if err := json.Unmarshal(raw, &res); err != nil {
+		return err
+	}
+	if !res.Success {
+		return res.err()
+	}
+	return nil
+}
+
+// LocalStatus asks this machine's Lody how the session's preview is.
+func LocalStatus(ctx context.Context, rpc LocalRPC, r Request, renewEndpointID string) (*Connection, error) {
+	params := map[string]any{"sessionId": r.Session, "requestedByUserId": r.User}
+	if renewEndpointID != "" {
+		params["renewEndpointId"] = renewEndpointID
+	}
+	raw, err := rpc(ctx, "session/preview-status", params, 15*time.Second)
+	if err != nil {
+		return nil, err
+	}
+	return statusOf(raw)
+}

@@ -1086,5 +1086,10 @@
   "shareRequestAbandon": "放弃部署",
   "shareRequestIncomplete": "此部署尚未发布，编辑器关闭后无法续传。请先放弃部署，再让 Agent 使用新的 requestId 重新发起分享请求。",
   "shareRequestFailed": "未能忽略此请求，请重试。",
-  "sharesLinkOtherDevice": "链接是在另一台设备上创建的，凭据只保存在那里。可重置链接，在本机生成一条新的。"
+  "sharesLinkOtherDevice": "链接是在另一台设备上创建的，凭据只保存在那里。可重置链接，在本机生成一条新的。",
+  "previewLocalDirect": "本地直连",
+  "previewConnected": "预览已连接",
+  "previewConnecting": "正在创建预览链接…",
+  "previewClosed": "预览已停止",
+  "previewUnavailable": "预览不可用"
 }

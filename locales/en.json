@@ -2237,5 +2237,10 @@
   "shareRequestAbandon": "Abandon deployment",
   "shareRequestIncomplete": "This deployment is not published yet and cannot be resumed after the editor closes. Abandon it, then ask the agent for a new share request with a new requestId.",
   "shareRequestFailed": "Could not dismiss the request. Try again.",
-  "sharesLinkOtherDevice": "The link was created on another device and is only stored there. Reset the link to create a new one you can copy here."
+  "sharesLinkOtherDevice": "The link was created on another device and is only stored there. Reset the link to create a new one you can copy here.",
+  "previewLocalDirect": "Local direct",
+  "previewConnected": "Preview connected",
+  "previewConnecting": "Creating preview link…",
+  "previewClosed": "Preview stopped",
+  "previewUnavailable": "Preview unavailable"
 }
