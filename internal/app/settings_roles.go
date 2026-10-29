@@ -333,7 +333,7 @@ func (a *App) roleTargetRow(c *ui.Context, p *palette, i int) {
 		for _, ag := range a.catalog.Agents[t.machine] {
 			agents = append(agents, option{ag.ID, ag.Name})
 		}
-		a.toolbarPicker(c, p, key+"agent", iconBot, firstNonEmpty(a.agentName(t.machine, t.agent), locales.NoAgent()), agents, t.agent, func(id string) {
+		a.toolbarPicker(c, p, key+"agent", configMark(a.agent(t.machine, t.agent)), firstNonEmpty(a.agentName(t.machine, t.agent), locales.NoAgent()), agents, t.agent, func(id string) {
 			t.agent, t.model, t.mode = id, "", ""
 		})
 		models := []option{{"", locales.DefaultModel()}}

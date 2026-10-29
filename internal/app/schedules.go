@@ -1330,7 +1330,7 @@ func (a *App) schedFormView(c *ui.Context, p *palette, f *schedForm, row *schedu
 				if agent != nil {
 					label = agent.Name
 				}
-				a.picker(c, p, "sched/agent", iconBot, label, agents, func(id string) {
+				a.picker(c, p, "sched/agent", configMark(agent), label, agents, func(id string) {
 					f.agent = id
 					delete(a.models, "sched")
 					delete(a.modes, "sched")

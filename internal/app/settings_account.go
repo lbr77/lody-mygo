@@ -384,7 +384,7 @@ func (a *App) machineCard(c *ui.Context, p *palette, id string, machines map[str
 				}
 				ui.Row(c).FillWidth().Wrap().Gap(6).Children(func() {
 					for _, ag := range agents {
-						pill(c.Key(ag.ID), p, agentIcon(ag.CLIType), ag.Name)
+						pill(c.Key(ag.ID), p, agentMark(ag.CLIType, ag.AgentType, ag.Row), ag.Name)
 					}
 				})
 			})

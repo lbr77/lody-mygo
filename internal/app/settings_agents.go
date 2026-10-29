@@ -311,7 +311,7 @@ func agoText(t time.Time) string {
 func (a *App) providerRow(c *ui.Context, p *palette, ag catalog.AgentConfig) {
 	agent := ag
 	ui.Row(c).FillWidth().MinHeight(48).Padding(8, 8, 8, 16).Gap(12).AlignItems(ui.Center).Children(func() {
-		ui.Icon(c, agentIcon(agent.CLIType)).Size(18, 18).TextColor(p.Text).Shrink(0)
+		ui.Icon(c, agentMark(agent.CLIType, agent.AgentType, agent.Row)).Size(18, 18).TextColor(p.Text).Shrink(0)
 		body := ui.Column(c).Grow(1).MinWidth(0).Gap(2).Cursor(ui.CursorPointer).Label(agent.Name).OnClick(func() { a.openProvider(agent.MachineID, &agent) })
 		body.Children(func() {
 			ui.Text(c, agent.Name).FontSize(sizeSub).FontWeight(500).TextColor(p.Text).SingleLine()
@@ -814,7 +814,7 @@ func (a *App) providerRail(c *ui.Context, p *palette) {
 						row.Background(p.SideHover)
 					}
 					row.Children(func() {
-						ui.Icon(c, agentIcon(kind.cliType)).Size(15, 15).TextColor(p.Text)
+						ui.Icon(c, kindMark(kind)).Size(15, 15).TextColor(p.Text)
 						ui.Text(c, kind.label()).FontSize(sizeSub).TextColor(p.Text).Grow(1).SingleLine()
 						if selected {
 							ui.Icon(c, iconCheck).Size(14, 14).TextColor(p.Secondary)
@@ -859,7 +859,7 @@ func (a *App) providerFormView(c *ui.Context, p *palette) {
 	}
 	ui.Row(c).FillWidth().Padding(16, 14, 8, 20).Gap(12).AlignItems(ui.Center).Shrink(0).Children(func() {
 		ui.Box(c).Size(36, 36).Radius(8).Center().Background(p.Text.Alpha(0.05)).Children(func() {
-			ui.Icon(c, agentIcon(k.cliType)).Size(18, 18).TextColor(p.Text)
+			ui.Icon(c, kindMark(k)).Size(18, 18).TextColor(p.Text)
 		})
 		ui.Column(c).Grow(1).MinWidth(0).Gap(2).Children(func() {
 			ui.Text(c, title).FontSize(sizeBody).FontWeight(600).TextColor(p.Strong)

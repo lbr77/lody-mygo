@@ -51,7 +51,7 @@ func (a *App) homeView(c *ui.Context, p *palette) {
 				delete(a.modes, "")
 			}
 			agents := a.agentOptions()
-			a.picker(c, p, "agent", iconBot, agentLabel, agents, pickAgent)
+			a.picker(c, p, "agent", configMark(agent), agentLabel, agents, pickAgent)
 			providers := &cycleTarget{current: a.newChat.agent, pick: pickAgent}
 			for _, o := range agents {
 				providers.values = append(providers.values, o.id)

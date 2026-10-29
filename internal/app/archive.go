@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/lbr77/lody-mygo/locales"
+	"slices"
 	"sort"
 	"strings"
 	"time"
@@ -177,7 +178,7 @@ func (a *App) archivedRow(c *ui.Context, p *palette, s catalog.Session) {
 	row.ContextMenu(func(m *ui.Menu) { a.sessionMenu(m, s) })
 	row.Children(func() {
 		ui.Box(c).Size(20, 20).Center().Shrink(0).Children(func() {
-			ui.Icon(c, agentGlyph(s.AgentType)).Size(14, 14).TextColor(p.Secondary)
+			ui.Icon(c, a.sessionMark(&s)).Size(14, 14).TextColor(p.Secondary)
 		})
 		ui.Text(c, s.Title).FontSize(sizeBody).TextColor(p.Text).SingleLine().Grow(1).MinWidth(0)
 		ui.Text(c, s.BranchName).FontSize(sizeFoot).TextColor(p.Secondary).SingleLine().Width(160).Shrink(0)
@@ -264,13 +265,31 @@ func (a *App) toolbarPicker(c *ui.Context, p *palette, key string, icon *ui.SVG,
 	a.optionList(c, p, b, open, options, selected, pick)
 }
 
-// agentGlyph is an agent's mark in lists.
+// agentGlyph is an agent's mark where only its type is known: a built-in
+// by that name, or else the registry's agent.
 func agentGlyph(agentType string) *ui.SVG {
-	switch strings.ToLower(agentType) {
-	case "claude", "claude-code":
-		return iconAsterisk
+	t := strings.ToLower(agentType)
+	if t == "claude-code" {
+		t = "claude"
 	}
-	return iconBot
+	cli := "registry"
+	if slices.Contains(managedTypes, t) || t == "deepseek" || t == "bub" || t == "dimcode" {
+		cli = "builtin"
+	}
+	return agentMark(cli, t, nil)
+}
+
+// sessionMark is the mark of a session's agent, its config's brand first.
+func (a *App) sessionMark(s *catalog.Session) *ui.SVG {
+	for _, ag := range a.catalog.Agents[s.MachineID] {
+		if ag.ID == s.AgentConfigID {
+			return agentMark(ag.CLIType, ag.AgentType, ag.Row)
+		}
+	}
+	if s.CLIType != "" {
+		return agentMark(s.CLIType, s.AgentType, nil)
+	}
+	return agentGlyph(s.AgentType)
 }
 
 // relativeTime is a short age: "now", "5m", "14h", "3d", or the date.

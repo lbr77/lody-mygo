@@ -124,12 +124,13 @@ func (a *App) usageDayBreakdown(c *ui.Context, p *palette, d *usageDayDetail) {
 	type part struct {
 		label string
 		value float64
+		icon  func() // what leads a ranked row: the model's maker, the member
 	}
 	parts := []part{
-		{locales.UsageCache(), d.Totals.CacheReadTokens + d.Totals.CacheCreationTokens},
-		{locales.UsageInput(), d.Totals.InputTokens},
-		{locales.UsageOutput(), d.Totals.OutputTokens},
-		{locales.UsageReasoning(), d.Totals.ReasoningTokens},
+		{locales.UsageCache(), d.Totals.CacheReadTokens + d.Totals.CacheCreationTokens, nil},
+		{locales.UsageInput(), d.Totals.InputTokens, nil},
+		{locales.UsageOutput(), d.Totals.OutputTokens, nil},
+		{locales.UsageReasoning(), d.Totals.ReasoningTokens, nil},
 	}
 	sum := 0.0
 	var shown []part
@@ -163,7 +164,10 @@ func (a *App) usageDayBreakdown(c *ui.Context, p *palette, d *usageDayDetail) {
 			ui.Text(c, title).FontSize(sizeCaption).TextColor(p.Secondary)
 			for _, r := range rows {
 				ui.Column(c.Key(r.label)).FillWidth().Gap(3).Children(func() {
-					ui.Row(c).FillWidth().Gap(8).Children(func() {
+					ui.Row(c).FillWidth().Gap(8).AlignItems(ui.Center).Children(func() {
+						if r.icon != nil {
+							r.icon()
+						}
 						ui.Text(c, r.label).FontSize(sizeFoot).TextColor(p.Text).SingleLine().Grow(1).MinWidth(0)
 						ui.Text(c, formatCount(r.value)).FontSize(sizeFoot).TextColor(p.Secondary).FontFeatures("tnum")
 					})
@@ -178,11 +182,13 @@ func (a *App) usageDayBreakdown(c *ui.Context, p *palette, d *usageDayDetail) {
 	}
 	var models, people []part
 	for _, m := range d.ByModel {
-		models = append(models, part{m.ModelID, m.Tokens})
+		mark := modelMark(m.ModelID)
+		models = append(models, part{m.ModelID, m.Tokens, func() { ui.Icon(c, mark).Size(14, 14).TextColor(p.Secondary).Shrink(0) }})
 	}
 	for _, u := range d.ByUser {
 		who := d.Users[u.UserID]
-		people = append(people, part{firstNonEmpty(who.Name, who.Email, u.UserID), u.Tokens})
+		name := firstNonEmpty(who.Name, who.Email, u.UserID)
+		people = append(people, part{name, u.Tokens, func() { avatar(c, p, name, 16, 8) }})
 	}
 	ui.Row(c).FillWidth().Gap(24).AlignItems(ui.Start).Children(func() {
 		ranked(locales.UsageByModel(), models)

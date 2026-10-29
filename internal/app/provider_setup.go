@@ -226,7 +226,7 @@ func (a *App) providerSetupRow(c *ui.Context, p *palette, st catalog.ProviderSet
 	ui.Column(c.Key("setup/" + st.ID)).FillWidth().MinWidth(0).Children(func() {
 		ui.Row(c).FillWidth().Gap(12).AlignItems(ui.Center).Padding(12, 0, 12, 12).Children(func() {
 			percent := a.setupPercent(st)
-			agentReadinessMark(c, p, cliType, a.setupReadiness(st), percent)
+			agentReadinessMark(c, p, cliType, agentType, st.Config, a.setupReadiness(st), percent)
 			ui.Column(c).Grow(1).MinWidth(0).Children(func() {
 				ui.Text(c, name).FontSize(sizeFoot).TextColor(p.Text).SingleLine()
 				ui.Text(c, agentKindLabel(cliType, agentType)).FontSize(sizeFoot).TextColor(p.Secondary).SingleLine()
@@ -297,7 +297,7 @@ func agentKindLabel(cliType, agentType string) string {
 // agent is to usable: dim when cold, a ring around it while arriving — a
 // 22% arc orbiting every 1.4s, or filling to percent when the work can be
 // measured — and full contrast once ready.
-func agentReadinessMark(c *ui.Context, p *palette, cliType, readiness string, percent float32) {
+func agentReadinessMark(c *ui.Context, p *palette, cliType, agentType string, row map[string]any, readiness string, percent float32) {
 	tile := ui.Box(c.Key("mark")).Size(40, 40).Radius(8).Shrink(0).Center().Background(p.Text.Alpha(0.04))
 	var orbit, fill float32
 	arriving := readiness == "arriving"
@@ -343,7 +343,7 @@ func agentReadinessMark(c *ui.Context, p *palette, cliType, readiness string, pe
 		ink, opacity = p.Secondary, 0.4
 	}
 	tile.Children(func() {
-		ui.Icon(c, agentIcon(cliType)).Size(18, 18).TextColor(ink).Opacity(opacity)
+		ui.Icon(c, agentMark(cliType, agentType, row)).Size(18, 18).TextColor(ink).Opacity(opacity)
 	})
 }
 
