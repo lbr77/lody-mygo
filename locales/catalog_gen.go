@@ -7686,3 +7686,273 @@ func BinaryError() string { return In(i18n.Locale()).BinaryError() }
 func (msgs Messages) BinaryError() string {
 	return Catalog.Format(msgs.locale, "binaryError", nil)
 }
+
+// McpAuthTitle says "Sign-in and authorization"
+// in the language the app shows.
+func McpAuthTitle() string { return In(i18n.Locale()).McpAuthTitle() }
+
+// McpAuthTitle says "Sign-in and authorization"
+// in the language of msgs.
+func (msgs Messages) McpAuthTitle() string {
+	return Catalog.Format(msgs.locale, "mcpAuthTitle", nil)
+}
+
+// McpAuthSettings says "Settings"
+// in the language the app shows.
+func McpAuthSettings() string { return In(i18n.Locale()).McpAuthSettings() }
+
+// McpAuthSettings says "Settings"
+// in the language of msgs.
+func (msgs Messages) McpAuthSettings() string {
+	return Catalog.Format(msgs.locale, "mcpAuthSettings", nil)
+}
+
+// McpSaveConfiguration says "Save configuration"
+// in the language the app shows.
+func McpSaveConfiguration() string { return In(i18n.Locale()).McpSaveConfiguration() }
+
+// McpSaveConfiguration says "Save configuration"
+// in the language of msgs.
+func (msgs Messages) McpSaveConfiguration() string {
+	return Catalog.Format(msgs.locale, "mcpSaveConfiguration", nil)
+}
+
+// McpSaving says "Saving…"
+// in the language the app shows.
+func McpSaving() string { return In(i18n.Locale()).McpSaving() }
+
+// McpSaving says "Saving…"
+// in the language of msgs.
+func (msgs Messages) McpSaving() string {
+	return Catalog.Format(msgs.locale, "mcpSaving", nil)
+}
+
+// McpAuthManual says "Manual credentials"
+// in the language the app shows.
+func McpAuthManual() string { return In(i18n.Locale()).McpAuthManual() }
+
+// McpAuthManual says "Manual credentials"
+// in the language of msgs.
+func (msgs Messages) McpAuthManual() string {
+	return Catalog.Format(msgs.locale, "mcpAuthManual", nil)
+}
+
+// McpLocalCredentials says "Values other than {ref} references stay with the Lody daemon on this computer; the workspace keeps only the references."
+// in the language the app shows.
+func McpLocalCredentials(ref string) string { return In(i18n.Locale()).McpLocalCredentials(ref) }
+
+// McpLocalCredentials says "Values other than {ref} references stay with the Lody daemon on this computer; the workspace keeps only the references."
+// in the language of msgs.
+func (msgs Messages) McpLocalCredentials(ref string) string {
+	return Catalog.Format(msgs.locale, "mcpLocalCredentials", map[string]any{"ref": ref})
+}
+
+// McpAuthClient says "Use your own OAuth application"
+// in the language the app shows.
+func McpAuthClient() string { return In(i18n.Locale()).McpAuthClient() }
+
+// McpAuthClient says "Use your own OAuth application"
+// in the language of msgs.
+func (msgs Messages) McpAuthClient() string {
+	return Catalog.Format(msgs.locale, "mcpAuthClient", nil)
+}
+
+// McpAuthAuthorize says "Authorize"
+// in the language the app shows.
+func McpAuthAuthorize() string { return In(i18n.Locale()).McpAuthAuthorize() }
+
+// McpAuthAuthorize says "Authorize"
+// in the language of msgs.
+func (msgs Messages) McpAuthAuthorize() string {
+	return Catalog.Format(msgs.locale, "mcpAuthAuthorize", nil)
+}
+
+// McpAuthCheck says "Check connection"
+// in the language the app shows.
+func McpAuthCheck() string { return In(i18n.Locale()).McpAuthCheck() }
+
+// McpAuthCheck says "Check connection"
+// in the language of msgs.
+func (msgs Messages) McpAuthCheck() string {
+	return Catalog.Format(msgs.locale, "mcpAuthCheck", nil)
+}
+
+// McpAuthSignout says "Sign out"
+// in the language the app shows.
+func McpAuthSignout() string { return In(i18n.Locale()).McpAuthSignout() }
+
+// McpAuthSignout says "Sign out"
+// in the language of msgs.
+func (msgs Messages) McpAuthSignout() string {
+	return Catalog.Format(msgs.locale, "mcpAuthSignout", nil)
+}
+
+// McpAuthSaveFirst says "Save the configuration before authorizing."
+// in the language the app shows.
+func McpAuthSaveFirst() string { return In(i18n.Locale()).McpAuthSaveFirst() }
+
+// McpAuthSaveFirst says "Save the configuration before authorizing."
+// in the language of msgs.
+func (msgs Messages) McpAuthSaveFirst() string {
+	return Catalog.Format(msgs.locale, "mcpAuthSaveFirst", nil)
+}
+
+// McpAuthLocalRequired says "Connect to the local daemon to configure authentication."
+// in the language the app shows.
+func McpAuthLocalRequired() string { return In(i18n.Locale()).McpAuthLocalRequired() }
+
+// McpAuthLocalRequired says "Connect to the local daemon to configure authentication."
+// in the language of msgs.
+func (msgs Messages) McpAuthLocalRequired() string {
+	return Catalog.Format(msgs.locale, "mcpAuthLocalRequired", nil)
+}
+
+// McpAuthUnknown says "Check the connection to see whether authorization is needed."
+// in the language the app shows.
+func McpAuthUnknown() string { return In(i18n.Locale()).McpAuthUnknown() }
+
+// McpAuthUnknown says "Check the connection to see whether authorization is needed."
+// in the language of msgs.
+func (msgs Messages) McpAuthUnknown() string {
+	return Catalog.Format(msgs.locale, "mcpAuthUnknown", nil)
+}
+
+// McpAuthNotRequired says "The connection does not require authorization."
+// in the language the app shows.
+func McpAuthNotRequired() string { return In(i18n.Locale()).McpAuthNotRequired() }
+
+// McpAuthNotRequired says "The connection does not require authorization."
+// in the language of msgs.
+func (msgs Messages) McpAuthNotRequired() string {
+	return Catalog.Format(msgs.locale, "mcpAuthNotRequired", nil)
+}
+
+// McpAuthWaiting says "Waiting for authorization in your browser…"
+// in the language the app shows.
+func McpAuthWaiting() string { return In(i18n.Locale()).McpAuthWaiting() }
+
+// McpAuthWaiting says "Waiting for authorization in your browser…"
+// in the language of msgs.
+func (msgs Messages) McpAuthWaiting() string {
+	return Catalog.Format(msgs.locale, "mcpAuthWaiting", nil)
+}
+
+// McpAuthAuthorized says "Authorized"
+// in the language the app shows.
+func McpAuthAuthorized() string { return In(i18n.Locale()).McpAuthAuthorized() }
+
+// McpAuthAuthorized says "Authorized"
+// in the language of msgs.
+func (msgs Messages) McpAuthAuthorized() string {
+	return Catalog.Format(msgs.locale, "mcpAuthAuthorized", nil)
+}
+
+// McpAuthError says "Authorization failed. Check the connection and try again."
+// in the language the app shows.
+func McpAuthError() string { return In(i18n.Locale()).McpAuthError() }
+
+// McpAuthError says "Authorization failed. Check the connection and try again."
+// in the language of msgs.
+func (msgs Messages) McpAuthError() string {
+	return Catalog.Format(msgs.locale, "mcpAuthError", nil)
+}
+
+// McpAuthStorageUnavailable says "The system credential store is unavailable. Unlock or configure it, then try again."
+// in the language the app shows.
+func McpAuthStorageUnavailable() string { return In(i18n.Locale()).McpAuthStorageUnavailable() }
+
+// McpAuthStorageUnavailable says "The system credential store is unavailable. Unlock or configure it, then try again."
+// in the language of msgs.
+func (msgs Messages) McpAuthStorageUnavailable() string {
+	return Catalog.Format(msgs.locale, "mcpAuthStorageUnavailable", nil)
+}
+
+// McpAuthClientRequired says "This service requires an OAuth application. Enter its client ID below."
+// in the language the app shows.
+func McpAuthClientRequired() string { return In(i18n.Locale()).McpAuthClientRequired() }
+
+// McpAuthClientRequired says "This service requires an OAuth application. Enter its client ID below."
+// in the language of msgs.
+func (msgs Messages) McpAuthClientRequired() string {
+	return Catalog.Format(msgs.locale, "mcpAuthClientRequired", nil)
+}
+
+// McpAuthExpired says "Authorization expired. Authorize again to continue."
+// in the language the app shows.
+func McpAuthExpired() string { return In(i18n.Locale()).McpAuthExpired() }
+
+// McpAuthExpired says "Authorization expired. Authorize again to continue."
+// in the language of msgs.
+func (msgs Messages) McpAuthExpired() string {
+	return Catalog.Format(msgs.locale, "mcpAuthExpired", nil)
+}
+
+// McpAuthCancelled says "Authorization cancelled."
+// in the language the app shows.
+func McpAuthCancelled() string { return In(i18n.Locale()).McpAuthCancelled() }
+
+// McpAuthCancelled says "Authorization cancelled."
+// in the language of msgs.
+func (msgs Messages) McpAuthCancelled() string {
+	return Catalog.Format(msgs.locale, "mcpAuthCancelled", nil)
+}
+
+// McpAuthUnsupported says "This service does not support the standard authorization flow. Configure its credentials manually."
+// in the language the app shows.
+func McpAuthUnsupported() string { return In(i18n.Locale()).McpAuthUnsupported() }
+
+// McpAuthUnsupported says "This service does not support the standard authorization flow. Configure its credentials manually."
+// in the language of msgs.
+func (msgs Messages) McpAuthUnsupported() string {
+	return Catalog.Format(msgs.locale, "mcpAuthUnsupported", nil)
+}
+
+// McpAuthStdio says "Configure credentials in the environment fields, then save."
+// in the language the app shows.
+func McpAuthStdio() string { return In(i18n.Locale()).McpAuthStdio() }
+
+// McpAuthStdio says "Configure credentials in the environment fields, then save."
+// in the language of msgs.
+func (msgs Messages) McpAuthStdio() string {
+	return Catalog.Format(msgs.locale, "mcpAuthStdio", nil)
+}
+
+// McpEnvPassthrough says "Environment variable passthrough"
+// in the language the app shows.
+func McpEnvPassthrough() string { return In(i18n.Locale()).McpEnvPassthrough() }
+
+// McpEnvPassthrough says "Environment variable passthrough"
+// in the language of msgs.
+func (msgs Messages) McpEnvPassthrough() string {
+	return Catalog.Format(msgs.locale, "mcpEnvPassthrough", nil)
+}
+
+// McpEnvPassthroughHint says "These variables are copied from the target machine's own environment. One name a line."
+// in the language the app shows.
+func McpEnvPassthroughHint() string { return In(i18n.Locale()).McpEnvPassthroughHint() }
+
+// McpEnvPassthroughHint says "These variables are copied from the target machine's own environment. One name a line."
+// in the language of msgs.
+func (msgs Messages) McpEnvPassthroughHint() string {
+	return Catalog.Format(msgs.locale, "mcpEnvPassthroughHint", nil)
+}
+
+// McpDefaultEnabled says "Select by default"
+// in the language the app shows.
+func McpDefaultEnabled() string { return In(i18n.Locale()).McpDefaultEnabled() }
+
+// McpDefaultEnabled says "Select by default"
+// in the language of msgs.
+func (msgs Messages) McpDefaultEnabled() string {
+	return Catalog.Format(msgs.locale, "mcpDefaultEnabled", nil)
+}
+
+// McpDefaultEnabledHint says "New sessions initially select this server; users can still deselect it."
+// in the language the app shows.
+func McpDefaultEnabledHint() string { return In(i18n.Locale()).McpDefaultEnabledHint() }
+
+// McpDefaultEnabledHint says "New sessions initially select this server; users can still deselect it."
+// in the language of msgs.
+func (msgs Messages) McpDefaultEnabledHint() string {
+	return Catalog.Format(msgs.locale, "mcpDefaultEnabledHint", nil)
+}

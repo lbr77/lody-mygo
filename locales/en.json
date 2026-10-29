@@ -1642,5 +1642,39 @@
   "binaryExtracting": "Extracting runtime…",
   "binaryPublishing": "Installing runtime…",
   "binaryDownloadFailed": "The agent runtime download failed.",
-  "binaryError": "Agent download failed"
+  "binaryError": "Agent download failed",
+  "mcpAuthTitle": "Sign-in and authorization",
+  "mcpAuthSettings": "Settings",
+  "mcpSaveConfiguration": "Save configuration",
+  "mcpSaving": "Saving…",
+  "mcpAuthManual": "Manual credentials",
+  "mcpLocalCredentials": "Values other than {ref} references stay with the Lody daemon on this computer; the workspace keeps only the references.",
+  "@mcpLocalCredentials": {
+    "placeholders": {
+      "ref": {
+        "type": "String"
+      }
+    }
+  },
+  "mcpAuthClient": "Use your own OAuth application",
+  "mcpAuthAuthorize": "Authorize",
+  "mcpAuthCheck": "Check connection",
+  "mcpAuthSignout": "Sign out",
+  "mcpAuthSaveFirst": "Save the configuration before authorizing.",
+  "mcpAuthLocalRequired": "Connect to the local daemon to configure authentication.",
+  "mcpAuthUnknown": "Check the connection to see whether authorization is needed.",
+  "mcpAuthNotRequired": "The connection does not require authorization.",
+  "mcpAuthWaiting": "Waiting for authorization in your browser…",
+  "mcpAuthAuthorized": "Authorized",
+  "mcpAuthError": "Authorization failed. Check the connection and try again.",
+  "mcpAuthStorageUnavailable": "The system credential store is unavailable. Unlock or configure it, then try again.",
+  "mcpAuthClientRequired": "This service requires an OAuth application. Enter its client ID below.",
+  "mcpAuthExpired": "Authorization expired. Authorize again to continue.",
+  "mcpAuthCancelled": "Authorization cancelled.",
+  "mcpAuthUnsupported": "This service does not support the standard authorization flow. Configure its credentials manually.",
+  "mcpAuthStdio": "Configure credentials in the environment fields, then save.",
+  "mcpEnvPassthrough": "Environment variable passthrough",
+  "mcpEnvPassthroughHint": "These variables are copied from the target machine's own environment. One name a line.",
+  "mcpDefaultEnabled": "Select by default",
+  "mcpDefaultEnabledHint": "New sessions initially select this server; users can still deselect it."
 }

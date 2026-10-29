@@ -752,10 +752,13 @@ func (a *App) providerRail(c *ui.Context, p *palette) {
 // providerSection is a collapsible part of the form.
 func (a *App) providerSection(c *ui.Context, p *palette, id, title string, body func()) {
 	f := &a.provider
-	open := f.sections[id]
+	foldSection(c, p, f.sections[id], func() { f.sections[id] = !f.sections[id] }, id, title, body)
+}
+
+// foldSection is a part of a form that folds away under its title.
+func foldSection(c *ui.Context, p *palette, open bool, toggle func(), id, title string, body func()) {
 	ui.Column(c.Key(id)).FillWidth().Radius(8).Background(p.Text.Alpha(0.035)).Clip().Children(func() {
-		head := ui.Row(c).FillWidth().Height(40).Padding(0, 12).AlignItems(ui.Center).Cursor(ui.CursorPointer).Label(title).
-			OnClick(func() { f.sections[id] = !f.sections[id] })
+		head := ui.Row(c).FillWidth().Height(40).Padding(0, 12).AlignItems(ui.Center).Cursor(ui.CursorPointer).Label(title).OnClick(toggle)
 		head.Children(func() {
 			ui.Text(c, title).FontSize(sizeSub).FontWeight(500).TextColor(p.Text).Grow(1)
 			icon := iconChevronDown

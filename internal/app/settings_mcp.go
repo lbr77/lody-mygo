@@ -37,6 +37,12 @@ type mcpForm struct {
 	url         string
 	bearer      string
 	headers     string // Name: value, a line each
+	passthrough string // variables passed on from the machine, a line each
+	enabled     bool   // selected for new sessions
+	manualOpen  bool   // the manual credentials are unfolded
+	busy        bool
+	saved       bool // the server is in the workspace
+	auth        *mcpAuth
 	err         string
 }
 
@@ -65,6 +71,7 @@ type mcpTools struct {
 	loading bool
 	tools   []mcpTool
 	err     string
+	oauth   bool // the server wants a sign-in
 }
 
 type mcpTool struct {
@@ -134,7 +141,7 @@ func (a *App) loadTools(m catalog.MCPServer) {
 			switch {
 			case err == nil:
 			case oauth:
-				state.err = locales.McpToolsAuthRequired()
+				state.err, state.oauth = locales.McpToolsAuthRequired(), true
 			case errors.As(err, &daemonErr) && daemonErr.Code == "daemon_unavailable":
 				state.err = locales.McpToolsNoDaemon()
 			default:
@@ -153,17 +160,21 @@ func (a *App) mcpRow(c *ui.Context, p *palette, m catalog.MCPServer) {
 	ui.Column(c).FillWidth().Children(func() {
 		a.mcpServerRow(c, p, server, tools)
 		if tools != nil {
-			mcpToolList(c, p, tools)
+			a.mcpToolList(c, p, server, tools)
 		}
 	})
 }
 
-func mcpToolList(c *ui.Context, p *palette, t *mcpTools) {
+func (a *App) mcpToolList(c *ui.Context, p *palette, m catalog.MCPServer, t *mcpTools) {
 	ui.Row(c).FillWidth().Wrap().Gap(6).AlignItems(ui.Center).Padding(0, 14, 12, 54).Children(func() {
 		switch {
 		case t.loading:
 			ui.Spinner(c).Size(13, 13)
 			ui.Text(c, locales.McpToolsLoading()).FontSize(sizeFoot).TextColor(p.Secondary)
+		case t.oauth:
+			ui.Text(c, t.err).FontSize(sizeFoot).TextColor(p.Secondary)
+			server := m
+			outlineButton(c, p, iconKey, locales.McpAuthAuthorize()).OnClick(func() { a.editMCP(&server) })
 		case t.err != "":
 			ui.Text(c, t.err).FontSize(sizeFoot).TextColor(p.Danger).Selectable()
 		case len(t.tools) == 0:
@@ -202,6 +213,15 @@ func (a *App) mcpServerRow(c *ui.Context, p *palette, server catalog.MCPServer, 
 				ui.Text(c, m.Description).FontSize(sizeFoot).TextColor(p.Tertiary).SingleLine()
 			}
 		})
+		settings := ui.Row(c).Gap(4).AlignItems(ui.Center).Padding(4, 8).Radius(6).Cursor(ui.CursorPointer).Label(locales.McpAuthSettings()).
+			Transition(colorFade).OnClick(func() { a.editMCP(&server) })
+		if settings.Hovered() {
+			settings.Background(p.Hover)
+		}
+		settings.Children(func() {
+			ui.Icon(c, iconSettings).Size(13, 13).TextColor(p.Secondary)
+			ui.Text(c, locales.McpAuthSettings()).FontSize(sizeFoot).TextColor(p.Secondary)
+		})
 		load := ui.Row(c).Gap(4).AlignItems(ui.Center).Padding(4, 8).Radius(6).Tooltip(locales.McpToolsLocal()).Transition(colorFade)
 		if m.Connection == nil || (tools != nil && tools.loading) || a.toolsMachine() == "" {
 			load.Opacity(0.45)
@@ -233,9 +253,16 @@ func (a *App) mcpServerRow(c *ui.Context, p *palette, server catalog.MCPServer, 
 
 // editMCP opens the editor, on a new server or an existing one.
 func (a *App) editMCP(m *catalog.MCPServer) {
+	a.endMCPAuth(a.mcp.auth, a.mcp.id)
 	f := mcpForm{open: true, id: uuid.NewString(), args: []string{""}}
 	if m != nil {
 		f.id, f.createdAt, f.createdBy, f.name, f.description = m.ID, m.CreatedAt, m.CreatedBy, m.Name, m.Description
+		f.enabled, f.saved, f.auth = m.EnabledByDefault, true, &mcpAuth{}
+		var names []string
+		for _, v := range anyList(m.Connection["envPassthrough"]) {
+			names = append(names, str(v))
+		}
+		f.passthrough = strings.Join(names, "\n")
 		f.http = m.Transport == "http"
 		conn := m.Connection
 		f.command, f.url, f.bearer = str(conn["command"]), str(conn["url"]), str(conn["bearerToken"])
@@ -248,8 +275,12 @@ func (a *App) editMCP(m *catalog.MCPServer) {
 		}
 		f.env = pairs(conn["env"], "=")
 		f.headers = pairs(conn["headers"], ": ")
+		f.manualOpen = f.bearer != "" || f.headers != ""
 	}
 	a.mcp = f
+	if m != nil {
+		a.refreshAuth(a.mcp.auth, *m)
+	}
 }
 
 func anyList(v any) []any {
@@ -334,9 +365,47 @@ func (f *mcpForm) connection() (map[string]any, error) {
 	if env != nil {
 		conn["env"] = env
 	}
+	var passthrough []any
+	for _, name := range strings.FieldsFunc(f.passthrough, func(r rune) bool { return r == '\n' || r == ',' || r == ' ' }) {
+		if !slices.Contains(passthrough, any(name)) {
+			passthrough = append(passthrough, name)
+		}
+	}
+	if len(passthrough) > 0 {
+		conn["envPassthrough"] = passthrough
+	}
 	return conn, nil
 }
 
+// sharedConnection is the form's connection as the workspace keeps it,
+// and the credentials only this computer's daemon keeps. A server signed
+// in here stays marked so while it reaches the same place.
+func (a *App) sharedConnection(f *mcpForm) (shared, local map[string]any, err error) {
+	full, err := f.connection()
+	if err != nil || full == nil {
+		return nil, nil, err
+	}
+	shared, local = splitMCP(full)
+	if m := a.savedMCP(f.id); m != nil && m.Connection["authentication"] == "local" && sameDestination(shared, m.Connection) {
+		shared["authentication"] = "local"
+	}
+	return shared, local, nil
+}
+
+// mcpDirty is whether the form says other than the workspace has, so a
+// sign-in waits for a save.
+func (a *App) mcpDirty(f *mcpForm) bool {
+	m := a.savedMCP(f.id)
+	if m == nil {
+		return true
+	}
+	shared, local, err := a.sharedConnection(f)
+	return err != nil || len(local) > 0 || connKey(shared) != connKey(m.Connection) ||
+		strings.TrimSpace(f.name) != m.Name || strings.TrimSpace(f.description) != m.Description
+}
+
+// saveMCP writes the server; credentials the form holds go to this
+// computer's daemon instead, as Lody saves them.
 func (a *App) saveMCP() {
 	f := &a.mcp
 	name := strings.TrimSpace(f.name)
@@ -346,7 +415,7 @@ func (a *App) saveMCP() {
 			return
 		}
 	}
-	conn, err := f.connection()
+	shared, local, err := a.sharedConnection(f)
 	if err != nil {
 		f.err = err.Error()
 		return
@@ -355,26 +424,56 @@ func (a *App) saveMCP() {
 	if f.http {
 		transport = "http"
 	}
-	enabled := true
-	for _, m := range a.catalog.MCPServers {
-		if m.ID == f.id {
-			enabled = m.EnabledByDefault
-		}
-	}
 	server := catalog.MCPServer{ID: f.id, Name: name, Transport: transport, Description: strings.TrimSpace(f.description),
-		Connection: conn, EnabledByDefault: enabled, CreatedAt: f.createdAt, CreatedBy: f.createdBy}
+		Connection: shared, EnabledByDefault: f.enabled, CreatedAt: f.createdAt, CreatedBy: f.createdBy}
 	row := server.Row(nowMs(), a.account.User.ID)
-	f.open = false
+	server.CreatedAt, server.UpdatedAt, server.CreatedBy = row["createdAt"].(float64), row["updatedAt"].(float64), str(row["createdBy"])
+	f.busy, f.err = true, ""
 	a.streamWrite("", func(fl *flock.Flock) error { return fl.Put([]any{"mcpServer", server.ID}, row) }, func(err error) {
-		if err == nil {
-			a.loadTools(server)
+		if err != nil {
+			f.busy, f.err = false, err.Error()
+			return
 		}
+		f.saved, f.createdAt, f.createdBy = true, server.CreatedAt, server.CreatedBy
+		if f.auth == nil {
+			f.auth = &mcpAuth{}
+		}
+		if len(local) == 0 {
+			f.busy, f.open = false, false
+			a.loadTools(server)
+			return
+		}
+		if !a.mcpAuthReady() {
+			f.busy, f.err = false, locales.McpAuthLocalRequired()
+			return
+		}
+		local["mode"] = "manual"
+		meta := server.Meta()
+		go func() {
+			res, err := a.mcpAuthCall(meta, "configure", map[string]any{"authentication": local})
+			a.update(func() {
+				f.busy = false
+				if err != nil || res.Status == "error" {
+					f.err = locales.McpAuthError()
+					return
+				}
+				if a.mcpAuthStatus == nil {
+					a.mcpAuthStatus = map[string]mcpAuthResult{}
+				}
+				a.mcpAuthStatus[server.ID] = res
+				f.open = false
+				a.loadTools(server)
+			})
+		}()
 	})
 }
 
 func (a *App) mcpDialog(c *ui.Context, p *palette) {
 	f := &a.mcp
 	if !f.open {
+		if f.auth != nil && f.auth.attempt != "" {
+			a.endMCPAuth(f.auth, f.id)
+		}
 		return
 	}
 	title := locales.McpAddTitle()
@@ -399,9 +498,14 @@ func (a *App) mcpDialog(c *ui.Context, p *palette) {
 				ui.Text(c, locales.McpConnectionHint("${VAR}")).FontSize(sizeCaption).TextColor(p.Tertiary)
 			})
 			if f.http {
-				field(c, p, "URL", "", func() { input(c, p, &f.url, "https://example.com/mcp", "URL").Font(fontMono) })
-				field(c, p, "Bearer token", "", func() { input(c, p, &f.bearer, "${TOKEN}", "Bearer token").Font(fontMono) })
-				field(c, p, locales.McpHeaders(), locales.McpHeadersHint(), func() { area(c, p, &f.headers, "X-Api-Key: ${API_KEY}", locales.McpHeaders(), 2).Font(fontMono) })
+				field(c, p, "URL", "", func() { input(c, p, &f.url, "https://mcp.example.com/mcp", "URL").Font(fontMono) })
+				foldSection(c, p, f.manualOpen, func() { f.manualOpen = !f.manualOpen }, "manual", locales.McpAuthManual(), func() {
+					field(c, p, "Bearer Token", "", func() { input(c, p, &f.bearer, "${MCP_TOKEN}", "Bearer Token").Font(fontMono).Password() })
+					field(c, p, locales.McpHeaders(), locales.McpHeadersHint(), func() {
+						area(c, p, &f.headers, "X-Api-Key: ${API_KEY}", locales.McpHeaders(), 2).Font(fontMono)
+					})
+					ui.Text(c, locales.McpLocalCredentials("${VAR}")).FontSize(sizeCaption).LineHeight(1.45).TextColor(p.Tertiary)
+				})
 			} else {
 				field(c, p, locales.McpCommand(), "", func() { input(c, p, &f.command, "/absolute/path/to/mcp-server", locales.McpCommand()).Font(fontMono) })
 				field(c, p, locales.McpArgs(), "", func() {
@@ -416,15 +520,37 @@ func (a *App) mcpDialog(c *ui.Context, p *palette) {
 					}
 					ghostButton(c, p, "+ "+locales.McpAddArg()).OnClick(func() { f.args = append(f.args, "") })
 				})
-				field(c, p, locales.McpEnv(), locales.McpEnvHint(), func() { area(c, p, &f.env, "API_KEY=${API_KEY}", locales.McpEnv(), 2).Font(fontMono) })
+				field(c, p, locales.McpEnv(), locales.McpEnvHint()+" "+locales.McpLocalCredentials("${VAR}"), func() {
+					area(c, p, &f.env, "API_KEY=${API_KEY}", locales.McpEnv(), 2).Font(fontMono)
+				})
+				field(c, p, locales.McpEnvPassthrough(), locales.McpEnvPassthroughHint(), func() {
+					area(c, p, &f.passthrough, "API_TOKEN", locales.McpEnvPassthrough(), 2).Font(fontMono)
+				})
 			}
+			if m := a.savedMCP(f.id); m != nil && f.saved && f.auth != nil {
+				a.mcpAuthPanel(c, p, *m, a.mcpDirty(f) || f.busy)
+			} else {
+				ui.Text(c, locales.McpAuthSaveFirst()).FontSize(sizeFoot).TextColor(p.Secondary)
+			}
+			ui.Row(c).FillWidth().Gap(12).AlignItems(ui.Center).Padding(10, 12).Radius(8).Background(p.Text.Alpha(0.035)).Children(func() {
+				ui.Column(c).Grow(1).Gap(2).Children(func() {
+					ui.Text(c, locales.McpDefaultEnabled()).FontSize(sizeSub).FontWeight(500).TextColor(p.Text)
+					ui.Text(c, locales.McpDefaultEnabledHint()).FontSize(sizeCaption).TextColor(p.Secondary)
+				})
+				ui.Switch(c, &f.enabled).Label(locales.McpDefaultEnabled())
+			})
 			if f.err != "" {
 				ui.Text(c, f.err).FontSize(sizeFoot).TextColor(p.Danger)
 			}
 		})
 		ui.Row(c).FillWidth().Padding(12, 20, 16, 20).Gap(8).Justify(ui.End).Shrink(0).Children(func() {
-			ghostButton(c, p, locales.Cancel()).Border(1, p.Border).OnClick(func() { f.open = false })
-			primaryButton(c, p, locales.Save(), strings.TrimSpace(f.name) != "").OnClick(a.saveMCP)
+			ghostButton(c, p, locales.Close()).Border(1, p.Border).OnClick(func() { f.open = false })
+			label := locales.McpSaveConfiguration()
+			if f.busy {
+				ui.Spinner(c).Size(14, 14)
+				label = locales.McpSaving()
+			}
+			primaryButton(c, p, label, strings.TrimSpace(f.name) != "" && !f.busy).OnClick(a.saveMCP)
 		})
 	})
 }

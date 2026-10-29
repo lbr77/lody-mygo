@@ -22,6 +22,7 @@ type MCPServer struct {
 	Connection       map[string]any
 	EnabledByDefault bool
 	CreatedAt        float64
+	UpdatedAt        float64
 	CreatedBy        string
 }
 
@@ -39,6 +40,11 @@ func (m MCPServer) Summary() string {
 		parts = append(parts, text(a))
 	}
 	return strings.Join(parts, " ")
+}
+
+// Meta is the server as the workspace stream holds it, unchanged.
+func (m MCPServer) Meta() map[string]any {
+	return m.Row(max(m.UpdatedAt, m.CreatedAt), "")
 }
 
 // Row is the server as the workspace stream stores it.
@@ -128,7 +134,7 @@ func projectWorkspace(rows []flock.Row) Catalog {
 			m := MCPServer{
 				ID: id, Name: strings.TrimSpace(text(v["name"])), Transport: text(v["transport"]), Description: text(v["description"]),
 				Connection: object(v["connection"]), EnabledByDefault: v["enabledByDefault"] == true,
-				CreatedAt: stamp(v["createdAt"]), CreatedBy: text(v["createdBy"]),
+				CreatedAt: stamp(v["createdAt"]), UpdatedAt: stamp(v["updatedAt"]), CreatedBy: text(v["createdBy"]),
 			}
 			if m.Name == "" || (m.Transport != "stdio" && m.Transport != "http") {
 				continue
