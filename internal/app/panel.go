@@ -1,11 +1,13 @@
 package app
 
 import (
+	"context"
 	"fmt"
 	"path"
 	"slices"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/egoist/mygo/ui"
 	"github.com/egoist/mygo/ui/editor"
@@ -247,6 +249,10 @@ func panelTab(c *ui.Context, p *palette, label string, active bool, close func()
 // machine compares it, and falls back to the edits the conversation shows
 // when the machine can't.
 func (a *App) changesTab(c *ui.Context, p *palette, in *inspectState) {
+	if in.turnDiff != nil {
+		a.turnDiffView(c, p, in)
+		return
+	}
 	if in.change != "" {
 		a.machineDiff(c, p, in)
 		return
@@ -433,6 +439,11 @@ func (a *App) machineDiff(c *ui.Context, p *palette, in *inspectState) {
 		panelStatus(c, p, true, locales.Loading(), "")
 		return
 	}
+	a.changeDiff(c, p, "machine/"+in.scope+"/"+entry.Path, entry)
+}
+
+// changeDiff shows a change's two sides as a diff, or why it can't.
+func (a *App) changeDiff(c *ui.Context, p *palette, key string, entry *collab.Change) {
 	old, okOld := entry.Old.String()
 	now, okNew := entry.New.String()
 	if entry.Status != "ok" || !okOld || !okNew {
@@ -448,7 +459,6 @@ func (a *App) machineDiff(c *ui.Context, p *palette, in *inspectState) {
 		panelStatus(c, p, false, why, "")
 		return
 	}
-	key := "machine/" + in.scope + "/" + entry.Path
 	d := a.diffs[key]
 	if d == nil {
 		lang := editor.LanguageFor(entry.Path)
@@ -491,4 +501,59 @@ func (a *App) fileEdits(c *ui.Context, p *palette, ch fileChange) {
 			})
 		}
 	})
+}
+
+// turnDiffState is what one reply changed in a file, as its edited files
+// open it.
+type turnDiffState struct {
+	turn, path string
+	loading    bool
+	err        string
+	change     *collab.Change
+}
+
+// openTurnDiff shows a reply's change to a file in the Changes panel.
+func (a *App) openTurnDiff(turn, file string) {
+	s, ok := a.collabSession()
+	if !ok {
+		return
+	}
+	in := a.inspectFor(a.selected)
+	in.openPanel(tabChanges)
+	a.panelOpen = true
+	td := &turnDiffState{turn: turn, path: file, loading: true}
+	in.turnDiff = td
+	conn := a.conn
+	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 65*time.Second)
+		defer cancel()
+		ch, err := collab.TurnDiff(ctx, conn, s, turn, file)
+		a.update(func() {
+			td.loading, td.change = false, ch
+			if err != nil {
+				td.err = err.Error()
+			}
+		})
+	}()
+}
+
+func (a *App) turnDiffView(c *ui.Context, p *palette, in *inspectState) {
+	td := in.turnDiff
+	ui.Row(c).Shrink(0).Height(36).Padding(0, 8).Gap(6).AlignItems(ui.Center).BorderWidth(0, 0, 1, 0).BorderColor(p.Border).Children(func() {
+		iconButton(c, p, iconChevronLeft, locales.NavBack(), p.Hover).OnClick(func() { in.turnDiff = nil })
+		ui.Text(c, td.path).Font(fontMono).FontSize(sizeFoot).TextColor(p.Text).SingleLine().Grow(1).MinWidth(0)
+		if ch := td.change; ch != nil && ch.Add != nil && ch.Del != nil {
+			diffCounts(c, p, *ch.Add, *ch.Del)
+		}
+	})
+	switch {
+	case td.loading:
+		panelStatus(c, p, true, locales.Loading(), "")
+	case td.err != "":
+		panelStatus(c, p, false, locales.PanelNoDiff(), td.err)
+	case td.change == nil:
+		panelStatus(c, p, false, locales.PanelNoDiff(), "")
+	default:
+		a.changeDiff(c, p, "turn/"+td.turn+"/"+td.path, td.change)
+	}
 }

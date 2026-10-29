@@ -5,6 +5,7 @@ import (
 	"compress/gzip"
 	"encoding/base64"
 	"encoding/json"
+	"strings"
 	"testing"
 )
 
@@ -59,5 +60,21 @@ func TestSortEntries(t *testing.T) {
 	}
 	if got != "Alpha cmd beta.go zeta.go " {
 		t.Fatal(got)
+	}
+}
+
+func TestEncodeText(t *testing.T) {
+	small, err := encodeText("hello")
+	if err != nil || small["encoding"] != "plain" || small["rawBytes"] != 5 {
+		t.Fatalf("small = %v, %v", small, err)
+	}
+	big := strings.Repeat("line of code\n", 10000)
+	enc, err := encodeText(big)
+	if err != nil || enc["encoding"] != "gzip-base64" || enc["rawBytes"] != len(big) {
+		t.Fatalf("big = %v, %v", enc["encoding"], err)
+	}
+	back := &Text{Encoding: "gzip-base64", Data: enc["data"].(string)}
+	if b, err := back.Bytes(); err != nil || string(b) != big {
+		t.Fatalf("round trip: %v", err)
 	}
 }

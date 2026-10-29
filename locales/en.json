@@ -1728,5 +1728,25 @@
   "monitorTerminateFailed": "Failed to terminate ACP process",
   "monitorTerminateUnavailable": "Machine is unavailable",
   "monitorTruncated": "Only the first 100 sessions are shown.",
-  "agentIdle": "The agent isn't running on the machine."
+  "agentIdle": "The agent isn't running on the machine.",
+  "editFile": "Edit file",
+  "fileUnsaved": "Unsaved",
+  "fileReadOnly": "This file is read-only.",
+  "fileReload": "Reload",
+  "fileLiveReload": "The agent or another peer changed this file. Reload to apply, or keep your edits and save to trigger a conflict.",
+  "saveConflictTitle": "Save conflict",
+  "saveConflictDetail": "The file on disk changed since you started editing ({conflict}). Choose how to reconcile.",
+  "@saveConflictDetail": {
+    "placeholders": {
+      "conflict": {
+        "type": "String"
+      }
+    }
+  },
+  "saveConflictDiscardHint": "Throw away your local edits and reload from disk.",
+  "saveConflictMarkers": "Insert conflict markers",
+  "saveConflictMarkersHint": "Reload with conflict markers so you can resolve by hand.",
+  "saveConflictOverwrite": "Overwrite disk",
+  "saveConflictOverwriteConfirm": "Confirm: overwrite disk",
+  "lspUnavailable": "The machine has no language server for this file."
 }

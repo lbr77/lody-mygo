@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"errors"
 	"path"
 	"strings"
 	"time"
@@ -24,17 +25,18 @@ const (
 // inspectState is the inspector's state for a session: the folders it
 // listed and opened, the file it shows, and the changes it compared.
 type inspectState struct {
-	session string
-	tabs    []string               // the panels open, in the order they opened
-	tab     string                 // the one shown
-	dirs    map[string]*dirListing // by path relative to the project
-	open    map[string]bool
-	tree    ui.ListState
-	file    string // the file Files shows
-	preview *filePreview
-	scope   string
-	changes map[string]*changesState // by scope
-	change  string                   // the file Changes shows
+	session  string
+	tabs     []string               // the panels open, in the order they opened
+	tab      string                 // the one shown
+	dirs     map[string]*dirListing // by path relative to the project
+	open     map[string]bool
+	tree     ui.ListState
+	file     string // the file Files shows
+	preview  *filePreview
+	scope    string
+	changes  map[string]*changesState // by scope
+	change   string                   // the file Changes shows
+	turnDiff *turnDiffState           // a reply's change to a file, shown over Changes
 }
 
 type dirListing struct {
@@ -55,6 +57,17 @@ type filePreview struct {
 	image   *ui.Bitmap
 	code    *editor.State
 	asText  bool // a Markdown file shown as its source
+
+	// Editing, through Code Collab: the file as opened, its digest the
+	// base a save writes over.
+	editing  bool
+	opening  bool
+	base     *collab.File
+	saving   bool
+	saveErr  string
+	conflict *collab.Conflict
+	disk     *collab.File // a newer text the disk has, while there are edits
+	checked  time.Time
 }
 
 type changesState struct {
@@ -335,8 +348,28 @@ func (a *App) fileView(c *ui.Context, p *palette, in *inspectState, s collab.Ses
 			}
 			ghostButton(c, p, label).OnClick(func() { fp.asText = !fp.asText })
 		}
+		switch {
+		case fp != nil && fp.editing:
+			if fp.code != nil && fp.code.Buffer.Modified() {
+				ui.Text(c, locales.FileUnsaved()).FontSize(sizeCaption).TextColor(p.Warning)
+			}
+			if fp.saving {
+				ui.Spinner(c).Size(12, 12)
+			}
+			ghostButton(c, p, locales.Done()).OnClick(func() { fp.stopEditing() })
+			modified := fp.code != nil && fp.code.Buffer.Modified()
+			primaryButton(c, p, locales.Save(), modified && !fp.saving && fp.conflict == nil).OnClick(func() { a.saveFile(fp, s) })
+		case fp.editable() && !(markdownFile && !fp.asText):
+			if fp.opening {
+				ui.Spinner(c).Size(12, 12)
+			}
+			iconButton(c, p, iconPencil, locales.EditFile(), p.Hover).Tooltip(locales.EditFile()).OnClick(func() { a.editFile(fp, s) })
+		}
 		iconButton(c, p, iconCopy, locales.Copy(), p.Hover).OnClick(func() { mygo.Clipboard.WriteText(in.file) })
 	})
+	if fp != nil && fp.saveErr != "" {
+		ui.Text(c, fp.saveErr).FontSize(sizeFoot).TextColor(p.Danger).Padding(6, 12).Selectable()
+	}
 	switch {
 	case fp == nil || fp.loading:
 		panelStatus(c, p, true, locales.Loading(), "")
@@ -353,11 +386,211 @@ func (a *App) fileView(c *ui.Context, p *palette, in *inspectState, s collab.Ses
 			markdown.View(c.Key("md/"+in.file), fp.text, &a.md)
 		})
 	default:
+		if fp.editing {
+			a.editBanner(c, p, fp, s)
+		}
 		if fp.code == nil {
 			buf := editor.NewBuffer(fp.text)
 			buf.SetLanguage(editor.LanguageFor(in.file))
 			fp.code = &editor.State{Buffer: buf, ReadOnly: true, Font: ui.Font{Family: fontMono, Size: 12}, NoFolding: true, NoActiveLine: true, Label: in.file}
 		}
 		editor.View(c, fp.code).Grow(1).MinHeight(0).FillWidth()
+		if fp.editing {
+			c.OnShortcut(ui.Cmd, ui.KeyS, func() { a.saveFile(fp, s) })
+			a.watchFile(c, fp, s)
+		}
 	}
+}
+
+// editable is whether the shown file opens for editing: text, not too
+// large for Code Collab.
+func (fp *filePreview) editable() bool {
+	return fp != nil && !fp.loading && fp.err == "" && !fp.binary && fp.image == nil && len(fp.text) <= 10<<20
+}
+
+// editFile opens the file through Code Collab, which hands its digest,
+// and makes the editor writable.
+func (a *App) editFile(fp *filePreview, s collab.Session) {
+	if fp.opening || fp.editing {
+		return
+	}
+	fp.opening, fp.saveErr = true, ""
+	conn := a.conn
+	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 35*time.Second)
+		defer cancel()
+		f, err := collab.OpenText(ctx, conn, s, fp.path)
+		a.update(func() {
+			fp.opening = false
+			if err != nil {
+				fp.saveErr = err.Error()
+				return
+			}
+			if f.ReadOnly {
+				fp.saveErr = locales.FileReadOnly()
+				return
+			}
+			fp.base, fp.text, fp.editing, fp.checked = f, f.Text, true, time.Now()
+			buf := editor.NewBuffer(f.Text)
+			buf.SetLanguage(editor.LanguageFor(fp.path))
+			fp.code = &editor.State{Buffer: buf, Font: ui.Font{Family: fontMono, Size: 12}, NoFolding: true, Label: fp.path,
+				OnDefinition: func(offset int) { a.goToDefinition(fp, s, offset) }}
+		})
+	}()
+}
+
+// stopEditing goes back to reading, dropping unsaved edits.
+func (fp *filePreview) stopEditing() {
+	fp.editing, fp.conflict, fp.disk, fp.saveErr = false, nil, nil, ""
+	if fp.base != nil {
+		fp.text = fp.base.Text
+	}
+	fp.code = nil
+}
+
+// saveFile writes the editor's text over the file it opened.
+func (a *App) saveFile(fp *filePreview, s collab.Session) {
+	if !fp.editing || fp.saving || fp.conflict != nil || fp.code == nil || fp.base == nil {
+		return
+	}
+	text := fp.code.Buffer.String()
+	fp.saving, fp.saveErr = true, ""
+	conn, base := a.conn, *fp.base
+	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 65*time.Second)
+		defer cancel()
+		digest, err := collab.SaveText(ctx, conn, s, fp.path, base.Digest, text, base.Format)
+		a.update(func() {
+			fp.saving = false
+			var conflict *collab.Conflict
+			switch {
+			case errors.As(err, &conflict):
+				fp.conflict = conflict
+			case err != nil:
+				fp.saveErr = err.Error()
+			default:
+				fp.base.Digest, fp.base.Text, fp.text, fp.disk = digest, text, text, nil
+				if fp.code.Buffer.String() == text {
+					fp.code.Buffer.MarkSaved()
+				}
+			}
+		})
+	}()
+}
+
+// watchFile asks every few seconds whether the disk moved on: a clean
+// buffer takes the new text, an edited one is told.
+func (a *App) watchFile(c *ui.Context, fp *filePreview, s collab.Session) {
+	c.After(5 * time.Second)
+	if fp.saving || fp.conflict != nil || fp.disk != nil || fp.base == nil || time.Since(fp.checked) < 5*time.Second {
+		return
+	}
+	fp.checked = time.Now()
+	conn, path, digest := a.conn, fp.path, fp.base.Digest
+	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 35*time.Second)
+		defer cancel()
+		f, err := collab.RefreshText(ctx, conn, s, path, digest)
+		if err != nil || f == nil {
+			return
+		}
+		a.update(func() {
+			if !fp.editing || fp.base == nil || fp.base.Digest != digest {
+				return
+			}
+			if fp.code != nil && !fp.code.Buffer.Modified() {
+				fp.base, fp.text = f, f.Text
+				fp.code.Buffer.Reset(f.Text)
+				return
+			}
+			fp.disk = f
+		})
+	}()
+}
+
+// conflictMarkers sets mine against the disk's, Git's way, to resolve by
+// hand.
+func conflictMarkers(mine, disk string) string {
+	nl := func(s string) string {
+		if s != "" && !strings.HasSuffix(s, "\n") {
+			return s + "\n"
+		}
+		return s
+	}
+	return "<<<<<<< yours\n" + nl(mine) + "=======\n" + nl(disk) + ">>>>>>> disk\n"
+}
+
+// editBanner is the editor's state over it: saving, a save the disk
+// refused and how to settle it, or a newer text on disk.
+func (a *App) editBanner(c *ui.Context, p *palette, fp *filePreview, s collab.Session) {
+	switch {
+	case fp.conflict != nil:
+		cf := fp.conflict
+		ui.Column(c).FillWidth().Padding(10, 12).Gap(8).Background(p.Warning.Alpha(0.1)).BorderWidth(0, 0, 1, 0).BorderColor(p.Warning.Alpha(0.3)).Children(func() {
+			ui.Text(c, locales.SaveConflictTitle()).FontSize(sizeSub).FontWeight(600).TextColor(p.Text)
+			ui.Text(c, locales.SaveConflictDetail(cf.Reason)).FontSize(sizeFoot).TextColor(p.Secondary)
+			ui.Row(c).Wrap().Gap(8).Children(func() {
+				ghostButton(c, p, locales.FileReload()).Border(1, p.Border).Tooltip(locales.SaveConflictDiscardHint()).OnClick(func() {
+					fp.conflict = nil
+					if cf.HasText {
+						fp.base = &collab.File{Path: fp.path, Digest: cf.DiskDigest, Text: cf.DiskText, Format: fp.base.Format}
+						fp.text = cf.DiskText
+						fp.code.Buffer.Reset(cf.DiskText)
+						return
+					}
+					fp.stopEditing()
+					a.editFile(fp, s)
+				})
+				if cf.HasText {
+					ghostButton(c, p, locales.SaveConflictMarkers()).Border(1, p.Border).Tooltip(locales.SaveConflictMarkersHint()).OnClick(func() {
+						mine := fp.code.Buffer.String()
+						fp.conflict = nil
+						fp.base = &collab.File{Path: fp.path, Digest: cf.DiskDigest, Text: cf.DiskText, Format: fp.base.Format}
+						fp.code.Buffer.Set(conflictMarkers(mine, cf.DiskText))
+					})
+				}
+				if cf.DiskDigest != "" {
+					ghostButton(c, p, locales.SaveConflictOverwrite()).Border(1, p.Danger.Alpha(0.5)).OnClick(func() {
+						a.confirm(locales.SaveConflictOverwriteConfirm(), locales.SaveConflictDetail(cf.Reason), locales.SaveConflictOverwrite(), func() {
+							fp.conflict = nil
+							fp.base.Digest = cf.DiskDigest
+							a.saveFile(fp, s)
+						})
+					})
+				}
+			})
+		})
+	case fp.disk != nil:
+		ui.Row(c).FillWidth().Padding(8, 12).Gap(8).AlignItems(ui.Center).Background(p.Primary.Alpha(0.08)).Children(func() {
+			ui.Text(c, locales.FileLiveReload()).FontSize(sizeFoot).TextColor(p.Secondary).Grow(1).MinWidth(0)
+			ghostButton(c, p, locales.FileReload()).Border(1, p.Border).OnClick(func() {
+				d := fp.disk
+				fp.disk, fp.base, fp.text = nil, d, d.Text
+				fp.code.Buffer.Reset(d.Text)
+			})
+		})
+	}
+}
+
+// goToDefinition asks the machine's language server where the word at
+// offset is defined.
+func (a *App) goToDefinition(fp *filePreview, s collab.Session, offset int) {
+	if fp.code == nil {
+		return
+	}
+	pos := fp.code.Buffer.Pos(offset)
+	conn, path := a.conn, fp.path
+	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 35*time.Second)
+		defer cancel()
+		_, err := collab.Lsp(ctx, conn, s, "definition", path, pos.Line, pos.Col)
+		a.update(func() {
+			switch {
+			case errors.Is(err, collab.ErrNoLanguageServer):
+				a.notice = locales.LspUnavailable()
+			case err != nil:
+				a.notice = err.Error()
+			}
+		})
+	}()
 }

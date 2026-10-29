@@ -14,6 +14,7 @@ import (
 
 	"github.com/egoist/mygo"
 	"github.com/egoist/mygo/ui"
+	"github.com/egoist/mygo/ui/editor"
 
 	"github.com/lbr77/lody-mygo/internal/catalog"
 	"github.com/lbr77/lody-mygo/internal/cloud"
@@ -471,6 +472,7 @@ func TestChangesPanel(t *testing.T) {
 	items := a.view.Entries[1].Items
 	items[4].Content = []any{map[string]any{"type": "diff", "path": "internal/catalog/sync.go", "oldText": "package catalog\n", "newText": "package catalog\n\nconst maxReplica = 8 << 20\n"}}
 	items[2].Content = []any{map[string]any{"type": "diff", "path": "README.md", "oldText": "# Lody", "newText": "# Lody Native"}}
+	a.view.Entries[1].FileDiffs = nil // its card opens the reply's own diff
 	tt := snap(t, a, "changes-panel", false, func(tt *ui.Tester) {
 		tt.Frame()
 		if err := tt.Click("Show panel"); err != nil {
@@ -1112,5 +1114,32 @@ func TestSessionActions(t *testing.T) {
 	}
 	if tokensCompact(1_234_567) != "1.23M" || tokensCompact(999) != "999" || tokensCompact(120_000) != "120K" {
 		t.Fatal("tokensCompact")
+	}
+}
+
+func TestFileEditing(t *testing.T) {
+	if got := conflictMarkers("mine", "disk\n"); got != "<<<<<<< yours\nmine\n=======\ndisk\n>>>>>>> disk\n" {
+		t.Fatalf("markers = %q", got)
+	}
+	a := fixture()
+	a.panelOpen = true
+	in := a.inspectFor("s1")
+	in.openPanel(tabFiles)
+	in.file = "main.go"
+	buf := editor.NewBuffer("package main\n")
+	fp := &filePreview{path: "main.go", text: "package main\n", editing: true, base: &collab.File{Path: "main.go", Digest: "sha256:x", Text: "package main\n"},
+		code: &editor.State{Buffer: buf}, conflict: &collab.Conflict{Reason: "digest_mismatch", DiskDigest: "sha256:y", DiskText: "package other\n", HasText: true}}
+	in.preview = fp
+	a.conn = &cloud.Conn{ID: "w1"}
+	tt := snap(t, a, "file-conflict", false, nil)
+	for _, want := range []string{"Save conflict", "digest_mismatch", "Reload", "Insert conflict markers", "Overwrite disk", "Done"} {
+		if !tt.HasText(want) {
+			t.Fatalf("no %q in %q", want, tt.Texts())
+		}
+	}
+	fp.conflict, fp.disk = nil, &collab.File{Digest: "sha256:z", Text: "package newer\n"}
+	tt = snap(t, a, "file-disk-changed", false, nil)
+	if !tt.HasText("The agent or another peer changed this file.") {
+		t.Fatalf("disk banner: %q", tt.Texts())
 	}
 }

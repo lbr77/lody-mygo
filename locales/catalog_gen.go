@@ -8308,3 +8308,135 @@ func AgentIdle() string { return In(i18n.Locale()).AgentIdle() }
 func (msgs Messages) AgentIdle() string {
 	return Catalog.Format(msgs.locale, "agentIdle", nil)
 }
+
+// EditFile says "Edit file"
+// in the language the app shows.
+func EditFile() string { return In(i18n.Locale()).EditFile() }
+
+// EditFile says "Edit file"
+// in the language of msgs.
+func (msgs Messages) EditFile() string {
+	return Catalog.Format(msgs.locale, "editFile", nil)
+}
+
+// FileUnsaved says "Unsaved"
+// in the language the app shows.
+func FileUnsaved() string { return In(i18n.Locale()).FileUnsaved() }
+
+// FileUnsaved says "Unsaved"
+// in the language of msgs.
+func (msgs Messages) FileUnsaved() string {
+	return Catalog.Format(msgs.locale, "fileUnsaved", nil)
+}
+
+// FileReadOnly says "This file is read-only."
+// in the language the app shows.
+func FileReadOnly() string { return In(i18n.Locale()).FileReadOnly() }
+
+// FileReadOnly says "This file is read-only."
+// in the language of msgs.
+func (msgs Messages) FileReadOnly() string {
+	return Catalog.Format(msgs.locale, "fileReadOnly", nil)
+}
+
+// FileReload says "Reload"
+// in the language the app shows.
+func FileReload() string { return In(i18n.Locale()).FileReload() }
+
+// FileReload says "Reload"
+// in the language of msgs.
+func (msgs Messages) FileReload() string {
+	return Catalog.Format(msgs.locale, "fileReload", nil)
+}
+
+// FileLiveReload says "The agent or another peer changed this file. Reload to apply, or keep your edits and save to trigger a conflict."
+// in the language the app shows.
+func FileLiveReload() string { return In(i18n.Locale()).FileLiveReload() }
+
+// FileLiveReload says "The agent or another peer changed this file. Reload to apply, or keep your edits and save to trigger a conflict."
+// in the language of msgs.
+func (msgs Messages) FileLiveReload() string {
+	return Catalog.Format(msgs.locale, "fileLiveReload", nil)
+}
+
+// SaveConflictTitle says "Save conflict"
+// in the language the app shows.
+func SaveConflictTitle() string { return In(i18n.Locale()).SaveConflictTitle() }
+
+// SaveConflictTitle says "Save conflict"
+// in the language of msgs.
+func (msgs Messages) SaveConflictTitle() string {
+	return Catalog.Format(msgs.locale, "saveConflictTitle", nil)
+}
+
+// SaveConflictDetail says "The file on disk changed since you started editing ({conflict}). Choose how to reconcile."
+// in the language the app shows.
+func SaveConflictDetail(conflict string) string {
+	return In(i18n.Locale()).SaveConflictDetail(conflict)
+}
+
+// SaveConflictDetail says "The file on disk changed since you started editing ({conflict}). Choose how to reconcile."
+// in the language of msgs.
+func (msgs Messages) SaveConflictDetail(conflict string) string {
+	return Catalog.Format(msgs.locale, "saveConflictDetail", map[string]any{"conflict": conflict})
+}
+
+// SaveConflictDiscardHint says "Throw away your local edits and reload from disk."
+// in the language the app shows.
+func SaveConflictDiscardHint() string { return In(i18n.Locale()).SaveConflictDiscardHint() }
+
+// SaveConflictDiscardHint says "Throw away your local edits and reload from disk."
+// in the language of msgs.
+func (msgs Messages) SaveConflictDiscardHint() string {
+	return Catalog.Format(msgs.locale, "saveConflictDiscardHint", nil)
+}
+
+// SaveConflictMarkers says "Insert conflict markers"
+// in the language the app shows.
+func SaveConflictMarkers() string { return In(i18n.Locale()).SaveConflictMarkers() }
+
+// SaveConflictMarkers says "Insert conflict markers"
+// in the language of msgs.
+func (msgs Messages) SaveConflictMarkers() string {
+	return Catalog.Format(msgs.locale, "saveConflictMarkers", nil)
+}
+
+// SaveConflictMarkersHint says "Reload with conflict markers so you can resolve by hand."
+// in the language the app shows.
+func SaveConflictMarkersHint() string { return In(i18n.Locale()).SaveConflictMarkersHint() }
+
+// SaveConflictMarkersHint says "Reload with conflict markers so you can resolve by hand."
+// in the language of msgs.
+func (msgs Messages) SaveConflictMarkersHint() string {
+	return Catalog.Format(msgs.locale, "saveConflictMarkersHint", nil)
+}
+
+// SaveConflictOverwrite says "Overwrite disk"
+// in the language the app shows.
+func SaveConflictOverwrite() string { return In(i18n.Locale()).SaveConflictOverwrite() }
+
+// SaveConflictOverwrite says "Overwrite disk"
+// in the language of msgs.
+func (msgs Messages) SaveConflictOverwrite() string {
+	return Catalog.Format(msgs.locale, "saveConflictOverwrite", nil)
+}
+
+// SaveConflictOverwriteConfirm says "Confirm: overwrite disk"
+// in the language the app shows.
+func SaveConflictOverwriteConfirm() string { return In(i18n.Locale()).SaveConflictOverwriteConfirm() }
+
+// SaveConflictOverwriteConfirm says "Confirm: overwrite disk"
+// in the language of msgs.
+func (msgs Messages) SaveConflictOverwriteConfirm() string {
+	return Catalog.Format(msgs.locale, "saveConflictOverwriteConfirm", nil)
+}
+
+// LspUnavailable says "The machine has no language server for this file."
+// in the language the app shows.
+func LspUnavailable() string { return In(i18n.Locale()).LspUnavailable() }
+
+// LspUnavailable says "The machine has no language server for this file."
+// in the language of msgs.
+func (msgs Messages) LspUnavailable() string {
+	return Catalog.Format(msgs.locale, "lspUnavailable", nil)
+}

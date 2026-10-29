@@ -823,5 +823,18 @@
   "monitorTerminateFailed": "终止 ACP 进程失败",
   "monitorTerminateUnavailable": "机器当前不可用",
   "monitorTruncated": "仅展示前 100 个 session。",
-  "agentIdle": "Agent 当前没有在机器上运行。"
+  "agentIdle": "Agent 当前没有在机器上运行。",
+  "editFile": "编辑文件",
+  "fileUnsaved": "未保存",
+  "fileReadOnly": "此文件为只读。",
+  "fileReload": "重新加载",
+  "fileLiveReload": "agent 或另一个协作者修改了这个文件。点 Reload 应用新内容；继续编辑并保存会触发冲突。",
+  "saveConflictTitle": "保存冲突",
+  "saveConflictDetail": "你开始编辑后磁盘上的文件发生了变化（{conflict}），请选择处理方式。",
+  "saveConflictDiscardHint": "丢弃本地编辑，重新从磁盘加载。",
+  "saveConflictMarkers": "插入冲突标记",
+  "saveConflictMarkersHint": "重新加载并插入冲突标记，由你手动解决。",
+  "saveConflictOverwrite": "覆盖磁盘",
+  "saveConflictOverwriteConfirm": "确认：覆盖磁盘",
+  "lspUnavailable": "这台机器没有为此文件提供语言服务。"
 }

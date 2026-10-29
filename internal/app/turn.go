@@ -391,7 +391,13 @@ func (a *App) editedFiles(c *ui.Context, p *palette, e session.Entry) {
 		}
 		for _, d := range shown {
 			dir, file := path.Split(d.Path)
-			ui.Row(c.Key(d.Path)).Height(height).Padding(0, 10).Gap(6).AlignItems(ui.Center).Children(func() {
+			full := d.Path
+			row := ui.Row(c.Key(d.Path)).Height(height).Padding(0, 10).Gap(6).AlignItems(ui.Center).Cursor(ui.CursorPointer).
+				Label(d.Path).Transition(colorFade).OnClick(func() { a.openTurnDiff(e.ID, full) })
+			if row.Hovered() {
+				row.Background(p.Hover)
+			}
+			row.Children(func() {
 				ui.Text(c, file).FontSize(sizeSub).FontWeight(500).TextColor(p.Text).SingleLine().Shrink(0).MaxWidth(320)
 				ui.Text(c, strings.TrimSuffix(dir, "/")).FontSize(sizeSub).TextColor(p.Tertiary).SingleLine().MinWidth(0).Grow(1)
 				diffCounts(c, p, d.Add, d.Del)
