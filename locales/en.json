@@ -311,6 +311,21 @@
     }
   },
   "sentUnconfirmed": "Sent, but the machine hasn't confirmed it yet.",
+  "pendingMessageUploadFailed": "Not sent",
+  "pendingMessageUploading": "Waiting to send · Uploading attachments",
+  "pendingMessageWaiting": "Waiting to send",
+  "attachmentPrepared": "Ready",
+  "attachmentUploading": "Uploading · {progress}%",
+  "@attachmentUploading": {
+    "placeholders": {
+      "progress": {
+        "type": "int"
+      }
+    }
+  },
+  "attachmentInterrupted": "Upload interrupted",
+  "retryPendingSend": "Continue sending",
+  "cancelPendingSend": "Cancel send",
   "defaultModel": "Default model",
   "permissionMode": "Permission mode: {name}",
   "@permissionMode": {
@@ -2256,7 +2271,19 @@
   "passwordMismatch": "Passwords do not match.",
   "passwordCurrentRequired": "Enter your current password.",
   "passwordVerifyFailed": "Couldn't verify your password. Please try again.",
-  "sending": "Sending",
+  "sendStatusSending": "Sending · {sent} / {total}",
+  "@sendStatusSending": {
+    "placeholders": {
+      "sent": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "sendStatusSendingWithoutSize": "Sending",
+  "sendStatusFailed": "Not sent. Open the conversation to continue sending.",
   "attachMenu": "Add attachment",
   "mcpServersTitle": "MCP servers",
   "mcpLoadNone": "No MCP servers loaded",
@@ -3917,6 +3944,22 @@
   },
   "mqScheduledFailedCount": "{count} scheduled not sent",
   "@mqScheduledFailedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mqFailedCount": "{count} not sent",
+  "@mqFailedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mqPreparingCount": "{count} preparing",
+  "@mqPreparingCount": {
     "placeholders": {
       "count": {
         "type": "int"

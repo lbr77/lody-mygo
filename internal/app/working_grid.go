@@ -258,13 +258,17 @@ func (a *App) workingMark(c *ui.Context, p *palette, id string, working, unread 
 	return true
 }
 
-// sendRing marks a row whose message is still going out, as Lody's: a
-// faint ring that fills with the bytes sent, easing out over 300ms, a
-// highlight sweeping along what is filled every 1.8s so a ring waiting on
-// the next report never reads as frozen; without a size to measure, a
-// quarter of it turns every 1.2s.
-func sendRing(c *ui.Context, p *palette, progress float32, known bool) {
-	ring := ui.Box(c.Key("send-ring")).Size(12, 12).Shrink(0).Label(locales.Sending())
+// sendRing marks messages still going out, as Lody's
+// SessionSendProgressRing: a faint ring that fills with the bytes sent,
+// easing out over 300ms, a highlight sweeping along what is filled every
+// 1.8s so a ring waiting on the next report never reads as frozen;
+// without a size to measure, a quarter of it turns every 1.2s. label
+// names it where nothing beside it does.
+func sendRing(c *ui.Context, p *palette, progress float32, known bool, label string) {
+	ring := ui.Box(c.Key("send-ring")).Size(12, 12).Shrink(0)
+	if label != "" {
+		ring.Label(label)
+	}
 	ink := p.Primary
 	var turn, fill, sweep float32
 	if known {

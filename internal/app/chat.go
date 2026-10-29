@@ -233,7 +233,12 @@ func (a *App) conversation(c *ui.Context, p *palette, sess *catalog.Session) {
 	// press on it picks the message, as Lody's rows are select-none.
 	a.md.ShareSelection = a.shareImg.picking(a.selected)
 	a.indexFind(entries)
-	a.chatMotion.rows = len(entries) + 1
+	// The messages held on their way follow what is written, as Lody's
+	// trailing rows, each keyed by the turn it becomes, which takes its
+	// place.
+	held := a.heldSends(a.selected, v, false)
+	rows := len(entries) + len(held)
+	a.chatMotion.rows = rows + 1
 	a.revealFind()
 	defer func() {
 		if a.find.reveal > 0 {
@@ -242,8 +247,11 @@ func (a *App) conversation(c *ui.Context, p *palette, sess *catalog.Session) {
 		}
 	}()
 	a.chatList.Key = func(i int) any {
-		if i < len(entries) {
+		switch {
+		case i < len(entries):
 			return entries[i].ID
+		case i < rows:
+			return held[i-len(entries)].id
 		}
 		return i
 	}
@@ -272,16 +280,27 @@ func (a *App) conversation(c *ui.Context, p *palette, sess *catalog.Session) {
 	frame.Children(func() {
 		a.stepFindGlide(c)
 		a.chatMotion.applyNudge(a.selected, c.Now())
-		list := ui.List(c.Key("chat/"+a.selected), &a.chatList, len(entries)+1, func(i int) {
-			if i == len(entries) {
+		list := ui.List(c.Key("chat/"+a.selected), &a.chatList, rows+1, func(i int) {
+			if i == rows {
 				sent.noteEnd(a.liveStatus(c, p, v).Bounds())
+				return
+			}
+			if i >= len(entries) {
+				s := held[i-len(entries)]
+				row := a.column(c, s.id, func() { a.pendingMessage(c, p, s) })
+				if i > 0 {
+					row.Padding(56, 0, 0, 0) // as a written message's
+				}
+				b := row.Bounds()
+				a.outline.tops[i] = b.Y
+				sent.noteRow(s.id, b, i == rows-1)
 				return
 			}
 			// Where each row was, for the outline's reader position and
 			// the message just sent.
 			b := a.entry(c, p, entries, i).Bounds()
 			a.outline.tops[i] = b.Y
-			sent.noteRow(entries[i].ID, b, i == len(entries)-1)
+			sent.noteRow(entries[i].ID, b, i == rows-1)
 		})
 		// Tracked, so that a search can glide its result into view, and a
 		// message just sent glide to where it is held.
@@ -315,8 +334,9 @@ func (a *App) sendGlide(entries []session.Entry) bool {
 		}
 	}
 	if last != cm.lastUser {
-		// A message the user is sending, not one opened with the chat.
-		if cm.lastUser != "" && strings.HasPrefix(cm.lastUser, a.selected+"/") && a.sending && a.sendingID == a.selected {
+		// A message the user is sending, not one opened with the chat,
+		// nor one held already, which was anchored as it was sent.
+		if cm.lastUser != "" && strings.HasPrefix(cm.lastUser, a.selected+"/") && a.sending && a.sendingID == a.selected && cm.sent.id != id {
 			cm.sent.sendAnchor(a.selected, id)
 		}
 		cm.lastUser = last
@@ -587,9 +607,14 @@ func (a *App) userMessage(c *ui.Context, p *palette, e session.Entry) {
 	})
 }
 
-// sendingShown reports whether e is the message on its way: the
-// conversation's last from the user while its send is not done.
+// sendingShown reports whether e is a message on its way: written
+// locally, its write not through yet. That is a held message once its
+// turn shows, or the conversation's last from the user while a message
+// sent at once is not done.
 func (a *App) sendingShown(e session.Entry) bool {
+	if s := a.pending.find(e.ID); s != nil && s.sessionID == a.selected {
+		return true
+	}
 	if !a.sending || a.sendingID != a.selected || a.view == nil || e.Status != "pending" {
 		return false
 	}

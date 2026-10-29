@@ -32,7 +32,9 @@ import (
 // their new places on it once dropped. Its actions end the row: Steer, edit
 // and remove, with tips after 300ms, folded into one More button on a sheet
 // narrower than 520. Queued messages show only here, never in the
-// conversation, as Lody's.
+// conversation, as Lody's. Messages routed to the queue while their
+// attachments upload show after the queued ones as pending rows, which
+// only retry and cancel, and give way to the real items as they come.
 
 const (
 	queueLine      = 18  // one line of queue text, which the gutter, number and actions center on
@@ -82,6 +84,9 @@ type scheduledItem struct {
 type queueProps struct {
 	sessionID string
 	items     []session.Entry
+	// pending are the messages held on their way to the queue, which
+	// follow its items.
+	pending   []*pendingSend
 	scheduled []scheduledItem
 	// showSteer is a reply running to steer; nativeSteer that the agent
 	// takes any queued message mid-turn, where without it only the first
@@ -179,8 +184,9 @@ func (a *App) queueSheet(c *ui.Context, p *palette, sess *catalog.Session, v *se
 	if v != nil {
 		items = v.Queue
 	}
+	pending := a.heldSends(sess.ID, v, true)
 	scheduled := a.scheduledQueueItems(sess)
-	if len(items)+len(scheduled) == 0 {
+	if len(items)+len(pending)+len(scheduled) == 0 {
 		delete(a.mqViews, sess.ID)
 		return
 	}
@@ -188,6 +194,7 @@ func (a *App) queueSheet(c *ui.Context, p *palette, sess *catalog.Session, v *se
 	o := queueProps{
 		sessionID:   sid,
 		items:       items,
+		pending:     pending,
 		scheduled:   scheduled,
 		showSteer:   runningReply(v),
 		nativeSteer: a.steerable(sess),
@@ -298,15 +305,22 @@ func (a *App) queuePanel(c *ui.Context, p *palette, st *queueView, o queueProps)
 	items := st.ordered(o.items)
 	scheduled := append([]scheduledItem(nil), o.scheduled...)
 	sort.SliceStable(scheduled, func(i, j int) bool { return scheduled[i].at.Before(scheduled[j].at) })
-	if len(items)+len(scheduled) == 0 {
+	queued := len(items) + len(o.pending)
+	if queued+len(scheduled) == 0 {
 		return
 	}
 	st.follow(items)
-	onlyScheduled := len(items) == 0
+	onlyScheduled := queued == 0
 	failed := 0
 	for _, s := range scheduled {
 		if s.failed {
 			failed++
+		}
+	}
+	notSent := 0
+	for _, s := range o.pending {
+		if s.err != "" {
+			notSent++
 		}
 	}
 	open := !st.folded
@@ -331,18 +345,28 @@ func (a *App) queuePanel(c *ui.Context, p *palette, st *queueView, o queueProps)
 			ui.Text(c, title).FontSize(sizeFoot).FontWeight(500).TextColor(p.Text.Alpha(0.86)).SingleLine().Shrink(0)
 			if !onlyScheduled {
 				var counts []string
-				if len(items) > 0 {
-					counts = append(counts, locales.MqQueuedCount(len(items)))
+				if queued > 0 {
+					counts = append(counts, locales.MqQueuedCount(queued))
 				}
 				if len(scheduled) > 0 {
 					counts = append(counts, locales.MqScheduledCount(len(scheduled)))
 				}
 				ui.Text(c, strings.Join(counts, " · ")).FontSize(sizeFoot).FontFeatures("tnum").TextColor(p.Secondary).SingleLine().MinWidth(0).Shrink(1)
 			}
-			// Folded, what didn't go out still says so.
-			if !open && failed > 0 {
+			// Folded, what didn't go out, and what still prepares, says so.
+			if !open && (len(o.pending) > 0 || failed > 0) {
 				ui.Spacer(c)
-				ui.Text(c, locales.MqScheduledFailedCount(failed)).FontSize(sizeFoot).TextColor(p.Danger).SingleLine().Shrink(0)
+				ui.Row(c.Key("mq-status")).Wrap().Gap(8).Shrink(0).Role(ui.RoleStatus).Children(func() {
+					if notSent > 0 {
+						ui.Text(c, locales.MqFailedCount(notSent)).FontSize(sizeFoot).TextColor(p.Danger).SingleLine()
+					}
+					if preparing := len(o.pending) - notSent; preparing > 0 {
+						ui.Text(c, locales.MqPreparingCount(preparing)).FontSize(sizeFoot).TextColor(p.Secondary).SingleLine()
+					}
+					if failed > 0 {
+						ui.Text(c, locales.MqScheduledFailedCount(failed)).FontSize(sizeFoot).TextColor(p.Danger).SingleLine()
+					}
+				})
 			}
 		})
 		heightReveal(c, k, open, func() { a.queueList(c, p, st, o, items, scheduled) })
@@ -375,7 +399,12 @@ func (a *App) queueList(c *ui.Context, p *palette, st *queueView, o queueProps, 
 				for i := range items {
 					a.queueRow(c, p, st, o, items, i, pointer)
 				}
-				if len(items) > 0 && len(scheduled) > 0 {
+				// Held messages are no queue items yet: they stand where
+				// theirs will be appended, out of the drag.
+				for i, s := range o.pending {
+					a.pendingQueueRow(c, p, st, s, len(items)+i)
+				}
+				if len(items)+len(o.pending) > 0 && len(scheduled) > 0 {
 					ui.Row(c.Key("mq-scheduled")).FillWidth().Padding(8, 6, 2, 6).Children(func() {
 						ui.Text(c, locales.MqScheduledTitle()).FontSize(sizeCaption).LineHeight(16.0 / sizeCaption).FontWeight(500).TextColor(p.Secondary)
 					})
