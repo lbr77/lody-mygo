@@ -411,10 +411,13 @@ func wallLevel(count, busiest int) int {
 
 // wallInk is a wall cell's shade.
 func wallInk(p *palette, level int) ui.Color {
+	// Solid on the tile: quiet days a step toward ink, only activity blue,
+	// its lightest well clear of the quiet gray.
+	ground := secondaryGround(p)
 	if level == 0 {
-		return p.Text.Alpha(0.07)
+		return ground.Mix(p.Text, 0.08)
 	}
-	return p.Primary.Alpha([5]float32{0, 0.3, 0.5, 0.72, 1}[level])
+	return ground.Mix(p.Primary, [5]float32{0, 0.38, 0.58, 0.80, 1}[level])
 }
 
 // countUp rolls a number up from zero over 600ms, easing out as a cubic,
@@ -904,24 +907,32 @@ func diffSquares(added, removed int) [5]int {
 	return out
 }
 
-// activityWall is the last weeks' workdays, as many as fit, each shaded
-// by how busy it was.
+// activityWall is the last weeks' workdays, as Lody's contribution wall:
+// cells of 0.7em, 3px apart, as many weeks as fit (eight at least), the
+// cells stretching to fill the width; it fades in over 400ms.
 func (a *App) activityWall(c *ui.Context, p *palette, w homeWeek) {
-	wall := ui.Row(c.Key("wall")).FillWidth().Gap(2).Justify(ui.End).Margin(4, 0, 0, 0).ClipX()
+	const gap, cellEm, minWeeks = 3, 0.7, 8
+	wall := ui.Row(c.Key("wall")).FillWidth().Gap(gap).Margin(4, 0, 0, 0).ClipX()
+	if k := wall.Keyframes("in", []ui.Keyframe{{Value: 0}, {At: 400 * time.Millisecond, Value: 1, Ease: ui.EaseOut}}); k < 1 {
+		wall.Opacity(k)
+	}
+	cell := float32(sizeBody * cellEm)
 	fit := wallWeeks
-	if bw := wall.Bounds().W; bw > 0 {
-		fit = max(1, min(wallWeeks, int((bw+2)/12)))
+	bw := wall.Bounds().W
+	if bw > 0 {
+		fit = min(wallWeeks, max(minWeeks, int((bw+gap)/(cell+gap))))
+		cell = (bw - gap*float32(fit-1)) / float32(fit)
 	}
 	weeks := w.wall[len(w.wall)-fit:]
 	wall.Children(func() {
 		for i, days := range weeks {
-			ui.Column(c.Key(i)).Gap(2).Children(func() {
+			ui.Column(c.Key(i)).Gap(gap).Grow(1).Basis(0).MinWidth(0).Children(func() {
 				for _, d := range days {
 					tip := locales.HomeWeekWallQuiet(d.day.Format("Mon, Jan 2, 2006"))
 					if d.count > 0 {
 						tip = locales.HomeWeekWallDay(d.day.Format("Mon, Jan 2, 2006"), d.count)
 					}
-					ui.Box(c.Key(dayKey(d.day))).Size(10, 10).Radius(2).Background(wallInk(p, d.level)).Tooltip(tip)
+					ui.Box(c.Key(dayKey(d.day))).FillWidth().Height(cell).Radius(3).Background(wallInk(p, d.level)).Tooltip(tip)
 				}
 			})
 		}
