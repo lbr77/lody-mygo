@@ -1005,7 +1005,6 @@ func (a *App) saveSchedule() {
 	case strings.TrimSpace(f.title) == "" || strings.TrimSpace(f.prompt) == "" || err != nil:
 		return
 	case agent == nil:
-		f.err = locales.SchedRequireAgent()
 		return
 	}
 	model := a.models["sched"]
@@ -1026,7 +1025,6 @@ func (a *App) saveSchedule() {
 		d.Destination = schedule.Destination{Kind: schedule.OwnSession, Epoch: &epoch}
 	case schedule.ExistingSession:
 		if f.session == "" {
-			f.err = locales.SchedDestChoose()
 			return
 		}
 		d.Destination = schedule.Destination{Kind: schedule.ExistingSession, SessionID: f.session}
@@ -1328,6 +1326,9 @@ func (a *App) schedFormView(c *ui.Context, p *palette, f *schedForm, row *schedu
 					delete(a.runValues, "sched")
 					f.options = nil
 				})
+				if f.attempted && agent == nil {
+					issueMark(c, p, locales.SchedRequireAgent())
+				}
 				if agent != nil {
 					a.runConfig(c, p, "sched/model", agent.ID, a.models["sched"], nil, func(id string) { a.models["sched"] = id })
 					a.runOptions(c, p, "sched", agent.ID, a.models["sched"], f.options)
@@ -1416,6 +1417,9 @@ func (a *App) schedFormView(c *ui.Context, p *palette, f *schedForm, row *schedu
 					if len(chats) == 0 {
 						ui.Text(c, locales.SchedDestNoChats()).FontSize(sizeSub).TextColor(p.Secondary)
 						return
+					}
+					if f.attempted && f.session == "" {
+						issueMark(c, p, locales.SchedDestChoose())
 					}
 					a.selectButton(c, p, "sched/chat", label, chats, f.session, func(id string) { f.session = id })
 				})
