@@ -257,12 +257,21 @@ func (a *App) usagePage(c *ui.Context, p *palette) {
 				ui.Segmented(c, &picked, "Token", locales.UsageCostUSD()).Label(locales.UsageSkyline())
 				a.usageCost = picked == 1
 			})
-			ui.Row(c).FillWidth().Gap(24).AlignItems(ui.Start).Children(func() {
-				usageDonut(c, p, models, cost, t)
-				usageSkyline(c, p, t, cost, t.BucketSizeMs > 0 && t.BucketSizeMs < 86400000)
-			})
+			if rng == "day" || rng == "week" {
+				ui.Row(c).FillWidth().Gap(24).AlignItems(ui.Start).Children(func() {
+					usageDonut(c, p, models, cost, t)
+					usageSkyline(c, p, t, cost, t.BucketSizeMs > 0 && t.BucketSizeMs < 86400000)
+				})
+			} else if days := a.usageCalendar(); days != nil {
+				// Longer ranges show the year, the range's days lit.
+				usageHeatmap(c, p, days, cost, rng == "month")
+			}
 		})
 		stats := usageStatsOf(t.Buckets, cost)
+		dayStats := rng == "total" && a.usageCalendar() != nil
+		if dayStats {
+			stats = calendarStats(a.usageCalendar(), cost)
+		}
 		fmtv := formatCount
 		if cost {
 			fmtv = formatUSD
@@ -282,15 +291,202 @@ func (a *App) usagePage(c *ui.Context, p *palette) {
 			})
 			ui.Row(c).FillWidth().Gap(12).Children(func() {
 				smallStat(c, p, locales.UsageStatTotal(), fmtv(stats.total), "")
-				smallStat(c, p, locales.UsageStatAverage(), fmtv(stats.average), "")
+				average, peak, active := locales.UsageStatAverage(), locales.UsageStatPeak(), locales.UsageStatActive()
+				if dayStats {
+					average, peak, active = locales.UsageStatDaily(), locales.UsageStatPeakDay(), locales.UsageStatActiveDays()
+				}
+				smallStat(c, p, average, fmtv(stats.average), "")
 				peakAt := ""
 				if stats.peak > 0 {
-					peakAt = bucketTime(stats.peakAt, t.BucketSizeMs > 0 && t.BucketSizeMs < 86400000)
+					peakAt = bucketTime(stats.peakAt, !dayStats && t.BucketSizeMs > 0 && t.BucketSizeMs < 86400000)
 				}
-				smallStat(c, p, locales.UsageStatPeak(), fmtv(stats.peak), peakAt)
-				smallStat(c, p, locales.UsageStatActive(), fmt.Sprint(stats.active), locales.UsageStatCurrent(stats.current))
+				smallStat(c, p, peak, fmtv(stats.peak), peakAt)
+				smallStat(c, p, active, fmt.Sprint(stats.active), locales.UsageStatCurrent(stats.current))
 				smallStat(c, p, locales.UsageStatLongest(), fmt.Sprint(stats.longest), "")
 			})
+		})
+	})
+	name := func(id string) string {
+		if a.account != nil && id == a.account.User.ID {
+			return firstNonEmpty(a.account.User.Name, locales.SettingsYou())
+		}
+		if u, ok := t.Users[id]; ok {
+			return firstNonEmpty(u.Name, u.Email, id)
+		}
+		return id
+	}
+	usageStacked(c, p, locales.UsageByModel(), t, models, false, cost, strings.NewReplacer(" (recommended)", "").Replace)
+	if len(people) > 1 {
+		usageStacked(c, p, locales.UsageByMember(), t, people, true, cost, name)
+	}
+}
+
+type usageDay struct {
+	DayStartMs float64 `json:"dayStartMs"`
+	Date       string  `json:"date"`
+	Tokens     float64 `json:"tokens"`
+	CostUSD    float64 `json:"costUSD"`
+	IsFuture   bool    `json:"isFuture"`
+}
+
+// usageCalendar is the workspace's usage by day over the last year.
+func (a *App) usageCalendar() []usageDay {
+	convex, ws := a.convex, a.workspaceID
+	f := a.fetch("usage-calendar", func(ctx context.Context) (any, error) {
+		var out struct {
+			Days []usageDay `json:"days"`
+		}
+		err := convex.Query(ctx, "usage:getWorkspaceUsageCalendar", map[string]any{"workspaceId": ws}, &out)
+		return out.Days, err
+	})
+	days, _ := f.value.([]usageDay)
+	return days
+}
+
+// calendarStats are the year's figures by day, as Lody shows for All
+// time.
+func calendarStats(days []usageDay, cost bool) usageStats {
+	var buckets []usageBucket
+	for _, d := range days {
+		if !d.IsFuture {
+			buckets = append(buckets, usageBucket{BucketStartMs: d.DayStartMs, Tokens: d.Tokens, CostUSD: d.CostUSD})
+		}
+	}
+	return usageStatsOf(buckets, cost)
+}
+
+// heat is how strongly a value shows: against the 90th percentile of the
+// values above zero, eased, as Lody's charts scale.
+func heatScale(values []float64) func(float64) float32 {
+	var active []float64
+	for _, v := range values {
+		if v > 0 {
+			active = append(active, v)
+		}
+	}
+	sort.Float64s(active)
+	p90 := 0.0
+	if len(active) > 0 {
+		p90 = active[min(len(active)-1, int(math.Ceil(0.9*float64(len(active))))-1)]
+	}
+	return func(v float64) float32 {
+		if v <= 0 || p90 <= 0 {
+			return 0
+		}
+		return float32(math.Pow(math.Min(v/p90, 1), 0.62))
+	}
+}
+
+// usageHeatmap is the year a column a week, a cell a day.
+func usageHeatmap(c *ui.Context, p *palette, days []usageDay, cost, month bool) {
+	values := make([]float64, len(days))
+	for i, d := range days {
+		values[i] = d.Tokens
+		if cost {
+			values[i] = d.CostUSD
+		}
+	}
+	heat := heatScale(values)
+	window := time.Now().Add(-30 * 24 * time.Hour).UnixMilli()
+	fmtv := formatCount
+	if cost {
+		fmtv = formatUSD
+	}
+	ui.Row(c).FillWidth().Gap(2).Children(func() {
+		for w := 0; w*7 < len(days); w++ {
+			ui.Column(c.Key(w)).Gap(2).Children(func() {
+				for i := w * 7; i < min(len(days), w*7+7); i++ {
+					d := days[i]
+					cell := ui.Box(c.Key(i)).Size(9, 9).Radius(2).Tooltip(d.Date + " · " + fmtv(values[i]))
+					switch {
+					case d.IsFuture:
+						cell.Background(p.Text.Alpha(0.02))
+					case values[i] > 0:
+						cell.Background(usagePalette(p, 0).Alpha(0.18 + 0.74*heat(values[i])))
+					default:
+						cell.Background(p.Text.Alpha(0.06))
+					}
+					if month && d.DayStartMs < float64(window) {
+						cell.Opacity(0.3)
+					}
+				}
+			})
+		}
+	})
+}
+
+// usageStacked plots each bucket's parts, the largest few by color, the
+// rest together.
+func usageStacked(c *ui.Context, p *palette, title string, t *usageTimeline, parts []usagePart, byUser, cost bool, name func(string) string) {
+	if len(parts) == 0 || len(t.Buckets) == 0 {
+		return
+	}
+	top := map[string]int{}
+	for i, s := range parts[:min(len(parts), 4)] {
+		top[s.key] = i
+	}
+	type stack struct{ values [5]float64 }
+	stacks := make([]stack, len(t.Buckets))
+	peak := 0.0
+	for i, b := range t.Buckets {
+		add := func(key string, tokens, costUSD float64) {
+			v := tokens
+			if cost {
+				v = costUSD
+			}
+			slot, ok := top[key]
+			if !ok {
+				slot = 4
+			}
+			stacks[i].values[slot] += v
+		}
+		if byUser {
+			for _, u := range b.ByUser {
+				add(u.UserID, u.Tokens, u.CostUSD)
+			}
+		} else {
+			for _, m := range b.ByModel {
+				add(m.ModelID, m.Tokens, m.CostUSD)
+			}
+		}
+		total := 0.0
+		for _, v := range stacks[i].values {
+			total += v
+		}
+		peak = math.Max(peak, total)
+	}
+	ui.Column(c.Key(title)).FillWidth().Radius(12).Border(1, p.Border).Padding(16).Gap(12).Margin(4, 0, 0, 0).Children(func() {
+		ui.Text(c, title).FontSize(sizeBody).FontWeight(600).TextColor(p.Strong)
+		ui.Row(c).FillWidth().Height(140).Gap(2).AlignItems(ui.End).Children(func() {
+			for i := range stacks {
+				st := stacks[i]
+				ui.Column(c.Key(i)).Grow(1).Basis(0).MinWidth(1).Justify(ui.End).Children(func() {
+					for slot := 4; slot >= 0; slot-- {
+						if st.values[slot] <= 0 || peak <= 0 {
+							continue
+						}
+						color := p.Tertiary.Alpha(0.5)
+						if slot < 4 {
+							color = usagePalette(p, slot)
+						}
+						ui.Box(c.Key(slot)).FillWidth().Height(max(1, float32(st.values[slot]/peak*140))).Background(color)
+					}
+				})
+			}
+		})
+		ui.Row(c).FillWidth().Wrap().Gap(12).Children(func() {
+			for i, s := range parts[:min(len(parts), 4)] {
+				ui.Row(c.Key(s.key)).Gap(5).AlignItems(ui.Center).Children(func() {
+					ui.Box(c).Size(8, 8).Radius(2).Background(usagePalette(p, i))
+					ui.Text(c, name(s.key)).FontSize(sizeCaption).TextColor(p.Secondary)
+				})
+			}
+			if len(parts) > 4 {
+				ui.Row(c).Gap(5).AlignItems(ui.Center).Children(func() {
+					ui.Box(c).Size(8, 8).Radius(2).Background(p.Tertiary.Alpha(0.5))
+					ui.Text(c, locales.UsageOthers()).FontSize(sizeCaption).TextColor(p.Secondary)
+				})
+			}
 		})
 	})
 }
@@ -394,21 +590,26 @@ func usageSkyline(c *ui.Context, p *palette, t *usageTimeline, cost, hourly bool
 			})
 			ui.Text(c, locales.UsageMore()).FontSize(sizeCaption).TextColor(p.Tertiary)
 		})
+		values := make([]float64, len(t.Buckets))
+		for i, b := range t.Buckets {
+			values[i] = b.Tokens
+			if cost {
+				values[i] = b.CostUSD
+			}
+		}
+		scale := heatScale(values)
 		ui.Row(c).FillWidth().Height(150).Gap(3).AlignItems(ui.End).BorderWidth(0, 0, 1, 0).BorderColor(p.Border).Children(func() {
 			for i, b := range t.Buckets {
-				v := b.Tokens
-				if cost {
-					v = b.CostUSD
-				}
-				h, heat := float32(0), float32(0)
-				if stats.peak > 0 {
-					heat = float32(v / stats.peak)
-					h = heat * 146
+				v := values[i]
+				h, heat := float32(0), scale(v)
+				if stats.peak > 0 && v > 0 {
+					// At least 7% high, as Lody's bars.
+					h = max(0.07, float32(v/stats.peak)) * 146
 				}
 				bar := ui.Box(c.Key(i)).Grow(1).Basis(0).MinWidth(1).Height(max(h, 0)).Radius(2).
 					Tooltip(bucketTime(b.BucketStartMs, hourly) + " · " + fmtv(v))
 				if v > 0 {
-					bar.Background(usagePalette(p, 0).Alpha(0.3 + 0.7*heat))
+					bar.Background(usagePalette(p, 0).Alpha(0.18 + 0.74*heat))
 				}
 			}
 		})

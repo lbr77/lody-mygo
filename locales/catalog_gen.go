@@ -6938,3 +6938,43 @@ func AvatarChange() string { return In(i18n.Locale()).AvatarChange() }
 func (msgs Messages) AvatarChange() string {
 	return Catalog.Format(msgs.locale, "avatarChange", nil)
 }
+
+// UsageStatDaily says "Daily average"
+// in the language the app shows.
+func UsageStatDaily() string { return In(i18n.Locale()).UsageStatDaily() }
+
+// UsageStatDaily says "Daily average"
+// in the language of msgs.
+func (msgs Messages) UsageStatDaily() string {
+	return Catalog.Format(msgs.locale, "usageStatDaily", nil)
+}
+
+// UsageStatPeakDay says "Peak day"
+// in the language the app shows.
+func UsageStatPeakDay() string { return In(i18n.Locale()).UsageStatPeakDay() }
+
+// UsageStatPeakDay says "Peak day"
+// in the language of msgs.
+func (msgs Messages) UsageStatPeakDay() string {
+	return Catalog.Format(msgs.locale, "usageStatPeakDay", nil)
+}
+
+// UsageStatActiveDays says "Active days"
+// in the language the app shows.
+func UsageStatActiveDays() string { return In(i18n.Locale()).UsageStatActiveDays() }
+
+// UsageStatActiveDays says "Active days"
+// in the language of msgs.
+func (msgs Messages) UsageStatActiveDays() string {
+	return Catalog.Format(msgs.locale, "usageStatActiveDays", nil)
+}
+
+// UsageOthers says "Others"
+// in the language the app shows.
+func UsageOthers() string { return In(i18n.Locale()).UsageOthers() }
+
+// UsageOthers says "Others"
+// in the language of msgs.
+func (msgs Messages) UsageOthers() string {
+	return Catalog.Format(msgs.locale, "usageOthers", nil)
+}

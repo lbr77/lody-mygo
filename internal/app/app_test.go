@@ -764,6 +764,13 @@ func TestCloudSettings(t *testing.T) {
 	a.expanded["machine/m1"] = true
 	check("machines", "Studio", "Edit machine name", "Share machine", "Remove from workspace", "Connected folders", "lody-mygo", "Connected agents", "Claude Code")
 	check("ai-usage", "1.5M", "$12.34", "Usage skyline", "By model", "claude-opus-5-5", "gpt-5", "By member", "Ada Lovelace", "Grace Hopper", "Longest streak")
+	var timeline usageTimeline
+	json.Unmarshal([]byte(`{"totals":{"tokens":1500000,"costUSD":12.34},"buckets":[{"bucketStartMs":0,"bucketLabel":"Oct 1","tokens":1500000,"costUSD":12.34,"byModel":[{"modelId":"gpt-5","tokens":1500000,"costUSD":12.34}]}]}`), &timeline)
+	a.fetches[a.workspaceID+"|usage/total"] = &fetched{value: &timeline}
+	seed("usage-calendar", `[{"dayStartMs":1798761600000,"date":"2027-01-01","tokens":1000,"costUSD":1,"isFuture":false},{"dayStartMs":1798848000000,"date":"2027-01-02","tokens":3000,"costUSD":2,"isFuture":false},{"dayStartMs":1798934400000,"date":"2027-01-03","tokens":0,"costUSD":0,"isFuture":true}]`, &[]usageDay{})
+	a.usageRange = "total"
+	check("ai-usage", "Daily average", "2K", "Peak day", "Active days", "Longest streak")
+	a.usageRange = ""
 	check("billing", "Plus", "Monthly", "Switch to yearly", "Renews on", "Jan 1, 2027", "Team members", "2 / 2")
 	check("github", "GitHub App", "1 of 1 repositories enabled", "Act as yourself", "lbr77/lody-mygo", "Private")
 	a.catalog.MCPServers = []catalog.MCPServer{

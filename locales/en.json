@@ -1495,5 +1495,9 @@
     }
   },
   "memoryEdit": "Edit memory",
-  "avatarChange": "Change"
+  "avatarChange": "Change",
+  "usageStatDaily": "Daily average",
+  "usageStatPeakDay": "Peak day",
+  "usageStatActiveDays": "Active days",
+  "usageOthers": "Others"
 }

@@ -687,5 +687,9 @@
   "machineLifecycleRefused": "机器拒绝了请求。",
   "machineLifecycleStarted": "{name} 正在重启。",
   "memoryEdit": "编辑记忆体",
-  "avatarChange": "更换"
+  "avatarChange": "更换",
+  "usageStatDaily": "日均",
+  "usageStatPeakDay": "峰值日期",
+  "usageStatActiveDays": "活跃天数",
+  "usageOthers": "其他"
 }
