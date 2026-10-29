@@ -336,21 +336,23 @@ func (a *App) roleTargetRow(c *ui.Context, p *palette, i int) {
 		a.toolbarPicker(c, p, key+"agent", configMark(a.agent(t.machine, t.agent)), firstNonEmpty(a.agentName(t.machine, t.agent), locales.NoAgent()), agents, t.agent, func(id string) {
 			t.agent, t.model, t.mode = id, "", ""
 		})
+		// Models and modes are named as the composer names them.
+		cap := a.capability(t.agent)
 		models := []option{{"", locales.DefaultModel()}}
-		modelLabel := locales.DefaultModel()
-		for _, m := range a.catalog.Capabilities[t.agent].Models {
-			label := firstNonEmpty(m.Name, m.ModelID)
+		chosenModel := locales.DefaultModel()
+		for _, m := range cap.Models {
+			label := modelLabel(cap, firstNonEmpty(m.Name, m.ModelID))
 			models = append(models, option{m.ModelID, label})
 			if m.ModelID == t.model {
-				modelLabel = label
+				chosenModel = label
 			}
 		}
-		a.toolbarPicker(c, p, key+"model", nil, modelLabel, models, t.model, func(id string) { t.model = id })
+		a.toolbarPicker(c, p, key+"model", nil, chosenModel, models, t.model, func(id string) { t.model = id })
 		agentType := ""
 		if ag := a.agent(t.machine, t.agent); ag != nil {
 			agentType = ag.AgentType
 		}
-		if modes := a.catalog.ModesFor(t.agent, agentType); len(modes) > 0 {
+		if modes := runModes(cap, a.catalog.ModesFor(t.agent, agentType)); len(modes) > 0 {
 			options := []option{{"", locales.ModeDefault()}}
 			modeLabel := locales.ModeDefault()
 			for _, m := range modes {

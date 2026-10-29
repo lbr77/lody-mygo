@@ -32,6 +32,8 @@ type Project struct {
 type Model struct {
 	ModelID string `json:"modelId,omitempty"`
 	Name    string `json:"name,omitempty"`
+	// Description is the agent's line about the model, as it reports it.
+	Description string `json:"description,omitempty"`
 }
 
 type Session struct {
@@ -210,6 +212,12 @@ type Capability struct {
 	Options []ConfigOption `json:"options,omitempty"`
 	// Efforts are the reasoning efforts each model allows, by model id.
 	Efforts map[string][]string `json:"efforts,omitempty"`
+	// Declared are the controls the agent declared for each of its
+	// models, by model id, as its acpModelCapability row has them for the
+	// version of the agent the capability describes.
+	Declared map[string]ModelControls `json:"declared,omitempty"`
+	// SourceVersion is the version of the agent the capability describes.
+	SourceVersion string `json:"sourceVersion,omitempty"`
 	// SessionTitle is whether the agent names its sessions itself.
 	SessionTitle bool `json:"sessionTitle,omitempty"`
 	// Fork is whether a session can start again from one of its replies.
@@ -226,6 +234,18 @@ type Capability struct {
 	AgentType string `json:"agentType,omitempty"`
 }
 
+// ModelControls are what a model allows, as its agent declared them: the
+// reasoning efforts it accepts, and whether it has Fast. A control left
+// out is unknown, not refused.
+type ModelControls struct {
+	// Efforts are the efforts the model accepts, when HasEfforts; none
+	// then means the model has no effort.
+	Efforts    []string `json:"efforts,omitempty"`
+	HasEfforts bool     `json:"hasEfforts,omitempty"`
+	// Fast is whether the model has Fast, when declared.
+	Fast *bool `json:"fast,omitempty"`
+}
+
 // ConfigOption is a session setting an agent offers.
 type ConfigOption struct {
 	ID       string   `json:"id"`
@@ -234,12 +254,16 @@ type ConfigOption struct {
 	Type     string   `json:"type"`               // select or boolean
 	Current  any      `json:"current"`            // a string, or a bool for a boolean
 	Choices  []Choice `json:"choices,omitempty"`
+	// Description is the agent's line about the setting.
+	Description string `json:"description,omitempty"`
 }
 
 // Choice is a value a select option takes.
 type Choice struct {
 	Value string `json:"value"`
 	Name  string `json:"name"`
+	// Description is the agent's line about the value.
+	Description string `json:"description,omitempty"`
 }
 
 // RateLimit is a provider's quota: the windows its subscription meters.
@@ -267,12 +291,27 @@ type Command struct {
 type Mode struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
+	// Description is the agent's line about what the mode allows.
+	Description string `json:"description,omitempty"`
 }
 
-// Lody's built-in modes, for agents that haven't reported theirs.
+// Lody's built-in modes, for agents that haven't reported theirs, with
+// the lines Lody gives them.
 var (
-	claudeModes = []Mode{{"auto", "Auto"}, {"default", "Manual"}, {"acceptEdits", "Accept Edits"}, {"plan", "Plan Mode"}, {"dontAsk", "Don't Ask"}, {"bypassPermissions", "Bypass Permissions"}}
-	codexModes  = []Mode{{"read-only", "Read-only"}, {"agent", "Agent"}, {"agent-auto-review", "Auto review"}, {"agent-full-access", "Full access"}}
+	claudeModes = []Mode{
+		{"auto", "Auto", "Use a model classifier to approve/deny permission prompts"},
+		{"default", "Manual", "Standard behavior, prompts for dangerous operations"},
+		{"acceptEdits", "Accept Edits", "Auto-accept file edit operations"},
+		{"plan", "Plan Mode", "Planning mode, no actual tool execution"},
+		{"dontAsk", "Don't Ask", "Don't prompt for permissions, deny if not pre-approved"},
+		{"bypassPermissions", "Bypass Permissions", "Bypass all permission checks"},
+	}
+	codexModes = []Mode{
+		{"read-only", "Read-only", "Requires approval to edit files and run commands."},
+		{"agent", "Agent", "Read and edit files, and run commands."},
+		{"agent-auto-review", "Auto review", "Read and edit files, and run commands. Approval requests are reviewed automatically by a Codex subagent."},
+		{"agent-full-access", "Full access", "Codex can edit files outside this workspace and run commands with network access. Exercise caution when using."},
+	}
 )
 
 // ModesFor returns an agent's permission modes: those it reported, or
@@ -363,12 +402,13 @@ func modelOf(v any) *Model {
 	if !ok {
 		return nil
 	}
-	return &Model{ModelID: strings.TrimSpace(text(m["modelId"])), Name: strings.TrimSpace(text(m["name"]))}
+	return &Model{ModelID: strings.TrimSpace(text(m["modelId"])), Name: strings.TrimSpace(text(m["name"])), Description: strings.TrimSpace(text(m["description"]))}
 }
 
 // projectMachine projects the rows of a machine stream "mf:<machine>".
 func projectMachine(rows []flock.Row, machineID string) Catalog {
 	c := Catalog{Agents: map[string][]AgentConfig{}, Capabilities: map[string]Capability{}}
+	declared := map[string]map[string]any{} // acpModelCapability rows, by agent config
 	for _, row := range rows {
 		if row.Live && len(row.Key) == 1 && row.Key[0] == "dotlodyPath" {
 			if path, ok := row.Value.(string); ok && strings.TrimSpace(path) != "" {
@@ -477,7 +517,7 @@ func projectMachine(rows []flock.Row, machineID string) Catalog {
 					if name == "" {
 						name = id
 					}
-					capability.Modes = append(capability.Modes, Mode{ID: id, Name: name})
+					capability.Modes = append(capability.Modes, Mode{ID: id, Name: name, Description: text(mode["description"])})
 				}
 			}
 			for _, m := range anyList(value["availableCommands"]) {
@@ -496,16 +536,17 @@ func projectMachine(rows []flock.Row, machineID string) Catalog {
 				capability.GoalActions = append(capability.GoalActions, text(a))
 			}
 			capability.CLIType, capability.AgentType = text(value["cliType"]), text(value["agentType"])
+			capability.SourceVersion = text(value["sourceVersion"])
 			for _, o := range anyList(value["configOptions"]) {
 				opt := object(o)
-				option := ConfigOption{ID: text(opt["id"]), Name: text(opt["name"]), Category: text(opt["category"]), Type: text(opt["type"]), Current: opt["currentValue"]}
+				option := ConfigOption{ID: text(opt["id"]), Name: text(opt["name"]), Category: text(opt["category"]), Type: text(opt["type"]), Current: opt["currentValue"], Description: text(opt["description"])}
 				if option.ID == "" || (option.Type != "select" && option.Type != "boolean") {
 					continue
 				}
 				for _, choice := range anyList(opt["options"]) {
 					ch := object(choice)
 					if v := text(ch["value"]); v != "" {
-						option.Choices = append(option.Choices, Choice{Value: v, Name: firstText(text(ch["name"]), v)})
+						option.Choices = append(option.Choices, Choice{Value: v, Name: firstText(text(ch["name"]), v), Description: text(ch["description"])})
 					}
 				}
 				capability.Options = append(capability.Options, option)
@@ -537,9 +578,69 @@ func projectMachine(rows []flock.Row, machineID string) Catalog {
 				capability.DefaultModel = firstText(capability.Models[0].Name, capability.Models[0].ModelID)
 			}
 			c.Capabilities[id] = capability
+		case "acpModelCapability":
+			if id != "" {
+				declared[id] = value
+			}
+		}
+	}
+	// Each model's controls join the capability of the same version of
+	// the agent, as Lody reads them; another version's are stale.
+	for id, value := range declared {
+		capability, ok := c.Capabilities[id]
+		if !ok || capability.SourceVersion == "" || text(value["sourceVersion"]) != capability.SourceVersion {
+			continue
+		}
+		if models, ok := declaredModels(value); ok {
+			capability.Declared = models
+			c.Capabilities[id] = capability
 		}
 	}
 	return c
+}
+
+// declaredModels reads an acpModelCapability row's version 1 declaration;
+// one it can't read whole is left out whole, as Lody does, since a model
+// missing from it would read as refusing what it never declared.
+func declaredModels(value map[string]any) (map[string]ModelControls, bool) {
+	if v := value["version"]; v != 1.0 && v != int64(1) {
+		return nil, false
+	}
+	raw, ok := value["models"].(map[string]any)
+	if !ok || len(raw) == 0 {
+		return nil, false
+	}
+	models := map[string]ModelControls{}
+	for id, v := range raw {
+		m, ok := v.(map[string]any)
+		if !ok {
+			return nil, false
+		}
+		var controls ModelControls
+		if e, set := m["effortValues"]; set {
+			list, ok := e.([]any)
+			if !ok {
+				return nil, false
+			}
+			controls.HasEfforts, controls.Efforts = true, []string{}
+			for _, x := range list {
+				s, ok := x.(string)
+				if !ok {
+					return nil, false
+				}
+				controls.Efforts = append(controls.Efforts, s)
+			}
+		}
+		if f, set := m["fastMode"]; set {
+			fast, ok := f.(bool)
+			if !ok {
+				return nil, false
+			}
+			controls.Fast = &fast
+		}
+		models[id] = controls
+	}
+	return models, true
 }
 
 func anyList(v any) []any {

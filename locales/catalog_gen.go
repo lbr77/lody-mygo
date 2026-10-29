@@ -21051,6 +21051,192 @@ func (msgs Messages) RunConfigPlan() string {
 	return Catalog.Format(msgs.locale, "runConfigPlan", nil)
 }
 
+// RunConfigPermission says "Permission"
+// in the language the app shows.
+func RunConfigPermission() string { return In(i18n.Locale()).RunConfigPermission() }
+
+// RunConfigPermission says "Permission"
+// in the language of msgs.
+func (msgs Messages) RunConfigPermission() string {
+	return Catalog.Format(msgs.locale, "runConfigPermission", nil)
+}
+
+// RunConfigMode says "Mode"
+// in the language the app shows.
+func RunConfigMode() string { return In(i18n.Locale()).RunConfigMode() }
+
+// RunConfigMode says "Mode"
+// in the language of msgs.
+func (msgs Messages) RunConfigMode() string {
+	return Catalog.Format(msgs.locale, "runConfigMode", nil)
+}
+
+// GrokInteractionLabel says "Interaction Mode"
+// in the language the app shows.
+func GrokInteractionLabel() string { return In(i18n.Locale()).GrokInteractionLabel() }
+
+// GrokInteractionLabel says "Interaction Mode"
+// in the language of msgs.
+func (msgs Messages) GrokInteractionLabel() string {
+	return Catalog.Format(msgs.locale, "grokInteractionLabel", nil)
+}
+
+// GrokInteractionDescription says "Controls whether Grok acts, plans, or answers read-only questions"
+// in the language the app shows.
+func GrokInteractionDescription() string { return In(i18n.Locale()).GrokInteractionDescription() }
+
+// GrokInteractionDescription says "Controls whether Grok acts, plans, or answers read-only questions"
+// in the language of msgs.
+func (msgs Messages) GrokInteractionDescription() string {
+	return Catalog.Format(msgs.locale, "grokInteractionDescription", nil)
+}
+
+// GrokInteractionAgent says "Agent"
+// in the language the app shows.
+func GrokInteractionAgent() string { return In(i18n.Locale()).GrokInteractionAgent() }
+
+// GrokInteractionAgent says "Agent"
+// in the language of msgs.
+func (msgs Messages) GrokInteractionAgent() string {
+	return Catalog.Format(msgs.locale, "grokInteractionAgent", nil)
+}
+
+// GrokInteractionAgentDescription says "Use tools and make changes when needed"
+// in the language the app shows.
+func GrokInteractionAgentDescription() string {
+	return In(i18n.Locale()).GrokInteractionAgentDescription()
+}
+
+// GrokInteractionAgentDescription says "Use tools and make changes when needed"
+// in the language of msgs.
+func (msgs Messages) GrokInteractionAgentDescription() string {
+	return Catalog.Format(msgs.locale, "grokInteractionAgentDescription", nil)
+}
+
+// GrokInteractionPlan says "Plan"
+// in the language the app shows.
+func GrokInteractionPlan() string { return In(i18n.Locale()).GrokInteractionPlan() }
+
+// GrokInteractionPlan says "Plan"
+// in the language of msgs.
+func (msgs Messages) GrokInteractionPlan() string {
+	return Catalog.Format(msgs.locale, "grokInteractionPlan", nil)
+}
+
+// GrokInteractionPlanDescription says "Plan and reason without modifying the workspace"
+// in the language the app shows.
+func GrokInteractionPlanDescription() string {
+	return In(i18n.Locale()).GrokInteractionPlanDescription()
+}
+
+// GrokInteractionPlanDescription says "Plan and reason without modifying the workspace"
+// in the language of msgs.
+func (msgs Messages) GrokInteractionPlanDescription() string {
+	return Catalog.Format(msgs.locale, "grokInteractionPlanDescription", nil)
+}
+
+// GrokInteractionAsk says "Ask"
+// in the language the app shows.
+func GrokInteractionAsk() string { return In(i18n.Locale()).GrokInteractionAsk() }
+
+// GrokInteractionAsk says "Ask"
+// in the language of msgs.
+func (msgs Messages) GrokInteractionAsk() string {
+	return Catalog.Format(msgs.locale, "grokInteractionAsk", nil)
+}
+
+// GrokInteractionAskDescription says "Answer questions without modifying the workspace"
+// in the language the app shows.
+func GrokInteractionAskDescription() string { return In(i18n.Locale()).GrokInteractionAskDescription() }
+
+// GrokInteractionAskDescription says "Answer questions without modifying the workspace"
+// in the language of msgs.
+func (msgs Messages) GrokInteractionAskDescription() string {
+	return Catalog.Format(msgs.locale, "grokInteractionAskDescription", nil)
+}
+
+// GrokPermissionLabel says "Permission Mode"
+// in the language the app shows.
+func GrokPermissionLabel() string { return In(i18n.Locale()).GrokPermissionLabel() }
+
+// GrokPermissionLabel says "Permission Mode"
+// in the language of msgs.
+func (msgs Messages) GrokPermissionLabel() string {
+	return Catalog.Format(msgs.locale, "grokPermissionLabel", nil)
+}
+
+// GrokPermissionDescription says "Controls how protected tool actions are approved"
+// in the language the app shows.
+func GrokPermissionDescription() string { return In(i18n.Locale()).GrokPermissionDescription() }
+
+// GrokPermissionDescription says "Controls how protected tool actions are approved"
+// in the language of msgs.
+func (msgs Messages) GrokPermissionDescription() string {
+	return Catalog.Format(msgs.locale, "grokPermissionDescription", nil)
+}
+
+// GrokPermissionAsk says "Ask Every Time"
+// in the language the app shows.
+func GrokPermissionAsk() string { return In(i18n.Locale()).GrokPermissionAsk() }
+
+// GrokPermissionAsk says "Ask Every Time"
+// in the language of msgs.
+func (msgs Messages) GrokPermissionAsk() string {
+	return Catalog.Format(msgs.locale, "grokPermissionAsk", nil)
+}
+
+// GrokPermissionAskDescription says "Request approval before protected actions"
+// in the language the app shows.
+func GrokPermissionAskDescription() string { return In(i18n.Locale()).GrokPermissionAskDescription() }
+
+// GrokPermissionAskDescription says "Request approval before protected actions"
+// in the language of msgs.
+func (msgs Messages) GrokPermissionAskDescription() string {
+	return Catalog.Format(msgs.locale, "grokPermissionAskDescription", nil)
+}
+
+// GrokPermissionAuto says "Auto"
+// in the language the app shows.
+func GrokPermissionAuto() string { return In(i18n.Locale()).GrokPermissionAuto() }
+
+// GrokPermissionAuto says "Auto"
+// in the language of msgs.
+func (msgs Messages) GrokPermissionAuto() string {
+	return Catalog.Format(msgs.locale, "grokPermissionAuto", nil)
+}
+
+// GrokPermissionAutoDescription says "Let Grok decide when approval is required (experimental)"
+// in the language the app shows.
+func GrokPermissionAutoDescription() string { return In(i18n.Locale()).GrokPermissionAutoDescription() }
+
+// GrokPermissionAutoDescription says "Let Grok decide when approval is required (experimental)"
+// in the language of msgs.
+func (msgs Messages) GrokPermissionAutoDescription() string {
+	return Catalog.Format(msgs.locale, "grokPermissionAutoDescription", nil)
+}
+
+// GrokPermissionAlwaysApprove says "Always Approve"
+// in the language the app shows.
+func GrokPermissionAlwaysApprove() string { return In(i18n.Locale()).GrokPermissionAlwaysApprove() }
+
+// GrokPermissionAlwaysApprove says "Always Approve"
+// in the language of msgs.
+func (msgs Messages) GrokPermissionAlwaysApprove() string {
+	return Catalog.Format(msgs.locale, "grokPermissionAlwaysApprove", nil)
+}
+
+// GrokPermissionAlwaysApproveDescription says "Approve protected actions automatically"
+// in the language the app shows.
+func GrokPermissionAlwaysApproveDescription() string {
+	return In(i18n.Locale()).GrokPermissionAlwaysApproveDescription()
+}
+
+// GrokPermissionAlwaysApproveDescription says "Approve protected actions automatically"
+// in the language of msgs.
+func (msgs Messages) GrokPermissionAlwaysApproveDescription() string {
+	return Catalog.Format(msgs.locale, "grokPermissionAlwaysApproveDescription", nil)
+}
+
 // NoticeRetry says "Retry"
 // in the language the app shows.
 func NoticeRetry() string { return In(i18n.Locale()).NoticeRetry() }

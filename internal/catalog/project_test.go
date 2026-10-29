@@ -90,3 +90,61 @@ func TestDotLodyAndWorktree(t *testing.T) {
 		t.Fatalf("session %+v", s)
 	}
 }
+
+// An agent's settings, values, modes and models keep the lines it gives
+// them, and each model's declared controls join the capability of the same
+// version of the agent, as Lody reads them.
+func TestCapabilityDescriptionsAndDeclaredModels(t *testing.T) {
+	capability := map[string]any{"cliType": "builtin", "agentType": "claude", "sourceVersion": "1.4.0",
+		"modes":  []any{map[string]any{"id": "plan", "name": "Plan Mode", "description": "Planning mode, no actual tool execution"}},
+		"models": []any{map[string]any{"modelId": "haiku", "name": "Haiku", "description": "Haiku 4.5 · Fastest for quick answers"}},
+		"configOptions": []any{map[string]any{"id": "effort", "name": "Effort", "description": "Available effort levels for this model", "category": "thought_level", "type": "select", "currentValue": "high",
+			"options": []any{map[string]any{"value": "high", "name": "High", "description": "More reasoning"}}}}}
+	declared := map[string]any{"version": 1.0, "sourceVersion": "1.4.0", "models": map[string]any{
+		"opus":  map[string]any{"effortValues": []any{"low", "high"}, "fastMode": true},
+		"haiku": map[string]any{"fastMode": false},
+		"none":  map[string]any{"effortValues": []any{}},
+	}}
+	read := func() Capability {
+		return projectMachine([]flock.Row{row(capability, "acpCapability", "c1"), row(declared, "acpModelCapability", "c1")}, "m1").Capabilities["c1"]
+	}
+	cap := read()
+	if cap.Modes[0].Description != "Planning mode, no actual tool execution" || cap.Models[0].Description != "Haiku 4.5 · Fastest for quick answers" {
+		t.Fatalf("modes %+v models %+v", cap.Modes, cap.Models)
+	}
+	if o := cap.Options[0]; o.Description != "Available effort levels for this model" || o.Choices[0].Description != "More reasoning" {
+		t.Fatalf("option %+v", o)
+	}
+	opus, haiku, none := cap.Declared["opus"], cap.Declared["haiku"], cap.Declared["none"]
+	if !opus.HasEfforts || len(opus.Efforts) != 2 || opus.Fast == nil || !*opus.Fast {
+		t.Fatalf("opus %+v", opus)
+	}
+	if haiku.HasEfforts || haiku.Fast == nil || *haiku.Fast {
+		t.Fatalf("haiku %+v", haiku)
+	}
+	if !none.HasEfforts || len(none.Efforts) != 0 {
+		t.Fatalf("none %+v", none)
+	}
+
+	// Another version's declaration is stale; one that can't be read
+	// whole is left out whole.
+	declared["sourceVersion"] = "1.3.0"
+	if got := read().Declared; got != nil {
+		t.Fatalf("stale declaration read: %+v", got)
+	}
+	declared["sourceVersion"] = "1.4.0"
+	declared["models"].(map[string]any)["bad"] = map[string]any{"fastMode": "yes"}
+	if got := read().Declared; got != nil {
+		t.Fatalf("malformed declaration read: %+v", got)
+	}
+}
+
+// Lody's own modes for Claude Code and Codex say what each allows.
+func TestBuiltinModeDescriptions(t *testing.T) {
+	var c Catalog
+	for _, m := range append(c.ModesFor("x", "claude"), c.ModesFor("x", "codex")...) {
+		if m.Description == "" {
+			t.Errorf("%s has no description", m.ID)
+		}
+	}
+}

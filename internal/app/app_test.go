@@ -355,7 +355,7 @@ func TestQueuedActionsAndModes(t *testing.T) {
 	a.view.Queue = []session.Entry{{ID: "q1", Role: "user", Status: "queued", Queued: true, Timestamp: "2026-10-29T09:21:00Z",
 		Items: []session.Item{{ID: "t", Type: "text", Text: "Also update the README."}}}}
 	tt := snap(t, a, "queued", true, nil)
-	for _, want := range []string{"Up next", "1 queued", "Also update the README.", "Steer", "Permission mode: Bypass Permissions"} {
+	for _, want := range []string{"Up next", "1 queued", "Also update the README.", "Steer", "Mode: Bypass Permissions"} {
 		if !tt.HasText(want) {
 			t.Errorf("missing %q in %q", want, tt.Texts())
 		}
@@ -364,7 +364,7 @@ func TestQueuedActionsAndModes(t *testing.T) {
 	if tt.HasText("Queued") || tt.HasText("Send now") {
 		t.Errorf("the queued message shows in the conversation: %q", tt.Texts())
 	}
-	if err := tt.Click("Permission mode: Bypass Permissions"); err != nil {
+	if err := tt.Click("Mode: Bypass Permissions"); err != nil {
 		t.Fatal(err)
 	}
 	tt.Frame()
@@ -405,7 +405,7 @@ func TestChinese(t *testing.T) {
 	a.view.Entries = a.view.Entries[:2]
 	a.view.Working = false
 	tt := snap(t, a, "chinese", false, nil)
-	for _, want := range []string{"新对话", "搜索", "已置顶", "工作了1分12秒", "添加附件", "权限模式：默认", "复制"} {
+	for _, want := range []string{"新对话", "搜索", "已置顶", "工作了1分12秒", "添加附件", "模式: 默认", "复制"} {
 		if !tt.HasText(want) {
 			t.Errorf("missing %q in %q", want, tt.Texts())
 		}

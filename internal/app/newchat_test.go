@@ -222,7 +222,7 @@ func TestRunConfigMenu(t *testing.T) {
 	}}}
 	tt := snap(t, a, "run-config", false, nil)
 	// The agent's permission setting outranks Claude Code's modes.
-	if _, ok := tt.Find(locales.PermissionMode("Ask Every Time")); !ok {
+	if _, ok := tt.Find(locales.RunConfigPermission() + ": Ask Every Time"); !ok {
 		t.Fatalf("permission: %q", tt.Texts())
 	}
 	if err := tt.Click(locales.RunConfigTitle()); err != nil {
@@ -313,7 +313,7 @@ func (a *App) permissionButtonPick(t *testing.T, tt *ui.Tester, label string) {
 	tt.Frame()
 	tt.Advance(300 * time.Millisecond)
 	tt.Frame()
-	if err := tt.Click(locales.PermissionMode("Ask Every Time")); err != nil {
+	if err := tt.Click(locales.RunConfigPermission() + ": Ask Every Time"); err != nil {
 		t.Fatal(err)
 	}
 	tt.Frame()
