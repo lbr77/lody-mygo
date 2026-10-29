@@ -865,7 +865,7 @@
   "mcpLead": "The MCP servers this workspace shares; each session chooses which to load.",
   "mcpAdd": "Add server",
   "mcpNone": "No MCP servers yet. Add one to share it with every session.",
-  "mcpToolsLocal": "Tools load on the machine running Lody's desktop app.",
+  "mcpToolsLocal": "Tools load on this computer: the command runs here, or the URL is reached from here.",
   "mcpLoadTools": "Load tools",
   "mcpDefault": "Default",
   "mcpDelete": "Delete {name}",
@@ -1499,5 +1499,161 @@
   "usageStatDaily": "Daily average",
   "usageStatPeakDay": "Peak day",
   "usageStatActiveDays": "Active days",
-  "usageOthers": "Others"
+  "usageOthers": "Others",
+  "mcpToolsLoading": "Loading tools…",
+  "mcpToolsEmpty": "No tools found",
+  "mcpToolsFailed": "Couldn't connect. Check the configuration and try again.",
+  "mcpToolsMissing": "{ref} isn't set on this computer.",
+  "@mcpToolsMissing": {
+    "placeholders": {
+      "ref": {
+        "type": "String"
+      }
+    }
+  },
+  "mcpToolsNotFound": "{command} isn't on this computer's PATH.",
+  "@mcpToolsNotFound": {
+    "placeholders": {
+      "command": {
+        "type": "String"
+      }
+    }
+  },
+  "providerRegistry": "ACP Providers",
+  "providerRegistryNote": "Experimental — uses ACP Providers.",
+  "providerProbing": "Probing…",
+  "codexAuthentication": "Authentication",
+  "codexStorage": "Credentials stay on the selected machine. Each provider has its own account.",
+  "codexCustomAPI": "Custom API",
+  "codexBaseURL": "Base URL",
+  "codexKeyNext": "Enter the API Key securely during sign-in. To change the destination, add a new provider.",
+  "codexEnterKey": "Enter API Key",
+  "codexUpdateKey": "Update API Key",
+  "codexVerifyingKey": "Verifying API Key",
+  "codexBound": "This provider is bound to its ChatGPT account. Add a new provider to use another account.",
+  "codexBadURL": "Codex Base URL requires HTTPS, except for loopback HTTP, without credentials or query parameters.",
+  "codexProtectedEnv": "Additional environment variables cannot override a Codex account connection.",
+  "authAccount": "Account",
+  "authRequiredHint": "This provider has no credentials on this machine yet.",
+  "authReauthHint": "Sign in again if this provider stopped accepting your account.",
+  "authSignIn": "Sign in with {provider}",
+  "@authSignIn": {
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "authRetry": "Retry {provider} sign-in",
+  "@authRetry": {
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "authSignInAgain": "Sign in again",
+  "authWaiting": "Waiting for {provider} sign-in",
+  "@authWaiting": {
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "authSucceeded": "{provider} sign-in completed",
+  "@authSucceeded": {
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "authFailed": "Authentication failed",
+  "authTimeout": "Authentication timed out. Please try again.",
+  "authNoMethods": "This agent did not advertise a sign-in method.",
+  "authUpgrade": "Update the target Machine to use interactive authentication for this Provider.",
+  "authFinish": "Finish signing in to {provider}",
+  "@authFinish": {
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "authBrowserOpened": "Complete authorization in the browser window, then return to Lody.",
+  "authOpenPage": "Open authorization page",
+  "authAuthorizeOpen": "Authorize and open page",
+  "authUnsafeURL": "The Provider returned an unsafe authorization URL. Only HTTP and HTTPS pages can be opened.",
+  "authOneTimeCode": "One-time code",
+  "authCopyCode": "Copy code",
+  "authCodeCopied": "Copied",
+  "authEnterCode": "Enter this code on the authorization page.",
+  "authEnterCodeExpiry": "Enter this code on the authorization page. It expires in {minutes} min.",
+  "@authEnterCodeExpiry": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "authCode": "Authorization code",
+  "authCodePlaceholder": "Paste the code from your browser",
+  "authCodeHelp": "Only needed when the browser shows a code instead of returning automatically.",
+  "authSubmitCode": "Continue",
+  "authCodeSubmitted": "Submitted",
+  "authCodeSubmitFailed": "Could not submit the authorization code. Please try again.",
+  "authInputSubmitFailed": "Could not submit the authentication response. Please try again.",
+  "authChooseMethod": "Choose a sign-in method",
+  "authEnvMethod": "Set it in this agent's environment variables.",
+  "authAdditionalInfo": "Additional information",
+  "authOptional": "(optional)",
+  "authSelectOption": "Select an option",
+  "authContinue": "Continue",
+  "authRuntimeDownloading": "Downloading the {runtime} runtime…",
+  "@authRuntimeDownloading": {
+    "placeholders": {
+      "runtime": {
+        "type": "String"
+      }
+    }
+  },
+  "authRuntimeDownloadingPercent": "Downloading the {runtime} runtime… {percent}%",
+  "@authRuntimeDownloadingPercent": {
+    "placeholders": {
+      "runtime": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "authRuntimePreparing": "Preparing the {runtime} runtime…",
+  "@authRuntimePreparing": {
+    "placeholders": {
+      "runtime": {
+        "type": "String"
+      }
+    }
+  },
+  "binaryChecking": "Checking download status…",
+  "binaryNotInstalled": "This agent needs its binary downloaded to the machine first.",
+  "binaryUnsupported": "This agent doesn't support this machine's platform.",
+  "binaryDownload": "Download agent",
+  "binaryRetry": "Retry download",
+  "binaryDownloading": "Downloading…",
+  "binaryDownloadingPercent": "Downloading… {percent}%",
+  "@binaryDownloadingPercent": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "binaryVerifying": "Verifying download…",
+  "binaryExtracting": "Extracting runtime…",
+  "binaryPublishing": "Installing runtime…",
+  "binaryDownloadFailed": "The agent runtime download failed.",
+  "binaryError": "Agent download failed"
 }

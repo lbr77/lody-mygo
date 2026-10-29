@@ -131,6 +131,7 @@ type App struct {
 	agentsMachine   string // the machine whose agents Settings shows
 	confirming      confirmation
 	mcp             mcpForm
+	mcpTools        map[string]*mcpTools // tool lists loaded, by server
 	general         generalForm
 	tokens          tokenForm
 	passwordNotice  string

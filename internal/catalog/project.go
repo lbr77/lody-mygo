@@ -97,6 +97,32 @@ type Capability struct {
 	Commands []Command `json:"commands,omitempty"`
 	// DefaultModel is the name of the model the agent starts with.
 	DefaultModel string `json:"defaultModel,omitempty"`
+	// Options are the agent's session settings, select or boolean ones,
+	// as title generation picks from.
+	Options []ConfigOption `json:"options,omitempty"`
+	// Efforts are the reasoning efforts each model allows, by model id.
+	Efforts map[string][]string `json:"efforts,omitempty"`
+	// SessionTitle is whether the agent names its sessions itself.
+	SessionTitle bool `json:"sessionTitle,omitempty"`
+	// CLIType and AgentType are the runtime the agent reported for.
+	CLIType   string `json:"cliType,omitempty"`
+	AgentType string `json:"agentType,omitempty"`
+}
+
+// ConfigOption is a session setting an agent offers.
+type ConfigOption struct {
+	ID       string   `json:"id"`
+	Name     string   `json:"name"`
+	Category string   `json:"category,omitempty"` // mode, model, thought_level or the agent's own
+	Type     string   `json:"type"`               // select or boolean
+	Current  any      `json:"current"`            // a string, or a bool for a boolean
+	Choices  []Choice `json:"choices,omitempty"`
+}
+
+// Choice is a value a select option takes.
+type Choice struct {
+	Value string `json:"value"`
+	Name  string `json:"name"`
 }
 
 // Command is an agent's slash command.
@@ -272,6 +298,30 @@ func projectMachine(rows []flock.Row, machineID string) Catalog {
 				}
 			}
 			capability.Steer = value["acknowledgedSteer"] == true && value["provenance"] == "runtime"
+			capability.SessionTitle = value["sessionTitle"] == true
+			capability.CLIType, capability.AgentType = text(value["cliType"]), text(value["agentType"])
+			for _, o := range anyList(value["configOptions"]) {
+				opt := object(o)
+				option := ConfigOption{ID: text(opt["id"]), Name: text(opt["name"]), Category: text(opt["category"]), Type: text(opt["type"]), Current: opt["currentValue"]}
+				if option.ID == "" || (option.Type != "select" && option.Type != "boolean") {
+					continue
+				}
+				for _, choice := range anyList(opt["options"]) {
+					ch := object(choice)
+					if v := text(ch["value"]); v != "" {
+						option.Choices = append(option.Choices, Choice{Value: v, Name: firstText(text(ch["name"]), v)})
+					}
+				}
+				capability.Options = append(capability.Options, option)
+			}
+			for model, efforts := range object(value["modelReasoningEfforts"]) {
+				if capability.Efforts == nil {
+					capability.Efforts = map[string][]string{}
+				}
+				for _, e := range anyList(efforts) {
+					capability.Efforts[model] = append(capability.Efforts[model], text(e))
+				}
+			}
 			// The model option's current value names the default, as
 			// Lody's provider rows show it.
 			for _, o := range anyList(value["configOptions"]) {

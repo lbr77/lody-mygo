@@ -12,11 +12,13 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/egoist/mygo"
 	"github.com/egoist/mygo/ui"
 
 	"github.com/lbr77/lody-mygo/internal/catalog"
 	"github.com/lbr77/lody-mygo/internal/cloud"
 	"github.com/lbr77/lody-mygo/internal/collab"
+	"github.com/lbr77/lody-mygo/internal/mcp"
 	"github.com/lbr77/lody-mygo/internal/mention"
 	"github.com/lbr77/lody-mygo/internal/presence"
 	"github.com/lbr77/lody-mygo/internal/session"
@@ -781,8 +783,50 @@ func TestCloudSettings(t *testing.T) {
 	a.catalog.Agents["m1"][0].Row = map[string]any{"env": map[string]any{"A": "1"}}
 	check("agents", "Claude Code", "1 environment variable", "Add Provider")
 	a.openProvider("m1", nil)
-	check("agents", "New Provider", "Kimi Code", "DeepSeek over Claude Code", "Custom command", "Runtime binary path")
+	check("agents", "New Provider", "Kimi Code", "DeepSeek over Claude Code", "ACP Providers", "Amp", "Custom command", "Runtime binary path")
+	if a.catalog.MachineCaps == nil {
+		a.catalog.MachineCaps = map[string]map[string]float64{}
+	}
+	a.catalog.MachineCaps["m1"] = map[string]float64{"codexAuthProfiles": 1, "acpAuthenticationInteractions": 2, "acpProtocolAuthentication": 2}
+	for _, k := range allKinds {
+		if k.value == "builtin:codex" {
+			a.selectKind(k)
+		}
+	}
+	if a.catalog.Capabilities == nil {
+		a.catalog.Capabilities = map[string]catalog.Capability{}
+	}
+	a.catalog.Capabilities[a.provider.id] = catalog.Capability{CLIType: "builtin", AgentType: "codex", Options: []catalog.ConfigOption{
+		{ID: "model", Name: "Model", Category: "model", Type: "select", Current: "gpt-5.6", Choices: []catalog.Choice{{Value: "gpt-5.6", Name: "GPT-5.6"}, {Value: "gpt-5.6-luna", Name: "GPT-5.6 Luna"}}},
+		{ID: "reasoning_effort", Name: "Reasoning effort", Category: "thought_level", Type: "select", Current: "medium", Choices: []catalog.Choice{{Value: "low", Name: "Low"}, {Value: "medium", Name: "Medium"}}},
+	}}
+	check("agents", "Authentication", "ChatGPT", "Custom API", "Title generation", "Model", "GPT-5.6 Luna", "Reasoning effort", "Low")
+	if a.provider.codex == nil || a.provider.codex.mode != "chatgpt" || a.provider.title["model"] != "gpt-5.6-luna" {
+		t.Fatalf("codex form = %+v, title %v", a.provider.codex, a.provider.title)
+	}
+	a.provider.authRequired = true
+	check("agents", "Account", "This provider has no credentials on this machine yet.", "Sign in with ChatGPT")
+	var opened string
+	openExternal = func(u string) { opened = u }
+	defer func() { openExternal = func(u string) { mygo.Shell.OpenExternal(u) } }()
+	flow := &authFlow{phase: "running", machine: "m1", requestID: "auth-1"}
+	a.provider.auth = flow
+	a.signInProgress(flow, authProgress{RequestID: "auth-1", Status: "authorization", AuthorizationURL: "https://auth.openai.com/device", UserCode: "ABCD-1234", AcceptsAuthorizationCode: true})
+	check("agents", "Waiting for ChatGPT sign-in", "Finish signing in to ChatGPT", "ABCD-1234", "Copy code", "Authorization code")
+	if opened != "https://auth.openai.com/device" {
+		t.Fatalf("opened %q", opened)
+	}
+	a.signInProgress(flow, authProgress{Status: "input-required", InteractionID: "i1", Form: &authForm{Fields: []authField{{ID: "apiKey", Type: "secret", Label: "API Key", Required: true}}}})
+	check("agents", "Additional information", "API Key", "Continue")
+	a.signInDone(flow, authResponse{Success: true, Disposition: "authenticated"}, nil)
+	check("agents", "ChatGPT sign-in completed", "Sign in again")
+	if a.provider.authRequired {
+		t.Fatal("still signed out")
+	}
 	a.provider.open = false
+	a.mcpTools = map[string]*mcpTools{"x1": {conn: connKey(a.catalog.MCPServers[0].Connection), tools: []mcp.Tool{{Name: "decompile", Description: "Decompiles"}}},
+		"x2": {conn: connKey(a.catalog.MCPServers[1].Connection), err: "Couldn't connect. Check the configuration and try again."}}
+	check("mcp", "decompile", "Couldn't connect. Check the configuration and try again.")
 	a.catalog.Memories = map[string][]catalog.Memory{"m1": {{ProviderID: "nowledge-mem", MemoryID: "ada", MachineID: "m1", Name: "Ada's memory"}}}
 	seed("memory/m1", `{"type":"machine/memory","status":"ready","memories":[{"id":"ada","name":"Ada's memory"},{"id":"grace","name":"Grace"}]}`, &memoryInventory{})
 	check("memory", "Ada's memory", "Add memory")
@@ -864,6 +908,76 @@ func TestProviderRow(t *testing.T) {
 	}
 	if !strings.HasPrefix(row["agentType"].(string), "custom-") || row["cliType"] != "custom" {
 		t.Fatalf("custom row = %v", row)
+	}
+}
+
+func TestCodexRow(t *testing.T) {
+	var codex providerKind
+	for _, k := range allKinds {
+		if k.value == "builtin:codex" {
+			codex = k
+		}
+	}
+	f := providerForm{machine: "m1", id: "c1", kind: codex, codex: &codexAuth{mode: "api-key", profileID: "p1", baseURL: " https://api.example.com/v1/ "}, path: "/usr/bin/codex"}
+	row, err := f.row()
+	if err != nil {
+		t.Fatal(err)
+	}
+	auth := row["codexAuth"].(map[string]any)
+	if auth["mode"] != "api-key" || auth["profileId"] != "p1" || auth["baseUrl"] != "https://api.example.com/v1" ||
+		row["runtimeOverrides"].(map[string]any)["codexPath"] != "\x00lody-codex-profile-v1" {
+		t.Fatalf("row = %v", row)
+	}
+	for _, bad := range []string{"http://api.example.com", "https://u:p@api.example.com", "https://api.example.com/?k=1", "nope"} {
+		f.codex.baseURL = bad
+		if _, err := f.row(); err == nil {
+			t.Errorf("accepted %q", bad)
+		}
+	}
+	f.codex.baseURL = "http://127.0.0.1:8080/v1"
+	if _, err := f.row(); err != nil {
+		t.Fatal(err)
+	}
+	f.env = "OPENAI_API_KEY=sk"
+	if _, err := f.row(); err == nil {
+		t.Fatal("a profile's variable overridden")
+	}
+}
+
+func TestTitleDefaults(t *testing.T) {
+	cap := catalog.Capability{Options: []catalog.ConfigOption{
+		{ID: "mode", Category: "mode", Type: "select", Current: "default", Choices: []catalog.Choice{{Value: "default", Name: "Default"}, {Value: "plan", Name: "Plan"}, {Value: "read-only", Name: "Read only"}}},
+		{ID: "model", Category: "model", Type: "select", Current: "big", Choices: []catalog.Choice{{Value: "big", Name: "Big"}, {Value: "small", Name: "Small"}}},
+		{ID: "reasoning_effort", Type: "select", Current: "high", Choices: []catalog.Choice{{Value: "high", Name: "High"}, {Value: "minimal", Name: "Minimal"}, {Value: "low", Name: "Low"}}},
+		{ID: "fast", Type: "boolean", Current: false},
+		{ID: "empty", Type: "select"},
+	}, Efforts: map[string][]string{"small": {"low", "high"}}}
+	options := titleOptions(cap, nil)
+	if len(options) != 4 || len(options[2].Choices) != 3 {
+		t.Fatalf("options = %+v", options)
+	}
+	got := titleDefaults("registry", "x", options)
+	if got["mode"] != "read-only" || got["reasoning_effort"] != "minimal" || len(got) != 2 {
+		t.Fatalf("defaults = %v", got)
+	}
+	if efforts := titleOptions(cap, map[string]any{"model": "small"})[2].Choices; len(efforts) != 2 || efforts[0].Value != "high" {
+		t.Fatalf("small's efforts = %v", efforts)
+	}
+	if got := titleDefaults("builtin", "codex", options); got["model"] != "gpt-5.6-luna" {
+		t.Fatalf("codex = %v", got)
+	}
+	f := providerForm{kind: providerKind{cliType: "builtin", agentType: "claude", group: "builtin"}, id: "c1", title: map[string]any{"mode": "plan"}}
+	a := &App{}
+	if f.ownsTitle = a.titleOwned(&f); !f.ownsTitle {
+		t.Fatal("Claude titles its own sessions")
+	}
+	if row, _ := f.row(); row["titleGeneration"] != nil {
+		t.Fatalf("row = %v", row)
+	}
+	f.kind = providerKind{cliType: "registry", agentType: "amp-acp", group: "registry"}
+	f.ownsTitle = a.titleOwned(&f)
+	if row, _ := f.row(); row["titleGeneration"].(map[string]any)["configOptionValues"].(map[string]any)["mode"] != "plan" {
+		t.Fatalf("row = %v", row)
 	}
 }
 

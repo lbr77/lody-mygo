@@ -4185,11 +4185,11 @@ func (msgs Messages) McpNone() string {
 	return Catalog.Format(msgs.locale, "mcpNone", nil)
 }
 
-// McpToolsLocal says "Tools load on the machine running Lody's desktop app."
+// McpToolsLocal says "Tools load on this computer: the command runs here, or the URL is reached from here."
 // in the language the app shows.
 func McpToolsLocal() string { return In(i18n.Locale()).McpToolsLocal() }
 
-// McpToolsLocal says "Tools load on the machine running Lody's desktop app."
+// McpToolsLocal says "Tools load on this computer: the command runs here, or the URL is reached from here."
 // in the language of msgs.
 func (msgs Messages) McpToolsLocal() string {
 	return Catalog.Format(msgs.locale, "mcpToolsLocal", nil)
@@ -6977,4 +6977,702 @@ func UsageOthers() string { return In(i18n.Locale()).UsageOthers() }
 // in the language of msgs.
 func (msgs Messages) UsageOthers() string {
 	return Catalog.Format(msgs.locale, "usageOthers", nil)
+}
+
+// McpToolsLoading says "Loading tools…"
+// in the language the app shows.
+func McpToolsLoading() string { return In(i18n.Locale()).McpToolsLoading() }
+
+// McpToolsLoading says "Loading tools…"
+// in the language of msgs.
+func (msgs Messages) McpToolsLoading() string {
+	return Catalog.Format(msgs.locale, "mcpToolsLoading", nil)
+}
+
+// McpToolsEmpty says "No tools found"
+// in the language the app shows.
+func McpToolsEmpty() string { return In(i18n.Locale()).McpToolsEmpty() }
+
+// McpToolsEmpty says "No tools found"
+// in the language of msgs.
+func (msgs Messages) McpToolsEmpty() string {
+	return Catalog.Format(msgs.locale, "mcpToolsEmpty", nil)
+}
+
+// McpToolsFailed says "Couldn't connect. Check the configuration and try again."
+// in the language the app shows.
+func McpToolsFailed() string { return In(i18n.Locale()).McpToolsFailed() }
+
+// McpToolsFailed says "Couldn't connect. Check the configuration and try again."
+// in the language of msgs.
+func (msgs Messages) McpToolsFailed() string {
+	return Catalog.Format(msgs.locale, "mcpToolsFailed", nil)
+}
+
+// McpToolsMissing says "{ref} isn't set on this computer."
+// in the language the app shows.
+func McpToolsMissing(ref string) string { return In(i18n.Locale()).McpToolsMissing(ref) }
+
+// McpToolsMissing says "{ref} isn't set on this computer."
+// in the language of msgs.
+func (msgs Messages) McpToolsMissing(ref string) string {
+	return Catalog.Format(msgs.locale, "mcpToolsMissing", map[string]any{"ref": ref})
+}
+
+// McpToolsNotFound says "{command} isn't on this computer's PATH."
+// in the language the app shows.
+func McpToolsNotFound(command string) string { return In(i18n.Locale()).McpToolsNotFound(command) }
+
+// McpToolsNotFound says "{command} isn't on this computer's PATH."
+// in the language of msgs.
+func (msgs Messages) McpToolsNotFound(command string) string {
+	return Catalog.Format(msgs.locale, "mcpToolsNotFound", map[string]any{"command": command})
+}
+
+// ProviderRegistry says "ACP Providers"
+// in the language the app shows.
+func ProviderRegistry() string { return In(i18n.Locale()).ProviderRegistry() }
+
+// ProviderRegistry says "ACP Providers"
+// in the language of msgs.
+func (msgs Messages) ProviderRegistry() string {
+	return Catalog.Format(msgs.locale, "providerRegistry", nil)
+}
+
+// ProviderRegistryNote says "Experimental — uses ACP Providers."
+// in the language the app shows.
+func ProviderRegistryNote() string { return In(i18n.Locale()).ProviderRegistryNote() }
+
+// ProviderRegistryNote says "Experimental — uses ACP Providers."
+// in the language of msgs.
+func (msgs Messages) ProviderRegistryNote() string {
+	return Catalog.Format(msgs.locale, "providerRegistryNote", nil)
+}
+
+// ProviderProbing says "Probing…"
+// in the language the app shows.
+func ProviderProbing() string { return In(i18n.Locale()).ProviderProbing() }
+
+// ProviderProbing says "Probing…"
+// in the language of msgs.
+func (msgs Messages) ProviderProbing() string {
+	return Catalog.Format(msgs.locale, "providerProbing", nil)
+}
+
+// CodexAuthentication says "Authentication"
+// in the language the app shows.
+func CodexAuthentication() string { return In(i18n.Locale()).CodexAuthentication() }
+
+// CodexAuthentication says "Authentication"
+// in the language of msgs.
+func (msgs Messages) CodexAuthentication() string {
+	return Catalog.Format(msgs.locale, "codexAuthentication", nil)
+}
+
+// CodexStorage says "Credentials stay on the selected machine. Each provider has its own account."
+// in the language the app shows.
+func CodexStorage() string { return In(i18n.Locale()).CodexStorage() }
+
+// CodexStorage says "Credentials stay on the selected machine. Each provider has its own account."
+// in the language of msgs.
+func (msgs Messages) CodexStorage() string {
+	return Catalog.Format(msgs.locale, "codexStorage", nil)
+}
+
+// CodexCustomAPI says "Custom API"
+// in the language the app shows.
+func CodexCustomAPI() string { return In(i18n.Locale()).CodexCustomAPI() }
+
+// CodexCustomAPI says "Custom API"
+// in the language of msgs.
+func (msgs Messages) CodexCustomAPI() string {
+	return Catalog.Format(msgs.locale, "codexCustomAPI", nil)
+}
+
+// CodexBaseURL says "Base URL"
+// in the language the app shows.
+func CodexBaseURL() string { return In(i18n.Locale()).CodexBaseURL() }
+
+// CodexBaseURL says "Base URL"
+// in the language of msgs.
+func (msgs Messages) CodexBaseURL() string {
+	return Catalog.Format(msgs.locale, "codexBaseURL", nil)
+}
+
+// CodexKeyNext says "Enter the API Key securely during sign-in. To change the destination, add a new provider."
+// in the language the app shows.
+func CodexKeyNext() string { return In(i18n.Locale()).CodexKeyNext() }
+
+// CodexKeyNext says "Enter the API Key securely during sign-in. To change the destination, add a new provider."
+// in the language of msgs.
+func (msgs Messages) CodexKeyNext() string {
+	return Catalog.Format(msgs.locale, "codexKeyNext", nil)
+}
+
+// CodexEnterKey says "Enter API Key"
+// in the language the app shows.
+func CodexEnterKey() string { return In(i18n.Locale()).CodexEnterKey() }
+
+// CodexEnterKey says "Enter API Key"
+// in the language of msgs.
+func (msgs Messages) CodexEnterKey() string {
+	return Catalog.Format(msgs.locale, "codexEnterKey", nil)
+}
+
+// CodexUpdateKey says "Update API Key"
+// in the language the app shows.
+func CodexUpdateKey() string { return In(i18n.Locale()).CodexUpdateKey() }
+
+// CodexUpdateKey says "Update API Key"
+// in the language of msgs.
+func (msgs Messages) CodexUpdateKey() string {
+	return Catalog.Format(msgs.locale, "codexUpdateKey", nil)
+}
+
+// CodexVerifyingKey says "Verifying API Key"
+// in the language the app shows.
+func CodexVerifyingKey() string { return In(i18n.Locale()).CodexVerifyingKey() }
+
+// CodexVerifyingKey says "Verifying API Key"
+// in the language of msgs.
+func (msgs Messages) CodexVerifyingKey() string {
+	return Catalog.Format(msgs.locale, "codexVerifyingKey", nil)
+}
+
+// CodexBound says "This provider is bound to its ChatGPT account. Add a new provider to use another account."
+// in the language the app shows.
+func CodexBound() string { return In(i18n.Locale()).CodexBound() }
+
+// CodexBound says "This provider is bound to its ChatGPT account. Add a new provider to use another account."
+// in the language of msgs.
+func (msgs Messages) CodexBound() string {
+	return Catalog.Format(msgs.locale, "codexBound", nil)
+}
+
+// CodexBadURL says "Codex Base URL requires HTTPS, except for loopback HTTP, without credentials or query parameters."
+// in the language the app shows.
+func CodexBadURL() string { return In(i18n.Locale()).CodexBadURL() }
+
+// CodexBadURL says "Codex Base URL requires HTTPS, except for loopback HTTP, without credentials or query parameters."
+// in the language of msgs.
+func (msgs Messages) CodexBadURL() string {
+	return Catalog.Format(msgs.locale, "codexBadURL", nil)
+}
+
+// CodexProtectedEnv says "Additional environment variables cannot override a Codex account connection."
+// in the language the app shows.
+func CodexProtectedEnv() string { return In(i18n.Locale()).CodexProtectedEnv() }
+
+// CodexProtectedEnv says "Additional environment variables cannot override a Codex account connection."
+// in the language of msgs.
+func (msgs Messages) CodexProtectedEnv() string {
+	return Catalog.Format(msgs.locale, "codexProtectedEnv", nil)
+}
+
+// AuthAccount says "Account"
+// in the language the app shows.
+func AuthAccount() string { return In(i18n.Locale()).AuthAccount() }
+
+// AuthAccount says "Account"
+// in the language of msgs.
+func (msgs Messages) AuthAccount() string {
+	return Catalog.Format(msgs.locale, "authAccount", nil)
+}
+
+// AuthRequiredHint says "This provider has no credentials on this machine yet."
+// in the language the app shows.
+func AuthRequiredHint() string { return In(i18n.Locale()).AuthRequiredHint() }
+
+// AuthRequiredHint says "This provider has no credentials on this machine yet."
+// in the language of msgs.
+func (msgs Messages) AuthRequiredHint() string {
+	return Catalog.Format(msgs.locale, "authRequiredHint", nil)
+}
+
+// AuthReauthHint says "Sign in again if this provider stopped accepting your account."
+// in the language the app shows.
+func AuthReauthHint() string { return In(i18n.Locale()).AuthReauthHint() }
+
+// AuthReauthHint says "Sign in again if this provider stopped accepting your account."
+// in the language of msgs.
+func (msgs Messages) AuthReauthHint() string {
+	return Catalog.Format(msgs.locale, "authReauthHint", nil)
+}
+
+// AuthSignIn says "Sign in with {provider}"
+// in the language the app shows.
+func AuthSignIn(provider string) string { return In(i18n.Locale()).AuthSignIn(provider) }
+
+// AuthSignIn says "Sign in with {provider}"
+// in the language of msgs.
+func (msgs Messages) AuthSignIn(provider string) string {
+	return Catalog.Format(msgs.locale, "authSignIn", map[string]any{"provider": provider})
+}
+
+// AuthRetry says "Retry {provider} sign-in"
+// in the language the app shows.
+func AuthRetry(provider string) string { return In(i18n.Locale()).AuthRetry(provider) }
+
+// AuthRetry says "Retry {provider} sign-in"
+// in the language of msgs.
+func (msgs Messages) AuthRetry(provider string) string {
+	return Catalog.Format(msgs.locale, "authRetry", map[string]any{"provider": provider})
+}
+
+// AuthSignInAgain says "Sign in again"
+// in the language the app shows.
+func AuthSignInAgain() string { return In(i18n.Locale()).AuthSignInAgain() }
+
+// AuthSignInAgain says "Sign in again"
+// in the language of msgs.
+func (msgs Messages) AuthSignInAgain() string {
+	return Catalog.Format(msgs.locale, "authSignInAgain", nil)
+}
+
+// AuthWaiting says "Waiting for {provider} sign-in"
+// in the language the app shows.
+func AuthWaiting(provider string) string { return In(i18n.Locale()).AuthWaiting(provider) }
+
+// AuthWaiting says "Waiting for {provider} sign-in"
+// in the language of msgs.
+func (msgs Messages) AuthWaiting(provider string) string {
+	return Catalog.Format(msgs.locale, "authWaiting", map[string]any{"provider": provider})
+}
+
+// AuthSucceeded says "{provider} sign-in completed"
+// in the language the app shows.
+func AuthSucceeded(provider string) string { return In(i18n.Locale()).AuthSucceeded(provider) }
+
+// AuthSucceeded says "{provider} sign-in completed"
+// in the language of msgs.
+func (msgs Messages) AuthSucceeded(provider string) string {
+	return Catalog.Format(msgs.locale, "authSucceeded", map[string]any{"provider": provider})
+}
+
+// AuthFailed says "Authentication failed"
+// in the language the app shows.
+func AuthFailed() string { return In(i18n.Locale()).AuthFailed() }
+
+// AuthFailed says "Authentication failed"
+// in the language of msgs.
+func (msgs Messages) AuthFailed() string {
+	return Catalog.Format(msgs.locale, "authFailed", nil)
+}
+
+// AuthTimeout says "Authentication timed out. Please try again."
+// in the language the app shows.
+func AuthTimeout() string { return In(i18n.Locale()).AuthTimeout() }
+
+// AuthTimeout says "Authentication timed out. Please try again."
+// in the language of msgs.
+func (msgs Messages) AuthTimeout() string {
+	return Catalog.Format(msgs.locale, "authTimeout", nil)
+}
+
+// AuthNoMethods says "This agent did not advertise a sign-in method."
+// in the language the app shows.
+func AuthNoMethods() string { return In(i18n.Locale()).AuthNoMethods() }
+
+// AuthNoMethods says "This agent did not advertise a sign-in method."
+// in the language of msgs.
+func (msgs Messages) AuthNoMethods() string {
+	return Catalog.Format(msgs.locale, "authNoMethods", nil)
+}
+
+// AuthUpgrade says "Update the target Machine to use interactive authentication for this Provider."
+// in the language the app shows.
+func AuthUpgrade() string { return In(i18n.Locale()).AuthUpgrade() }
+
+// AuthUpgrade says "Update the target Machine to use interactive authentication for this Provider."
+// in the language of msgs.
+func (msgs Messages) AuthUpgrade() string {
+	return Catalog.Format(msgs.locale, "authUpgrade", nil)
+}
+
+// AuthFinish says "Finish signing in to {provider}"
+// in the language the app shows.
+func AuthFinish(provider string) string { return In(i18n.Locale()).AuthFinish(provider) }
+
+// AuthFinish says "Finish signing in to {provider}"
+// in the language of msgs.
+func (msgs Messages) AuthFinish(provider string) string {
+	return Catalog.Format(msgs.locale, "authFinish", map[string]any{"provider": provider})
+}
+
+// AuthBrowserOpened says "Complete authorization in the browser window, then return to Lody."
+// in the language the app shows.
+func AuthBrowserOpened() string { return In(i18n.Locale()).AuthBrowserOpened() }
+
+// AuthBrowserOpened says "Complete authorization in the browser window, then return to Lody."
+// in the language of msgs.
+func (msgs Messages) AuthBrowserOpened() string {
+	return Catalog.Format(msgs.locale, "authBrowserOpened", nil)
+}
+
+// AuthOpenPage says "Open authorization page"
+// in the language the app shows.
+func AuthOpenPage() string { return In(i18n.Locale()).AuthOpenPage() }
+
+// AuthOpenPage says "Open authorization page"
+// in the language of msgs.
+func (msgs Messages) AuthOpenPage() string {
+	return Catalog.Format(msgs.locale, "authOpenPage", nil)
+}
+
+// AuthAuthorizeOpen says "Authorize and open page"
+// in the language the app shows.
+func AuthAuthorizeOpen() string { return In(i18n.Locale()).AuthAuthorizeOpen() }
+
+// AuthAuthorizeOpen says "Authorize and open page"
+// in the language of msgs.
+func (msgs Messages) AuthAuthorizeOpen() string {
+	return Catalog.Format(msgs.locale, "authAuthorizeOpen", nil)
+}
+
+// AuthUnsafeURL says "The Provider returned an unsafe authorization URL. Only HTTP and HTTPS pages can be opened."
+// in the language the app shows.
+func AuthUnsafeURL() string { return In(i18n.Locale()).AuthUnsafeURL() }
+
+// AuthUnsafeURL says "The Provider returned an unsafe authorization URL. Only HTTP and HTTPS pages can be opened."
+// in the language of msgs.
+func (msgs Messages) AuthUnsafeURL() string {
+	return Catalog.Format(msgs.locale, "authUnsafeURL", nil)
+}
+
+// AuthOneTimeCode says "One-time code"
+// in the language the app shows.
+func AuthOneTimeCode() string { return In(i18n.Locale()).AuthOneTimeCode() }
+
+// AuthOneTimeCode says "One-time code"
+// in the language of msgs.
+func (msgs Messages) AuthOneTimeCode() string {
+	return Catalog.Format(msgs.locale, "authOneTimeCode", nil)
+}
+
+// AuthCopyCode says "Copy code"
+// in the language the app shows.
+func AuthCopyCode() string { return In(i18n.Locale()).AuthCopyCode() }
+
+// AuthCopyCode says "Copy code"
+// in the language of msgs.
+func (msgs Messages) AuthCopyCode() string {
+	return Catalog.Format(msgs.locale, "authCopyCode", nil)
+}
+
+// AuthCodeCopied says "Copied"
+// in the language the app shows.
+func AuthCodeCopied() string { return In(i18n.Locale()).AuthCodeCopied() }
+
+// AuthCodeCopied says "Copied"
+// in the language of msgs.
+func (msgs Messages) AuthCodeCopied() string {
+	return Catalog.Format(msgs.locale, "authCodeCopied", nil)
+}
+
+// AuthEnterCode says "Enter this code on the authorization page."
+// in the language the app shows.
+func AuthEnterCode() string { return In(i18n.Locale()).AuthEnterCode() }
+
+// AuthEnterCode says "Enter this code on the authorization page."
+// in the language of msgs.
+func (msgs Messages) AuthEnterCode() string {
+	return Catalog.Format(msgs.locale, "authEnterCode", nil)
+}
+
+// AuthEnterCodeExpiry says "Enter this code on the authorization page. It expires in {minutes} min."
+// in the language the app shows.
+func AuthEnterCodeExpiry(minutes int) string { return In(i18n.Locale()).AuthEnterCodeExpiry(minutes) }
+
+// AuthEnterCodeExpiry says "Enter this code on the authorization page. It expires in {minutes} min."
+// in the language of msgs.
+func (msgs Messages) AuthEnterCodeExpiry(minutes int) string {
+	return Catalog.Format(msgs.locale, "authEnterCodeExpiry", map[string]any{"minutes": minutes})
+}
+
+// AuthCode says "Authorization code"
+// in the language the app shows.
+func AuthCode() string { return In(i18n.Locale()).AuthCode() }
+
+// AuthCode says "Authorization code"
+// in the language of msgs.
+func (msgs Messages) AuthCode() string {
+	return Catalog.Format(msgs.locale, "authCode", nil)
+}
+
+// AuthCodePlaceholder says "Paste the code from your browser"
+// in the language the app shows.
+func AuthCodePlaceholder() string { return In(i18n.Locale()).AuthCodePlaceholder() }
+
+// AuthCodePlaceholder says "Paste the code from your browser"
+// in the language of msgs.
+func (msgs Messages) AuthCodePlaceholder() string {
+	return Catalog.Format(msgs.locale, "authCodePlaceholder", nil)
+}
+
+// AuthCodeHelp says "Only needed when the browser shows a code instead of returning automatically."
+// in the language the app shows.
+func AuthCodeHelp() string { return In(i18n.Locale()).AuthCodeHelp() }
+
+// AuthCodeHelp says "Only needed when the browser shows a code instead of returning automatically."
+// in the language of msgs.
+func (msgs Messages) AuthCodeHelp() string {
+	return Catalog.Format(msgs.locale, "authCodeHelp", nil)
+}
+
+// AuthSubmitCode says "Continue"
+// in the language the app shows.
+func AuthSubmitCode() string { return In(i18n.Locale()).AuthSubmitCode() }
+
+// AuthSubmitCode says "Continue"
+// in the language of msgs.
+func (msgs Messages) AuthSubmitCode() string {
+	return Catalog.Format(msgs.locale, "authSubmitCode", nil)
+}
+
+// AuthCodeSubmitted says "Submitted"
+// in the language the app shows.
+func AuthCodeSubmitted() string { return In(i18n.Locale()).AuthCodeSubmitted() }
+
+// AuthCodeSubmitted says "Submitted"
+// in the language of msgs.
+func (msgs Messages) AuthCodeSubmitted() string {
+	return Catalog.Format(msgs.locale, "authCodeSubmitted", nil)
+}
+
+// AuthCodeSubmitFailed says "Could not submit the authorization code. Please try again."
+// in the language the app shows.
+func AuthCodeSubmitFailed() string { return In(i18n.Locale()).AuthCodeSubmitFailed() }
+
+// AuthCodeSubmitFailed says "Could not submit the authorization code. Please try again."
+// in the language of msgs.
+func (msgs Messages) AuthCodeSubmitFailed() string {
+	return Catalog.Format(msgs.locale, "authCodeSubmitFailed", nil)
+}
+
+// AuthInputSubmitFailed says "Could not submit the authentication response. Please try again."
+// in the language the app shows.
+func AuthInputSubmitFailed() string { return In(i18n.Locale()).AuthInputSubmitFailed() }
+
+// AuthInputSubmitFailed says "Could not submit the authentication response. Please try again."
+// in the language of msgs.
+func (msgs Messages) AuthInputSubmitFailed() string {
+	return Catalog.Format(msgs.locale, "authInputSubmitFailed", nil)
+}
+
+// AuthChooseMethod says "Choose a sign-in method"
+// in the language the app shows.
+func AuthChooseMethod() string { return In(i18n.Locale()).AuthChooseMethod() }
+
+// AuthChooseMethod says "Choose a sign-in method"
+// in the language of msgs.
+func (msgs Messages) AuthChooseMethod() string {
+	return Catalog.Format(msgs.locale, "authChooseMethod", nil)
+}
+
+// AuthEnvMethod says "Set it in this agent's environment variables."
+// in the language the app shows.
+func AuthEnvMethod() string { return In(i18n.Locale()).AuthEnvMethod() }
+
+// AuthEnvMethod says "Set it in this agent's environment variables."
+// in the language of msgs.
+func (msgs Messages) AuthEnvMethod() string {
+	return Catalog.Format(msgs.locale, "authEnvMethod", nil)
+}
+
+// AuthAdditionalInfo says "Additional information"
+// in the language the app shows.
+func AuthAdditionalInfo() string { return In(i18n.Locale()).AuthAdditionalInfo() }
+
+// AuthAdditionalInfo says "Additional information"
+// in the language of msgs.
+func (msgs Messages) AuthAdditionalInfo() string {
+	return Catalog.Format(msgs.locale, "authAdditionalInfo", nil)
+}
+
+// AuthOptional says "(optional)"
+// in the language the app shows.
+func AuthOptional() string { return In(i18n.Locale()).AuthOptional() }
+
+// AuthOptional says "(optional)"
+// in the language of msgs.
+func (msgs Messages) AuthOptional() string {
+	return Catalog.Format(msgs.locale, "authOptional", nil)
+}
+
+// AuthSelectOption says "Select an option"
+// in the language the app shows.
+func AuthSelectOption() string { return In(i18n.Locale()).AuthSelectOption() }
+
+// AuthSelectOption says "Select an option"
+// in the language of msgs.
+func (msgs Messages) AuthSelectOption() string {
+	return Catalog.Format(msgs.locale, "authSelectOption", nil)
+}
+
+// AuthContinue says "Continue"
+// in the language the app shows.
+func AuthContinue() string { return In(i18n.Locale()).AuthContinue() }
+
+// AuthContinue says "Continue"
+// in the language of msgs.
+func (msgs Messages) AuthContinue() string {
+	return Catalog.Format(msgs.locale, "authContinue", nil)
+}
+
+// AuthRuntimeDownloading says "Downloading the {runtime} runtime…"
+// in the language the app shows.
+func AuthRuntimeDownloading(runtime string) string {
+	return In(i18n.Locale()).AuthRuntimeDownloading(runtime)
+}
+
+// AuthRuntimeDownloading says "Downloading the {runtime} runtime…"
+// in the language of msgs.
+func (msgs Messages) AuthRuntimeDownloading(runtime string) string {
+	return Catalog.Format(msgs.locale, "authRuntimeDownloading", map[string]any{"runtime": runtime})
+}
+
+// AuthRuntimeDownloadingPercent says "Downloading the {runtime} runtime… {percent}%"
+// in the language the app shows.
+func AuthRuntimeDownloadingPercent(runtime string, percent int) string {
+	return In(i18n.Locale()).AuthRuntimeDownloadingPercent(runtime, percent)
+}
+
+// AuthRuntimeDownloadingPercent says "Downloading the {runtime} runtime… {percent}%"
+// in the language of msgs.
+func (msgs Messages) AuthRuntimeDownloadingPercent(runtime string, percent int) string {
+	return Catalog.Format(msgs.locale, "authRuntimeDownloadingPercent", map[string]any{"runtime": runtime, "percent": percent})
+}
+
+// AuthRuntimePreparing says "Preparing the {runtime} runtime…"
+// in the language the app shows.
+func AuthRuntimePreparing(runtime string) string {
+	return In(i18n.Locale()).AuthRuntimePreparing(runtime)
+}
+
+// AuthRuntimePreparing says "Preparing the {runtime} runtime…"
+// in the language of msgs.
+func (msgs Messages) AuthRuntimePreparing(runtime string) string {
+	return Catalog.Format(msgs.locale, "authRuntimePreparing", map[string]any{"runtime": runtime})
+}
+
+// BinaryChecking says "Checking download status…"
+// in the language the app shows.
+func BinaryChecking() string { return In(i18n.Locale()).BinaryChecking() }
+
+// BinaryChecking says "Checking download status…"
+// in the language of msgs.
+func (msgs Messages) BinaryChecking() string {
+	return Catalog.Format(msgs.locale, "binaryChecking", nil)
+}
+
+// BinaryNotInstalled says "This agent needs its binary downloaded to the machine first."
+// in the language the app shows.
+func BinaryNotInstalled() string { return In(i18n.Locale()).BinaryNotInstalled() }
+
+// BinaryNotInstalled says "This agent needs its binary downloaded to the machine first."
+// in the language of msgs.
+func (msgs Messages) BinaryNotInstalled() string {
+	return Catalog.Format(msgs.locale, "binaryNotInstalled", nil)
+}
+
+// BinaryUnsupported says "This agent doesn't support this machine's platform."
+// in the language the app shows.
+func BinaryUnsupported() string { return In(i18n.Locale()).BinaryUnsupported() }
+
+// BinaryUnsupported says "This agent doesn't support this machine's platform."
+// in the language of msgs.
+func (msgs Messages) BinaryUnsupported() string {
+	return Catalog.Format(msgs.locale, "binaryUnsupported", nil)
+}
+
+// BinaryDownload says "Download agent"
+// in the language the app shows.
+func BinaryDownload() string { return In(i18n.Locale()).BinaryDownload() }
+
+// BinaryDownload says "Download agent"
+// in the language of msgs.
+func (msgs Messages) BinaryDownload() string {
+	return Catalog.Format(msgs.locale, "binaryDownload", nil)
+}
+
+// BinaryRetry says "Retry download"
+// in the language the app shows.
+func BinaryRetry() string { return In(i18n.Locale()).BinaryRetry() }
+
+// BinaryRetry says "Retry download"
+// in the language of msgs.
+func (msgs Messages) BinaryRetry() string {
+	return Catalog.Format(msgs.locale, "binaryRetry", nil)
+}
+
+// BinaryDownloading says "Downloading…"
+// in the language the app shows.
+func BinaryDownloading() string { return In(i18n.Locale()).BinaryDownloading() }
+
+// BinaryDownloading says "Downloading…"
+// in the language of msgs.
+func (msgs Messages) BinaryDownloading() string {
+	return Catalog.Format(msgs.locale, "binaryDownloading", nil)
+}
+
+// BinaryDownloadingPercent says "Downloading… {percent}%"
+// in the language the app shows.
+func BinaryDownloadingPercent(percent int) string {
+	return In(i18n.Locale()).BinaryDownloadingPercent(percent)
+}
+
+// BinaryDownloadingPercent says "Downloading… {percent}%"
+// in the language of msgs.
+func (msgs Messages) BinaryDownloadingPercent(percent int) string {
+	return Catalog.Format(msgs.locale, "binaryDownloadingPercent", map[string]any{"percent": percent})
+}
+
+// BinaryVerifying says "Verifying download…"
+// in the language the app shows.
+func BinaryVerifying() string { return In(i18n.Locale()).BinaryVerifying() }
+
+// BinaryVerifying says "Verifying download…"
+// in the language of msgs.
+func (msgs Messages) BinaryVerifying() string {
+	return Catalog.Format(msgs.locale, "binaryVerifying", nil)
+}
+
+// BinaryExtracting says "Extracting runtime…"
+// in the language the app shows.
+func BinaryExtracting() string { return In(i18n.Locale()).BinaryExtracting() }
+
+// BinaryExtracting says "Extracting runtime…"
+// in the language of msgs.
+func (msgs Messages) BinaryExtracting() string {
+	return Catalog.Format(msgs.locale, "binaryExtracting", nil)
+}
+
+// BinaryPublishing says "Installing runtime…"
+// in the language the app shows.
+func BinaryPublishing() string { return In(i18n.Locale()).BinaryPublishing() }
+
+// BinaryPublishing says "Installing runtime…"
+// in the language of msgs.
+func (msgs Messages) BinaryPublishing() string {
+	return Catalog.Format(msgs.locale, "binaryPublishing", nil)
+}
+
+// BinaryDownloadFailed says "The agent runtime download failed."
+// in the language the app shows.
+func BinaryDownloadFailed() string { return In(i18n.Locale()).BinaryDownloadFailed() }
+
+// BinaryDownloadFailed says "The agent runtime download failed."
+// in the language of msgs.
+func (msgs Messages) BinaryDownloadFailed() string {
+	return Catalog.Format(msgs.locale, "binaryDownloadFailed", nil)
+}
+
+// BinaryError says "Agent download failed"
+// in the language the app shows.
+func BinaryError() string { return In(i18n.Locale()).BinaryError() }
+
+// BinaryError says "Agent download failed"
+// in the language of msgs.
+func (msgs Messages) BinaryError() string {
+	return Catalog.Format(msgs.locale, "binaryError", nil)
 }

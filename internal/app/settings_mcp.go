@@ -1,15 +1,20 @@
 package app
 
 import (
+	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/egoist/mygo/ui"
 	"github.com/google/uuid"
 
 	"github.com/lbr77/lody-mygo/internal/catalog"
 	"github.com/lbr77/lody-mygo/internal/flock"
+	"github.com/lbr77/lody-mygo/internal/mcp"
 	"github.com/lbr77/lody-mygo/locales"
 )
 
@@ -52,8 +57,96 @@ func (a *App) mcpPage(c *ui.Context, p *palette) {
 	a.mcpDialog(c, p)
 }
 
+// mcpTools is a server's tool list, as this computer last loaded it.
+type mcpTools struct {
+	conn    string // the connection it was loaded for
+	loading bool
+	tools   []mcp.Tool
+	err     string
+}
+
+func connKey(conn map[string]any) string {
+	b, _ := json.Marshal(conn)
+	return string(b)
+}
+
+// loadTools lists a server's tools from this computer: its command runs
+// here, or its URL is reached from here, as Lody's settings do.
+func (a *App) loadTools(m catalog.MCPServer) {
+	if m.Connection == nil {
+		return
+	}
+	if a.mcpTools == nil {
+		a.mcpTools = map[string]*mcpTools{}
+	}
+	state := &mcpTools{conn: connKey(m.Connection), loading: true}
+	a.mcpTools[m.ID] = state
+	server, err := mcp.FromConnection(m.Connection)
+	if err != nil {
+		state.loading, state.err = false, locales.McpToolsFailed()
+		return
+	}
+	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 40*time.Second)
+		defer cancel()
+		tools, err := mcp.ListTools(ctx, server, mcp.Environ())
+		a.update(func() {
+			state.loading, state.tools = false, tools
+			var missing *mcp.MissingError
+			var notFound *mcp.NotFoundError
+			switch {
+			case err == nil:
+			case errors.As(err, &missing):
+				state.err = locales.McpToolsMissing(missing.Variable)
+			case errors.As(err, &notFound):
+				state.err = locales.McpToolsNotFound(notFound.Command)
+			default:
+				// Lody shows no detail: errors may carry a token or the
+				// server's output.
+				state.err = locales.McpToolsFailed()
+			}
+		})
+	}()
+}
+
 func (a *App) mcpRow(c *ui.Context, p *palette, m catalog.MCPServer) {
 	server := m
+	tools := a.mcpTools[m.ID]
+	if tools != nil && tools.conn != connKey(m.Connection) {
+		tools = nil // loaded for a connection since changed
+	}
+	ui.Column(c).FillWidth().Children(func() {
+		a.mcpServerRow(c, p, server, tools)
+		if tools != nil {
+			mcpToolList(c, p, tools)
+		}
+	})
+}
+
+func mcpToolList(c *ui.Context, p *palette, t *mcpTools) {
+	ui.Row(c).FillWidth().Wrap().Gap(6).AlignItems(ui.Center).Padding(0, 14, 12, 54).Children(func() {
+		switch {
+		case t.loading:
+			ui.Spinner(c).Size(13, 13)
+			ui.Text(c, locales.McpToolsLoading()).FontSize(sizeFoot).TextColor(p.Secondary)
+		case t.err != "":
+			ui.Text(c, t.err).FontSize(sizeFoot).TextColor(p.Danger).Selectable()
+		case len(t.tools) == 0:
+			ui.Text(c, locales.McpToolsEmpty()).FontSize(sizeFoot).TextColor(p.Secondary)
+		default:
+			for _, tool := range t.tools {
+				badge := ui.Text(c.Key(tool.Name), tool.Name).Font(fontMono).FontSize(sizeCaption).TextColor(p.Text).
+					Padding(2, 7).Radius(5).Background(p.Text.Alpha(0.06))
+				if tool.Description != "" {
+					badge.Tooltip(tool.Description)
+				}
+			}
+		}
+	})
+}
+
+func (a *App) mcpServerRow(c *ui.Context, p *palette, server catalog.MCPServer, tools *mcpTools) {
+	m := server
 	ui.Row(c).FillWidth().Padding(12, 14).Gap(12).AlignItems(ui.Center).Children(func() {
 		icon := iconSquareTerminal
 		badge := "stdio"
@@ -74,7 +167,16 @@ func (a *App) mcpRow(c *ui.Context, p *palette, m catalog.MCPServer) {
 				ui.Text(c, m.Description).FontSize(sizeFoot).TextColor(p.Tertiary).SingleLine()
 			}
 		})
-		ui.Row(c).Gap(4).AlignItems(ui.Center).Opacity(0.45).Tooltip(locales.McpToolsLocal()).Children(func() {
+		load := ui.Row(c).Gap(4).AlignItems(ui.Center).Padding(4, 8).Radius(6).Tooltip(locales.McpToolsLocal()).Transition(colorFade)
+		if m.Connection == nil || (tools != nil && tools.loading) {
+			load.Opacity(0.45)
+		} else {
+			load.Cursor(ui.CursorPointer).Label(locales.McpLoadTools()).OnClick(func() { a.loadTools(server) })
+			if load.Hovered() {
+				load.Background(p.Hover)
+			}
+		}
+		load.Children(func() {
 			ui.Icon(c, iconRefresh).Size(13, 13).TextColor(p.Secondary)
 			ui.Text(c, locales.McpLoadTools()).FontSize(sizeFoot).TextColor(p.Secondary)
 		})
@@ -228,7 +330,11 @@ func (a *App) saveMCP() {
 		Connection: conn, EnabledByDefault: enabled, CreatedAt: f.createdAt, CreatedBy: f.createdBy}
 	row := server.Row(nowMs(), a.account.User.ID)
 	f.open = false
-	a.streamWrite("", func(fl *flock.Flock) error { return fl.Put([]any{"mcpServer", server.ID}, row) }, nil)
+	a.streamWrite("", func(fl *flock.Flock) error { return fl.Put([]any{"mcpServer", server.ID}, row) }, func(err error) {
+		if err == nil {
+			a.loadTools(server)
+		}
+	})
 }
 
 func (a *App) mcpDialog(c *ui.Context, p *palette) {

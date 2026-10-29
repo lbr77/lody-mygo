@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"slices"
 	"strings"
 	"time"
@@ -32,6 +33,9 @@ type providerKind struct {
 	tokenEnv  string            // the preset's token variable
 	fixedEnv  map[string]string // the preset's settings
 	endpoints []endpoint        // the base URLs a preset may use
+
+	description string // a registry agent's
+	binary      bool   // a registry agent the machine downloads first
 }
 
 type endpoint struct{ id, label, url string }
@@ -88,6 +92,25 @@ var providerKinds = []providerKind{
 	{value: "custom", name: "", group: "custom", cliType: "custom"},
 }
 
+// registryAgent is an agent of the ACP registry, which Lody offers as a
+// provider.
+type registryAgent struct {
+	id, name, description string
+	binary                bool
+}
+
+// allKinds is the rail's catalog: the built-ins and presets, the ACP
+// registry's agents, then a custom command.
+var allKinds = func() []providerKind {
+	custom := providerKinds[len(providerKinds)-1]
+	out := append([]providerKind(nil), providerKinds[:len(providerKinds)-1]...)
+	for _, r := range registryAgents {
+		out = append(out, providerKind{value: "registry:" + r.id, name: r.name, group: "registry", agentType: r.id, cliType: "registry",
+			description: r.description, binary: r.binary})
+	}
+	return append(out, custom)
+}()
+
 func (k providerKind) label() string {
 	if k.group == "custom" {
 		return locales.ProviderCustom()
@@ -119,6 +142,75 @@ type providerForm struct {
 	testErr   string
 	err       string
 	persisted bool // the config is saved, as a test saves it
+
+	customType   string         // a new custom provider's agent type
+	codex        *codexAuth     // the account a managed Codex signs in with
+	title        map[string]any // title generation's option values
+	titled       bool           // their defaults are filled in
+	ownsTitle    bool           // the agent names its sessions itself
+	authRequired bool           // the last test found no credentials
+	auth         *authFlow
+	binary       *binaryState
+}
+
+// codexAuth is the account of a managed Codex provider: ChatGPT, or an
+// API key for a base URL. Its credentials stay on the machine, under the
+// profile.
+type codexAuth struct {
+	mode      string // chatgpt or api-key
+	profileID string
+	baseURL   string
+}
+
+// codexLaunchGuard stands in for the Codex path of a profile's config, so
+// a machine too old for profiles fails rather than use its global login.
+const codexLaunchGuard = "\x00lody-codex-profile-v1"
+
+const defaultCodexURL = "https://api.openai.com/v1"
+
+// normalizeCodexURL checks a Codex base URL as Lody does: HTTPS, or HTTP
+// on loopback, with no credentials, query or fragment.
+func normalizeCodexURL(v string) (string, error) {
+	u, err := url.Parse(strings.TrimSpace(v))
+	bad := fmt.Errorf("%s", locales.CodexBadURL())
+	if err != nil || u.Host == "" {
+		return "", bad
+	}
+	host := u.Hostname()
+	loopback := host == "localhost" || host == "::1" || strings.HasPrefix(host, "127.")
+	if u.User != nil || u.RawQuery != "" || u.ForceQuery || u.Fragment != "" || (u.Scheme != "https" && !(u.Scheme == "http" && loopback)) {
+		return "", bad
+	}
+	return strings.TrimRight(u.String(), "/"), nil
+}
+
+// codexProtectedEnv are the variables a Codex profile keeps to itself.
+var codexProtectedEnv = []string{"HOME", "USERPROFILE", "APPDATA", "LOCALAPPDATA", "XDG_CONFIG_HOME", "DBUS_SESSION_BUS_ADDRESS",
+	"HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY", "NO_PROXY", "SSL_CERT_FILE", "SSL_CERT_DIR", "NODE_EXTRA_CA_CERTS",
+	"NODE_TLS_REJECT_UNAUTHORIZED", "MODEL_PROVIDER", "DEFAULT_AUTH_REQUEST", "NODE_OPTIONS", "LD_PRELOAD", "LD_LIBRARY_PATH"}
+
+func codexProtected(key string) bool {
+	k := strings.ToUpper(key)
+	if slices.Contains(codexProtectedEnv, k) {
+		return true
+	}
+	for _, prefix := range []string{"CODEX_", "OPENAI_", "LODY_CODEX_", "DYLD_"} {
+		if strings.HasPrefix(k, prefix) {
+			return true
+		}
+	}
+	return false
+}
+
+// agentType is the config's agent type, as its row has it.
+func (f *providerForm) agentType() string {
+	switch {
+	case f.editing != nil:
+		return f.editing.AgentType
+	case f.kind.group == "custom":
+		return f.customType
+	}
+	return f.kind.agentType
 }
 
 func (a *App) agentsPage(c *ui.Context, p *palette) {
@@ -218,7 +310,7 @@ func (a *App) providerRow(c *ui.Context, p *palette, ag catalog.AgentConfig) {
 
 // refreshProvider asks the machine to start the agent and report its
 // models and modes, which it writes to its stream.
-func (a *App) refreshProvider(machine, configID string, done func(result string, err error)) {
+func (a *App) refreshProvider(machine, configID string, done func(result string, authRequired bool, err error)) {
 	conn := a.conn
 	if conn == nil {
 		return
@@ -240,6 +332,7 @@ func (a *App) refreshProvider(machine, configID string, done func(result string,
 		result := ""
 		switch {
 		case err != nil:
+		case res.AuthRequired && done != nil:
 		case res.AuthRequired:
 			err = fmt.Errorf("%s", locales.ProviderAuthRequired())
 		case !res.Success:
@@ -249,7 +342,7 @@ func (a *App) refreshProvider(machine, configID string, done func(result string,
 		}
 		a.update(func() {
 			if done != nil {
-				done(result, err)
+				done(result, res.AuthRequired, err)
 			} else if err != nil {
 				a.settingsError = err.Error()
 			}
@@ -282,12 +375,16 @@ func (a *App) openProvider(machine string, ag *catalog.AgentConfig) {
 	if machine == "" && len(a.catalog.MachineIDs) > 0 {
 		machine = a.catalog.MachineIDs[0]
 	}
-	f := providerForm{open: true, machine: machine, kind: providerKinds[0], id: uuid.NewString(), sections: map[string]bool{}}
+	if prev := a.provider.auth; prev != nil && prev.phase == "running" {
+		a.cancelProviderAuth(prev)
+	}
+	f := providerForm{open: true, machine: machine, kind: providerKinds[0], id: uuid.NewString(), sections: map[string]bool{"title": true},
+		customType: "custom-" + uuid.NewString(), title: map[string]any{}}
 	if ag != nil {
 		f.editing, f.id, f.name, f.persisted = ag, ag.ID, ag.Name, true
 		f.kind = providerKind{value: ag.CLIType + ":" + ag.AgentType, name: ag.AgentType, agentType: ag.AgentType, cliType: ag.CLIType}
-		for _, k := range providerKinds {
-			if k.group == "builtin" && k.agentType == ag.AgentType && ag.CLIType == "builtin" {
+		for _, k := range allKinds {
+			if (k.group == "builtin" || k.group == "registry") && k.agentType == ag.AgentType && k.cliType == ag.CLIType {
 				f.kind = k
 			}
 		}
@@ -307,8 +404,41 @@ func (a *App) openProvider(machine string, ag *catalog.AgentConfig) {
 		}
 		f.prompt = str(row["prompt"])
 		f.env = pairs(row["env"], "=")
+		if auth, _ := row["codexAuth"].(map[string]any); auth != nil {
+			f.codex = &codexAuth{mode: str(auth["mode"]), profileID: str(auth["profileId"]), baseURL: str(auth["baseUrl"])}
+			f.path = ""
+		}
+		if tg, _ := row["titleGeneration"].(map[string]any); tg != nil {
+			if values, _ := tg["configOptionValues"].(map[string]any); values != nil {
+				for k, v := range values {
+					f.title[k] = v
+				}
+			}
+		}
 	}
 	a.provider = f
+}
+
+// selectKind switches a new provider's kind, leaving what the last one
+// had set.
+func (a *App) selectKind(k providerKind) {
+	f := &a.provider
+	if f.auth != nil && f.auth.phase == "running" {
+		a.cancelProviderAuth(f.auth)
+	}
+	f.kind, f.endpoint, f.baseURL, f.testErr, f.tested = k, "", "", "", ""
+	f.codex, f.title, f.titled, f.authRequired, f.auth, f.binary = nil, map[string]any{}, false, false, nil, nil
+}
+
+// machineCap is the version of a protocol capability a machine has.
+func (a *App) machineCap(machine, name string) int {
+	return int(a.catalog.MachineCaps[machine][name])
+}
+
+// managedCodex is whether the form's Codex signs in with its own account,
+// as machines with profiles keep them.
+func (a *App) managedCodex(f *providerForm) bool {
+	return f.kind.cliType == "builtin" && f.kind.agentType == "codex" && a.machineCap(f.machine, "codexAuthProfiles") >= 1
 }
 
 func shellQuote(s string) string {
@@ -384,10 +514,10 @@ func (f *providerForm) row() (map[string]any, error) {
 	}
 	row["id"], row["machineId"], row["name"] = f.id, f.machine, name
 	if f.editing == nil {
-		row["cliType"], row["agentType"] = k.cliType, k.agentType
-		if k.group == "custom" {
-			row["agentType"] = "custom-" + uuid.NewString()
+		if k.group == "custom" && f.customType == "" {
+			f.customType = "custom-" + uuid.NewString()
 		}
+		row["cliType"], row["agentType"] = k.cliType, f.agentType()
 		if k.brand != "" {
 			row["brandId"] = k.brand
 		}
@@ -422,7 +552,24 @@ func (f *providerForm) row() (map[string]any, error) {
 		env[k.tokenEnv] = strings.TrimSpace(f.token)
 	}
 	row["env"] = env
-	if k.pathKey != "" {
+	codex := f.codex != nil && k.cliType == "builtin" && k.agentType == "codex"
+	if codex {
+		for key := range env {
+			if codexProtected(key) {
+				return nil, fmt.Errorf("%s", locales.CodexProtectedEnv())
+			}
+		}
+		auth := map[string]any{"mode": f.codex.mode, "profileId": f.codex.profileID}
+		if f.codex.mode == "api-key" {
+			base, err := normalizeCodexURL(f.codex.baseURL)
+			if err != nil {
+				return nil, err
+			}
+			auth["baseUrl"] = base
+		}
+		row["codexAuth"] = auth
+		row["runtimeOverrides"] = map[string]any{"codexPath": codexLaunchGuard}
+	} else if k.pathKey != "" {
 		ov, _ := row["runtimeOverrides"].(map[string]any)
 		next := map[string]any{}
 		for key, v := range ov {
@@ -462,23 +609,31 @@ func (f *providerForm) row() (map[string]any, error) {
 	} else {
 		delete(row, "prompt")
 	}
+	switch {
+	case f.ownsTitle:
+		delete(row, "titleGeneration")
+	case k.group != "preset" && len(f.title) > 0:
+		tg := map[string]any{}
+		if old, _ := row["titleGeneration"].(map[string]any); old != nil {
+			for key, v := range old {
+				tg[key] = v
+			}
+		}
+		values := map[string]any{}
+		for key, v := range f.title {
+			values[key] = v
+		}
+		tg["configOptionValues"] = values
+		row["titleGeneration"] = tg
+	}
 	return row, nil
 }
 
-// saveProvider writes the config; test also asks the machine to start it.
-func (a *App) saveProvider(test bool) {
-	f := &a.provider
-	row, err := f.row()
-	if err != nil {
-		f.err = err.Error()
-		return
-	}
-	f.err, f.testErr, f.tested = "", "", ""
-	machine, id, agentType := f.machine, f.id, str(row["agentType"])
+// writeProvider writes an agent config, taking its type off the opted-out
+// built-ins.
+func (a *App) writeProvider(machine, id string, row map[string]any, done func(error)) {
+	agentType := str(row["agentType"])
 	optOut := slices.Contains(managedTypes, agentType)
-	if test {
-		f.testing = true
-	}
 	a.streamWrite(machine, func(fl *flock.Flock) error {
 		if optOut {
 			if _, ok, _ := fl.Get([]any{"builtinAgentOptOut", agentType}); ok {
@@ -488,7 +643,24 @@ func (a *App) saveProvider(test bool) {
 			}
 		}
 		return fl.Put([]any{"agentConfig", id}, row)
-	}, func(err error) {
+	}, done)
+}
+
+// saveProvider writes the config; test also asks the machine to start it.
+func (a *App) saveProvider(test bool) {
+	f := &a.provider
+	f.ownsTitle = a.titleOwned(f)
+	row, err := f.row()
+	if err != nil {
+		f.err = err.Error()
+		return
+	}
+	f.err, f.testErr, f.tested = "", "", ""
+	machine, id := f.machine, f.id
+	if test {
+		f.testing = true
+	}
+	a.writeProvider(machine, id, row, func(err error) {
 		if err != nil {
 			f.testing, f.err = false, err.Error()
 			return
@@ -498,12 +670,13 @@ func (a *App) saveProvider(test bool) {
 			f.open = false
 			return
 		}
-		a.refreshProvider(machine, id, func(result string, err error) {
+		a.refreshProvider(machine, id, func(result string, authRequired bool, err error) {
 			f.testing = false
 			if err != nil {
 				f.testErr = err.Error()
 				return
 			}
+			f.authRequired = authRequired
 			f.tested = result
 		})
 	})
@@ -512,6 +685,10 @@ func (a *App) saveProvider(test bool) {
 func (a *App) providerDialog(c *ui.Context, p *palette) {
 	f := &a.provider
 	if !f.open {
+		if f.auth != nil && f.auth.phase == "running" {
+			a.cancelProviderAuth(f.auth)
+			f.auth.phase = "cancelled"
+		}
 		return
 	}
 	w, h := c.Size()
@@ -536,10 +713,13 @@ func (a *App) providerRail(c *ui.Context, p *palette) {
 			Padding(0, 10).Radius(8).Background(p.Canvas).Border(1, p.Border).Margin(0, 0, 8, 0)
 		ui.Scroll(c).Grow(1).MinHeight(0).Gap(2).Children(func() {
 			q := strings.ToLower(strings.TrimSpace(f.search))
-			for _, group := range []struct{ id, label string }{{"builtin", locales.ProviderBuiltin()}, {"preset", locales.ProviderPresets()}, {"custom", locales.ProviderCustomGroup()}} {
+			groups := []struct{ id, label string }{{"builtin", locales.ProviderBuiltin()}, {"preset", locales.ProviderPresets()},
+				{"registry", locales.ProviderRegistry()}, {"custom", locales.ProviderCustomGroup()}}
+			for _, group := range groups {
 				shown := false
-				for _, k := range providerKinds {
-					if k.group != group.id || (q != "" && !strings.Contains(strings.ToLower(k.label()), q)) {
+				for _, k := range allKinds {
+					keys := strings.ToLower(k.label() + " " + k.agentType + " " + k.description)
+					if k.group != group.id || (q != "" && !strings.Contains(keys, q)) {
 						continue
 					}
 					if !shown {
@@ -548,9 +728,7 @@ func (a *App) providerRail(c *ui.Context, p *palette) {
 					}
 					kind := k
 					row := ui.Row(c.Key(k.value)).FillWidth().Height(34).Padding(0, 10).Radius(8).Gap(10).AlignItems(ui.Center).Cursor(ui.CursorPointer).
-						Label(k.label()).Transition(colorFade).OnClick(func() {
-						f.kind, f.endpoint, f.baseURL, f.testErr, f.tested = kind, "", "", "", ""
-					})
+						Label(k.label()).Transition(colorFade).OnClick(func() { a.selectKind(kind) })
 					selected := f.kind.value == k.value
 					switch {
 					case selected:
@@ -605,10 +783,14 @@ func (a *App) providerFormView(c *ui.Context, p *palette) {
 		})
 		ui.Column(c).Grow(1).MinWidth(0).Gap(2).Children(func() {
 			ui.Text(c, title).FontSize(sizeBody).FontWeight(600).TextColor(p.Strong)
-			ui.Text(c, locales.ProviderRuntime(k.label())).FontSize(sizeFoot).TextColor(p.Secondary).SingleLine()
+			subtitle := locales.ProviderRuntime(k.label())
+			if k.description != "" {
+				subtitle = k.description
+			}
+			ui.Text(c, subtitle).FontSize(sizeFoot).TextColor(p.Secondary).SingleLine()
 		})
 		test := outlineButton(c, p, iconFlask, locales.ProviderTest())
-		if f.testing {
+		if f.testing || !a.binaryReady(f) {
 			test.Disabled(true).Opacity(0.6)
 		} else {
 			test.OnClick(func() { a.saveProvider(true) })
@@ -631,7 +813,11 @@ func (a *App) providerFormView(c *ui.Context, p *palette) {
 				input(c, p, &f.command, "/path/to/agent --acp", locales.ProviderCommand()).Font(fontMono)
 			})
 		}
-		if k.pathKey != "" {
+		managed := a.managedCodex(f)
+		if managed && f.codex == nil && f.editing == nil {
+			f.codex = &codexAuth{mode: "chatgpt", profileID: uuid.NewString()}
+		}
+		if k.pathKey != "" && f.codex == nil {
 			field(c, p, locales.ProviderPath(), locales.ProviderPathHint(), func() {
 				input(c, p, &f.path, "/path/to/"+k.agentType, locales.ProviderPath()).Font(fontMono)
 			})
@@ -652,11 +838,14 @@ func (a *App) providerFormView(c *ui.Context, p *palette) {
 				a.toolbarPicker(c, p, "provider-endpoint", iconGlobe, current.label, options, current.id, func(id string) { f.endpoint = id })
 			})
 		}
-		if k.group != "preset" {
-			a.providerSection(c, p, "title", locales.ProviderTitleGen(), func() {
-				ui.Text(c, locales.ProviderTitleGenHint()).FontSize(sizeFoot).TextColor(p.Secondary)
-			})
+		if managed && f.codex != nil {
+			a.codexAuthField(c, p)
 		}
+		if k.binary {
+			a.binaryField(c, p)
+		}
+		a.accountField(c, p, managed)
+		a.titleSection(c, p)
 		a.providerSection(c, p, "prompt", locales.ProviderPrompt(), func() {
 			area(c, p, &f.prompt, locales.ProviderPromptPlaceholder(), locales.ProviderPrompt(), 4)
 		})
@@ -683,13 +872,19 @@ func (a *App) providerFormView(c *ui.Context, p *palette) {
 			ui.Text(c, f.err).FontSize(sizeFoot).TextColor(p.Danger)
 		}
 	})
-	ui.Row(c).FillWidth().Padding(12, 20, 16, 20).Gap(8).Justify(ui.End).Shrink(0).Children(func() {
+	ui.Row(c).FillWidth().Padding(12, 20, 16, 20).Gap(8).Justify(ui.End).AlignItems(ui.Center).Shrink(0).Children(func() {
+		if k.group == "registry" {
+			ui.Row(c).Grow(1).Gap(6).AlignItems(ui.Center).Children(func() {
+				ui.Icon(c, iconFlask).Size(12, 12).TextColor(p.Tertiary)
+				ui.Text(c, locales.ProviderRegistryNote()).FontSize(sizeCaption).TextColor(p.Tertiary)
+			})
+		}
 		ghostButton(c, p, locales.Cancel()).Border(1, p.Border).OnClick(func() { f.open = false })
 		label := locales.ProviderCreate()
 		if f.persisted {
 			label = locales.Save()
 		}
-		ready := f.machine != "" && (k.group != "custom" || strings.TrimSpace(f.command) != "")
+		ready := f.machine != "" && (k.group != "custom" || strings.TrimSpace(f.command) != "") && a.binaryReady(f)
 		primaryButton(c, p, label, ready && !f.testing).OnClick(func() { a.saveProvider(false) })
 	})
 }
