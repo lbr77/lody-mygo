@@ -111,3 +111,17 @@ func TestExpand(t *testing.T) {
 		t.Fatalf("Tokens missed: %v %v", skills, sessions)
 	}
 }
+
+func TestRoles(t *testing.T) {
+	// Control characters go before whitespace collapses, as Lody's.
+	if got := RoleSlug("  @Code  Reviewer\t2 "); got != "Code-Reviewer2" {
+		t.Errorf("slug %q", got)
+	}
+	one := RoleItem("r1", "Reviewer", "🧐 Reviewer", "", "")
+	two := RoleItem("r2", "Builder", "", "", "m2")
+	got := Expand("ask "+one.Insert+" and "+two.Insert+" @role:Gone", []Item{one, two})
+	want := "ask use lody mcp to create a session with agent role[id: r1, name: Reviewer] and use lody mcp to create a session with agent role[id: r2, agentRoleMachineId: m2, name: Builder] @role:Gone"
+	if got != want {
+		t.Errorf("expanded:\n%s\nwant:\n%s", got, want)
+	}
+}

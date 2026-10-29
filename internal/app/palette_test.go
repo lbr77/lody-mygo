@@ -430,3 +430,41 @@ func TestPreferencePages(t *testing.T) {
 		t.Error("ligatures default off")
 	}
 }
+
+func TestAtMenuCategories(t *testing.T) {
+	a := fixture()
+	a.view.Entries = a.view.Entries[:2]
+	a.view.Working = false
+	a.catalog.Sessions[0].AgentConfigID = "a1"
+	a.catalog.Capabilities = map[string]catalog.Capability{"a1": {Commands: []catalog.Command{{Name: "compact", Description: "Compact the context"}}}}
+	a.catalog.Roles = []catalog.AgentRole{{ID: "r1", Name: "Code Reviewer", Visibility: "workspace", Targets: []catalog.RoleTarget{{MachineID: "m1", AgentConfigID: "a1"}}}}
+	tt := snap(t, a, "mention-categories", true, func(tt *ui.Tester) {
+		tt.Frame()
+		tt.Type("@")
+		tt.Frame()
+	})
+	var cats []string
+	for _, r := range a.mention.rows {
+		cats = append(cats, r.category)
+	}
+	if got := strings.Join(cats, ","); got != "file,skill,session,role,shortcut,cmd" {
+		t.Fatalf("categories %s", got)
+	}
+	for _, want := range []string{"Agent Roles", "Prompt Shortcuts", "Agent Commands"} {
+		if !tt.HasText(want) {
+			t.Errorf("missing %q", want)
+		}
+	}
+	tt.Type("role:")
+	tt.Frame()
+	if len(a.mention.rows) != 1 || a.mention.rows[0].item.Insert != "@role:Code-Reviewer" {
+		t.Fatalf("roles: %+v", a.mention.rows)
+	}
+	// The placeholder teaches what this composer answers.
+	if got := composerHint(true, true, true); got != "Press '/' for commands, '@' for mentions, '$' for skills." {
+		t.Errorf("hint %q", got)
+	}
+	if got := composerHint(false, false, true); got != "Press '$' for skills." {
+		t.Errorf("hint %q", got)
+	}
+}

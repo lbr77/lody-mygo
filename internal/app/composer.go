@@ -164,7 +164,7 @@ type composerOptions struct {
 // above its controls.
 func (a *App) composerBox(c *ui.Context, p *palette, o composerOptions) {
 	if o.placeholder == "" {
-		o.placeholder = locales.ComposerPlaceholder()
+		o.placeholder = a.composerPlaceholder(c)
 	}
 	if o.sendSize == 0 {
 		o.sendSize = 28
@@ -544,4 +544,36 @@ func modeCycle(modes []catalog.Mode, current string, pick func(string)) *cycleTa
 		t.values = append(t.values, m.ID)
 	}
 	return t
+}
+
+// composerPlaceholder teaches the keys the composer answers, as Lody's: /
+// for the agent's commands, @ for what the project can mention, $ for
+// skills; a narrow composer just asks.
+func (a *App) composerPlaceholder(c *ui.Context) string {
+	if w, _ := c.Size(); w > 0 && w < 440 {
+		return locales.ComposerPlaceholder()
+	}
+	t := a.mentionTarget()
+	return composerHint(len(a.catalog.Capabilities[t.agent].Commands) > 0, t.localProject() != "" || strings.HasPrefix(t.project, "github:"), t.machine != "")
+}
+
+// composerHint names the keys the composer answers.
+func composerHint(commands, mentions, skills bool) string {
+	switch {
+	case commands && mentions && skills:
+		return locales.HintCommandsMentionsSkills()
+	case mentions && skills:
+		return locales.HintMentionsSkills()
+	case commands && skills:
+		return locales.HintCommandsSkills()
+	case commands && mentions:
+		return locales.HintCommandsMentions()
+	case commands:
+		return locales.HintCommands()
+	case mentions:
+		return locales.HintMentions()
+	case skills:
+		return locales.HintSkills()
+	}
+	return locales.ComposerPlaceholder()
 }

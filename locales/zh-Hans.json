@@ -1321,5 +1321,17 @@
   "prefLigatures": "字体连字",
   "prefLigaturesHelp": "应用于对话、代码、工具输出。",
   "notifyNeedsYou": "等你确认",
-  "notifyFinished": "已完成"
+  "notifyFinished": "已完成",
+  "hintCommands": "按 '/' 使用命令。",
+  "hintCommandsMentions": "按 '/' 使用命令，'@' 添加提及。",
+  "hintCommandsMentionsSkills": "按 '/' 使用命令，'@' 添加提及，'$' 使用技能。",
+  "hintCommandsSkills": "按 '/' 使用命令，'$' 使用技能。",
+  "hintMentions": "按 '@' 添加提及。",
+  "hintMentionsSkills": "按 '@' 添加提及，'$' 使用技能。",
+  "hintSkills": "按 '$' 使用技能。",
+  "mentionRoles": "Agent 角色",
+  "mentionShortcuts": "提示词快捷方式",
+  "mentionCommands": "Agent 命令",
+  "mentionIssues": "Issues",
+  "mentionPullRequests": "Pull Requests"
 }

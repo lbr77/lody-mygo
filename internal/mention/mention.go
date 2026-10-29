@@ -19,6 +19,9 @@ const (
 	Skill     = "skill"
 	Session   = "session"
 	Command   = "cmd"
+	Role      = "role"
+	// Shortcut is the @ menu's way to the prompt shortcuts that / reaches.
+	Shortcut = "shortcut"
 )
 
 // Item is a thing the composer can mention.
@@ -28,6 +31,7 @@ type Item struct {
 	Name     string
 	Subtitle string
 	Insert   string // the text that takes the trigger's place
+	role     string // a role's own name, which its expansion carries
 }
 
 // MaxFiles is how many paths are asked of a machine.
@@ -175,6 +179,53 @@ func SessionItem(id, title, project string) Item {
 	return Item{Kind: Session, Path: id, Name: title, Subtitle: project, Insert: "@session:" + id}
 }
 
+// RoleItem is an agent role to mention, as Lody writes it: @role:<slug>
+// of its name, which asks the agent to create a session with the role.
+// label is what the menu shows; machine names the target of a role on
+// several machines.
+func RoleItem(id, name, label, description, machine string) Item {
+	value := id
+	if machine != "" {
+		value += "@" + machine
+	}
+	return Item{Kind: Role, Path: value, Name: firstNonEmpty(label, name), Subtitle: description, Insert: "@role:" + RoleSlug(name), role: name}
+}
+
+func firstNonEmpty(values ...string) string {
+	for _, v := range values {
+		if v != "" {
+			return v
+		}
+	}
+	return ""
+}
+
+// RoleSlug is a role's name as its mention token: whitespace becomes
+// dashes, control characters go, at most 40 characters, as Lody's.
+func RoleSlug(name string) string {
+	name = strings.TrimLeft(strings.TrimSpace(name), "@")
+	var b strings.Builder
+	dash := false
+	for _, r := range name {
+		switch {
+		case unicode.IsControl(r):
+		case unicode.IsSpace(r) || r == '-':
+			dash = true
+		default:
+			if dash && b.Len() > 0 {
+				b.WriteByte('-')
+			}
+			dash = false
+			b.WriteRune(r)
+		}
+	}
+	runes := []rune(b.String())
+	if len(runes) > 40 {
+		runes = runes[:40]
+	}
+	return string(runes)
+}
+
 // Trigger is the mention being typed: its sigil, where it starts and what
 // follows it up to the caret.
 type Trigger struct {
@@ -319,6 +370,8 @@ func tokens(text string) []token {
 			out = append(out, token{i, end, word})
 		case len(word) > len("@session:") && strings.HasPrefix(word, "@session:") && !strings.Contains(word[1:], "@"):
 			out = append(out, token{i, end, word})
+		case len(word) > len("@role:") && strings.HasPrefix(word, "@role:") && !strings.Contains(word[1:], "@"):
+			out = append(out, token{i, end, word})
 		}
 		if end == i {
 			end++
@@ -339,7 +392,7 @@ func isSpaceByte(b byte) bool {
 func Expand(text string, items []Item) string {
 	byInsert := map[string]Item{}
 	for _, it := range items {
-		if it.Kind == Skill || it.Kind == Session {
+		if it.Kind == Skill || it.Kind == Session || it.Kind == Role {
 			byInsert[it.Insert] = it
 		}
 	}
@@ -365,6 +418,12 @@ func prompt(it Item) string {
 	switch it.Kind {
 	case Session:
 		return "use lody mcp to query session[id: " + it.Path + "] history"
+	case Role:
+		name := firstNonEmpty(it.role, it.Name)
+		if id, machine, ok := strings.Cut(it.Path, "@"); ok {
+			return "use lody mcp to create a session with agent role[id: " + id + ", agentRoleMachineId: " + machine + ", name: " + name + "]"
+		}
+		return "use lody mcp to create a session with agent role[id: " + it.Path + ", name: " + name + "]"
 	case Skill:
 		dest := strings.ReplaceAll(strings.ReplaceAll(it.Path, `\`, `\\`), ")", `\)`)
 		return "use /" + strings.TrimPrefix(it.Insert, "$") + " [Skill Path](" + dest + ")"

@@ -2714,5 +2714,17 @@
   "prefLigatures": "Font ligatures",
   "prefLigaturesHelp": "Applies to conversation, code, and tool output.",
   "notifyNeedsYou": "Needs your approval",
-  "notifyFinished": "Finished"
+  "notifyFinished": "Finished",
+  "hintCommands": "Press '/' for commands.",
+  "hintCommandsMentions": "Press '/' for commands, '@' for mentions.",
+  "hintCommandsMentionsSkills": "Press '/' for commands, '@' for mentions, '$' for skills.",
+  "hintCommandsSkills": "Press '/' for commands, '$' for skills.",
+  "hintMentions": "Press '@' for mentions.",
+  "hintMentionsSkills": "Press '@' for mentions, '$' for skills.",
+  "hintSkills": "Press '$' for skills.",
+  "mentionRoles": "Agent Roles",
+  "mentionShortcuts": "Prompt Shortcuts",
+  "mentionCommands": "Agent Commands",
+  "mentionIssues": "Issues",
+  "mentionPullRequests": "Pull Requests"
 }

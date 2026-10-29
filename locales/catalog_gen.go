@@ -13328,3 +13328,123 @@ func NotifyFinished() string { return In(i18n.Locale()).NotifyFinished() }
 func (msgs Messages) NotifyFinished() string {
 	return Catalog.Format(msgs.locale, "notifyFinished", nil)
 }
+
+// HintCommands says "Press '/' for commands."
+// in the language the app shows.
+func HintCommands() string { return In(i18n.Locale()).HintCommands() }
+
+// HintCommands says "Press '/' for commands."
+// in the language of msgs.
+func (msgs Messages) HintCommands() string {
+	return Catalog.Format(msgs.locale, "hintCommands", nil)
+}
+
+// HintCommandsMentions says "Press '/' for commands, '@' for mentions."
+// in the language the app shows.
+func HintCommandsMentions() string { return In(i18n.Locale()).HintCommandsMentions() }
+
+// HintCommandsMentions says "Press '/' for commands, '@' for mentions."
+// in the language of msgs.
+func (msgs Messages) HintCommandsMentions() string {
+	return Catalog.Format(msgs.locale, "hintCommandsMentions", nil)
+}
+
+// HintCommandsMentionsSkills says "Press '/' for commands, '@' for mentions, '$' for skills."
+// in the language the app shows.
+func HintCommandsMentionsSkills() string { return In(i18n.Locale()).HintCommandsMentionsSkills() }
+
+// HintCommandsMentionsSkills says "Press '/' for commands, '@' for mentions, '$' for skills."
+// in the language of msgs.
+func (msgs Messages) HintCommandsMentionsSkills() string {
+	return Catalog.Format(msgs.locale, "hintCommandsMentionsSkills", nil)
+}
+
+// HintCommandsSkills says "Press '/' for commands, '$' for skills."
+// in the language the app shows.
+func HintCommandsSkills() string { return In(i18n.Locale()).HintCommandsSkills() }
+
+// HintCommandsSkills says "Press '/' for commands, '$' for skills."
+// in the language of msgs.
+func (msgs Messages) HintCommandsSkills() string {
+	return Catalog.Format(msgs.locale, "hintCommandsSkills", nil)
+}
+
+// HintMentions says "Press '@' for mentions."
+// in the language the app shows.
+func HintMentions() string { return In(i18n.Locale()).HintMentions() }
+
+// HintMentions says "Press '@' for mentions."
+// in the language of msgs.
+func (msgs Messages) HintMentions() string {
+	return Catalog.Format(msgs.locale, "hintMentions", nil)
+}
+
+// HintMentionsSkills says "Press '@' for mentions, '$' for skills."
+// in the language the app shows.
+func HintMentionsSkills() string { return In(i18n.Locale()).HintMentionsSkills() }
+
+// HintMentionsSkills says "Press '@' for mentions, '$' for skills."
+// in the language of msgs.
+func (msgs Messages) HintMentionsSkills() string {
+	return Catalog.Format(msgs.locale, "hintMentionsSkills", nil)
+}
+
+// HintSkills says "Press '$' for skills."
+// in the language the app shows.
+func HintSkills() string { return In(i18n.Locale()).HintSkills() }
+
+// HintSkills says "Press '$' for skills."
+// in the language of msgs.
+func (msgs Messages) HintSkills() string {
+	return Catalog.Format(msgs.locale, "hintSkills", nil)
+}
+
+// MentionRoles says "Agent Roles"
+// in the language the app shows.
+func MentionRoles() string { return In(i18n.Locale()).MentionRoles() }
+
+// MentionRoles says "Agent Roles"
+// in the language of msgs.
+func (msgs Messages) MentionRoles() string {
+	return Catalog.Format(msgs.locale, "mentionRoles", nil)
+}
+
+// MentionShortcuts says "Prompt Shortcuts"
+// in the language the app shows.
+func MentionShortcuts() string { return In(i18n.Locale()).MentionShortcuts() }
+
+// MentionShortcuts says "Prompt Shortcuts"
+// in the language of msgs.
+func (msgs Messages) MentionShortcuts() string {
+	return Catalog.Format(msgs.locale, "mentionShortcuts", nil)
+}
+
+// MentionCommands says "Agent Commands"
+// in the language the app shows.
+func MentionCommands() string { return In(i18n.Locale()).MentionCommands() }
+
+// MentionCommands says "Agent Commands"
+// in the language of msgs.
+func (msgs Messages) MentionCommands() string {
+	return Catalog.Format(msgs.locale, "mentionCommands", nil)
+}
+
+// MentionIssues says "Issues"
+// in the language the app shows.
+func MentionIssues() string { return In(i18n.Locale()).MentionIssues() }
+
+// MentionIssues says "Issues"
+// in the language of msgs.
+func (msgs Messages) MentionIssues() string {
+	return Catalog.Format(msgs.locale, "mentionIssues", nil)
+}
+
+// MentionPullRequests says "Pull Requests"
+// in the language the app shows.
+func MentionPullRequests() string { return In(i18n.Locale()).MentionPullRequests() }
+
+// MentionPullRequests says "Pull Requests"
+// in the language of msgs.
+func (msgs Messages) MentionPullRequests() string {
+	return Catalog.Format(msgs.locale, "mentionPullRequests", nil)
+}

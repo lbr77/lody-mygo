@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"regexp"
+	"slices"
 	"sort"
 	"strings"
 	"time"
@@ -13,6 +14,7 @@ import (
 
 	"github.com/egoist/mygo/ui"
 
+	"github.com/lbr77/lody-mygo/internal/catalog"
 	"github.com/lbr77/lody-mygo/internal/cloud"
 	"github.com/lbr77/lody-mygo/internal/mention"
 	"github.com/lbr77/lody-mygo/internal/shortcuts"
@@ -228,11 +230,12 @@ func fetchSkills(ctx context.Context, conn *cloud.Conn, user string, t mentionTa
 	return mention.Skills(groups), nil
 }
 
-// sessionMentions lists the workspace's other sessions, latest first.
-func (a *App) sessionMentions(t mentionTarget) []mention.Item {
+// sessionMentions lists the workspace's other sessions, latest first:
+// the current project's unless the list covers all, or all is asked for.
+func (a *App) sessionMentions(t mentionTarget, all bool) []mention.Item {
 	sessions := make([]int, 0, len(a.catalog.Sessions))
 	for i, s := range a.catalog.Sessions {
-		if s.ID != t.session && !s.Archived && (a.mention.allProjects || sessionScopeKey(s.ProjectID) == sessionScopeKey(t.project)) {
+		if s.ID != t.session && !s.Archived && (all || a.mention.allProjects || sessionScopeKey(s.ProjectID) == sessionScopeKey(t.project)) {
 			sessions = append(sessions, i)
 		}
 	}
@@ -268,6 +271,12 @@ func categoryLabel(ns string) string {
 		return locales.MentionSkills()
 	case mention.Session:
 		return locales.MentionSessions()
+	case mention.Role:
+		return locales.MentionRoles()
+	case mention.Shortcut:
+		return locales.MentionShortcuts()
+	case mention.Command:
+		return locales.MentionCommands()
 	}
 	return ns
 }
@@ -278,7 +287,12 @@ func (a *App) mentionRows(t mentionTarget, tr mention.Trigger) (rows []mentionRo
 	source := func(ns string) ([]mention.Item, bool, string) {
 		switch ns {
 		case mention.Session:
-			return a.sessionMentions(t), false, ""
+			return a.sessionMentions(t, false), false, ""
+		case mention.Role:
+			return a.roleMentions(t), false, ""
+		case mention.Shortcut:
+			src := a.mentionSource(mentionShortcut, mentionTarget{})
+			return src.items, src.loading, src.err
 		case mention.Command:
 			return a.commandMentions(t), false, ""
 		}
@@ -306,18 +320,18 @@ func (a *App) mentionRows(t mentionTarget, tr mention.Trigger) (rows []mentionRo
 		loading = loading || src.loading
 	default:
 		q := tr.Query
-		if ns, rest, ok := strings.Cut(q, ":"); ok && (ns == mention.File || ns == mention.Skill || ns == mention.Session) {
+		categories := a.atCategories(t)
+		if ns, rest, ok := strings.Cut(q, ":"); ok && slices.Contains(categories, ns) {
 			single(ns, rest)
 			break
 		}
-		categories := []string{mention.File, mention.Skill, mention.Session}
 		if q == "" {
 			for _, ns := range categories {
 				rows = append(rows, mentionRow{category: ns})
 			}
 			break
 		}
-		for _, ns := range categories {
+		for _, ns := range []string{mention.File, mention.Skill, mention.Session, mention.Role} {
 			items, l, err := source(ns)
 			add(mention.Match(items, q, 4))
 			loading = loading || l
@@ -451,8 +465,13 @@ func (a *App) mentionPanel(c *ui.Context, p *palette, box, input ui.Element) {
 		m.levelRun++
 	}
 	ui.Overlay(c, func() {
+		// The categories alone are a short menu; what they list is wider.
+		width := float32(460)
+		if len(rows) > 0 && rows[0].category != "" && rows[len(rows)-1].category != "" {
+			width = 220
+		}
 		panel := ui.Column(c.Key("mentions")).AttachTo(box, ui.AnchorTopStart, ui.AnchorBottomStart).Margin(6, 0, 0, 0).
-			Width(460).Radius(12).Border(0.5, p.CardRim).Background(p.Popover).KeepFocus().Clip().
+			Width(width).Radius(12).Border(0.5, p.CardRim).Background(p.Popover).KeepFocus().Clip().
 			Shadow(0, 12, 32, -8, ui.RGBA(0, 0, 0, 0.18)).Transition(popIn)
 		panel.Children(func() {
 			list := ui.Scroll(c).MaxHeight(320).Padding(4).Gap(1)
@@ -527,8 +546,10 @@ func (a *App) mentionRowView(c *ui.Context, p *palette, row mentionRow, highligh
 			icon = iconBoxes
 		case mention.Session:
 			icon = iconMessageSquare
-		case mention.Command:
+		case mention.Command, mention.Shortcut:
 			icon = iconTerminal
+		case mention.Role:
+			icon = iconUserCog
 		}
 		ui.Icon(c, icon).Size(16, 16).TextColor(p.Secondary).Shrink(0)
 		title := label
@@ -539,8 +560,12 @@ func (a *App) mentionRowView(c *ui.Context, p *palette, row mentionRow, highligh
 		ui.Text(c, title).FontSize(sizeSub).TextColor(p.Text).SingleLine().Shrink(0).MaxWidth(240)
 		if row.category != "" {
 			ui.Spacer(c)
-			if row.category == mention.Skill {
+			// The key that opens the category without the menu.
+			switch row.category {
+			case mention.Skill:
 				ui.Text(c, "$").Font(fontMono).FontSize(sizeFoot).TextColor(p.Tertiary)
+			case mention.Shortcut, mention.Command:
+				ui.Text(c, "/").Font(fontMono).FontSize(sizeFoot).TextColor(p.Tertiary)
 			}
 			ui.Icon(c, iconChevronRight).Size(14, 14).TextColor(p.Tertiary)
 			return
@@ -666,7 +691,46 @@ func (a *App) mentionItems(t mentionTarget) (skills, sessions []mention.Item) {
 			skills = []mention.Item{}
 		}
 	}
-	return skills, a.sessionMentions(t)
+	// Every session and role, so what was picked from all projects expands.
+	return skills, append(a.sessionMentions(t, true), a.roleMentions(t)...)
+}
+
+// roleMentions lists the agent roles the user can use, one per machine a
+// role runs on, the composer's machine first, as Lody's.
+func (a *App) roleMentions(t mentionTarget) []mention.Item {
+	me := ""
+	if a.account != nil {
+		me = a.account.User.ID
+	}
+	roles := append([]catalog.AgentRole(nil), a.catalog.Roles...)
+	sort.SliceStable(roles, func(i, j int) bool { return roles[i].Name < roles[j].Name })
+	var out []mention.Item
+	for _, r := range roles {
+		if r.Visibility != "workspace" && r.OwnerUserID != me {
+			continue
+		}
+		targets := append([]catalog.RoleTarget(nil), r.Targets...)
+		sort.SliceStable(targets, func(i, j int) bool { return targets[i].MachineID == t.machine && targets[j].MachineID != t.machine })
+		if len(targets) <= 1 {
+			out = append(out, mention.RoleItem(r.ID, r.Name, firstNonEmpty(r.Emoji, "🤖")+" "+r.Name, r.Description, ""))
+			continue
+		}
+		for _, tg := range targets {
+			out = append(out, mention.RoleItem(r.ID, r.Name, firstNonEmpty(r.Emoji, "🤖")+" "+r.Name+" · "+a.machineLabel(tg.MachineID), r.Description, tg.MachineID))
+		}
+	}
+	return out
+}
+
+// atCategories are what @ reaches, in Lody's order: files, skills,
+// sessions, agent roles, prompt shortcuts, and the agent's commands when
+// it has some.
+func (a *App) atCategories(t mentionTarget) []string {
+	out := []string{mention.File, mention.Skill, mention.Session, mention.Role, mention.Shortcut}
+	if len(a.catalog.Capabilities[t.agent].Commands) > 0 {
+		out = append(out, mention.Command)
+	}
+	return out
 }
 
 // sessionScopeHeader picks the projects the session list covers: the
