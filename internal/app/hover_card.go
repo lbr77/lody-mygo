@@ -33,6 +33,13 @@ type hoverCard struct {
 	lastShown time.Time // when a card was last shown, for the warm window
 	pressed   bool      // a press on a row hides cards until the pointer moves on
 	copied    time.Time // the branch was copied
+	// The row whose card shows, as this frame built it, the card drawn
+	// once after the list, and whether the pointer was on the row or the
+	// card in the last frame.
+	row        ui.Element
+	sess       *catalog.Session
+	rowHovered bool
+	cardHover  bool
 }
 
 // sessionHover runs the card of a sidebar row: hovered is whether the
@@ -69,6 +76,20 @@ func (a *App) sessionHover(c *ui.Context, p *palette, row ui.Element, s *catalog
 	if hc.shown != s.ID {
 		return
 	}
+	hc.row, hc.sess, hc.rowHovered = row, s, hovered
+}
+
+// sessionCardOverlay draws the card of the row that has it, once, after
+// the list: another row taking it over in the frame replaces it in place.
+// It stays 180ms after the pointer leaves the row and the card.
+func (a *App) sessionCardOverlay(c *ui.Context, p *palette) {
+	hc := &a.card
+	row, s, hovered := hc.row, hc.sess, hc.rowHovered
+	hc.row, hc.sess, hc.rowHovered = ui.Element{}, nil, false
+	if s == nil || hc.shown != s.ID {
+		return
+	}
+	now := time.Now()
 	var card ui.Element
 	ui.Overlay(c, func() {
 		card = a.sessionCard(c, p, row, s)
@@ -90,11 +111,13 @@ func (a *App) sessionHover(c *ui.Context, p *palette, row ui.Element, s *catalog
 // sessionCard is the card itself, 288 wide, 6px to the right of its row.
 func (a *App) sessionCard(c *ui.Context, p *palette, row ui.Element, s *catalog.Session) ui.Element {
 	hc := &a.card
-	card := ui.Column(c.Key("info-card/"+s.ID)).Width(288).Padding(12).Gap(12).Radius(12).Border(0.5, p.CardRim).Background(p.Popover).
+	// One card under one key: another taking over replaces it at once, in
+	// place; a card closing fades as it came.
+	card := ui.Column(c.Key("info-card")).Width(288).Padding(12).Gap(12).Radius(12).Border(0.5, p.CardRim).Background(p.Popover).
 		Shadow(0, 12, 32, -8, ui.RGBA(0, 0, 0, 0.18)).AttachTo(row, ui.AnchorTopEnd, ui.AnchorTopStart).Margin(0, 0, 0, 6)
 	if !hc.inRun {
 		// Side-aware: it starts 4px further right and closes that step.
-		card.Transition(ui.ElementTransition{Colors: true, Duration: popTime, Ease: easeStandard, Enter: &ui.Motion{X: 4}})
+		card.Transition(ui.ElementTransition{Colors: true, Duration: popTime, Ease: easeStandard, Enter: &ui.Motion{X: 4}, Exit: &ui.Motion{X: 4}})
 	}
 	now := time.Now()
 	card.Children(func() {

@@ -267,7 +267,7 @@ func menuSwitch(c *ui.Context, p *palette, on bool) {
 	}
 	track.Children(func() {
 		k := ui.Box(c.Key("knob")).Size(12, 12).Radius(6).Absolute().Top(2).Background(raisedGround(p)).Shadow(0, 1, 2, 0, ui.RGBA(0, 0, 0, 0.2))
-		k.Left(k.AnimateWith("x", knob, durRegular, easeStandard))
+		k.Left(k.AnimateWith("x", knob, durFast, easeStandard))
 	})
 }
 

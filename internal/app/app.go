@@ -81,6 +81,7 @@ type App struct {
 	access       accessPanel               // the header's access panel
 	hmenu        menuState                 // the header's session menu
 	menus        map[string]*contextMenu   // drawn menus by key: rows' context menus and ⋯
+	booting      bool                      // the boot screen showed, and fades out over the app
 	shareImg     shareImage                // "Share as image…": the messages picked, then their preview
 	binaries     map[string]binaryProgress // what machines said of runtime downloads, by machine/agent
 	attachPrev   attachPreview             // a text file's preview

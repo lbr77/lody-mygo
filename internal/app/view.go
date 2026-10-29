@@ -20,12 +20,12 @@ var bootMarkPNG []byte
 var bootMarkBitmap, _ = ui.DecodeBitmap(bootMarkPNG)
 
 // bootMark is Lody's launch mark: its 48px jellyfish fades in over 240ms
-// after 120ms, easing out, and from 1.2s breathes down to half and back
-// every 2.4s while the app starts.
+// after 120ms on CSS's ease-out, and from 1.2s breathes down to half and
+// back every 2.4s, ease-in-out, while the app starts.
 func bootMark(c *ui.Context) {
 	mark := ui.Image(c.Key("boot-mark"), bootMarkBitmap).Size(48, 48).Label(locales.Loading())
-	in := mark.Keyframes("in", []ui.Keyframe{{Value: 0}, {At: 120 * time.Millisecond, Value: 0}, {At: 360 * time.Millisecond, Value: 1, Ease: ui.EaseOut}})
-	breathe := mark.Keyframes("breathe", []ui.Keyframe{{Value: 1}, {At: 1200 * time.Millisecond, Value: 0.5, Ease: ui.EaseInOut}, {At: 2400 * time.Millisecond, Value: 1, Ease: ui.EaseInOut}},
+	in := mark.Keyframes("in", []ui.Keyframe{{Value: 0}, {At: 120 * time.Millisecond, Value: 0}, {At: 360 * time.Millisecond, Value: 1, Ease: cssEaseOut}})
+	breathe := mark.Keyframes("breathe", []ui.Keyframe{{Value: 1}, {At: 1200 * time.Millisecond, Value: 0.5, Ease: cssEaseInOut}, {At: 2400 * time.Millisecond, Value: 1, Ease: cssEaseInOut}},
 		ui.KeyframeOptions{Repeat: ui.RepeatForever, Delay: 1200 * time.Millisecond})
 	mark.Opacity(in * breathe)
 }
@@ -38,6 +38,7 @@ func (a *App) render(c *ui.Context) {
 	ui.Overlay(c, func() {})
 	switch a.phase {
 	case phaseLoading:
+		a.booting = true
 		ui.Column(c.Key("loading")).Fill().Center().Background(p.Canvas).DragWindow().Children(func() {
 			bootMark(c)
 		})
@@ -46,33 +47,46 @@ func (a *App) render(c *ui.Context) {
 	default:
 		a.mainView(c, p)
 	}
+	a.bootOut(c, p)
+}
+
+// bootOut fades the boot screen out over 160ms, easing out, over the app
+// that is ready under it, as Lody's boot shell leaves.
+func (a *App) bootOut(c *ui.Context, p *palette) {
+	if a.phase == phaseLoading || !a.booting {
+		return
+	}
+	ui.Overlay(c, func() {
+		shell := ui.Column(c.Key("boot-out")).Absolute().Left(0).Top(0).Right(0).Bottom(0).Center().Background(p.Canvas).PassThrough()
+		k := shell.Keyframes("out", []ui.Keyframe{{Value: 1}, {At: 160 * time.Millisecond, Value: 0, Ease: cssEaseOut}})
+		if k <= 0 {
+			a.booting = false
+			return
+		}
+		shell.Opacity(k).Children(func() { bootMark(c) })
+	})
 }
 
 // signInView follows Lody's login page: a visual panel beside a form
 // column whose content sits at the bottom.
 func (a *App) signInView(c *ui.Context, p *palette) {
-	ui.Row(c.Key("signin")).Fill().Padding(12).Gap(12).AlignItems(ui.Stretch).Background(p.Canvas).Transition(windowIn).Children(func() {
+	ui.Row(c.Key("signin")).Fill().Padding(12).Gap(12).AlignItems(ui.Stretch).Background(p.Canvas).Children(func() {
 		a.dither.view(c, p).DragWindow()
 		ui.Column(c).Width(440).Shrink(0).Padding(28, 40, 36, 52).Children(func() {
 			ui.Spacer(c).DragWindow()
-			// The column's parts rise in one after another, 70ms apart after
-			// 150ms, each over 500ms, as Lody's login page arrives.
-			part := 0
-			rise := func(e ui.Element) ui.Element {
-				k := e.Keyframes("rise", []ui.Keyframe{{Value: 0}, {At: 500 * time.Millisecond, Value: 1, Ease: easeSweep}},
-					ui.KeyframeOptions{Delay: 150*time.Millisecond + time.Duration(part)*70*time.Millisecond})
-				part++
-				if k < 1 {
-					e.Opacity(k).Translate(0, 10*(1-k))
-				}
-				return e
+			// The column rises in as one after 150ms, over 500ms, as Lody's
+			// login page staggers its one child.
+			form := ui.Column(c.Key("signin-form")).MaxWidth(360).Gap(24)
+			if k := form.Keyframes("rise", []ui.Keyframe{{Value: 0}, {At: 500 * time.Millisecond, Value: 1, Ease: easeSweep}},
+				ui.KeyframeOptions{Delay: 150 * time.Millisecond}); k < 1 {
+				form.Opacity(k).Translate(0, 10*(1-k))
 			}
-			ui.Column(c).MaxWidth(360).Gap(24).Children(func() {
-				rise(ui.Column(c.Key("signin-head"))).Gap(10).Children(func() {
+			form.Children(func() {
+				ui.Column(c.Key("signin-head")).Gap(10).Children(func() {
 					ui.Text(c, locales.SignInTitle()).FontSize(28).FontWeight(600).LineHeight(1.2).LetterSpacing(-0.7).TextColor(p.Strong)
 					ui.Text(c, locales.SignInDescription()).FontSize(sizeBody).LineHeight(1.5).TextColor(p.Secondary)
 				})
-				rise(ui.Column(c.Key("signin-action"))).Gap(12).Children(func() {
+				ui.Column(c.Key("signin-action")).Gap(12).Children(func() {
 					if a.signIn.busy {
 						a.deviceCodeCard(c, p)
 					} else if inkButton(c, p, locales.SignInOpenBrowser(), iconExternal, 40).FillWidth().Clicked() {
@@ -83,7 +97,7 @@ func (a *App) signInView(c *ui.Context, p *palette) {
 					}
 					ui.Text(c, locales.SignInHint()).FontSize(sizeFoot).TextColor(p.Secondary).TextAlign(ui.Center)
 				})
-				rise(ui.Column(c.Key("signin-foot"))).BorderWidth(1, 0, 0, 0).BorderColor(p.Border).Padding(16, 0, 0, 0).Children(func() {
+				ui.Column(c.Key("signin-foot")).BorderWidth(1, 0, 0, 0).BorderColor(p.Border).Padding(16, 0, 0, 0).Children(func() {
 					ui.Text(c, locales.SignInFootnote()).FontSize(sizeCaption).LineHeight(1.6).TextColor(p.Tertiary)
 				})
 			})

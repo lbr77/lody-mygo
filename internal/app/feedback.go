@@ -120,14 +120,22 @@ func copyButton(c *ui.Context, p *palette, key string, copiedAt *time.Time, labe
 		copy()
 		*copiedAt = time.Now()
 	})
+	// The two icons cross over 200ms, as Lody's CopyButton: the one going
+	// fades, blurs 4px and shrinks to .75; the one coming the other way.
+	k := b.AnimateWith("copied", b2f(copied), 200*time.Millisecond, twEase)
 	b.Children(func() {
 		ui.Box(c).Size(14, 14).Children(func() {
-			icon, k := iconCopy, "copy"
-			if copied {
-				icon, k = iconCheck, "check"
+			swap := func(key string, icon *ui.SVG, on float32) {
+				if on <= 0 {
+					return
+				}
+				i := ui.Icon(c.Key(key), icon).Size(14, 14).TextColor(p.Text).Absolute().Opacity(on).Scale(0.75+0.25*on, 0.75+0.25*on)
+				if on < 1 {
+					i.Blur(4 * (1 - on))
+				}
 			}
-			ui.Icon(c.Key(k), icon).Size(14, 14).TextColor(p.Text).Absolute().
-				Transition(ui.ElementTransition{Duration: 200 * time.Millisecond, Ease: easeLody, Enter: &ui.Motion{Scale: 0.75}, Exit: &ui.Motion{Scale: 0.75}})
+			swap("copy", iconCopy, 1-k)
+			swap("check", iconCheck, k)
 		})
 		ui.Text(c, text).FontSize(sizeFoot).FontWeight(500).TextColor(p.Text)
 	})
@@ -169,7 +177,8 @@ func segmented(c *ui.Context, p *palette, key string, options []option, selected
 				if o.id == selected {
 					sel = b
 				}
-				ink := tab.AnimateColor("ink", map[bool]ui.Color{true: p.Text, false: p.Secondary}[o.id == selected], ui.Animation{Duration: durFast, Ease: easeLody})
+				// A label comes to the active ink under the pointer too.
+				ink := tab.AnimateColor("ink", map[bool]ui.Color{true: p.Text, false: p.Secondary}[o.id == selected || tab.Hovered()], ui.Animation{Duration: durFast, Ease: easeLody})
 				tab.Children(func() { content(o.label, ink) })
 			}
 		})

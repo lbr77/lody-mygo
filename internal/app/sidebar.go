@@ -227,6 +227,7 @@ func (a *App) sidebar(c *ui.Context, p *palette) ui.Element {
 				ui.Text(c, msg).FontSize(sizeSub).TextColor(p.SideMuted).Margin(24, 10)
 			}
 		})
+		a.sessionCardOverlay(c, p)
 		if a.notice != "" {
 			ui.Row(c).Shrink(0).Margin(0, 10).Padding(6, 8).Gap(6).Radius(8).Background(p.Danger.Alpha(0.1)).AlignItems(ui.Center).Cursor(ui.CursorPointer).
 				Label(locales.Dismiss()).OnClick(func() { a.notice = "" }).Children(func() {
@@ -245,7 +246,9 @@ func navRow(c *ui.Context, p *palette, icon *ui.SVG, label string, selected bool
 
 // navRowCount is a nav row with a count at its end, as the Inbox's.
 func navRowCount(c *ui.Context, p *palette, icon *ui.SVG, label string, selected bool, count int) ui.Element {
-	row := ui.ButtonBase(c).Height(28).Padding(4, 9).Radius(8).Gap(6).Justify(ui.Start).Cursor(ui.CursorPointer).Label(label).Transition(colorFade)
+	// Tailwind's transition: the fill and the icon's ink, which rests a
+	// step quieter than the label and comes up with the hover, over 150ms.
+	row := ui.ButtonBase(c).Height(28).Padding(4, 9).Radius(8).Gap(6).Justify(ui.Start).Cursor(ui.CursorPointer).Label(label).Transition(twFade)
 	ink, iconInk := p.SideRow, p.SideMuted
 	switch {
 	case selected:
@@ -255,6 +258,7 @@ func navRowCount(c *ui.Context, p *palette, icon *ui.SVG, label string, selected
 		row.Background(p.SideHover)
 		iconInk = p.SideRow
 	}
+	iconInk = row.AnimateColor("icon-ink", iconInk, ui.Animation{Duration: 150 * time.Millisecond, Ease: twEase})
 	row.Children(func() {
 		ui.Box(c).Size(16, 20).Center().Children(func() { ui.Icon(c, icon).Size(16, 16).TextColor(iconInk) })
 		ui.Text(c, label).FontSize(sizeSub).TextColor(ink).Grow(1)
@@ -277,11 +281,17 @@ func (a *App) sectionHeader(c *ui.Context, p *palette, r sideRow) {
 	hovered := row.Hovered()
 	collapsed := a.collapsed[r.group]
 	// The chevron fades in with the pointer, and stays while folded, and
-	// turns to point right as it folds: 150ms, easing out, as Lody's.
-	reveal := row.AnimateWith("reveal", b2f(hovered || collapsed), 150*time.Millisecond, ui.EaseOut)
-	turn := row.AnimateWith("turn", b2f(collapsed), 150*time.Millisecond, ui.EaseOut)
+	// turns to point right as it folds: 150ms on Tailwind's ease-out, as
+	// Lody's; the label comes up to the sidebar's ink under the pointer.
+	reveal := row.AnimateWith("reveal", b2f(hovered || collapsed), 150*time.Millisecond, twEaseOut)
+	turn := row.AnimateWith("turn", b2f(collapsed), 150*time.Millisecond, twEaseOut)
+	label := p.SideMuted.Alpha(0.8)
+	if hovered {
+		label = p.SideRow
+	}
+	label = row.AnimateColor("label", label, ui.Animation{Duration: 150 * time.Millisecond, Ease: twEase})
 	row.Children(func() {
-		ui.Text(c, r.label).FontSize(sizeFoot).FontWeight(500).TextColor(p.SideMuted.Alpha(0.8)).SingleLine().MinWidth(0)
+		ui.Text(c, r.label).FontSize(sizeFoot).FontWeight(500).TextColor(label).SingleLine().MinWidth(0)
 		if r.machine != "" && !a.presence.IsOnline(r.machine) {
 			offlinePill(c, p)
 		}
@@ -297,7 +307,7 @@ func (a *App) projectRow(c *ui.Context, p *palette, r sideRow) {
 	collapsed := a.collapsed[r.group]
 	selected := a.newChat.project == r.project && a.selected == ""
 	row := ui.Row(c.Key(r.key)).Height(30).Padding(4, 8).Border(1, ui.Transparent).Radius(6).Gap(8).AlignItems(ui.Center).
-		Cursor(ui.CursorPointer).Label(r.label).Transition(colorFade).
+		Cursor(ui.CursorPointer).Label(r.label).Transition(twFade).
 		OnClick(func() {
 			a.collapsed[r.group] = !a.collapsed[r.group]
 			a.savePrefs()
@@ -309,6 +319,9 @@ func (a *App) projectRow(c *ui.Context, p *palette, r sideRow) {
 	case hovered:
 		row.Background(p.SideHover)
 	}
+	// The row's hover controls fade in with the pointer over 100ms, and
+	// take no pointer while they are away.
+	actions := row.AnimateWith("actions", b2f(hovered), 100*time.Millisecond, twEase)
 	// With the pointer the folder gives way to the chevron, which turns
 	// between open and folded: both over 100ms, as Lody's.
 	swap := row.AnimateWith("swap", b2f(hovered), 100*time.Millisecond, ui.CubicBezier(0.4, 0, 0.2, 1))
@@ -331,36 +344,47 @@ func (a *App) projectRow(c *ui.Context, p *palette, r sideRow) {
 			}
 		})
 		ui.Text(c, r.label).FontSize(sizeSub).TextColor(p.SideRow).SingleLine().Grow(1).MinWidth(0)
-		if hovered {
-			b := ui.ButtonBase(c).Size(20, 20).Radius(4).Cursor(ui.CursorPointer).Label(locales.NewChatIn(r.label)).Tooltip(locales.NewChat()).Transition(colorFade)
-			if b.Hovered() {
-				b.Background(p.Text.Alpha(0.08))
+		if actions > 0 {
+			b := ui.ButtonBase(c.Key("new-chat")).Size(20, 20).Radius(4).Label(locales.NewChatIn(r.label)).Opacity(actions).
+				Transition(ui.ElementTransition{Colors: true, Duration: 100 * time.Millisecond, Ease: twEase})
+			ink := p.Secondary.Alpha(0.7)
+			if hovered {
+				tip(c, p, b, locales.NewChat()).Cursor(ui.CursorPointer).OnClick(func() {
+					a.newChat.machine, a.newChat.project = r.machine, r.project
+					a.pickNewChatDefaults()
+					a.open("")
+				})
+				if b.Hovered() {
+					b.Background(p.Text.Alpha(0.06))
+					ink = p.Text
+				}
+			} else {
+				b.PassThrough()
 			}
-			b.OnClick(func() {
-				a.newChat.machine, a.newChat.project = r.machine, r.project
-				a.pickNewChatDefaults()
-				a.open("")
-			})
-			b.Children(func() { ui.Icon(c, iconSquarePen).Size(14, 14).TextColor(p.SideMuted) })
+			ink = b.AnimateColor("ink", ink, ui.Animation{Duration: 100 * time.Millisecond, Ease: twEase})
+			b.Children(func() { ui.Icon(c, iconSquarePen).Size(14, 14).TextColor(ink) })
 		}
 	})
 }
 
 func (a *App) moreRow(c *ui.Context, p *palette, r sideRow) {
 	row := ui.Row(c.Key(r.key)).Height(28).Padding(4, 8, 4, 37).Radius(6).AlignItems(ui.Center).Cursor(ui.CursorPointer).
-		Label(locales.SidebarShowAll(r.count)).OnClick(func() { a.showAll[r.group] = true }).Transition(colorFade)
+		Label(locales.SidebarShowAll(r.count)).OnClick(func() { a.showAll[r.group] = true }).Transition(twFade)
+	ink := p.SideMuted.Alpha(0.8)
 	if row.Hovered() {
 		row.Background(p.SideHover)
+		ink = p.SideRow
 	}
+	ink = row.AnimateColor("ink", ink, ui.Animation{Duration: 150 * time.Millisecond, Ease: twEase})
 	row.Children(func() {
-		ui.Text(c, locales.SidebarShowAll(r.count)).FontSize(sizeSub).TextColor(p.SideMuted)
+		ui.Text(c, locales.SidebarShowAll(r.count)).FontSize(sizeSub).TextColor(ink)
 	})
 }
 
 func (a *App) sessionRow(c *ui.Context, p *palette, r sideRow) {
 	s := r.session
 	selected := a.selected == s.ID
-	row := ui.Row(c.Key(r.key)).Border(1, ui.Transparent).Gap(8).AlignItems(ui.Center).Cursor(ui.CursorPointer).Label(s.Title).Margin(r.top, 0, 0, 0).Transition(colorFade)
+	row := ui.Row(c.Key(r.key)).Border(1, ui.Transparent).Gap(8).AlignItems(ui.Center).Cursor(ui.CursorPointer).Label(s.Title).Margin(r.top, 0, 0, 0)
 	if r.nested {
 		row.Height(30).Padding(4, 8).Radius(6)
 	} else {
@@ -422,7 +446,7 @@ func rowTitle(c *ui.Context, title string, ink ui.Color, hovered bool) {
 		}
 		run := ui.Text(c.Key("run"), title).FontSize(sizeSub).TextColor(ink).SingleLine().Shrink(0)
 		dur := time.Duration(max(3.8, 2.4+float64(over)/30) * float64(time.Second))
-		k := run.Keyframes("marquee", []ui.Keyframe{{Value: 0}, {At: dur, Value: 1, Ease: ui.EaseInOut}},
+		k := run.Keyframes("marquee", []ui.Keyframe{{Value: 0}, {At: dur, Value: 1, Ease: cssEaseInOut}},
 			ui.KeyframeOptions{Repeat: ui.RepeatForever, Alternate: true, Delay: 600 * time.Millisecond})
 		run.Translate(-over*k, 0)
 	})
@@ -444,13 +468,13 @@ func (a *App) rowEnd(c *ui.Context, p *palette, s *catalog.Session, age, hovered
 	}
 	show := (hovered || armed) && !s.Archived
 	slot := ui.Row(c.Key("end")).Height(20).MinWidth(20).Shrink(0).Justify(ui.End).AlignItems(ui.Center)
-	rest := slot.AnimateWith("rest", b2f(!show), 100*time.Millisecond, easeStandard)
+	rest := slot.AnimateWith("rest", b2f(!show), 100*time.Millisecond, twEase)
 	slot.Children(func() {
 		ui.Row(c.Key("rest")).AlignItems(ui.Center).Opacity(rest).Children(func() { a.statusMark(c, p, s, age) })
 		if !show {
 			return
 		}
-		fade := ui.ElementTransition{Duration: 100 * time.Millisecond, Ease: easeStandard, Enter: &ui.Motion{}, Exit: &ui.Motion{}}
+		fade := ui.ElementTransition{Duration: 100 * time.Millisecond, Ease: twEase, Enter: &ui.Motion{}, Exit: &ui.Motion{}}
 		id := s.ID
 		if armed {
 			// The confirmation snaps in, a pill in the destructive ink.
@@ -476,7 +500,8 @@ func (a *App) rowEnd(c *ui.Context, p *palette, s *catalog.Session, age, hovered
 			return
 		}
 		b := ui.ButtonBase(c.Key("archive")).Absolute().Right(0).Top(0).Size(20, 20).Radius(4).Justify(ui.Center).AlignItems(ui.Center).
-			Cursor(ui.CursorPointer).Label(locales.ActionArchive()).Tooltip(locales.ActionArchive()).Transition(fade)
+			Cursor(ui.CursorPointer).Label(locales.ActionArchive()).Transition(fade)
+		tip(c, p, b, locales.ActionArchive())
 		ink := p.SideMuted
 		if b.Hovered() {
 			ink = p.SideRow
@@ -834,39 +859,58 @@ func (a *App) rowLeadingSlot(c *ui.Context, p *palette, r sideRow, sess catalog.
 		width = 26
 	}
 	slot := ui.Box(c.Key("slot")).Size(width, 14).Shrink(0)
+	// The rest gives way to ⋯ with the pointer, each fading over 100ms;
+	// ⋯ stays while its menu is open.
+	hovered = hovered || a.rowMenu("more/"+sess.ID).open
+	more := slot.AnimateWith("more", b2f(hovered), 100*time.Millisecond, twEase)
 	slot.Children(func() {
 		line := p.SideRow.Alpha(0.2)
-		switch {
-		case r.depth > 0 && !hovered:
-			// The trunk climbs to the row above and runs on into the next
-			// unless this is the last; the elbow reaches the title.
-			reach := (rowH - 14) / 2
-			trunk := ui.Box(c.Key("trunk")).Absolute().Left(7).Top(-reach).Width(1).Background(line)
-			if r.last {
-				trunk.Height(reach + 7)
-			} else {
-				trunk.Height(rowH + 1)
-			}
-			ui.Box(c.Key("elbow")).Absolute().Left(7).Top(7).Width(13).Height(1).Background(line)
-		case r.opened > 0 && !hovered:
-			collapsed := a.collapsed["opened:"+sess.ID]
-			label := locales.OpenedHide()
-			if collapsed {
-				label = locales.OpenedShow(r.opened)
-			}
-			b := ui.ButtonBase(c.Key("fold")).Size(14, 14).Radius(4).Center().Cursor(ui.CursorPointer).Label(label).Tooltip(label).
-				OnClick(func() { a.collapsed["opened:"+sess.ID] = !collapsed })
-			b.Children(func() {
-				turn := b.AnimateWith("turn", b2f(!collapsed), 150*time.Millisecond, ui.EaseOut)
-				ui.Icon(c, iconChevronDown).Size(14, 14).TextColor(p.SideMuted).Rotate(-90 * (1 - turn))
-			})
-		case hovered:
-			more := ui.ButtonBase(c.Key("more")).Size(14, 14).Radius(4).Label(locales.MoreActions())
-			lodyMenuButton(c, p, more, &a.rowMenu("more/"+sess.ID).menuState, 180, 290, 28, func(m *lodyMenu) { a.sessionRowMenu(m, sess) })
-			if r.depth > 0 {
-				more.Absolute().Left(0)
-			}
-			more.Children(func() { ui.Icon(c, iconMore).Size(14, 14).TextColor(p.SideMuted) })
+		rest := ui.Box(c.Key("rest")).Absolute().Left(0).Top(0).Size(width, 14).Opacity(1 - more)
+		if hovered {
+			rest.PassThrough()
 		}
+		rest.Children(func() {
+			switch {
+			case more >= 1:
+			case r.depth > 0:
+				// The trunk climbs to the row above and runs on into the next
+				// unless this is the last; the elbow reaches the title.
+				reach := (rowH - 14) / 2
+				trunk := ui.Box(c.Key("trunk")).Absolute().Left(7).Top(-reach).Width(1).Background(line)
+				if r.last {
+					trunk.Height(reach + 7)
+				} else {
+					trunk.Height(rowH + 1)
+				}
+				ui.Box(c.Key("elbow")).Absolute().Left(7).Top(7).Width(13).Height(1).Background(line)
+			case r.opened > 0:
+				collapsed := a.collapsed["opened:"+sess.ID]
+				label := locales.OpenedHide()
+				if collapsed {
+					label = locales.OpenedShow(r.opened)
+				}
+				b := ui.ButtonBase(c.Key("fold")).Size(14, 14).Radius(4).Center().Cursor(ui.CursorPointer).Label(label).
+					OnClick(func() { a.collapsed["opened:"+sess.ID] = !collapsed })
+				tip(c, p, b, label)
+				b.Children(func() {
+					turn := b.AnimateWith("turn", b2f(!collapsed), 150*time.Millisecond, twEaseOut)
+					ui.Icon(c, iconChevronDown).Size(14, 14).TextColor(p.SideMuted).Rotate(-90 * (1 - turn))
+				})
+			}
+		})
+		if more <= 0 {
+			return
+		}
+		btn := ui.ButtonBase(c.Key("more")).Size(14, 14).Radius(4).Label(locales.MoreActions()).Opacity(more).
+			Transition(ui.ElementTransition{Colors: true, Duration: 100 * time.Millisecond, Ease: twEase})
+		if r.depth > 0 {
+			btn.Absolute().Left(0)
+		}
+		if hovered {
+			lodyMenuButton(c, p, btn, &a.rowMenu("more/"+sess.ID).menuState, 180, 290, 28, func(m *lodyMenu) { a.sessionRowMenu(m, sess) })
+		} else {
+			btn.PassThrough()
+		}
+		btn.Children(func() { ui.Icon(c, iconMore).Size(14, 14).TextColor(p.SideMuted) })
 	})
 }
