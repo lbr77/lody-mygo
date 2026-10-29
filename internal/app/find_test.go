@@ -3,6 +3,7 @@ package app
 import (
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/egoist/mygo/ui"
 
@@ -157,5 +158,34 @@ func TestFailedActivityMark(t *testing.T) {
 	})
 	if !tt.HasText("Worked for 1m 12s") {
 		t.Fatalf("%q", tt.Texts())
+	}
+}
+
+func TestQuickReplies(t *testing.T) {
+	a := fixture()
+	a.view.Working = false
+	a.view.Entries = a.view.Entries[:2]
+	tt := snap(t, a, "quick-replies", false, nil)
+	for _, want := range []string{"Continue", "Review Changes", "Commit & Push"} {
+		if !tt.HasText(want) {
+			t.Errorf("missing %q", want)
+		}
+	}
+	tt.Type("x")
+	tt.Frame()
+	if tt.HasText("Review Changes") {
+		t.Fatal("typing left the quick replies")
+	}
+	// Edited, they replace the defaults, and keep their order.
+	a.setQuickReplies([]quickReply{{ID: "a", Label: "Ship it", Message: "Merge when green."}})
+	a.draft = ""
+	tt.Frame()
+	tt.Advance(200 * time.Millisecond)
+	tt.Frame()
+	if !tt.HasText("Ship it") || tt.HasText("Continue") {
+		t.Fatalf("%q", tt.Texts())
+	}
+	if validQuickReply(quickReply{Label: strings.Repeat("x", 41), Message: "m"}) || validQuickReply(quickReply{Label: "x", Message: "  "}) {
+		t.Error("invalid quick reply accepted")
 	}
 }

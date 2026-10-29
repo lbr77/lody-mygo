@@ -13528,3 +13528,213 @@ func PlanImplementFailed() string { return In(i18n.Locale()).PlanImplementFailed
 func (msgs Messages) PlanImplementFailed() string {
 	return Catalog.Format(msgs.locale, "planImplementFailed", nil)
 }
+
+// QuickTitle says "Quick Replies"
+// in the language the app shows.
+func QuickTitle() string { return In(i18n.Locale()).QuickTitle() }
+
+// QuickTitle says "Quick Replies"
+// in the language of msgs.
+func (msgs Messages) QuickTitle() string {
+	return Catalog.Format(msgs.locale, "quickTitle", nil)
+}
+
+// QuickAdd says "Add Quick Reply"
+// in the language the app shows.
+func QuickAdd() string { return In(i18n.Locale()).QuickAdd() }
+
+// QuickAdd says "Add Quick Reply"
+// in the language of msgs.
+func (msgs Messages) QuickAdd() string {
+	return Catalog.Format(msgs.locale, "quickAdd", nil)
+}
+
+// QuickEdit says "Edit Quick Reply"
+// in the language the app shows.
+func QuickEdit() string { return In(i18n.Locale()).QuickEdit() }
+
+// QuickEdit says "Edit Quick Reply"
+// in the language of msgs.
+func (msgs Messages) QuickEdit() string {
+	return Catalog.Format(msgs.locale, "quickEdit", nil)
+}
+
+// QuickLabel says "Button name"
+// in the language the app shows.
+func QuickLabel() string { return In(i18n.Locale()).QuickLabel() }
+
+// QuickLabel says "Button name"
+// in the language of msgs.
+func (msgs Messages) QuickLabel() string {
+	return Catalog.Format(msgs.locale, "quickLabel", nil)
+}
+
+// QuickMessage says "Message"
+// in the language the app shows.
+func QuickMessage() string { return In(i18n.Locale()).QuickMessage() }
+
+// QuickMessage says "Message"
+// in the language of msgs.
+func (msgs Messages) QuickMessage() string {
+	return Catalog.Format(msgs.locale, "quickMessage", nil)
+}
+
+// QuickSendHint says "Sends this message immediately."
+// in the language the app shows.
+func QuickSendHint() string { return In(i18n.Locale()).QuickSendHint() }
+
+// QuickSendHint says "Sends this message immediately."
+// in the language of msgs.
+func (msgs Messages) QuickSendHint() string {
+	return Catalog.Format(msgs.locale, "quickSendHint", nil)
+}
+
+// QuickSendHintLong says "Clicking this button sends the message immediately."
+// in the language the app shows.
+func QuickSendHintLong() string { return In(i18n.Locale()).QuickSendHintLong() }
+
+// QuickSendHintLong says "Clicking this button sends the message immediately."
+// in the language of msgs.
+func (msgs Messages) QuickSendHintLong() string {
+	return Catalog.Format(msgs.locale, "quickSendHintLong", nil)
+}
+
+// QuickHint says "Shown above the input when the agent is idle and your draft is empty. Saved on this device for all conversations."
+// in the language the app shows.
+func QuickHint() string { return In(i18n.Locale()).QuickHint() }
+
+// QuickHint says "Shown above the input when the agent is idle and your draft is empty. Saved on this device for all conversations."
+// in the language of msgs.
+func (msgs Messages) QuickHint() string {
+	return Catalog.Format(msgs.locale, "quickHint", nil)
+}
+
+// QuickEmpty says "No quick replies. Click Add Quick Reply to add one."
+// in the language the app shows.
+func QuickEmpty() string { return In(i18n.Locale()).QuickEmpty() }
+
+// QuickEmpty says "No quick replies. Click Add Quick Reply to add one."
+// in the language of msgs.
+func (msgs Messages) QuickEmpty() string {
+	return Catalog.Format(msgs.locale, "quickEmpty", nil)
+}
+
+// QuickDeleteTitle says "Delete Quick Reply?"
+// in the language the app shows.
+func QuickDeleteTitle() string { return In(i18n.Locale()).QuickDeleteTitle() }
+
+// QuickDeleteTitle says "Delete Quick Reply?"
+// in the language of msgs.
+func (msgs Messages) QuickDeleteTitle() string {
+	return Catalog.Format(msgs.locale, "quickDeleteTitle", nil)
+}
+
+// QuickDeleteHint says "This removes the button from all conversations on this device."
+// in the language the app shows.
+func QuickDeleteHint() string { return In(i18n.Locale()).QuickDeleteHint() }
+
+// QuickDeleteHint says "This removes the button from all conversations on this device."
+// in the language of msgs.
+func (msgs Messages) QuickDeleteHint() string {
+	return Catalog.Format(msgs.locale, "quickDeleteHint", nil)
+}
+
+// QuickSaveFailed says "Couldn't save your quick replies. Please try again."
+// in the language the app shows.
+func QuickSaveFailed() string { return In(i18n.Locale()).QuickSaveFailed() }
+
+// QuickSaveFailed says "Couldn't save your quick replies. Please try again."
+// in the language of msgs.
+func (msgs Messages) QuickSaveFailed() string {
+	return Catalog.Format(msgs.locale, "quickSaveFailed", nil)
+}
+
+// QuickMoveUp says "Move up"
+// in the language the app shows.
+func QuickMoveUp() string { return In(i18n.Locale()).QuickMoveUp() }
+
+// QuickMoveUp says "Move up"
+// in the language of msgs.
+func (msgs Messages) QuickMoveUp() string {
+	return Catalog.Format(msgs.locale, "quickMoveUp", nil)
+}
+
+// QuickMoveDown says "Move down"
+// in the language the app shows.
+func QuickMoveDown() string { return In(i18n.Locale()).QuickMoveDown() }
+
+// QuickMoveDown says "Move down"
+// in the language of msgs.
+func (msgs Messages) QuickMoveDown() string {
+	return Catalog.Format(msgs.locale, "quickMoveDown", nil)
+}
+
+// QuickReset says "Restore defaults"
+// in the language the app shows.
+func QuickReset() string { return In(i18n.Locale()).QuickReset() }
+
+// QuickReset says "Restore defaults"
+// in the language of msgs.
+func (msgs Messages) QuickReset() string {
+	return Catalog.Format(msgs.locale, "quickReset", nil)
+}
+
+// QuickContinueLabel says "Continue"
+// in the language the app shows.
+func QuickContinueLabel() string { return In(i18n.Locale()).QuickContinueLabel() }
+
+// QuickContinueLabel says "Continue"
+// in the language of msgs.
+func (msgs Messages) QuickContinueLabel() string {
+	return Catalog.Format(msgs.locale, "quickContinueLabel", nil)
+}
+
+// QuickContinueMessage says "Continue with the next step."
+// in the language the app shows.
+func QuickContinueMessage() string { return In(i18n.Locale()).QuickContinueMessage() }
+
+// QuickContinueMessage says "Continue with the next step."
+// in the language of msgs.
+func (msgs Messages) QuickContinueMessage() string {
+	return Catalog.Format(msgs.locale, "quickContinueMessage", nil)
+}
+
+// QuickReviewLabel says "Review Changes"
+// in the language the app shows.
+func QuickReviewLabel() string { return In(i18n.Locale()).QuickReviewLabel() }
+
+// QuickReviewLabel says "Review Changes"
+// in the language of msgs.
+func (msgs Messages) QuickReviewLabel() string {
+	return Catalog.Format(msgs.locale, "quickReviewLabel", nil)
+}
+
+// QuickReviewMessage says "Review the changes from this task and check for any issues."
+// in the language the app shows.
+func QuickReviewMessage() string { return In(i18n.Locale()).QuickReviewMessage() }
+
+// QuickReviewMessage says "Review the changes from this task and check for any issues."
+// in the language of msgs.
+func (msgs Messages) QuickReviewMessage() string {
+	return Catalog.Format(msgs.locale, "quickReviewMessage", nil)
+}
+
+// QuickCommitLabel says "Commit & Push"
+// in the language the app shows.
+func QuickCommitLabel() string { return In(i18n.Locale()).QuickCommitLabel() }
+
+// QuickCommitLabel says "Commit & Push"
+// in the language of msgs.
+func (msgs Messages) QuickCommitLabel() string {
+	return Catalog.Format(msgs.locale, "quickCommitLabel", nil)
+}
+
+// QuickCommitMessage says "Commit and push the changes from this task."
+// in the language the app shows.
+func QuickCommitMessage() string { return In(i18n.Locale()).QuickCommitMessage() }
+
+// QuickCommitMessage says "Commit and push the changes from this task."
+// in the language of msgs.
+func (msgs Messages) QuickCommitMessage() string {
+	return Catalog.Format(msgs.locale, "quickCommitMessage", nil)
+}

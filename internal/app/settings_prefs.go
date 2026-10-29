@@ -105,6 +105,7 @@ func (a *App) preferencesPage(c *ui.Context, p *palette) {
 		a.switchRow(c, p, locales.PrefCodeOnly(), locales.PrefCodeOnlyHelp(), &a.codeOnly)
 		a.switchRow(c, p, locales.PrefNotifications(), "", &a.notifications)
 	})
+	a.quickRepliesSection(c, p)
 	prefSection(c, p, locales.PrefAdvanced(), false, func() {
 		a.switchRow(c, p, locales.PrefExperimental(), locales.PrefExperimentalHelp(), &a.experimental)
 		settingRow(c, p, locales.PrefClearCache(), locales.PrefClearCacheHelp(), func() {

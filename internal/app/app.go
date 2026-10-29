@@ -111,6 +111,9 @@ type App struct {
 	history          []string // sessions shown, for Back and Forward
 	histPos          int
 	palette          paletteState
+	quickReplies     []quickReply // as edited; nil for the defaults
+	quickForm        quickReplyForm
+	composerFocused  bool      // the composer had the focus last frame
 	plan             planState // proposed plans' panels and decisions
 	mdSize           float32   // the text size the Markdown themes were made for
 	language         string    // the app's language; "" follows the system
@@ -270,6 +273,9 @@ func (a *App) Start(win *mygo.Window) {
 	a.keyOverrides = prefs.Keys
 	a.language, a.fontSize, a.wideMode, a.inlineMath, a.extendedCode = prefs.Language, prefs.FontSize, prefs.Wide, prefs.InlineMath, prefs.ExtendedCode
 	a.ligatures, a.codeOnly, a.notifications, a.experimental = !prefs.NoLigatures, prefs.CodeOnly, prefs.Notifications, prefs.Experimental
+	if prefs.QuickReplies != nil {
+		a.quickReplies = *prefs.QuickReplies
+	}
 	if a.language != "" {
 		mygo.App.SetLocale(a.language)
 	}
@@ -934,6 +940,8 @@ type prefs struct {
 	CodeOnly      bool    `json:"codeOnly,omitempty"`
 	Notifications bool    `json:"notifications,omitempty"`
 	Experimental  bool    `json:"experimental,omitempty"`
+	// QuickReplies are the quick replies as edited; absent for lody-ios's.
+	QuickReplies *[]quickReply `json:"quickReplies,omitempty"`
 }
 
 func dataDir() string {
@@ -973,9 +981,14 @@ func loadPrefs() prefs {
 }
 
 func (a *App) savePrefs() {
+	var quick *[]quickReply
+	if a.quickReplies != nil {
+		quick = &a.quickReplies
+	}
 	writeJSON("prefs.json", prefs{Workspace: a.workspaceID, Collapsed: a.collapsed, Appearance: a.appearance, Busy: a.busyBehavior, Sidebar: a.sidebarWidth, HomeBoard: a.homeBoard, Keys: a.keyOverrides,
 		Language: a.language, FontSize: a.fontSize, Wide: a.wideMode, InlineMath: a.inlineMath, ExtendedCode: a.extendedCode,
-		NoLigatures: !a.ligatures, CodeOnly: a.codeOnly, Notifications: a.notifications, Experimental: a.experimental})
+		NoLigatures: !a.ligatures, CodeOnly: a.codeOnly, Notifications: a.notifications, Experimental: a.experimental,
+		QuickReplies: quick})
 }
 
 func loadAccount() *cloud.Account {
