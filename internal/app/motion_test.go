@@ -415,7 +415,7 @@ func TestAccessPanel(t *testing.T) {
 	tt.Advance(700 * time.Millisecond)
 	tt.Frame()
 	snapFrame(t, tt, "access-panel")
-	for _, want := range []string{"Private to you", "Studio is not shared with the team.", "Only you", "Team", "Web", "Copy URL"} {
+	for _, want := range []string{"Private to you", "Studio is not shared with the team.", "Only you", "Team", "Web", "Copy URL", "Copy as Markdown"} {
 		if !tt.HasText(want) {
 			t.Errorf("missing %q in %q", want, tt.Texts())
 		}
@@ -505,5 +505,39 @@ func TestFileCards(t *testing.T) {
 		if !tt.HasText(want) {
 			t.Errorf("preview misses %q in %q", want, tt.Texts())
 		}
+	}
+}
+
+// The header's ⋯ is Lody's session menu: the chat's place and machine,
+// Full width, Share, Find, the forks, Rename, the copies and Archive; Copy
+// as Markdown copies the conversation.
+func TestHeaderMenu(t *testing.T) {
+	a := fixture()
+	a.view.Working = false
+	s := &a.catalog.Sessions[0]
+	s.BranchName, s.BaseBranch = "lody/flock", "main"
+	s.Project = map[string]any{"kind": "local", "localProjectId": "p1"}
+	tt := snap(t, a, "header-menu", false, nil)
+	if err := tt.Click("More actions"); err != nil {
+		t.Fatal(err)
+	}
+	items := strings.Join(tt.Menu(), "|")
+	for _, want := range []string{"lody/flock  ·  Base branch: main", "Machine: Studio · Local", "Full width", "Find in session", "Fork session", "Rename Chat", "Copy", "Archive session"} {
+		if !strings.Contains(items, want) {
+			t.Errorf("menu misses %q: %s", want, items)
+		}
+	}
+	var copied string
+	old := writeClipboard
+	writeClipboard = func(s string) { copied = s }
+	defer func() { writeClipboard = old }()
+	wait := pumpUpdates(t, a)
+	if err := tt.ChooseMenuItem("Copy", "Copy as Markdown"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	wait("the copy", func() bool { return copied != "" })
+	if !strings.Contains(copied, "Port the Flock catalog runtime") || !strings.Contains(copied, "# Port the Flock runtime to Go") {
+		t.Fatalf("copied %q", copied)
 	}
 }

@@ -370,6 +370,7 @@ func (a *App) accessHome(c *ui.Context, p *palette, s *catalog.Session, st *acce
 		id := s.ID
 		rows = append(rows,
 			row{"copy-url", locales.AccessCopyURL(), iconLink, false, func() { a.copySessionLink(id) }},
+			row{"copy-markdown", locales.AccessCopyMarkdown(), iconCopy, false, func() { a.copyConversation(id) }},
 		)
 		ui.Box(c).FillWidth().Height(1).Margin(8, 4).Background(p.Border)
 		ui.Column(c).FillWidth().Children(func() {

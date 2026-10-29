@@ -3429,5 +3429,99 @@
         "type": "String"
       }
     }
+  },
+  "hmRepoCopied": "Repository name copied to clipboard",
+  "hmBaseBranchCopied": "Base branch name copied to clipboard",
+  "hmBaseBranchLine": "{branch}  ·  Base branch: {base}",
+  "@hmBaseBranchLine": {
+    "placeholders": {
+      "branch": {
+        "type": "String"
+      },
+      "base": {
+        "type": "String"
+      }
+    }
+  },
+  "hmProjectPathCopied": "Project path copied to clipboard",
+  "hmMachineLine": "Machine: {name}",
+  "@hmMachineLine": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "hmMachineLineKind": "Machine: {name} · {kind}",
+  "@hmMachineLineKind": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "kind": {
+        "type": "String"
+      }
+    }
+  },
+  "hmCopyContext": "Copy context as Markdown",
+  "hmRenameChat": "Rename Chat",
+  "hmChangeOwner": "Change owner",
+  "hmOwnerChanged": "Session owner is now {name}",
+  "@hmOwnerChanged": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "hmOwnerChangeFailed": "Could not change the session owner",
+  "hmCheckingSharing": "Checking sharing…",
+  "hmCopyBaseBranch": "Copy base branch",
+  "hmCopyPath": "Copy path",
+  "hmPathCopied": "Session workspace path copied to clipboard",
+  "hmArchive": "Archive session",
+  "hmRestore": "Restore session",
+  "hmOpenedBy": "Opened by: {title}",
+  "@hmOpenedBy": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "hmOpenedSessions": "Opened sessions ({count})",
+  "@hmOpenedSessions": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "copiedMarkdownTrimmed": "Conversation copied as Markdown (trimmed: {omitted})",
+  "@copiedMarkdownTrimmed": {
+    "placeholders": {
+      "omitted": {
+        "type": "String"
+      }
+    }
+  },
+  "copiedMarkdownOver": "Conversation copied as Markdown (~{tokens}k tokens — message text alone exceeds the target)",
+  "@copiedMarkdownOver": {
+    "placeholders": {
+      "tokens": {
+        "type": "int"
+      }
+    }
+  },
+  "trimToolCalls": "tool call details",
+  "trimThinking": "thinking",
+  "trimTerminal": "terminal output",
+  "trimToolResults": "{value} tool results",
+  "@trimToolResults": {
+    "placeholders": {
+      "value": {
+        "type": "int"
+      }
+    }
   }
 }

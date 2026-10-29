@@ -17552,3 +17552,259 @@ func FileDownloaded(name string) string { return In(i18n.Locale()).FileDownloade
 func (msgs Messages) FileDownloaded(name string) string {
 	return Catalog.Format(msgs.locale, "fileDownloaded", map[string]any{"name": name})
 }
+
+// HmRepoCopied says "Repository name copied to clipboard"
+// in the language the app shows.
+func HmRepoCopied() string { return In(i18n.Locale()).HmRepoCopied() }
+
+// HmRepoCopied says "Repository name copied to clipboard"
+// in the language of msgs.
+func (msgs Messages) HmRepoCopied() string {
+	return Catalog.Format(msgs.locale, "hmRepoCopied", nil)
+}
+
+// HmBaseBranchCopied says "Base branch name copied to clipboard"
+// in the language the app shows.
+func HmBaseBranchCopied() string { return In(i18n.Locale()).HmBaseBranchCopied() }
+
+// HmBaseBranchCopied says "Base branch name copied to clipboard"
+// in the language of msgs.
+func (msgs Messages) HmBaseBranchCopied() string {
+	return Catalog.Format(msgs.locale, "hmBaseBranchCopied", nil)
+}
+
+// HmBaseBranchLine says "{branch}  ·  Base branch: {base}"
+// in the language the app shows.
+func HmBaseBranchLine(branch string, base string) string {
+	return In(i18n.Locale()).HmBaseBranchLine(branch, base)
+}
+
+// HmBaseBranchLine says "{branch}  ·  Base branch: {base}"
+// in the language of msgs.
+func (msgs Messages) HmBaseBranchLine(branch string, base string) string {
+	return Catalog.Format(msgs.locale, "hmBaseBranchLine", map[string]any{"branch": branch, "base": base})
+}
+
+// HmProjectPathCopied says "Project path copied to clipboard"
+// in the language the app shows.
+func HmProjectPathCopied() string { return In(i18n.Locale()).HmProjectPathCopied() }
+
+// HmProjectPathCopied says "Project path copied to clipboard"
+// in the language of msgs.
+func (msgs Messages) HmProjectPathCopied() string {
+	return Catalog.Format(msgs.locale, "hmProjectPathCopied", nil)
+}
+
+// HmMachineLine says "Machine: {name}"
+// in the language the app shows.
+func HmMachineLine(name string) string { return In(i18n.Locale()).HmMachineLine(name) }
+
+// HmMachineLine says "Machine: {name}"
+// in the language of msgs.
+func (msgs Messages) HmMachineLine(name string) string {
+	return Catalog.Format(msgs.locale, "hmMachineLine", map[string]any{"name": name})
+}
+
+// HmMachineLineKind says "Machine: {name} · {kind}"
+// in the language the app shows.
+func HmMachineLineKind(name string, kind string) string {
+	return In(i18n.Locale()).HmMachineLineKind(name, kind)
+}
+
+// HmMachineLineKind says "Machine: {name} · {kind}"
+// in the language of msgs.
+func (msgs Messages) HmMachineLineKind(name string, kind string) string {
+	return Catalog.Format(msgs.locale, "hmMachineLineKind", map[string]any{"name": name, "kind": kind})
+}
+
+// HmCopyContext says "Copy context as Markdown"
+// in the language the app shows.
+func HmCopyContext() string { return In(i18n.Locale()).HmCopyContext() }
+
+// HmCopyContext says "Copy context as Markdown"
+// in the language of msgs.
+func (msgs Messages) HmCopyContext() string {
+	return Catalog.Format(msgs.locale, "hmCopyContext", nil)
+}
+
+// HmRenameChat says "Rename Chat"
+// in the language the app shows.
+func HmRenameChat() string { return In(i18n.Locale()).HmRenameChat() }
+
+// HmRenameChat says "Rename Chat"
+// in the language of msgs.
+func (msgs Messages) HmRenameChat() string {
+	return Catalog.Format(msgs.locale, "hmRenameChat", nil)
+}
+
+// HmChangeOwner says "Change owner"
+// in the language the app shows.
+func HmChangeOwner() string { return In(i18n.Locale()).HmChangeOwner() }
+
+// HmChangeOwner says "Change owner"
+// in the language of msgs.
+func (msgs Messages) HmChangeOwner() string {
+	return Catalog.Format(msgs.locale, "hmChangeOwner", nil)
+}
+
+// HmOwnerChanged says "Session owner is now {name}"
+// in the language the app shows.
+func HmOwnerChanged(name string) string { return In(i18n.Locale()).HmOwnerChanged(name) }
+
+// HmOwnerChanged says "Session owner is now {name}"
+// in the language of msgs.
+func (msgs Messages) HmOwnerChanged(name string) string {
+	return Catalog.Format(msgs.locale, "hmOwnerChanged", map[string]any{"name": name})
+}
+
+// HmOwnerChangeFailed says "Could not change the session owner"
+// in the language the app shows.
+func HmOwnerChangeFailed() string { return In(i18n.Locale()).HmOwnerChangeFailed() }
+
+// HmOwnerChangeFailed says "Could not change the session owner"
+// in the language of msgs.
+func (msgs Messages) HmOwnerChangeFailed() string {
+	return Catalog.Format(msgs.locale, "hmOwnerChangeFailed", nil)
+}
+
+// HmCheckingSharing says "Checking sharing…"
+// in the language the app shows.
+func HmCheckingSharing() string { return In(i18n.Locale()).HmCheckingSharing() }
+
+// HmCheckingSharing says "Checking sharing…"
+// in the language of msgs.
+func (msgs Messages) HmCheckingSharing() string {
+	return Catalog.Format(msgs.locale, "hmCheckingSharing", nil)
+}
+
+// HmCopyBaseBranch says "Copy base branch"
+// in the language the app shows.
+func HmCopyBaseBranch() string { return In(i18n.Locale()).HmCopyBaseBranch() }
+
+// HmCopyBaseBranch says "Copy base branch"
+// in the language of msgs.
+func (msgs Messages) HmCopyBaseBranch() string {
+	return Catalog.Format(msgs.locale, "hmCopyBaseBranch", nil)
+}
+
+// HmCopyPath says "Copy path"
+// in the language the app shows.
+func HmCopyPath() string { return In(i18n.Locale()).HmCopyPath() }
+
+// HmCopyPath says "Copy path"
+// in the language of msgs.
+func (msgs Messages) HmCopyPath() string {
+	return Catalog.Format(msgs.locale, "hmCopyPath", nil)
+}
+
+// HmPathCopied says "Session workspace path copied to clipboard"
+// in the language the app shows.
+func HmPathCopied() string { return In(i18n.Locale()).HmPathCopied() }
+
+// HmPathCopied says "Session workspace path copied to clipboard"
+// in the language of msgs.
+func (msgs Messages) HmPathCopied() string {
+	return Catalog.Format(msgs.locale, "hmPathCopied", nil)
+}
+
+// HmArchive says "Archive session"
+// in the language the app shows.
+func HmArchive() string { return In(i18n.Locale()).HmArchive() }
+
+// HmArchive says "Archive session"
+// in the language of msgs.
+func (msgs Messages) HmArchive() string {
+	return Catalog.Format(msgs.locale, "hmArchive", nil)
+}
+
+// HmRestore says "Restore session"
+// in the language the app shows.
+func HmRestore() string { return In(i18n.Locale()).HmRestore() }
+
+// HmRestore says "Restore session"
+// in the language of msgs.
+func (msgs Messages) HmRestore() string {
+	return Catalog.Format(msgs.locale, "hmRestore", nil)
+}
+
+// HmOpenedBy says "Opened by: {title}"
+// in the language the app shows.
+func HmOpenedBy(title string) string { return In(i18n.Locale()).HmOpenedBy(title) }
+
+// HmOpenedBy says "Opened by: {title}"
+// in the language of msgs.
+func (msgs Messages) HmOpenedBy(title string) string {
+	return Catalog.Format(msgs.locale, "hmOpenedBy", map[string]any{"title": title})
+}
+
+// HmOpenedSessions says "Opened sessions ({count})"
+// in the language the app shows.
+func HmOpenedSessions(count int) string { return In(i18n.Locale()).HmOpenedSessions(count) }
+
+// HmOpenedSessions says "Opened sessions ({count})"
+// in the language of msgs.
+func (msgs Messages) HmOpenedSessions(count int) string {
+	return Catalog.Format(msgs.locale, "hmOpenedSessions", map[string]any{"count": count})
+}
+
+// CopiedMarkdownTrimmed says "Conversation copied as Markdown (trimmed: {omitted})"
+// in the language the app shows.
+func CopiedMarkdownTrimmed(omitted string) string {
+	return In(i18n.Locale()).CopiedMarkdownTrimmed(omitted)
+}
+
+// CopiedMarkdownTrimmed says "Conversation copied as Markdown (trimmed: {omitted})"
+// in the language of msgs.
+func (msgs Messages) CopiedMarkdownTrimmed(omitted string) string {
+	return Catalog.Format(msgs.locale, "copiedMarkdownTrimmed", map[string]any{"omitted": omitted})
+}
+
+// CopiedMarkdownOver says "Conversation copied as Markdown (~{tokens}k tokens — message text alone exceeds the target)"
+// in the language the app shows.
+func CopiedMarkdownOver(tokens int) string { return In(i18n.Locale()).CopiedMarkdownOver(tokens) }
+
+// CopiedMarkdownOver says "Conversation copied as Markdown (~{tokens}k tokens — message text alone exceeds the target)"
+// in the language of msgs.
+func (msgs Messages) CopiedMarkdownOver(tokens int) string {
+	return Catalog.Format(msgs.locale, "copiedMarkdownOver", map[string]any{"tokens": tokens})
+}
+
+// TrimToolCalls says "tool call details"
+// in the language the app shows.
+func TrimToolCalls() string { return In(i18n.Locale()).TrimToolCalls() }
+
+// TrimToolCalls says "tool call details"
+// in the language of msgs.
+func (msgs Messages) TrimToolCalls() string {
+	return Catalog.Format(msgs.locale, "trimToolCalls", nil)
+}
+
+// TrimThinking says "thinking"
+// in the language the app shows.
+func TrimThinking() string { return In(i18n.Locale()).TrimThinking() }
+
+// TrimThinking says "thinking"
+// in the language of msgs.
+func (msgs Messages) TrimThinking() string {
+	return Catalog.Format(msgs.locale, "trimThinking", nil)
+}
+
+// TrimTerminal says "terminal output"
+// in the language the app shows.
+func TrimTerminal() string { return In(i18n.Locale()).TrimTerminal() }
+
+// TrimTerminal says "terminal output"
+// in the language of msgs.
+func (msgs Messages) TrimTerminal() string {
+	return Catalog.Format(msgs.locale, "trimTerminal", nil)
+}
+
+// TrimToolResults says "{value} tool results"
+// in the language the app shows.
+func TrimToolResults(value int) string { return In(i18n.Locale()).TrimToolResults(value) }
+
+// TrimToolResults says "{value} tool results"
+// in the language of msgs.
+func (msgs Messages) TrimToolResults(value int) string {
+	return Catalog.Format(msgs.locale, "trimToolResults", map[string]any{"value": value})
+}
