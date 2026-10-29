@@ -138,6 +138,52 @@ func sheet(c *ui.Context, p *palette, open *bool, width float32, fn func()) {
 	})
 }
 
+// lodyDialog is @lody/ui's Dialog on the modal rung: a 512px panel over
+// the veil, padded 16 with 16 between its parts, its cross in the corner,
+// rising into place as sheetIn raises it. fn builds the panel's parts.
+func lodyDialog(c *ui.Context, p *palette, open *bool, label string, fn func()) {
+	w, h := c.Size()
+	ui.DialogBase(c, open, func(backdrop, panel ui.Element) {
+		sheetIn(backdrop, panel)
+		if p.Dark {
+			backdrop.Background(ui.RGBA(0, 0, 0, 0.6))
+			panel.Background(p.Ground).InsetShadow(0, 1, 0, 0, ui.RGBA(255, 255, 255, 0.06)).
+				Shadow(0, 0, 0, 0.5, ui.RGBA(255, 255, 255, 0.08)).Shadow(0, 24, 56, -8, ui.RGBA(0, 0, 0, 0.7))
+		} else {
+			backdrop.Background(ui.RGBA(28, 28, 28, 0.5))
+			panel.Background(p.Popover).Shadow(0, 0, 0, 0.5, ui.RGBA(28, 28, 28, 0.08)).
+				Shadow(0, 2, 6, -2, ui.RGBA(28, 28, 28, 0.08)).Shadow(0, 24, 56, -12, ui.RGBA(28, 28, 28, 0.28))
+		}
+		panel.Width(min(512, w-64)).MaxHeight(h - 64).Padding(16).Gap(16).Radius(14).Label(label)
+		fn()
+		if lodyButton(c, p, "ghost", "dialog-close", iconX, "", true).Absolute().Top(16).Right(16).Label(locales.Close()).Clicked() {
+			*open = false
+		}
+	})
+}
+
+// lodyDialogHeader is a Dialog's title, clear of its cross, over the
+// sentence about it.
+func lodyDialogHeader(c *ui.Context, p *palette, title, description string, mark *ui.SVG) {
+	ui.Column(c.Key("dialog-head")).FillWidth().Gap(6).Shrink(0).Padding(0, 36, 0, 0).Children(func() {
+		heading := func() {
+			ui.Text(c, title).FontSize(16).LineHeight(24.0 / 16).FontWeight(600).TextColor(p.Text).MinWidth(0)
+		}
+		if mark == nil {
+			heading()
+		} else {
+			// A mark leads the title, as Magpie's does.
+			ui.Row(c).FillWidth().Gap(8).AlignItems(ui.Center).Children(func() {
+				ui.Icon(c, mark).Size(20, 20).TextColor(p.Text).Shrink(0)
+				heading()
+			})
+		}
+		if description != "" {
+			ui.Text(c, description).FontSize(sizeBody).LineHeight(20.0 / 14).TextColor(p.Secondary).MinWidth(0)
+		}
+	})
+}
+
 // sheetHeader is a dialog's title and lead, with its close button.
 func sheetHeader(c *ui.Context, p *palette, title, lead string, close func()) {
 	ui.Row(c).FillWidth().Padding(18, 14, 8, 20).Gap(12).AlignItems(ui.Start).Shrink(0).Children(func() {

@@ -269,7 +269,6 @@ type App struct {
 	usageDay         float64 // the usage day opened, its start in ms
 	usageDayShown    float64 // the day the panel shows, as it folds away too
 	share            shareDialog
-	resetting        string                // the share whose link is being reset, in settings
 	archiveArm       string                // the row whose archive button asks to be clicked again
 	archiveArmAt     time.Time             // since when
 	marks            map[string]*markState // the rows' working marks, by session
@@ -289,10 +288,11 @@ type App struct {
 	inboxAt          time.Time             // when the inbox was last asked for
 	pings            map[string]*pingState // machines' round trips
 	sidebarWidth     float32               // as dragged; 0 is the default
-	revoking         string                // the share whose revoke awaits confirmation
 	sharePages       sharePaging           // the published shares' pages in settings
 	link             *linkTarget           // a lody:// link waiting until it can open
 	linkDefault      linkDefault           // whether lody:// links open in this app
+	claim            machineClaim          // a pairing request a lody:// link asked this machine to take
+	magpie           magpieImport          // a Magpie import a lody:// link asked for
 	taskOpen         bool                  // a task's dialog
 	taskEntry        string                // the turn and task it shows
 	taskID           string

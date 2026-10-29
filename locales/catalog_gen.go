@@ -21386,3 +21386,277 @@ func GrokPermissionAlwaysApproveDescription() string {
 func (msgs Messages) GrokPermissionAlwaysApproveDescription() string {
 	return Catalog.Format(msgs.locale, "grokPermissionAlwaysApproveDescription", nil)
 }
+
+// SharesPublishedAt says "Published"
+// in the language the app shows.
+func SharesPublishedAt() string { return In(i18n.Locale()).SharesPublishedAt() }
+
+// SharesPublishedAt says "Published"
+// in the language of msgs.
+func (msgs Messages) SharesPublishedAt() string {
+	return Catalog.Format(msgs.locale, "sharesPublishedAt", nil)
+}
+
+// SharesUpdatedAt says "Last updated"
+// in the language the app shows.
+func SharesUpdatedAt() string { return In(i18n.Locale()).SharesUpdatedAt() }
+
+// SharesUpdatedAt says "Last updated"
+// in the language of msgs.
+func (msgs Messages) SharesUpdatedAt() string {
+	return Catalog.Format(msgs.locale, "sharesUpdatedAt", nil)
+}
+
+// SharesConversationsLabel says "Conversations"
+// in the language the app shows.
+func SharesConversationsLabel() string { return In(i18n.Locale()).SharesConversationsLabel() }
+
+// SharesConversationsLabel says "Conversations"
+// in the language of msgs.
+func (msgs Messages) SharesConversationsLabel() string {
+	return Catalog.Format(msgs.locale, "sharesConversationsLabel", nil)
+}
+
+// SharesSize says "Size"
+// in the language the app shows.
+func SharesSize() string { return In(i18n.Locale()).SharesSize() }
+
+// SharesSize says "Size"
+// in the language of msgs.
+func (msgs Messages) SharesSize() string {
+	return Catalog.Format(msgs.locale, "sharesSize", nil)
+}
+
+// SharesStatusLabel says "Status"
+// in the language the app shows.
+func SharesStatusLabel() string { return In(i18n.Locale()).SharesStatusLabel() }
+
+// SharesStatusLabel says "Status"
+// in the language of msgs.
+func (msgs Messages) SharesStatusLabel() string {
+	return Catalog.Format(msgs.locale, "sharesStatusLabel", nil)
+}
+
+// SharesLinkRevoked says "This share has been revoked, so it has no live link."
+// in the language the app shows.
+func SharesLinkRevoked() string { return In(i18n.Locale()).SharesLinkRevoked() }
+
+// SharesLinkRevoked says "This share has been revoked, so it has no live link."
+// in the language of msgs.
+func (msgs Messages) SharesLinkRevoked() string {
+	return Catalog.Format(msgs.locale, "sharesLinkRevoked", nil)
+}
+
+// SharesLinkOtherPublisher says "Only the member who published this share holds its link."
+// in the language the app shows.
+func SharesLinkOtherPublisher() string { return In(i18n.Locale()).SharesLinkOtherPublisher() }
+
+// SharesLinkOtherPublisher says "Only the member who published this share holds its link."
+// in the language of msgs.
+func (msgs Messages) SharesLinkOtherPublisher() string {
+	return Catalog.Format(msgs.locale, "sharesLinkOtherPublisher", nil)
+}
+
+// SharesOpenConversation says "Open conversation"
+// in the language the app shows.
+func SharesOpenConversation() string { return In(i18n.Locale()).SharesOpenConversation() }
+
+// SharesOpenConversation says "Open conversation"
+// in the language of msgs.
+func (msgs Messages) SharesOpenConversation() string {
+	return Catalog.Format(msgs.locale, "sharesOpenConversation", nil)
+}
+
+// SharesShowRevoked says "Show revoked ({count})"
+// in the language the app shows.
+func SharesShowRevoked(count int) string { return In(i18n.Locale()).SharesShowRevoked(count) }
+
+// SharesShowRevoked says "Show revoked ({count})"
+// in the language of msgs.
+func (msgs Messages) SharesShowRevoked(count int) string {
+	return Catalog.Format(msgs.locale, "sharesShowRevoked", map[string]any{"count": count})
+}
+
+// SharesPublisherProfile says "View profile for {name}"
+// in the language the app shows.
+func SharesPublisherProfile(name string) string {
+	return In(i18n.Locale()).SharesPublisherProfile(name)
+}
+
+// SharesPublisherProfile says "View profile for {name}"
+// in the language of msgs.
+func (msgs Messages) SharesPublisherProfile(name string) string {
+	return Catalog.Format(msgs.locale, "sharesPublisherProfile", map[string]any{"name": name})
+}
+
+// MachinePairingDesktopClaimed says "This machine is connected."
+// in the language the app shows.
+func MachinePairingDesktopClaimed() string { return In(i18n.Locale()).MachinePairingDesktopClaimed() }
+
+// MachinePairingDesktopClaimed says "This machine is connected."
+// in the language of msgs.
+func (msgs Messages) MachinePairingDesktopClaimed() string {
+	return Catalog.Format(msgs.locale, "machinePairingDesktopClaimed", nil)
+}
+
+// MachinePairingDesktopClaimFailed says "Could not connect this machine. Create a new connection request and try again."
+// in the language the app shows.
+func MachinePairingDesktopClaimFailed() string {
+	return In(i18n.Locale()).MachinePairingDesktopClaimFailed()
+}
+
+// MachinePairingDesktopClaimFailed says "Could not connect this machine. Create a new connection request and try again."
+// in the language of msgs.
+func (msgs Messages) MachinePairingDesktopClaimFailed() string {
+	return Catalog.Format(msgs.locale, "machinePairingDesktopClaimFailed", nil)
+}
+
+// MagpieImportAdded says "Magpie providers added. Check Providers for setup progress."
+// in the language the app shows.
+func MagpieImportAdded() string { return In(i18n.Locale()).MagpieImportAdded() }
+
+// MagpieImportAdded says "Magpie providers added. Check Providers for setup progress."
+// in the language of msgs.
+func (msgs Messages) MagpieImportAdded() string {
+	return Catalog.Format(msgs.locale, "magpieImportAdded", nil)
+}
+
+// MagpieImportFailed says "Could not finish importing. Check the local agent and retry; providers already added will be kept."
+// in the language the app shows.
+func MagpieImportFailed() string { return In(i18n.Locale()).MagpieImportFailed() }
+
+// MagpieImportFailed says "Could not finish importing. Check the local agent and retry; providers already added will be kept."
+// in the language of msgs.
+func (msgs Messages) MagpieImportFailed() string {
+	return Catalog.Format(msgs.locale, "magpieImportFailed", nil)
+}
+
+// MagpieImportInvalidLink says "This Magpie import link is invalid."
+// in the language the app shows.
+func MagpieImportInvalidLink() string { return In(i18n.Locale()).MagpieImportInvalidLink() }
+
+// MagpieImportInvalidLink says "This Magpie import link is invalid."
+// in the language of msgs.
+func (msgs Messages) MagpieImportInvalidLink() string {
+	return Catalog.Format(msgs.locale, "magpieImportInvalidLink", nil)
+}
+
+// MagpieImportLocalUnavailable says "Start the local agent to import Magpie."
+// in the language the app shows.
+func MagpieImportLocalUnavailable() string { return In(i18n.Locale()).MagpieImportLocalUnavailable() }
+
+// MagpieImportLocalUnavailable says "Start the local agent to import Magpie."
+// in the language of msgs.
+func (msgs Messages) MagpieImportLocalUnavailable() string {
+	return Catalog.Format(msgs.locale, "magpieImportLocalUnavailable", nil)
+}
+
+// MagpieImportPiUnavailable says "Pi is not supported on this machine."
+// in the language the app shows.
+func MagpieImportPiUnavailable() string { return In(i18n.Locale()).MagpieImportPiUnavailable() }
+
+// MagpieImportPiUnavailable says "Pi is not supported on this machine."
+// in the language of msgs.
+func (msgs Messages) MagpieImportPiUnavailable() string {
+	return Catalog.Format(msgs.locale, "magpieImportPiUnavailable", nil)
+}
+
+// MagpieImportUpdateRequired says "Update the local agent to import Magpie."
+// in the language the app shows.
+func MagpieImportUpdateRequired() string { return In(i18n.Locale()).MagpieImportUpdateRequired() }
+
+// MagpieImportUpdateRequired says "Update the local agent to import Magpie."
+// in the language of msgs.
+func (msgs Messages) MagpieImportUpdateRequired() string {
+	return Catalog.Format(msgs.locale, "magpieImportUpdateRequired", nil)
+}
+
+// MagpieImportTitle says "Import from Magpie"
+// in the language the app shows.
+func MagpieImportTitle() string { return In(i18n.Locale()).MagpieImportTitle() }
+
+// MagpieImportTitle says "Import from Magpie"
+// in the language of msgs.
+func (msgs Messages) MagpieImportTitle() string {
+	return Catalog.Format(msgs.locale, "magpieImportTitle", nil)
+}
+
+// MagpieImportDescription says "The following agent providers will be created automatically from the Magpie gateway configuration."
+// in the language the app shows.
+func MagpieImportDescription() string { return In(i18n.Locale()).MagpieImportDescription() }
+
+// MagpieImportDescription says "The following agent providers will be created automatically from the Magpie gateway configuration."
+// in the language of msgs.
+func (msgs Messages) MagpieImportDescription() string {
+	return Catalog.Format(msgs.locale, "magpieImportDescription", nil)
+}
+
+// MagpieImportMachineLineLabel says "Current machine"
+// in the language the app shows.
+func MagpieImportMachineLineLabel() string { return In(i18n.Locale()).MagpieImportMachineLineLabel() }
+
+// MagpieImportMachineLineLabel says "Current machine"
+// in the language of msgs.
+func (msgs Messages) MagpieImportMachineLineLabel() string {
+	return Catalog.Format(msgs.locale, "magpieImportMachineLineLabel", nil)
+}
+
+// MagpieImportThisMachine says "This machine"
+// in the language the app shows.
+func MagpieImportThisMachine() string { return In(i18n.Locale()).MagpieImportThisMachine() }
+
+// MagpieImportThisMachine says "This machine"
+// in the language of msgs.
+func (msgs Messages) MagpieImportThisMachine() string {
+	return Catalog.Format(msgs.locale, "magpieImportThisMachine", nil)
+}
+
+// MagpieImportIndependentConfig says "Independent configuration"
+// in the language the app shows.
+func MagpieImportIndependentConfig() string { return In(i18n.Locale()).MagpieImportIndependentConfig() }
+
+// MagpieImportIndependentConfig says "Independent configuration"
+// in the language of msgs.
+func (msgs Messages) MagpieImportIndependentConfig() string {
+	return Catalog.Format(msgs.locale, "magpieImportIndependentConfig", nil)
+}
+
+// MagpieImportEmpty says "No Magpie runtimes are available to import."
+// in the language the app shows.
+func MagpieImportEmpty() string { return In(i18n.Locale()).MagpieImportEmpty() }
+
+// MagpieImportEmpty says "No Magpie runtimes are available to import."
+// in the language of msgs.
+func (msgs Messages) MagpieImportEmpty() string {
+	return Catalog.Format(msgs.locale, "magpieImportEmpty", nil)
+}
+
+// MagpieImportImport says "Import"
+// in the language the app shows.
+func MagpieImportImport() string { return In(i18n.Locale()).MagpieImportImport() }
+
+// MagpieImportImport says "Import"
+// in the language of msgs.
+func (msgs Messages) MagpieImportImport() string {
+	return Catalog.Format(msgs.locale, "magpieImportImport", nil)
+}
+
+// MagpieImportImporting says "Importing…"
+// in the language the app shows.
+func MagpieImportImporting() string { return In(i18n.Locale()).MagpieImportImporting() }
+
+// MagpieImportImporting says "Importing…"
+// in the language of msgs.
+func (msgs Messages) MagpieImportImporting() string {
+	return Catalog.Format(msgs.locale, "magpieImportImporting", nil)
+}
+
+// MagpieImportRuntimes says "Runtimes"
+// in the language the app shows.
+func MagpieImportRuntimes() string { return In(i18n.Locale()).MagpieImportRuntimes() }
+
+// MagpieImportRuntimes says "Runtimes"
+// in the language of msgs.
+func (msgs Messages) MagpieImportRuntimes() string {
+	return Catalog.Format(msgs.locale, "magpieImportRuntimes", nil)
+}

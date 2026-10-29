@@ -3,17 +3,186 @@ package app
 import (
 	"context"
 	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"net/url"
+	"os"
+	"strings"
+	"sync"
 	"testing"
 	"time"
 
 	"github.com/egoist/mygo/ui"
 
 	"github.com/lbr77/lody-mygo/internal/catalog"
+	"github.com/lbr77/lody-mygo/internal/cloud"
 	"github.com/lbr77/lody-mygo/internal/flock"
 	"github.com/lbr77/lody-mygo/internal/localplane"
 	"github.com/lbr77/lody-mygo/internal/localplane/localplanetest"
 	"github.com/lbr77/lody-mygo/locales"
 )
+
+// testOffer is an end-to-end encrypted workspace's member offer, as
+// Lody's web app puts one in a link.
+var testOffer = `{"version":1,"workspaceId":"w9","genesisHash":"` + strings.Repeat("a", 64) + `","genesisRecordHex":"0a0b","endorser":"` +
+	strings.Repeat("b", 64) + `","token":"` + strings.Repeat("c", 64) + `","mode":"link","expiresAt":1798804800000}`
+
+// fakeConvex answers the app's Convex calls as Lody's backend would, by
+// function: answer gives a call's value, or the error it fails with.
+// Nothing reaches the network. It returns the calls made so far.
+func fakeConvex(t *testing.T, a *App, answer func(path string, args map[string]any) (any, string)) func() []map[string]any {
+	t.Helper()
+	var mu sync.Mutex
+	var calls []map[string]any
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/api/auth/convex/token" {
+			json.NewEncoder(w).Encode(map[string]any{"token": "jwt"})
+			return
+		}
+		var body struct {
+			Path string         `json:"path"`
+			Args map[string]any `json:"args"`
+		}
+		json.NewDecoder(r.Body).Decode(&body)
+		mu.Lock()
+		calls = append(calls, map[string]any{"path": body.Path, "args": body.Args})
+		mu.Unlock()
+		value, fail := answer(body.Path, body.Args)
+		if fail != "" {
+			json.NewEncoder(w).Encode(map[string]any{"status": "error", "errorMessage": fail})
+			return
+		}
+		json.NewEncoder(w).Encode(map[string]any{"status": "success", "value": value})
+	}))
+	t.Cleanup(srv.Close)
+	auth, origin := cloud.AuthOrigin, cloud.ConvexOrigin
+	cloud.AuthOrigin, cloud.ConvexOrigin = srv.URL, srv.URL
+	t.Cleanup(func() { cloud.AuthOrigin, cloud.ConvexOrigin = auth, origin })
+	a.convex = &cloud.Convex{API: &cloud.API{}, Token: func() string { return "token" }}
+	return func() []map[string]any {
+		mu.Lock()
+		defer mu.Unlock()
+		return append([]map[string]any(nil), calls...)
+	}
+}
+
+// lastToast is the newest toast waiting to show.
+func lastToast(a *App) string {
+	if len(a.toasts) == 0 {
+		return ""
+	}
+	return a.toasts[len(a.toasts)-1].Title
+}
+
+// The routes back from lody.ai open what the app has for them, as Lody's
+// desktop app routes them: an invitation opens to be accepted, or says an
+// encrypted workspace's can't be; GitHub's install comes back to its
+// settings; checkout to billing, the plan asked for again; a pairing
+// request is taken by this machine once its daemon has run, and a refusal
+// says so. The routes it can't serve, and sign-in's callback, are left
+// alone.
+func TestLinkRoutes(t *testing.T) {
+	a := fixture()
+	a.offline = false
+	a.account.Workspaces[0].Slug = "analytical"
+	pump := pumpUpdates(t, a)
+	refuse := false
+	calls := fakeConvex(t, a, func(path string, args map[string]any) (any, string) {
+		switch path {
+		case "auth:getInvitationPreview":
+			return map[string]any{"status": "available", "organizationName": "Acme", "inviterName": "Grace Hopper", "role": "member"}, ""
+		case "billing:getWorkspaceBillingEntitlement":
+			return map[string]any{"effectivePlanTier": "plus", "checkoutPending": false}, ""
+		case "machinePairing:claimFromDesktop":
+			if refuse {
+				return nil, "[CONVEX M(machinePairing:claimFromDesktop)] Uncaught Error: Request expired"
+			}
+			return map[string]any{"id": args["requestId"], "status": "claimed"}, ""
+		}
+		return nil, ""
+	})
+
+	// An invitation, with Settings open over the workspace.
+	a.settingsOpen = true
+	a.OpenURL("lody://invite/open?invitationId=inv_1")
+	if !a.wsJoin.open || a.wsJoin.kind != "invite" || a.wsJoin.id != "inv_1" || a.settingsOpen || a.link != nil {
+		t.Fatalf("invite: %+v, settings %v", a.wsJoin, a.settingsOpen)
+	}
+	pump("the invitation", func() bool { return a.wsJoin.preview != nil })
+	if a.wsJoin.preview["organizationName"] != "Acme" {
+		t.Fatalf("preview: %+v", a.wsJoin.preview)
+	}
+	a.wsJoin.open = false
+	a.OpenURL("lody://invite/open?memberOffer=" + url.QueryEscape(testOffer))
+	if lastToast(a) != locales.E2eeModeUpgradeHelp() || a.wsJoin.open {
+		t.Fatalf("encrypted invite: %q", lastToast(a))
+	}
+
+	// GitHub's install comes back to its settings.
+	a.OpenURL("lody://github-install?workspaceSlug=analytical&installed=true")
+	if !a.settingsOpen || a.settingsTab != "github" || a.link != nil {
+		t.Fatalf("github: settings %v %q, link %+v", a.settingsOpen, a.settingsTab, a.link)
+	}
+
+	// Checkout comes back to billing, the plan asked for again.
+	a.settingsOpen = false
+	a.tier = planTier{workspace: "w1", tier: "free", at: time.Now()}
+	a.OpenURL("lody://checkout-return?workspaceSlug=analytical&checkout=success")
+	if !a.settingsOpen || a.settingsTab != "billing" {
+		t.Fatalf("checkout: settings %v %q", a.settingsOpen, a.settingsTab)
+	}
+	pump("the plan", func() bool { return a.tier.tier == "plus" })
+	a.OpenURL("lody://checkout-return?workspaceSlug=nowhere")
+	if lastToast(a) != locales.DeepLinkWorkspaceUnavailable() || a.link != nil {
+		t.Fatalf("unknown workspace: %q", lastToast(a))
+	}
+
+	// A pairing request waits for this machine's daemon, then is taken
+	// under the computer's name.
+	a.term.machine, a.term.checked = "", time.Now()
+	a.OpenURL("lody://machine/connect?requestId=req1")
+	if a.claim.request != "req1" || a.claim.busy {
+		t.Fatalf("claim before the daemon: %+v", a.claim)
+	}
+	a.term.machine = "m1"
+	a.followLink()
+	pump("the claim", func() bool { return a.claim.request == "" && !a.claim.busy })
+	if lastToast(a) != locales.MachinePairingDesktopClaimed() {
+		t.Fatalf("claimed: %q", lastToast(a))
+	}
+	host, _ := os.Hostname()
+	var claim map[string]any
+	for _, c := range calls() {
+		if c["path"] == "machinePairing:claimFromDesktop" {
+			claim = c["args"].(map[string]any)
+		}
+	}
+	if claim["requestId"] != "req1" || claim["machineId"] != "m1" || claim["machineName"] != firstNonEmpty(host, "m1") {
+		t.Fatalf("claim args: %+v", claim)
+	}
+	// Refused, it says what Lody's says, not the server's words.
+	refuse = true
+	a.OpenURL("lody://machine/connect?requestId=req2")
+	pump("the refusal", func() bool { return a.claim.request == "" && !a.claim.busy })
+	if lastToast(a) != locales.MachinePairingDesktopClaimFailed() {
+		t.Fatalf("refused: %q", lastToast(a))
+	}
+	// Signed out, it waits.
+	a.phase = phaseSignedOut
+	a.OpenURL("lody://machine/connect?requestId=req3")
+	if a.claim.request != "req3" || a.claim.busy {
+		t.Fatalf("claim signed out: %+v", a.claim)
+	}
+
+	// What it can't serve is left alone.
+	a.phase, a.toasts, a.claim = phaseSignedIn, nil, machineClaim{}
+	for _, raw := range []string{"lody://auth/callback#token=x", "lody://nowhere/else", "lody://machine/connect/?requestId=r"} {
+		a.OpenURL(raw)
+		if a.link != nil || len(a.toasts) != 0 || a.claim.request != "" {
+			t.Fatalf("%s: link %+v, toasts %+v", raw, a.link, a.toasts)
+		}
+	}
+}
 
 // The links the system hands over read as Lody's desktop app reads them:
 // a session under any of Lody's schemes, or New chat on a machine's
@@ -37,6 +206,22 @@ func TestParseLink(t *testing.T) {
 		{"lody://chat:1/new?machine=m1&project=p1", nil},
 		{"lody://auth/callback#token=x", nil},
 		{"https://lody.ai/session/s1", nil},
+		{"lody://invite/open?invitationId=inv_1", &linkTarget{route: "invite", id: "inv_1"}},
+		{"lody://invite/open/?invitationId=%20inv_1%20", &linkTarget{route: "invite", id: "inv_1"}},
+		{"lody://invite/open", nil},
+		{"lody://invite/open?memberOffer=" + url.QueryEscape(testOffer), &linkTarget{route: "invite", e2ee: true}},
+		{"lody://invite/open?memberOffer=%7B%7D&invitationId=inv_1", nil},
+		{"lody://machine/connect?requestId=req1", &linkTarget{route: "machine", id: "req1"}},
+		{"lody://machine/connect/?requestId=req1", nil},
+		{"lody://machine/connect", nil},
+		{"lody://github-install?workspaceSlug=acme&installed=true", &linkTarget{route: "github", slug: "acme"}},
+		{"lody://github-install/", &linkTarget{route: "github"}},
+		{"lody://github-install/elsewhere", nil},
+		{"lody://checkout-return?workspaceSlug=acme&checkout=success", &linkTarget{route: "checkout", slug: "acme"}},
+		{"lody://provider/import?v=1&data=e30", &linkTarget{route: "magpie", raw: "lody://provider/import?v=1&data=e30"}},
+		{"lody://provider/import/?v=1&data=e30", nil},
+		{"lody://checkout-return:8080/", nil},
+		{"lody://nowhere/else", nil},
 	} {
 		got := parseLink(c.raw)
 		if (got == nil) != (c.want == nil) || got != nil && *got != *c.want {
