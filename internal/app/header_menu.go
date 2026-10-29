@@ -232,6 +232,9 @@ func (a *App) headerMenuRows(m *lodyMenu, s catalog.Session) {
 			a.copySessionLink(s.ID)
 		}
 	})
+	if m.item("share-image", iconImage, locales.ShareImgMenu(), menuItem{disabled: a.view == nil}) {
+		a.startShareImage(s.ID)
+	}
 
 	m.sep()
 	if s.Archived {

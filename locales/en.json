@@ -3566,5 +3566,49 @@
         "type": "String"
       }
     }
-  }
+  },
+  "shareImgMenu": "Share as image…",
+  "shareImgEmpty": "No conversation to share",
+  "shareImgSelectMessage": "Select message",
+  "shareImgSelectedCount": "{count} selected",
+  "@shareImgSelectedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "shareImgClearSelection": "Clear selection",
+  "shareImgSelectAll": "Select all",
+  "shareImgPreview": "Preview image",
+  "shareImgEstimatedTokens": "~{value} tokens",
+  "@shareImgEstimatedTokens": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "shareImgBackdrop": "Background",
+  "shareImgBackdropNone": "None",
+  "shareImgBackdropLody": "Lody",
+  "shareImgBackdropWelcome": "Welcome",
+  "shareImgBackdropAurora": "Aurora",
+  "shareImgBackdropOcean": "Ocean",
+  "shareImgBackdropSunset": "Sunset",
+  "shareImgDialogTitle": "Share as image",
+  "shareImgDialogDescription": "PNG image",
+  "shareImgDestination": "Sharing to",
+  "shareImgDestinationChat": "Chat",
+  "shareImgDestinationPost": "Post",
+  "shareImgMat": "Padding",
+  "shareImgTheme": "Theme",
+  "shareImgThemeLight": "Light",
+  "shareImgThemeDark": "Dark",
+  "shareImgCopyImage": "Copy image",
+  "shareImgCopying": "Copying...",
+  "shareImgCopied": "Image copied to clipboard",
+  "shareImgExportPng": "Export PNG",
+  "shareImgExporting": "Exporting...",
+  "shareImgExportFailed": "Could not complete the image action. Please try again."
 }

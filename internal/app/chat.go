@@ -75,6 +75,7 @@ func (a *App) mainView(c *ui.Context, p *palette) {
 	a.shareDialogView(c, p)
 	a.deviceAuthDialog(c, p)
 	a.messageShareDialog(c, p)
+	a.shareImageDialog(c, p)
 	a.filePreviewDialog(c, p)
 	a.scheduleSendDialog(c, p)
 	a.stuckBanner(c, p)
@@ -261,8 +262,11 @@ func (a *App) conversation(c *ui.Context, p *palette, sess *catalog.Session) {
 		})
 		a.outline.top = list.Bounds().Y
 		a.chatEdges(c, p, v, len(entries))
+		a.shareMarquee(c, p)
 	})
-	a.bottom(c, p, sess, v)
+	if !a.shareSelectionBar(c, p, sess) {
+		a.bottom(c, p, sess, v)
+	}
 	a.outlineRail(c, p, entries)
 	a.findBar(c, p)
 }
@@ -331,30 +335,40 @@ func (a *App) column(c *ui.Context, key any, fn func()) ui.Element {
 
 func (a *App) entry(c *ui.Context, p *palette, entries []session.Entry, i int) ui.Element {
 	e := entries[i]
-	top := float32(0)
-	if i > 0 {
-		switch {
-		case e.Role == "user":
-			top = 56 // answer to the next message
-		case entries[i-1].Role == "user":
-			top = 36 // message to its response
-		default:
-			top = 16
-		}
-	}
 	// Queued messages follow each other closely, the first able to
 	// interrupt the running turn.
 	firstQueued := e.Queued && (i == 0 || !entries[i-1].Queued)
-	if e.Queued && i > 0 && entries[i-1].Queued {
-		top = 12
+	row := func() ui.Element {
+		return a.column(c, e.ID, func() {
+			if e.Role == "user" {
+				a.userMessage(c, p, e, firstQueued)
+			} else {
+				a.assistantMessage(c, p, e)
+			}
+		})
 	}
-	return a.column(c, e.ID, func() {
-		if e.Role == "user" {
-			a.userMessage(c, p, e, firstQueued)
-		} else {
-			a.assistantMessage(c, p, e)
-		}
-	}).Padding(top, 0, 0, 0)
+	if a.shareImg.picking(a.selected) {
+		// Messages are being picked to share as an image.
+		return a.shareRow(c, p, entries, i, row)
+	}
+	return row().Padding(entryTop(entries, i), 0, 0, 0)
+}
+
+// entryTop is the room above entry i.
+func entryTop(entries []session.Entry, i int) float32 {
+	if i == 0 {
+		return 0
+	}
+	if entries[i].Queued && entries[i-1].Queued {
+		return 12
+	}
+	switch {
+	case entries[i].Role == "user":
+		return 56 // answer to the next message
+	case entries[i-1].Role == "user":
+		return 36 // message to its response
+	}
+	return 16
 }
 
 // deliveryLabel is what a user message's meta line says of its delivery,

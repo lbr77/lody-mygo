@@ -18030,3 +18030,305 @@ func DimcodeInstallHint(command string) string { return In(i18n.Locale()).Dimcod
 func (msgs Messages) DimcodeInstallHint(command string) string {
 	return Catalog.Format(msgs.locale, "dimcodeInstallHint", map[string]any{"command": command})
 }
+
+// ShareImgMenu says "Share as image…"
+// in the language the app shows.
+func ShareImgMenu() string { return In(i18n.Locale()).ShareImgMenu() }
+
+// ShareImgMenu says "Share as image…"
+// in the language of msgs.
+func (msgs Messages) ShareImgMenu() string {
+	return Catalog.Format(msgs.locale, "shareImgMenu", nil)
+}
+
+// ShareImgEmpty says "No conversation to share"
+// in the language the app shows.
+func ShareImgEmpty() string { return In(i18n.Locale()).ShareImgEmpty() }
+
+// ShareImgEmpty says "No conversation to share"
+// in the language of msgs.
+func (msgs Messages) ShareImgEmpty() string {
+	return Catalog.Format(msgs.locale, "shareImgEmpty", nil)
+}
+
+// ShareImgSelectMessage says "Select message"
+// in the language the app shows.
+func ShareImgSelectMessage() string { return In(i18n.Locale()).ShareImgSelectMessage() }
+
+// ShareImgSelectMessage says "Select message"
+// in the language of msgs.
+func (msgs Messages) ShareImgSelectMessage() string {
+	return Catalog.Format(msgs.locale, "shareImgSelectMessage", nil)
+}
+
+// ShareImgSelectedCount says "{count} selected"
+// in the language the app shows.
+func ShareImgSelectedCount(count int) string { return In(i18n.Locale()).ShareImgSelectedCount(count) }
+
+// ShareImgSelectedCount says "{count} selected"
+// in the language of msgs.
+func (msgs Messages) ShareImgSelectedCount(count int) string {
+	return Catalog.Format(msgs.locale, "shareImgSelectedCount", map[string]any{"count": count})
+}
+
+// ShareImgClearSelection says "Clear selection"
+// in the language the app shows.
+func ShareImgClearSelection() string { return In(i18n.Locale()).ShareImgClearSelection() }
+
+// ShareImgClearSelection says "Clear selection"
+// in the language of msgs.
+func (msgs Messages) ShareImgClearSelection() string {
+	return Catalog.Format(msgs.locale, "shareImgClearSelection", nil)
+}
+
+// ShareImgSelectAll says "Select all"
+// in the language the app shows.
+func ShareImgSelectAll() string { return In(i18n.Locale()).ShareImgSelectAll() }
+
+// ShareImgSelectAll says "Select all"
+// in the language of msgs.
+func (msgs Messages) ShareImgSelectAll() string {
+	return Catalog.Format(msgs.locale, "shareImgSelectAll", nil)
+}
+
+// ShareImgPreview says "Preview image"
+// in the language the app shows.
+func ShareImgPreview() string { return In(i18n.Locale()).ShareImgPreview() }
+
+// ShareImgPreview says "Preview image"
+// in the language of msgs.
+func (msgs Messages) ShareImgPreview() string {
+	return Catalog.Format(msgs.locale, "shareImgPreview", nil)
+}
+
+// ShareImgEstimatedTokens says "~{value} tokens"
+// in the language the app shows.
+func ShareImgEstimatedTokens(value string) string {
+	return In(i18n.Locale()).ShareImgEstimatedTokens(value)
+}
+
+// ShareImgEstimatedTokens says "~{value} tokens"
+// in the language of msgs.
+func (msgs Messages) ShareImgEstimatedTokens(value string) string {
+	return Catalog.Format(msgs.locale, "shareImgEstimatedTokens", map[string]any{"value": value})
+}
+
+// ShareImgBackdrop says "Background"
+// in the language the app shows.
+func ShareImgBackdrop() string { return In(i18n.Locale()).ShareImgBackdrop() }
+
+// ShareImgBackdrop says "Background"
+// in the language of msgs.
+func (msgs Messages) ShareImgBackdrop() string {
+	return Catalog.Format(msgs.locale, "shareImgBackdrop", nil)
+}
+
+// ShareImgBackdropNone says "None"
+// in the language the app shows.
+func ShareImgBackdropNone() string { return In(i18n.Locale()).ShareImgBackdropNone() }
+
+// ShareImgBackdropNone says "None"
+// in the language of msgs.
+func (msgs Messages) ShareImgBackdropNone() string {
+	return Catalog.Format(msgs.locale, "shareImgBackdropNone", nil)
+}
+
+// ShareImgBackdropLody says "Lody"
+// in the language the app shows.
+func ShareImgBackdropLody() string { return In(i18n.Locale()).ShareImgBackdropLody() }
+
+// ShareImgBackdropLody says "Lody"
+// in the language of msgs.
+func (msgs Messages) ShareImgBackdropLody() string {
+	return Catalog.Format(msgs.locale, "shareImgBackdropLody", nil)
+}
+
+// ShareImgBackdropWelcome says "Welcome"
+// in the language the app shows.
+func ShareImgBackdropWelcome() string { return In(i18n.Locale()).ShareImgBackdropWelcome() }
+
+// ShareImgBackdropWelcome says "Welcome"
+// in the language of msgs.
+func (msgs Messages) ShareImgBackdropWelcome() string {
+	return Catalog.Format(msgs.locale, "shareImgBackdropWelcome", nil)
+}
+
+// ShareImgBackdropAurora says "Aurora"
+// in the language the app shows.
+func ShareImgBackdropAurora() string { return In(i18n.Locale()).ShareImgBackdropAurora() }
+
+// ShareImgBackdropAurora says "Aurora"
+// in the language of msgs.
+func (msgs Messages) ShareImgBackdropAurora() string {
+	return Catalog.Format(msgs.locale, "shareImgBackdropAurora", nil)
+}
+
+// ShareImgBackdropOcean says "Ocean"
+// in the language the app shows.
+func ShareImgBackdropOcean() string { return In(i18n.Locale()).ShareImgBackdropOcean() }
+
+// ShareImgBackdropOcean says "Ocean"
+// in the language of msgs.
+func (msgs Messages) ShareImgBackdropOcean() string {
+	return Catalog.Format(msgs.locale, "shareImgBackdropOcean", nil)
+}
+
+// ShareImgBackdropSunset says "Sunset"
+// in the language the app shows.
+func ShareImgBackdropSunset() string { return In(i18n.Locale()).ShareImgBackdropSunset() }
+
+// ShareImgBackdropSunset says "Sunset"
+// in the language of msgs.
+func (msgs Messages) ShareImgBackdropSunset() string {
+	return Catalog.Format(msgs.locale, "shareImgBackdropSunset", nil)
+}
+
+// ShareImgDialogTitle says "Share as image"
+// in the language the app shows.
+func ShareImgDialogTitle() string { return In(i18n.Locale()).ShareImgDialogTitle() }
+
+// ShareImgDialogTitle says "Share as image"
+// in the language of msgs.
+func (msgs Messages) ShareImgDialogTitle() string {
+	return Catalog.Format(msgs.locale, "shareImgDialogTitle", nil)
+}
+
+// ShareImgDialogDescription says "PNG image"
+// in the language the app shows.
+func ShareImgDialogDescription() string { return In(i18n.Locale()).ShareImgDialogDescription() }
+
+// ShareImgDialogDescription says "PNG image"
+// in the language of msgs.
+func (msgs Messages) ShareImgDialogDescription() string {
+	return Catalog.Format(msgs.locale, "shareImgDialogDescription", nil)
+}
+
+// ShareImgDestination says "Sharing to"
+// in the language the app shows.
+func ShareImgDestination() string { return In(i18n.Locale()).ShareImgDestination() }
+
+// ShareImgDestination says "Sharing to"
+// in the language of msgs.
+func (msgs Messages) ShareImgDestination() string {
+	return Catalog.Format(msgs.locale, "shareImgDestination", nil)
+}
+
+// ShareImgDestinationChat says "Chat"
+// in the language the app shows.
+func ShareImgDestinationChat() string { return In(i18n.Locale()).ShareImgDestinationChat() }
+
+// ShareImgDestinationChat says "Chat"
+// in the language of msgs.
+func (msgs Messages) ShareImgDestinationChat() string {
+	return Catalog.Format(msgs.locale, "shareImgDestinationChat", nil)
+}
+
+// ShareImgDestinationPost says "Post"
+// in the language the app shows.
+func ShareImgDestinationPost() string { return In(i18n.Locale()).ShareImgDestinationPost() }
+
+// ShareImgDestinationPost says "Post"
+// in the language of msgs.
+func (msgs Messages) ShareImgDestinationPost() string {
+	return Catalog.Format(msgs.locale, "shareImgDestinationPost", nil)
+}
+
+// ShareImgMat says "Padding"
+// in the language the app shows.
+func ShareImgMat() string { return In(i18n.Locale()).ShareImgMat() }
+
+// ShareImgMat says "Padding"
+// in the language of msgs.
+func (msgs Messages) ShareImgMat() string {
+	return Catalog.Format(msgs.locale, "shareImgMat", nil)
+}
+
+// ShareImgTheme says "Theme"
+// in the language the app shows.
+func ShareImgTheme() string { return In(i18n.Locale()).ShareImgTheme() }
+
+// ShareImgTheme says "Theme"
+// in the language of msgs.
+func (msgs Messages) ShareImgTheme() string {
+	return Catalog.Format(msgs.locale, "shareImgTheme", nil)
+}
+
+// ShareImgThemeLight says "Light"
+// in the language the app shows.
+func ShareImgThemeLight() string { return In(i18n.Locale()).ShareImgThemeLight() }
+
+// ShareImgThemeLight says "Light"
+// in the language of msgs.
+func (msgs Messages) ShareImgThemeLight() string {
+	return Catalog.Format(msgs.locale, "shareImgThemeLight", nil)
+}
+
+// ShareImgThemeDark says "Dark"
+// in the language the app shows.
+func ShareImgThemeDark() string { return In(i18n.Locale()).ShareImgThemeDark() }
+
+// ShareImgThemeDark says "Dark"
+// in the language of msgs.
+func (msgs Messages) ShareImgThemeDark() string {
+	return Catalog.Format(msgs.locale, "shareImgThemeDark", nil)
+}
+
+// ShareImgCopyImage says "Copy image"
+// in the language the app shows.
+func ShareImgCopyImage() string { return In(i18n.Locale()).ShareImgCopyImage() }
+
+// ShareImgCopyImage says "Copy image"
+// in the language of msgs.
+func (msgs Messages) ShareImgCopyImage() string {
+	return Catalog.Format(msgs.locale, "shareImgCopyImage", nil)
+}
+
+// ShareImgCopying says "Copying..."
+// in the language the app shows.
+func ShareImgCopying() string { return In(i18n.Locale()).ShareImgCopying() }
+
+// ShareImgCopying says "Copying..."
+// in the language of msgs.
+func (msgs Messages) ShareImgCopying() string {
+	return Catalog.Format(msgs.locale, "shareImgCopying", nil)
+}
+
+// ShareImgCopied says "Image copied to clipboard"
+// in the language the app shows.
+func ShareImgCopied() string { return In(i18n.Locale()).ShareImgCopied() }
+
+// ShareImgCopied says "Image copied to clipboard"
+// in the language of msgs.
+func (msgs Messages) ShareImgCopied() string {
+	return Catalog.Format(msgs.locale, "shareImgCopied", nil)
+}
+
+// ShareImgExportPng says "Export PNG"
+// in the language the app shows.
+func ShareImgExportPng() string { return In(i18n.Locale()).ShareImgExportPng() }
+
+// ShareImgExportPng says "Export PNG"
+// in the language of msgs.
+func (msgs Messages) ShareImgExportPng() string {
+	return Catalog.Format(msgs.locale, "shareImgExportPng", nil)
+}
+
+// ShareImgExporting says "Exporting..."
+// in the language the app shows.
+func ShareImgExporting() string { return In(i18n.Locale()).ShareImgExporting() }
+
+// ShareImgExporting says "Exporting..."
+// in the language of msgs.
+func (msgs Messages) ShareImgExporting() string {
+	return Catalog.Format(msgs.locale, "shareImgExporting", nil)
+}
+
+// ShareImgExportFailed says "Could not complete the image action. Please try again."
+// in the language the app shows.
+func ShareImgExportFailed() string { return In(i18n.Locale()).ShareImgExportFailed() }
+
+// ShareImgExportFailed says "Could not complete the image action. Please try again."
+// in the language of msgs.
+func (msgs Messages) ShareImgExportFailed() string {
+	return Catalog.Format(msgs.locale, "shareImgExportFailed", nil)
+}
