@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -285,4 +286,56 @@ func (c *Client) ReadyForReview(ctx context.Context, nodeID string) error {
 		err = errors.New(out.Errors[0].Message)
 	}
 	return err
+}
+
+// IssueOrPR is an open issue or pull request of a repository.
+type IssueOrPR struct {
+	Number    int
+	Title     string
+	URL       string
+	PR        bool
+	UpdatedAt time.Time
+}
+
+// IssuesAndPRs lists a repository's open issues and pull requests, the
+// most recently updated first, at most 200, as Lody's # mentions read
+// them: two pages of GitHub's issues, which hold both.
+func (c *Client) IssuesAndPRs(ctx context.Context, repo string) ([]IssueOrPR, error) {
+	type item struct {
+		Number      int       `json:"number"`
+		Title       string    `json:"title"`
+		HTMLURL     string    `json:"html_url"`
+		State       string    `json:"state"`
+		UpdatedAt   time.Time `json:"updated_at"`
+		PullRequest *struct{} `json:"pull_request"`
+	}
+	var pages [2][]item
+	errs := make(chan error, 2)
+	for i := range pages {
+		go func(i int) {
+			errs <- c.do(ctx, http.MethodGet, fmt.Sprintf("/repos/%s/issues?state=open&per_page=100&sort=updated&direction=desc&page=%d", repo, i+1), nil, &pages[i])
+		}(i)
+	}
+	for range pages {
+		if err := <-errs; err != nil {
+			return nil, err
+		}
+	}
+	seen := map[string]bool{}
+	var out []IssueOrPR
+	for _, page := range pages {
+		for _, it := range page {
+			key := fmt.Sprint(it.PullRequest != nil, it.Number)
+			if it.State != "open" || seen[key] {
+				continue
+			}
+			seen[key] = true
+			out = append(out, IssueOrPR{Number: it.Number, Title: it.Title, URL: it.HTMLURL, PR: it.PullRequest != nil, UpdatedAt: it.UpdatedAt})
+		}
+	}
+	sort.SliceStable(out, func(i, j int) bool { return out[i].UpdatedAt.After(out[j].UpdatedAt) })
+	if len(out) > 200 {
+		out = out[:200]
+	}
+	return out, nil
 }

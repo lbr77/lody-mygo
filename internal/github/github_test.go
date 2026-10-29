@@ -56,3 +56,30 @@ func TestClient(t *testing.T) {
 		t.Fatalf("call %q", calls[2])
 	}
 }
+
+func TestIssuesAndPRs(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/repos/o/r/issues" || r.URL.Query().Get("state") != "open" {
+			http.NotFound(w, r)
+			return
+		}
+		if r.URL.Query().Get("page") == "2" {
+			w.Write([]byte(`[{"number":3,"title":"Old","state":"open","updated_at":"2026-01-01T00:00:00Z"}]`))
+			return
+		}
+		w.Write([]byte(`[{"number":7,"title":"Fix it","state":"open","updated_at":"2026-10-01T00:00:00Z","pull_request":{}},
+			{"number":5,"title":"Broken","state":"open","updated_at":"2026-09-01T00:00:00Z"},
+			{"number":4,"title":"Done","state":"closed","updated_at":"2026-10-02T00:00:00Z"}]`))
+	}))
+	defer srv.Close()
+	old := API
+	API = srv.URL
+	defer func() { API = old }()
+	got, err := (&Client{Token: "t"}).IssuesAndPRs(context.Background(), "o/r")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(got) != 3 || got[0].Number != 7 || !got[0].PR || got[1].Number != 5 || got[1].PR || got[2].Number != 3 {
+		t.Fatalf("%+v", got)
+	}
+}

@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"path"
 	"sort"
+	"strconv"
 	"strings"
 	"unicode"
 )
@@ -20,6 +21,8 @@ const (
 	Session   = "session"
 	Command   = "cmd"
 	Role      = "role"
+	Issue     = "issue"
+	PR        = "pr"
 	// Shortcut is the @ menu's way to the prompt shortcuts that / reaches.
 	Shortcut = "shortcut"
 )
@@ -177,6 +180,17 @@ func Commands(names, descriptions []string) []Item {
 // SessionItem is a session to mention.
 func SessionItem(id, title, project string) Item {
 	return Item{Kind: Session, Path: id, Name: title, Subtitle: project, Insert: "@session:" + id}
+}
+
+// IssueItem is an issue or pull request to mention: #number, which the
+// agent reads as GitHub's reference.
+func IssueItem(number int, title string, pr bool) Item {
+	kind := Issue
+	if pr {
+		kind = PR
+	}
+	n := strconv.Itoa(number)
+	return Item{Kind: kind, Path: n, Name: title, Subtitle: "#" + n, Insert: "#" + n}
 }
 
 // RoleItem is an agent role to mention, as Lody writes it: @role:<slug>

@@ -16,6 +16,7 @@ import (
 
 	"github.com/lbr77/lody-mygo/internal/catalog"
 	"github.com/lbr77/lody-mygo/internal/cloud"
+	"github.com/lbr77/lody-mygo/internal/github"
 	"github.com/lbr77/lody-mygo/internal/mention"
 	"github.com/lbr77/lody-mygo/internal/shortcuts"
 	"github.com/lbr77/lody-mygo/locales"
@@ -273,6 +274,10 @@ func categoryLabel(ns string) string {
 		return locales.MentionSessions()
 	case mention.Role:
 		return locales.MentionRoles()
+	case mention.Issue:
+		return locales.MentionIssues()
+	case mention.PR:
+		return locales.MentionPullRequests()
 	case mention.Shortcut:
 		return locales.MentionShortcuts()
 	case mention.Command:
@@ -290,6 +295,15 @@ func (a *App) mentionRows(t mentionTarget, tr mention.Trigger) (rows []mentionRo
 			return a.sessionMentions(t, false), false, ""
 		case mention.Role:
 			return a.roleMentions(t), false, ""
+		case mention.Issue, mention.PR:
+			src := a.issueSource(a.mentionRepo(t))
+			var items []mention.Item
+			for _, it := range src.items {
+				if it.Kind == ns {
+					items = append(items, it)
+				}
+			}
+			return items, src.loading, src.err
 		case mention.Shortcut:
 			src := a.mentionSource(mentionShortcut, mentionTarget{})
 			return src.items, src.loading, src.err
@@ -550,6 +564,10 @@ func (a *App) mentionRowView(c *ui.Context, p *palette, row mentionRow, highligh
 			icon = iconTerminal
 		case mention.Role:
 			icon = iconUserCog
+		case mention.Issue:
+			icon = iconCircleDot
+		case mention.PR:
+			icon = iconGitPR
 		}
 		ui.Icon(c, icon).Size(16, 16).TextColor(p.Secondary).Shrink(0)
 		title := label
@@ -726,7 +744,11 @@ func (a *App) roleMentions(t mentionTarget) []mention.Item {
 // sessions, agent roles, prompt shortcuts, and the agent's commands when
 // it has some.
 func (a *App) atCategories(t mentionTarget) []string {
-	out := []string{mention.File, mention.Skill, mention.Session, mention.Role, mention.Shortcut}
+	out := []string{mention.File}
+	if a.mentionRepo(t) != "" {
+		out = append(out, mention.Issue, mention.PR)
+	}
+	out = append(out, mention.Skill, mention.Session, mention.Role, mention.Shortcut)
 	if len(a.catalog.Capabilities[t.agent].Commands) > 0 {
 		out = append(out, mention.Command)
 	}
@@ -762,4 +784,62 @@ func (a *App) sessionScopeHeader(c *ui.Context, p *palette, t mentionTarget) {
 			})
 		}
 	})
+}
+
+// mentionRepo is the GitHub repository the composer's project is, for
+// its issues and pull requests: a GitHub project's, or the remote of a
+// local one.
+func (a *App) mentionRepo(t mentionTarget) string {
+	if repo, ok := strings.CutPrefix(t.project, "github:"); ok {
+		return repo
+	}
+	if s := a.catalog.Session(t.session); s != nil {
+		if repo := firstNonEmpty(s.RepoFullName, str(s.Project["githubRepoFullName"]), str(s.Project["repoFullName"])); repo != "" {
+			return repo
+		}
+	}
+	if st := a.gitStates[t.project]; st != nil {
+		return st.repo
+	}
+	return ""
+}
+
+// issueSource is a repository's open issues and pull requests, read with
+// the workspace's token and kept five minutes, as Lody's.
+func (a *App) issueSource(repo string) *mentionSource {
+	if a.mentionSources == nil {
+		a.mentionSources = map[string]*mentionSource{}
+	}
+	key := "issuepr|" + repo
+	src := a.mentionSources[key]
+	if src == nil {
+		src = &mentionSource{}
+		a.mentionSources[key] = src
+	}
+	if repo == "" || src.loading || (!src.loaded.IsZero() && time.Since(src.loaded) < 5*time.Minute) || a.offline {
+		return src
+	}
+	src.loading, src.err = true, ""
+	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+		defer cancel()
+		var items []mention.Item
+		token, err := a.githubToken(ctx, repo, false)
+		if err == nil {
+			var list []github.IssueOrPR
+			if list, err = (&github.Client{Token: token}).IssuesAndPRs(ctx, repo); err == nil {
+				for _, it := range list {
+					items = append(items, mention.IssueItem(it.Number, it.Title, it.PR))
+				}
+			}
+		}
+		a.update(func() {
+			src.loading, src.loaded = false, time.Now()
+			src.items, src.err = items, ""
+			if err != nil {
+				src.err = err.Error()
+			}
+		})
+	}()
+	return src
 }

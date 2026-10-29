@@ -11,6 +11,7 @@ import (
 	"github.com/egoist/mygo/ui"
 
 	"github.com/lbr77/lody-mygo/internal/catalog"
+	"github.com/lbr77/lody-mygo/internal/mention"
 )
 
 func TestCommandPalette(t *testing.T) {
@@ -466,5 +467,30 @@ func TestAtMenuCategories(t *testing.T) {
 	}
 	if got := composerHint(false, false, true); got != "Press '$' for skills." {
 		t.Errorf("hint %q", got)
+	}
+}
+
+func TestIssueMentions(t *testing.T) {
+	a := fixture()
+	a.view.Entries = a.view.Entries[:2]
+	a.view.Working = false
+	a.gitStates = map[string]*gitState{"m1:local:p1": {git: true, repo: "lbr77/lody-mygo"}}
+	a.mentionSources = map[string]*mentionSource{"issuepr|lbr77/lody-mygo": {loaded: time.Now(), items: []mention.Item{mention.IssueItem(12, "Sidebar gap", false), mention.IssueItem(14, "Tabs", true)}}}
+	tt := ui.NewTester(a.render, 1100, 720)
+	tt.Frame()
+	tt.Type("@")
+	tt.Frame()
+	if !tt.HasText("Issues") || !tt.HasText("Pull Requests") {
+		t.Fatalf("categories: %q", tt.Texts())
+	}
+	tt.Type("pr:")
+	tt.Frame()
+	if len(a.mention.rows) != 1 || a.mention.rows[0].item.Insert != "#14" {
+		t.Fatalf("prs: %+v", a.mention.rows)
+	}
+	tt.Key(0, ui.KeyEnter)
+	tt.Frame()
+	if a.draft != "#14 " {
+		t.Fatalf("draft %q", a.draft)
 	}
 }
