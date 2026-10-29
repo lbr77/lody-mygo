@@ -2,10 +2,12 @@ package app
 
 import (
 	"fmt"
+	"github.com/egoist/mygo/ui/editor"
 	"image"
 	"image/png"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -401,4 +403,29 @@ func TestTeXMath(t *testing.T) {
 	a.view.Entries[1].Items = []session.Item{{ID: "m", Type: "text", Text: "Euler: $e^{i\\pi} + 1 = 0$, a ratio $\\frac{a}{b}$ and $\\sqrt{x^2+y^2}$.\n\n$$\\sum_{i=1}^{n} i = \\frac{n(n+1)}{2}$$"}}
 	a.view.Entries[1].Finished = true
 	snap(t, a, "tex-math", false, nil)
+}
+
+func TestExtendedCode(t *testing.T) {
+	toks, _ := lexTokenizer(lexicons["haskell"]).Tokenize(`main = putStrLn "hi" -- greet`, 0, nil)
+	var kinds []editor.TokenKind
+	for _, tk := range toks {
+		kinds = append(kinds, tk.Kind)
+	}
+	if !slices.Contains(kinds, editor.TokenString) || !slices.Contains(kinds, editor.TokenComment) {
+		t.Fatalf("haskell tokens %v", toks)
+	}
+	// A block comment runs on into the next line.
+	_, state := lexTokenizer(lexicons["ocaml"]).Tokenize("let x = 1 (* open", 0, nil)
+	if state != 1 {
+		t.Fatal("block comment state lost")
+	}
+	a := fixture()
+	a.view.Working = false
+	a.view.Entries = a.view.Entries[:2]
+	a.view.Entries[1].Items = []session.Item{{ID: "m", Type: "text", Text: "```haskell\nmain :: IO ()\nmain = putStrLn \"hi\" -- greet\n```"}}
+	a.extendedCode = true
+	tt := snap(t, a, "extended-code", false, nil)
+	if !tt.HasText("haskell") {
+		t.Fatalf("%q", tt.Texts())
+	}
 }

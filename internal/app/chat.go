@@ -519,6 +519,9 @@ func (a *App) syncMarkdown(p *palette) {
 	muted.Text = p.Secondary
 	muted.Strong = p.Secondary
 	a.mdMuted.Theme = &muted
+	// Extended code languages: plain until the setting is on.
+	a.registerExtendedCode(&a.md)
+	a.registerExtendedCode(&a.mdMuted)
 	// Render inline math: TeX between $…$ and \(…\), and $$…$$ blocks.
 	a.md.Extensions, a.md.InlineMath, a.md.Math = 0, nil, nil
 	a.mdMuted.Extensions, a.mdMuted.InlineMath, a.mdMuted.Math = 0, nil, nil
