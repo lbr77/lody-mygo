@@ -587,13 +587,14 @@ func (a *App) workspaceMode() string {
 	return "unknown"
 }
 
-// modeGate holds an encrypted workspace's content back, saying why.
+// modeGate holds an encrypted workspace's content back, saying why, still,
+// as Lody's RouteMessage.
 func (a *App) modeGate(c *ui.Context, p *palette, mode string) {
 	title, help := locales.E2eeModeFailed(), locales.E2eeModeFailedHelp()
 	if mode == "e2ee" {
 		title, help = locales.E2eeWorkspaceTitle(), locales.E2eeModeUpgradeHelp()
 	}
-	ui.Column(c.Key("mode-gate")).Fill().Center().Padding(32).Gap(10).Transition(pageIn).Children(func() {
+	ui.Column(c.Key("mode-gate")).Fill().Center().Padding(32).Gap(10).Children(func() {
 		ui.Icon(c, iconLock).Size(28, 28).TextColor(p.Tertiary)
 		ui.Text(c, title).FontSize(16).FontWeight(600).TextColor(p.Strong).TextAlign(ui.Center)
 		ui.Text(c, help).FontSize(sizeSub).LineHeight(1.5).TextColor(p.Secondary).TextAlign(ui.Center).MaxWidth(420)

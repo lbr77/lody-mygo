@@ -22,8 +22,6 @@ const (
 var (
 	// easeStandard is Lody's ease.standard.
 	easeStandard = easeLody
-	// easeEnter decelerates hard, for what comes into view.
-	easeEnter = ui.CubicBezier(0.16, 1, 0.3, 1)
 	// easeSheet is iOS's sheet curve, which the sidebar slides on.
 	easeSheet = ui.CubicBezier(0.32, 0.72, 0, 1)
 
@@ -69,9 +67,6 @@ var (
 	// colorFade fades an element's background and border as hover, press
 	// and selection change them, without moving it.
 	colorFade = ui.ElementTransition{Colors: true, Duration: fadeTime, Ease: easeStandard}
-	// pageIn brings a page in where another was: it fades in, rising a
-	// little, as the one it replaces goes at once.
-	pageIn = ui.ElementTransition{Colors: true, Duration: pageTime, Ease: easeEnter, Enter: &ui.Motion{Y: 6}}
 	// windowIn fades in what fills the window, as the app goes from
 	// loading to signing in to the workspace.
 	windowIn = ui.ElementTransition{Colors: true, Duration: pageTime, Ease: easeStandard, Enter: &ui.Motion{}}

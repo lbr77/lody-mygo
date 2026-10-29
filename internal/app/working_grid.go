@@ -268,7 +268,7 @@ func sendRing(c *ui.Context, p *palette, progress float32, known bool) {
 	ink := p.Primary
 	var turn, fill, sweep float32
 	if known {
-		fill = ring.AnimateWith("fill", min(100, max(4, progress))/100, 300*time.Millisecond, ui.EaseOut)
+		fill = ring.AnimateWith("fill", min(100, max(4, progress))/100, 300*time.Millisecond, twEaseOut)
 		sweep = ring.Keyframes("sweep", []ui.Keyframe{{Value: 0}, {At: 1800 * time.Millisecond, Value: 1}}, ui.KeyframeOptions{Repeat: ui.RepeatForever})
 	} else {
 		turn = ring.Keyframes("turn", []ui.Keyframe{{Value: 0}, {At: 1200 * time.Millisecond, Value: 1}}, ui.KeyframeOptions{Repeat: ui.RepeatForever})
