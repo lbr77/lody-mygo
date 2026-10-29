@@ -309,6 +309,25 @@ func (a *App) urlImage(url string) *remoteImage {
 // sessionImage shows a picture of a session, fetched once and kept.
 func (a *App) sessionImage(c *ui.Context, p *palette, sessionID string, it session.Item, size float32) {
 	key := "img:" + it.ImageID
+	img := a.sessionBitmap(sessionID, it)
+	ui.Box(c.Key(key)).Size(size, size).Radius(12).Clip().Background(p.Text.Alpha(0.05)).Label(firstNonEmpty(it.FileName, locales.Image())).Children(func() {
+		switch {
+		case img != nil && img.bitmap != nil:
+			// Shown as it arrives, without a fade, as Lody's.
+			ui.Image(c.Key("bitmap"), img.bitmap).Size(size, size).Fit(ui.Cover)
+		case img != nil && img.loading:
+			// Its room breathes while it comes, as @lody/ui's skeleton.
+			skeleton(c, p, key, size).Width(size).Radius(0)
+		default:
+			ui.Box(c).Size(size, size).Center().Children(func() { ui.Icon(c, iconImage).Size(20, 20).TextColor(p.Secondary) })
+		}
+	})
+}
+
+// sessionBitmap is a picture of a session, fetched once and kept: nil
+// without a connection to fetch it.
+func (a *App) sessionBitmap(sessionID string, it session.Item) *remoteImage {
+	key := "img:" + it.ImageID
 	img := a.images[key]
 	if img == nil && a.conn != nil {
 		img = &remoteImage{loading: true}
@@ -325,18 +344,7 @@ func (a *App) sessionImage(c *ui.Context, p *palette, sessionID string, it sessi
 			a.update(func() { a.images[key] = &remoteImage{bitmap: bm, failed: err != nil} })
 		}()
 	}
-	ui.Box(c.Key(key)).Size(size, size).Radius(12).Clip().Background(p.Text.Alpha(0.05)).Label(firstNonEmpty(it.FileName, locales.Image())).Children(func() {
-		switch {
-		case img != nil && img.bitmap != nil:
-			// Shown as it arrives, without a fade, as Lody's.
-			ui.Image(c.Key("bitmap"), img.bitmap).Size(size, size).Fit(ui.Cover)
-		case img != nil && img.loading:
-			// Its room breathes while it comes, as @lody/ui's skeleton.
-			skeleton(c, p, key, size).Width(size).Radius(0)
-		default:
-			ui.Box(c).Size(size, size).Center().Children(func() { ui.Icon(c, iconImage).Size(20, 20).TextColor(p.Secondary) })
-		}
-	})
+	return img
 }
 
 // fileChip shows an attached file of a message.

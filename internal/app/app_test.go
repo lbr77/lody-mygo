@@ -352,13 +352,17 @@ func TestQueuedActionsAndModes(t *testing.T) {
 	// Answered: no permission card, a queued follow-up instead.
 	a.view.Entries[3].Items[1].Permission = nil
 	a.view.ModeID = "bypassPermissions"
-	a.view.Entries = append(a.view.Entries, session.Entry{ID: "q1", Role: "user", Status: "queued", Queued: true, Timestamp: "2026-10-29T09:21:00Z",
-		Items: []session.Item{{ID: "t", Type: "text", Text: "Also update the README."}}})
+	a.view.Queue = []session.Entry{{ID: "q1", Role: "user", Status: "queued", Queued: true, Timestamp: "2026-10-29T09:21:00Z",
+		Items: []session.Item{{ID: "t", Type: "text", Text: "Also update the README."}}}}
 	tt := snap(t, a, "queued", true, nil)
-	for _, want := range []string{"Queued", "Steer", "Send now", "Permission mode: Bypass Permissions"} {
+	for _, want := range []string{"Up next", "1 queued", "Also update the README.", "Steer", "Permission mode: Bypass Permissions"} {
 		if !tt.HasText(want) {
 			t.Errorf("missing %q in %q", want, tt.Texts())
 		}
+	}
+	// It waits above the composer, not in the conversation.
+	if tt.HasText("Queued") || tt.HasText("Send now") {
+		t.Errorf("the queued message shows in the conversation: %q", tt.Texts())
 	}
 	if err := tt.Click("Permission mode: Bypass Permissions"); err != nil {
 		t.Fatal(err)

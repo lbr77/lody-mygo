@@ -102,6 +102,7 @@ type Entry struct {
 	Status     string
 	Finished   bool
 	Queued     bool
+	Editing    bool // a queued message being edited, which holds the queue while first
 	Timestamp  string
 	UserTurnID string
 	Model      string
@@ -148,9 +149,13 @@ func (e *Entry) Text() string {
 
 // View is a session projected for display.
 type View struct {
-	Status       string // syncing, live or offline
-	Reason       string
-	Entries      []Entry
+	Status  string // syncing, live or offline
+	Reason  string
+	Entries []Entry
+	// Queue is what waits behind the running turn, in order: user
+	// messages kept out of the conversation until they are sent, as
+	// Lody's message queue.
+	Queue        []Entry
 	Working      bool
 	AwaitingUser bool
 	ModelID      string         // of the last user turn
@@ -592,7 +597,7 @@ func project(doc *loro.LoroDoc, status, reason string) *View {
 			continue
 		}
 		cfg := obj(item["acpSessionConfig"])
-		entry := Entry{ID: turnID, Role: "user", Status: "queued", Queued: true, Timestamp: str(item["timestamp"])}
+		entry := Entry{ID: turnID, Role: "user", Status: "queued", Queued: true, Editing: item["isEditing"] == true, Timestamp: str(item["timestamp"]), UserID: str(item["userId"])}
 		if str(cfg["_lodySteerMode"]) == "interrupt" {
 			entry.Status, entry.Steer, entry.SteerMode = "pending_apply", true, "interrupt"
 		}
@@ -605,7 +610,7 @@ func project(doc *loro.LoroDoc, status, reason string) *View {
 				entry.Items = append(entry.Items, summarizeItem(m, fmt.Sprintf("queue:%d:%d", i, j)))
 			}
 		}
-		view.Entries = append(view.Entries, entry)
+		view.Queue = append(view.Queue, entry)
 	}
 
 	view.Working = isWorking(raw, len(queue))

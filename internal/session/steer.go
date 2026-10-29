@@ -205,13 +205,13 @@ func (r *Replica) SteerQueued(ctx context.Context, machineID, messageID string, 
 	return nil
 }
 
-// markSteers sets each user entry's steer state from the receipts and the
-// session's steer links. Callers hold r.mu.
+// markSteers sets each user entry's steer state, and each queued
+// message's, from the receipts and the session's steer links. Callers
+// hold r.mu.
 func (r *Replica) markSteers(v *View, links map[string]any) {
-	for i := range v.Entries {
-		e := &v.Entries[i]
+	mark := func(e *Entry) {
 		if e.Role != "user" {
-			continue
+			return
 		}
 		if link := obj(links[e.ID]); link != nil {
 			e.Steer = true
@@ -221,5 +221,11 @@ func (r *Replica) markSteers(v *View, links map[string]any) {
 			e.Steer = true
 			e.SteerState = state
 		}
+	}
+	for i := range v.Entries {
+		mark(&v.Entries[i])
+	}
+	for i := range v.Queue {
+		mark(&v.Queue[i])
 	}
 }

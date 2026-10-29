@@ -116,6 +116,11 @@ func userEntry(v *View, id string) *Entry {
 			return &v.Entries[i]
 		}
 	}
+	for i := range v.Queue {
+		if v.Queue[i].ID == id {
+			return &v.Queue[i]
+		}
+	}
 	return nil
 }
 
@@ -164,10 +169,10 @@ func TestSteerQueuedMessage(t *testing.T) {
 		t.Fatalf("Send = %q, %v", state, err)
 	}
 	v := r.View()
-	queued := v.Entries[len(v.Entries)-1]
-	if !queued.Queued {
-		t.Fatalf("last entry = %+v", queued)
+	if len(v.Queue) != 1 || !v.Queue[0].Queued {
+		t.Fatalf("queue = %+v", v.Queue)
 	}
+	queued := v.Queue[0]
 	if err := r.SteerQueued(context.Background(), "m1", queued.ID, false); err != nil {
 		t.Fatal(err)
 	}
@@ -191,8 +196,7 @@ func TestInterruptWithQueuedMessage(t *testing.T) {
 	if _, err := r.Send(context.Background(), turn); err != nil {
 		t.Fatal(err)
 	}
-	v := r.View()
-	queued := v.Entries[len(v.Entries)-1]
+	queued := r.View().Queue[0]
 	if err := r.SteerQueued(context.Background(), "m1", queued.ID, true); err != nil {
 		t.Fatal(err)
 	}

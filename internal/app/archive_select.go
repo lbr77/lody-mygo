@@ -41,7 +41,8 @@ func (a *App) pruneArchivePick() {
 	}
 }
 
-// selectedFill is the ground of a chosen row, as Lody's selectedFill.
+// selectedFill is @lody/ui's colors.selectedFill: the ground of a chosen
+// row, and of a control's own fill under the pointer.
 func selectedFill(p *palette) ui.Color {
 	if p.Dark {
 		return ui.Hex("#232323")

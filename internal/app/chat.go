@@ -412,13 +412,10 @@ func (a *App) column(c *ui.Context, key any, fn func()) ui.Element {
 
 func (a *App) entry(c *ui.Context, p *palette, entries []session.Entry, i int) ui.Element {
 	e := entries[i]
-	// Queued messages follow each other closely, the first able to
-	// interrupt the running turn.
-	firstQueued := e.Queued && (i == 0 || !entries[i-1].Queued)
 	row := func() ui.Element {
 		return a.column(c, e.ID, func() {
 			if e.Role == "user" {
-				a.userMessage(c, p, e, firstQueued)
+				a.userMessage(c, p, e)
 			} else {
 				a.assistantMessage(c, p, e)
 			}
@@ -436,9 +433,6 @@ func entryTop(entries []session.Entry, i int) float32 {
 	if i == 0 {
 		return 0
 	}
-	if entries[i].Queued && entries[i-1].Queued {
-		return 12
-	}
 	switch {
 	case entries[i].Role == "user":
 		return 56 // answer to the next message
@@ -449,13 +443,10 @@ func entryTop(entries []session.Entry, i int) float32 {
 }
 
 // deliveryLabel is what a user message's meta line says of its delivery,
-// empty for an ordinary delivered message.
+// empty for an ordinary delivered message. Queued messages wait in the
+// message queue, not here.
 func deliveryLabel(e session.Entry) string {
 	switch {
-	case e.Steer && e.SteerMode == "interrupt" && e.Queued:
-		return locales.DeliverySendingNext()
-	case e.Queued:
-		return locales.DeliveryQueued()
 	case e.Steer && e.SteerState == "unknown":
 		return locales.DeliverySteerUnconfirmed()
 	case e.Steer && (e.Status == "pending_apply" || e.SteerState == "confirming"):
@@ -468,7 +459,7 @@ func deliveryLabel(e session.Entry) string {
 
 // userMessage is the user's bubble on the right, its avatar beside its
 // first line, the delivery mark and time above it, and its attachments.
-func (a *App) userMessage(c *ui.Context, p *palette, e session.Entry, firstQueued bool) {
+func (a *App) userMessage(c *ui.Context, p *palette, e session.Entry) {
 	var images, files []session.Item
 	for _, it := range e.Items {
 		switch it.Type {
@@ -531,9 +522,6 @@ func (a *App) userMessage(c *ui.Context, p *palette, e session.Entry, firstQueue
 				key := e.ID + "/more"
 				open := a.expanded[key]
 				bubble := ui.Column(c).Padding(12, 16).Radius(14).Background(p.UserBubble).MinWidth(0).Gap(6)
-				if e.Queued {
-					bubble.Opacity(0.7)
-				}
 				a.findRing(p, e.ID+"/user", bubble)
 				bubble.Children(func() {
 					if sending {
@@ -556,9 +544,6 @@ func (a *App) userMessage(c *ui.Context, p *palette, e session.Entry, firstQueue
 							Label(label).OnClick(func() { a.expanded[key] = !a.expanded[key] })
 					}
 				})
-			}
-			if e.Queued && a.view != nil && a.view.Working {
-				withTipDelay(300*time.Millisecond, func() { a.queuedActions(c, p, e, firstQueued) })
 			}
 			if canEdit && !editing {
 				entry := e
@@ -609,23 +594,6 @@ func sendingSpinner(c *ui.Context, p *palette) {
 	box := ui.Box(c.Key("sending")).Absolute().Left(-22).Bottom(13).Size(16, 16)
 	late := box.Keyframes("late", []ui.Keyframe{{Value: 0}, {At: 500 * time.Millisecond, Value: 0}, {At: 501 * time.Millisecond, Value: 1}})
 	box.Opacity(late).Children(func() { loader(c, p) })
-}
-
-// queuedActions give a queued message to the running turn: Steer when its
-// agent takes steering, Send now by interrupting it.
-func (a *App) queuedActions(c *ui.Context, p *palette, e session.Entry, first bool) {
-	sess := a.catalog.Session(a.selected)
-	if sess == nil || e.SteerMode == "interrupt" {
-		return
-	}
-	ui.Row(c).Gap(4).Children(func() {
-		if a.steerable(sess) {
-			tip(c, p, ghostButton(c, p, locales.Steer()), locales.QueuedSteerTooltip()).OnClick(func() { a.steerQueued(e.ID, false) })
-		}
-		if first {
-			tip(c, p, ghostButton(c, p, locales.QueuedSendNow()), locales.QueuedSendNowTooltip()).OnClick(func() { a.steerQueued(e.ID, true) })
-		}
-	})
 }
 
 // userAvatar is the 32px stand-in Lody shows without a picture.

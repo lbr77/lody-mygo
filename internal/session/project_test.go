@@ -69,8 +69,14 @@ func TestAppendAndProject(t *testing.T) {
 		t.Fatalf("update %d bytes, %v", len(update), err)
 	}
 	v = project(r.doc, "live", "")
-	if last := v.Entries[len(v.Entries)-1]; !last.Queued || last.Text() != "next" {
-		t.Fatalf("queued = %+v", last)
+	// It waits in the queue, out of the conversation.
+	if len(v.Queue) != 1 || !v.Queue[0].Queued || v.Queue[0].Text() != "next" || v.Queue[0].UserID != "user-1" {
+		t.Fatalf("queue = %+v", v.Queue)
+	}
+	for _, e := range v.Entries {
+		if e.ID == "u2" {
+			t.Fatalf("the queued message is in the conversation: %+v", e)
+		}
 	}
 }
 

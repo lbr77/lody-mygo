@@ -17,7 +17,8 @@ import (
 // Schedule send: the composer's "+" can hold the next message for a time.
 // Send then reserves it as a scheduled message, a once schedule into the
 // chat that the machine sends when its time comes, as Lody's does; the
-// chat's queue shows it until then, its time editable, and cancellable.
+// chat's message queue lists it until then (scheduledRow), its time
+// editable, and cancellable.
 
 // schedSendDraft is the time chosen for a chat's next message.
 type schedSendDraft struct {
@@ -251,69 +252,4 @@ func (a *App) sendScheduled(d *schedSendDraft) {
 			a.toast("success", locales.SmSaved())
 		})
 	}()
-}
-
-// scheduledQueue lists a chat's scheduled messages above its composer, as
-// the message queue does: the send time leading the text, editable, and
-// a cancel.
-func (a *App) scheduledQueue(c *ui.Context, p *palette, sess *catalog.Session) {
-	if sess == nil {
-		return
-	}
-	now := time.Now()
-	loc := loadZone(a.machineZone(sess.MachineID))
-	var rows []schedule.Row
-	for _, row := range a.sched.reg.Rows {
-		if !row.ScheduledMessage || row.Destination.SessionID != sess.ID || !row.Enabled {
-			continue
-		}
-		if rt := a.sched.reg.Runtime[row.ScheduleID]; rt != nil && (rt.MessageState == "sent" || rt.MessageState == "cancelled") {
-			continue
-		}
-		rows = append(rows, row)
-	}
-	if len(rows) == 0 {
-		return
-	}
-	ui.Column(c.Key("scheduled-queue")).FillWidth().Gap(2).Padding(0, 4, 6, 4).Children(func() {
-		for _, row := range rows {
-			row := row
-			at, _ := time.Parse(time.RFC3339Nano, row.Trigger.At)
-			failed := false
-			if rt := a.sched.reg.Runtime[row.ScheduleID]; rt != nil && rt.MessageState == "failed" {
-				failed = true
-			}
-			when := upcomingText(at, now, loc)
-			when = strings.ToUpper(when[:1]) + when[1:]
-			r := ui.Row(c.Key(row.ScheduleID)).FillWidth().MinHeight(30).Padding(4, 6, 4, 10).Gap(6).Radius(8).AlignItems(ui.Center).
-				Background(p.Text.Alpha(0.035))
-			tip(c, p, r, row.Title)
-			r.Children(func() {
-				label := when
-				if failed {
-					label += " · " + locales.SmNotSent()
-				}
-				tb := ui.ButtonBase(c).Height(22).Padding(0, 6).Radius(6).Gap(4).Cursor(ui.CursorPointer).Label(label + " · " + locales.SmEditTime()).
-					OnClick(func() { a.openScheduleSend(sess.ID, at, row.ScheduleID) }).Shrink(0)
-				ink := p.Primary
-				if failed {
-					ink = p.Warning
-				}
-				if tb.Hovered() {
-					tb.Background(ink.Alpha(0.1))
-				}
-				tb.Children(func() {
-					ui.Icon(c, iconClock).Size(12, 12).TextColor(ink)
-					ui.Text(c, when).FontSize(sizeFoot).FontWeight(500).TextColor(ink)
-				})
-				ui.Text(c, row.Title).FontSize(sizeFoot).TextColor(p.Text).Grow(1).SingleLine().MinWidth(0)
-				iconButton(c.Key("cancel"), p, iconX, locales.SmCancel(), p.Hover).Size(22, 22).OnClick(func() {
-					user := a.userID()
-					a.schedAct(func(ctx context.Context, s *schedule.Store) error {
-						return s.SetEnabled(ctx, row.ScheduleID, false, user, time.Now())
-					}, func() { a.toast("success", locales.SmCancelled()) })
-				})
-			})
-		}
-	})
 }
