@@ -50,8 +50,16 @@ type Session struct {
 	LastRunningSeen       float64 `json:"lastRunningSeen,omitempty"`
 	AwaitingUserSince     float64 `json:"awaitingUserSince,omitempty"`
 	BranchName            string  `json:"branchName,omitempty"`
-	DiffAdd               float64 `json:"diffAdd,omitempty"`
-	DiffDel               float64 `json:"diffDel,omitempty"`
+	// Project is the session's project as its meta has it, which a child
+	// conversation takes over; RepoFullName and BaseBranch too.
+	Project      map[string]any `json:"project,omitempty"`
+	RepoFullName string         `json:"repoFullName,omitempty"`
+	BaseBranch   string         `json:"baseBranch,omitempty"`
+	// ChildPlacement is where a child conversation shows: "side-panel",
+	// or among its parent's tabs.
+	ChildPlacement string  `json:"childPlacement,omitempty"`
+	DiffAdd        float64 `json:"diffAdd,omitempty"`
+	DiffDel        float64 `json:"diffDel,omitempty"`
 	// PullRequests are the pull requests the session opened, oldest
 	// first; PRState is each one's CI and merge state, by URL.
 	PullRequests []PullRequest      `json:"pullRequests,omitempty"`
@@ -599,6 +607,10 @@ func projectMeta(rows []flock.Row) Catalog {
 			LastRunningSeen:       stamp(value["lastRunningSeen"]),
 			AwaitingUserSince:     stamp(value["awaitingUserSince"]),
 			BranchName:            text(value["branchName"]),
+			Project:               object(value["project"]),
+			RepoFullName:          text(value["repoFullName"]),
+			BaseBranch:            text(value["baseBranch"]),
+			ChildPlacement:        text(value["childSessionPlacement"]),
 		}
 		if s.ID == "" {
 			s.ID = strings.TrimPrefix(id, "session-")

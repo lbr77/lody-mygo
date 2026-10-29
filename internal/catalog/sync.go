@@ -552,6 +552,13 @@ type NewSession struct {
 	// GitHubProject runs the session in a checkout of a workspace
 	// repository the machine makes, rather than in a local project.
 	GitHubProject string
+	// ParentSessionID makes the session a conversation among its parent's
+	// tabs, in the parent's workspace: Project, RepoFullName and
+	// BaseBranch are the parent's.
+	ParentSessionID string
+	Project         map[string]any
+	RepoFullName    string
+	BaseBranch      string
 }
 
 // CreateSession creates the session's stream and its catalog entry.
@@ -576,7 +583,18 @@ func (s *Sync) CreateSession(ctx context.Context, n NewSession) error {
 		"agentType":     n.Agent.AgentType,
 		"agentConfigId": n.Agent.ID,
 	}
-	if n.LocalProject != "" {
+	if n.ParentSessionID != "" {
+		meta["parentSessionId"] = n.ParentSessionID
+		if n.Project != nil {
+			meta["project"] = n.Project
+		}
+		if n.RepoFullName != "" {
+			meta["repoFullName"] = n.RepoFullName
+		}
+		if n.BaseBranch != "" {
+			meta["baseBranch"] = n.BaseBranch
+		}
+	} else if n.LocalProject != "" {
 		project := map[string]any{"kind": "local", "localProjectId": n.LocalProject}
 		if n.Worktree {
 			project["useWorktree"] = true

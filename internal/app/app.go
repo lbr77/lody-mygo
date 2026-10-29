@@ -23,8 +23,10 @@ import (
 
 	"github.com/lbr77/lody-mygo/internal/catalog"
 	"github.com/lbr77/lody-mygo/internal/cloud"
+	"github.com/lbr77/lody-mygo/internal/mention"
 	"github.com/lbr77/lody-mygo/internal/presence"
 	"github.com/lbr77/lody-mygo/internal/session"
+	"github.com/lbr77/lody-mygo/internal/shortcuts"
 )
 
 type phase int
@@ -783,7 +785,7 @@ func (a *App) startChat() {
 
 	a.recordActivity()
 	id := uuid.NewString()
-	sync, userID, workspace, conn := a.sync, a.account.User.ID, a.conn.ID, a.conn
+	userID := a.account.User.ID
 	target := a.mentionTarget()
 	skills, sessions := a.mentionItems(target)
 	store := a.shortcutStore()
@@ -808,15 +810,37 @@ func (a *App) startChat() {
 			}
 		}
 	}
+	a.createAndSend(catalog.NewSession{
+		ID: id, MachineID: nc.machine, UserID: userID, Title: title,
+		Agent: *agent, LocalProject: localProject, CreatedAt: time.Now(), GitHubProject: githubProject,
+		Worktree: worktree, Branch: branch, GitHubRepo: repo,
+	}, chatSend{key: "", text: text, files: files, model: model, mode: mode, runValues: runValues, mcp: mcp, target: target, skills: skills, sessions: sessions, store: store}, nil)
+}
+
+// chatSend is a first message: what it says and how it runs.
+type chatSend struct {
+	key         string // the composer's, for its draft
+	text        string
+	files       []pendingFile
+	model, mode string
+	runValues   map[string]any
+	mcp         []string
+	target      mentionTarget
+	skills      []mention.Item
+	sessions    []mention.Item
+	store       *shortcuts.Store
+}
+
+// createAndSend creates a session and sends its first message; created
+// runs once it exists, before it opens.
+func (a *App) createAndSend(n catalog.NewSession, m chatSend, created func()) {
+	sync, userID, workspace, conn := a.sync, a.account.User.ID, a.conn.ID, a.conn
+	id, agent, text, files := n.ID, n.Agent, m.text, m.files
 	a.sending, a.sendError, a.uploading = true, "", ""
 	go func() {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
 		defer cancel()
-		err := sync.CreateSession(ctx, catalog.NewSession{
-			ID: id, MachineID: nc.machine, UserID: userID, Title: title,
-			Agent: *agent, LocalProject: localProject, CreatedAt: time.Now(), GitHubProject: githubProject,
-			Worktree: worktree, Branch: branch, GitHubRepo: repo,
-		})
+		err := sync.CreateSession(ctx, n)
 		if err != nil {
 			a.update(func() { a.sending, a.sendError = false, locales.FailCreate(err.Error()) })
 			return
@@ -824,6 +848,9 @@ func (a *App) startChat() {
 		opened := make(chan *session.Replica, 1)
 		a.update(func() {
 			a.draft, a.attachments = "", nil
+			if created != nil {
+				created()
+			}
 			a.open(id)
 			opened <- a.replica
 		})
@@ -836,9 +863,9 @@ func (a *App) startChat() {
 		if blocks, err = a.upload(ctx, workspace, id, files); err == nil {
 			if err = r.WaitReady(ctx); err == nil {
 				state, err = r.Send(ctx, session.Turn{
-					MCPServerIDs: mcp,
-					Text:         expandMentions(ctx, conn, userID, target, text, skills, sessions, store), UserID: userID, MachineID: nc.machine, ModelID: model, ModeID: mode, Attachments: blocks,
-					AgentType: agent.AgentType, CLIType: agent.CLIType, MarkDispatch: sync.MarkDispatch, ConfigOptionValues: runValues,
+					MCPServerIDs: m.mcp,
+					Text:         expandMentions(ctx, conn, userID, m.target, text, m.skills, m.sessions, m.store), UserID: userID, MachineID: n.MachineID, ModelID: m.model, ModeID: m.mode, Attachments: blocks,
+					AgentType: agent.AgentType, CLIType: agent.CLIType, MarkDispatch: sync.MarkDispatch, ConfigOptionValues: m.runValues,
 				})
 			}
 		}
