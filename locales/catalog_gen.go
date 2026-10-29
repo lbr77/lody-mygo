@@ -11262,3 +11262,65 @@ func McpNextStartHint() string { return In(i18n.Locale()).McpNextStartHint() }
 func (msgs Messages) McpNextStartHint() string {
 	return Catalog.Format(msgs.locale, "mcpNextStartHint", nil)
 }
+
+// PrOpen says "Open"
+// in the language the app shows.
+func PrOpen() string { return In(i18n.Locale()).PrOpen() }
+
+// PrOpen says "Open"
+// in the language of msgs.
+func (msgs Messages) PrOpen() string {
+	return Catalog.Format(msgs.locale, "prOpen", nil)
+}
+
+// PrMerged says "Merged"
+// in the language the app shows.
+func PrMerged() string { return In(i18n.Locale()).PrMerged() }
+
+// PrMerged says "Merged"
+// in the language of msgs.
+func (msgs Messages) PrMerged() string {
+	return Catalog.Format(msgs.locale, "prMerged", nil)
+}
+
+// PrClosed says "Closed"
+// in the language the app shows.
+func PrClosed() string { return In(i18n.Locale()).PrClosed() }
+
+// PrClosed says "Closed"
+// in the language of msgs.
+func (msgs Messages) PrClosed() string {
+	return Catalog.Format(msgs.locale, "prClosed", nil)
+}
+
+// PrDraft says "Draft"
+// in the language the app shows.
+func PrDraft() string { return In(i18n.Locale()).PrDraft() }
+
+// PrDraft says "Draft"
+// in the language of msgs.
+func (msgs Messages) PrDraft() string {
+	return Catalog.Format(msgs.locale, "prDraft", nil)
+}
+
+// PrNumbered says "{status} PR #{number}"
+// in the language the app shows.
+func PrNumbered(status string, number int) string {
+	return In(i18n.Locale()).PrNumbered(status, number)
+}
+
+// PrNumbered says "{status} PR #{number}"
+// in the language of msgs.
+func (msgs Messages) PrNumbered(status string, number int) string {
+	return Catalog.Format(msgs.locale, "prNumbered", map[string]any{"status": status, "number": number})
+}
+
+// OpenPullRequest says "Open Pull Request"
+// in the language the app shows.
+func OpenPullRequest() string { return In(i18n.Locale()).OpenPullRequest() }
+
+// OpenPullRequest says "Open Pull Request"
+// in the language of msgs.
+func (msgs Messages) OpenPullRequest() string {
+	return Catalog.Format(msgs.locale, "openPullRequest", nil)
+}

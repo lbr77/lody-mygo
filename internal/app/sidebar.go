@@ -477,6 +477,7 @@ func (a *App) statusMark(c *ui.Context, p *palette, s *catalog.Session, age bool
 	case a.sending && a.sendingID == s.ID && !s.Working():
 		sendRing(c, p)
 	case a.workingMark(c, p, s.ID, s.Working(), s.Unread() && a.selected != s.ID):
+	case prMark(c, p, s, true):
 	case age:
 		if t := relativeTime(time.UnixMilli(int64(activity(*s)))); t != "" {
 			ui.Text(c, t).FontSize(sizeFoot).TextColor(p.SideMuted).Shrink(0)

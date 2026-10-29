@@ -1747,3 +1747,18 @@ func TestMCPSelection(t *testing.T) {
 		t.Fatalf("a new project starts from its defaults: %v", got)
 	}
 }
+
+func TestPullRequestMarks(t *testing.T) {
+	a := fixture()
+	s := &a.catalog.Sessions[1]
+	s.LastMessageAt, s.LastReadAt = 1, 1
+	s.PullRequests = []catalog.PullRequest{{URL: "https://github.com/lbr77/lody-mygo/pull/7", Status: "open", ReportedAt: "2026-10-29T09:00:00Z"}}
+	s.PRState = map[string]catalog.PRState{"https://github.com/lbr77/lody-mygo/pull/7": {CI: "f", Merge: "c"}}
+	tt := snap(t, a, "pr-mark", false, nil)
+	if !tt.HasText("Open PR #7") {
+		t.Fatalf("no PR mark: %q", tt.Texts())
+	}
+	if s.LatestPR().PRNumber() != 7 || s.PRState[s.LatestPR().URL].Ready() {
+		t.Fatal("PR facts")
+	}
+}

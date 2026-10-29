@@ -42,6 +42,9 @@ func (a *App) sessionMenu(m *ui.Menu, s catalog.Session) {
 			return sync.MarkRead(ctx, s)
 		})
 	}
+	if pr := s.LatestPR(); pr != nil && m.Item(locales.OpenPullRequest()).Chosen() {
+		openExternal(pr.URL)
+	}
 	if !s.Archived && m.Item(locales.ShareTitle()).Chosen() {
 		a.openShare(s.ID)
 	}

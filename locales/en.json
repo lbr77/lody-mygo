@@ -2274,5 +2274,21 @@
       }
     }
   },
-  "mcpNextStartHint": "Selection changes take effect the next time the agent starts."
+  "mcpNextStartHint": "Selection changes take effect the next time the agent starts.",
+  "prOpen": "Open",
+  "prMerged": "Merged",
+  "prClosed": "Closed",
+  "prDraft": "Draft",
+  "prNumbered": "{status} PR #{number}",
+  "@prNumbered": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      },
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "openPullRequest": "Open Pull Request"
 }

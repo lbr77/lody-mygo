@@ -1116,5 +1116,11 @@
   "mcpServersTitle": "MCP 服务器",
   "mcpLoadNone": "未加载 MCP",
   "mcpLoadCount": "{count, plural, other {加载 # 个 MCP}}",
-  "mcpNextStartHint": "选择变更会在 Agent 下次启动时生效。"
+  "mcpNextStartHint": "选择变更会在 Agent 下次启动时生效。",
+  "prOpen": "开放",
+  "prMerged": "已合并",
+  "prClosed": "已关闭",
+  "prDraft": "草稿",
+  "prNumbered": "{status} PR #{number}",
+  "openPullRequest": "打开 Pull Request"
 }

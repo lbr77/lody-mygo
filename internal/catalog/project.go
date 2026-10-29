@@ -52,6 +52,70 @@ type Session struct {
 	BranchName            string  `json:"branchName,omitempty"`
 	DiffAdd               float64 `json:"diffAdd,omitempty"`
 	DiffDel               float64 `json:"diffDel,omitempty"`
+	// PullRequests are the pull requests the session opened, oldest
+	// first; PRState is each one's CI and merge state, by URL.
+	PullRequests []PullRequest      `json:"pullRequests,omitempty"`
+	PRState      map[string]PRState `json:"prState,omitempty"`
+}
+
+// PullRequest is a pull request a session opened.
+type PullRequest struct {
+	URL        string  `json:"url"`
+	Status     string  `json:"status"` // open, draft, merged or closed
+	Number     float64 `json:"number,omitempty"`
+	ReportedAt string  `json:"reportedAt,omitempty"`
+}
+
+// PRState is a pull request's CI and merge state, as the machine's poller
+// writes it: CI s(uccess), f(ailure), p(ending), e(rror), x (expected);
+// merge c(lean), b(locked), d(irty), h (behind), u(nstable).
+type PRState struct {
+	CI    string `json:"s,omitempty"`
+	Merge string `json:"m,omitempty"`
+}
+
+// LatestPR is the session's pull request to show, as Lody picks it: the
+// latest reported, when any was, or else the last.
+func (s *Session) LatestPR() *PullRequest {
+	if len(s.PullRequests) == 0 {
+		return nil
+	}
+	best, reported := -1, false
+	for i, pr := range s.PullRequests {
+		if pr.ReportedAt != "" {
+			reported = true
+		}
+		if best < 0 || pr.ReportedAt > s.PullRequests[best].ReportedAt {
+			best = i
+		}
+	}
+	if !reported {
+		best = len(s.PullRequests) - 1
+	}
+	return &s.PullRequests[best]
+}
+
+// PRNumber is a pull request's number, from its URL when not recorded.
+func (pr PullRequest) PRNumber() int {
+	if pr.Number > 0 {
+		return int(pr.Number)
+	}
+	if i := strings.LastIndex(pr.URL, "/pull/"); i >= 0 {
+		n := 0
+		for _, r := range pr.URL[i+6:] {
+			if r < '0' || r > '9' {
+				break
+			}
+			n = n*10 + int(r-'0')
+		}
+		return n
+	}
+	return 0
+}
+
+// Ready is whether the pull request merges cleanly with green, or no, CI.
+func (st PRState) Ready() bool {
+	return st.Merge == "c" && (st.CI == "" || st.CI == "s")
 }
 
 // Working reports whether the session's agent is busy, by the statuses the
@@ -544,6 +608,25 @@ func projectMeta(rows []flock.Row) Catalog {
 		}
 		change := object(object(value["diffStats"])["allChange"])
 		s.DiffAdd, s.DiffDel = stamp(change["add"]), stamp(change["del"])
+		for _, raw := range anyList(value["pullRequests"]) {
+			pr := object(raw)
+			url, status := strings.TrimSpace(text(pr["url"])), text(pr["status"])
+			switch status {
+			case "open", "draft", "merged", "closed":
+			default:
+				continue
+			}
+			if url != "" {
+				s.PullRequests = append(s.PullRequests, PullRequest{URL: url, Status: status, Number: stamp(pr["number"]), ReportedAt: text(pr["reportedAt"])})
+			}
+		}
+		for url, raw := range object(value["pullRequestState"]) {
+			st := object(raw)
+			if s.PRState == nil {
+				s.PRState = map[string]PRState{}
+			}
+			s.PRState[url] = PRState{CI: text(st["s"]), Merge: text(st["m"])}
+		}
 		c.Sessions = append(c.Sessions, s)
 		if localID != "" || repo != "" {
 			name := repo
