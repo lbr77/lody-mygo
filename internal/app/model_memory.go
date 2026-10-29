@@ -115,7 +115,7 @@ func (a *App) applyModelChoice(choice modelChoice) {
 	if choice.Mode != "" && slices.ContainsFunc(a.catalog.ModesFor(agent.ID, agent.AgentType), func(m catalog.Mode) bool { return m.ID == choice.Mode }) {
 		a.modes[""] = choice.Mode
 	}
-	effort, hasEffort := effortOption(cap, a.models[""])
+	effort, hasEffort := effortOption(a.runCapability(agent.ID, a.models[""]))
 	for id, v := range choice.Values {
 		valid := false
 		for _, o := range cap.Options {

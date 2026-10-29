@@ -1,6 +1,10 @@
 package app
 
-import "github.com/egoist/mygo/ui"
+import (
+	"time"
+
+	"github.com/egoist/mygo/ui"
+)
 
 // lodyMenu is a menu drawn as @lody/ui's: a raised surface inset 4px, its
 // rows 16px icons in the hint ink before 13px labels, highlighted at once
@@ -49,7 +53,25 @@ type menuItem struct {
 	// bare leaves out the icon's box, as @lody/ui's row with neither an
 	// icon nor an inset.
 	bare bool
+	// describe says what the row's value does, in Lody's tooltip beside the
+	// row once the pointer has rested on it 300ms, as its permission list
+	// explains each mode.
+	describe string
+	// warn draws the icon in the warning ink, as Lody's amber shield on a
+	// mode that skips approval.
+	warn bool
+	// glyph is the icon's size in its 16px box, where smaller: Lody's
+	// permission list draws 14px marks.
+	glyph float32
 }
+
+// describeDelay is how long the pointer rests on a row before its
+// description shows, as Lody's permission list waits.
+const describeDelay = 300 * time.Millisecond
+
+// describeWidth is the widest a row's description runs before it wraps,
+// as Lody's (max-w-72).
+const describeWidth = 288
 
 // row lays out a row: its icon box, label and end, highlighted while the
 // pointer is on it.
@@ -72,18 +94,29 @@ func (m *lodyMenu) row(key string, icon *ui.SVG, label string, o menuItem, extra
 	if o.tip != "" {
 		lodyTooltip(c, p, r, o.tip)
 	}
+	if o.describe != "" {
+		r.Description(o.describe)
+		withTipDelay(describeDelay, func() { lodyTooltipBeside(c, p, r, o.describe, describeWidth) })
+	}
 	ink, hint := p.Text, p.Tertiary
 	if o.indicator {
 		hint = p.Text
 	}
+	if o.warn {
+		hint = p.Warning
+	}
 	if o.destructive {
 		ink, hint = p.Danger, p.Danger
+	}
+	glyph := float32(16)
+	if o.glyph > 0 {
+		glyph = o.glyph
 	}
 	r.Children(func() {
 		if !o.bare {
 			ui.Box(c).Size(16, 16).Shrink(0).Center().Children(func() {
 				if icon != nil {
-					ui.Icon(c, icon).Size(16, 16).TextColor(hint)
+					ui.Icon(c, icon).Size(glyph, glyph).TextColor(hint)
 				}
 			})
 		}

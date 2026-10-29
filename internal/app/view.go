@@ -240,6 +240,28 @@ func lodyTooltip(c *ui.Context, p *palette, anchor ui.Element, label string) {
 	})
 }
 
+// lodyTooltipBeside is Lody's tooltip to anchor's right, its top on
+// anchor's, as a menu row's description shows: the same chip, its lines
+// kept and wrapped at maxW, coming 4px toward its anchor as it fades in
+// over 120ms, from the side it landed on, the left where the window has
+// no room on the right.
+func lodyTooltipBeside(c *ui.Context, p *palette, anchor ui.Element, label string, maxW float32) {
+	if label == "" || !tips.show(c, anchor, label) {
+		return
+	}
+	ui.Overlay(c, func() {
+		tip := ui.Column(c.Key("lody-tip-beside")).Absolute().PassThrough().Role(ui.RoleTooltip).AttachTo(anchor, ui.AnchorTopEnd, ui.AnchorTopStart).Margin(0, 0, 0, 4)
+		away := float32(4)
+		if tb, ab := tip.Bounds(), anchor.Bounds(); tb.W > 0 && tb.X+tb.W <= ab.X+1 {
+			away = -4 // it landed left of its anchor
+		}
+		tip.Padding(4, 8).Radius(8).MaxWidth(maxW).Background(p.Popover).Border(0.5, p.CardRim).
+			Shadow(0, 6, 16, -4, ui.RGBA(0, 0, 0, 0.18)).
+			Transition(ui.ElementTransition{Duration: durFast, Ease: easeStandard, Enter: &ui.Motion{X: away}, Exit: &ui.Motion{X: away}})
+		tip.Children(func() { ui.Text(c, label).FontSize(sizeFoot).LineHeight(16.0 / 12).TextColor(p.Text) })
+	})
+}
+
 // tip gives e Lody's tooltip, as Element.Tooltip gives the theme's: for
 // the elements whose tips Lody draws.
 func tip(c *ui.Context, p *palette, e ui.Element, label string) ui.Element {

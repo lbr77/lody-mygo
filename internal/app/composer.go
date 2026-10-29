@@ -449,11 +449,12 @@ func sendDisc(c *ui.Context, p *palette, icon *ui.SVG, label string, enabled boo
 }
 
 // runConfig is the composer's run-config button: the agent's mark and the
-// model, which it chooses among the models the agent reports.
+// model, which it chooses among the models the agent reports, each named
+// as Lody names it.
 func (a *App) runConfig(c *ui.Context, p *palette, key, agentConfig, current string, last *catalog.Model, pick func(string)) {
-	models := a.catalog.Capabilities[agentConfig].Models
+	cap := a.capability(agentConfig)
 	label := current
-	for _, m := range models {
+	for _, m := range cap.Models {
 		if m.ModelID == current && m.Name != "" {
 			label = m.Name
 		}
@@ -461,12 +462,13 @@ func (a *App) runConfig(c *ui.Context, p *palette, key, agentConfig, current str
 	if label == current && last != nil && last.ModelID == current && last.Name != "" {
 		label = last.Name
 	}
+	label = modelLabel(cap, label)
 	if label == "" {
 		label = locales.DefaultModel()
 	}
 	var options []option
-	for _, m := range models {
-		options = append(options, option{m.ModelID, firstNonEmpty(m.Name, m.ModelID)})
+	for _, m := range cap.Models {
+		options = append(options, option{m.ModelID, modelLabel(cap, firstNonEmpty(m.Name, m.ModelID))})
 	}
 	a.picker(c, p, key, iconBot, label, options, pick)
 }
@@ -526,8 +528,27 @@ func modeFace(id string) (icon *ui.SVG, warning, auto bool) {
 	return iconShield, false, false
 }
 
-// modeButton picks the agent's permission mode.
-func (a *App) modeButton(c *ui.Context, p *palette, key string, modes []catalog.Mode, current string, pick func(string)) {
+// modeMark is how Lody's permission list marks a mode: the amber shield
+// where it skips approval, else the mode's own icon.
+func modeMark(id string) (icon *ui.SVG, warning bool) {
+	switch id {
+	case "agent-full-access", "danger-full-access", "bypassPermissions", "dontAsk", "yolo", "always-approve":
+		return iconShieldAlert, true
+	case "plan":
+		return iconCompass, false
+	case "acceptEdits":
+		return iconPenLine, false
+	case "read-only":
+		return iconEye, false
+	}
+	return iconShieldCheck, false
+}
+
+// modeButton picks the agent's permission mode, as Lody's permission
+// button: named for what it sets, control, and the mode it is on; its menu
+// lists each mode by its mark, the chosen one ticked, and says beside a
+// mode what it allows once the pointer rests on it.
+func (a *App) modeButton(c *ui.Context, p *palette, key, control string, modes []catalog.Mode, current string, pick func(string)) {
 	if len(modes) == 0 {
 		return
 	}
@@ -537,12 +558,16 @@ func (a *App) modeButton(c *ui.Context, p *palette, key string, modes []catalog.
 			name = m.Name
 		}
 	}
+	// Lody names the button "Permission: Ask Every Time", or "Mode: Auto".
+	face := control + ": " + name
 	icon, warning, auto := modeFace(current)
-	open := a.popover(key)
+	st := &a.rowMenu(key).menuState
 	b := ui.ButtonBase(c.Key(key)).Height(28).MinWidth(28).Padding(0, 6).Radius(8).Cursor(ui.CursorPointer).
-		Label(locales.PermissionMode(name)).OnClick(func() { *open = !*open }).Transition(colorFade)
-	tip(c, p, b, name)
-	if b.Hovered() || *open {
+		Label(face).Transition(colorFade)
+	if !st.open {
+		tip(c, p, b, face)
+	}
+	if b.Hovered() || st.open {
 		b.Background(p.Text.Alpha(0.06))
 	}
 	ink := p.Secondary
@@ -556,11 +581,21 @@ func (a *App) modeButton(c *ui.Context, p *palette, key string, modes []catalog.
 		}
 		ui.Icon(c, icon).Size(16, 16).TextColor(ink)
 	})
-	var options []option
-	for _, m := range modes {
-		options = append(options, option{m.ID, m.Name})
-	}
-	a.optionList(c, p, b, open, options, current, pick)
+	// Lody's list hugs its longest mode, from 176 to 256px wide.
+	lodyMenuAbove(c, p, b, st, false, 6, 176, 256, 28, func(m *lodyMenu) {
+		for _, md := range modes {
+			mark, warn := modeMark(md.ID)
+			chosen := md.ID == current
+			check := func() {
+				if chosen {
+					ui.Icon(c, iconCheck).Size(14, 14).TextColor(p.Text)
+				}
+			}
+			if m.item(md.ID, mark, md.Name, menuItem{end: check, describe: md.Description, warn: warn, glyph: 14}) {
+				pick(md.ID)
+			}
+		}
+	})
 }
 
 // popover returns the open state of a popover, made on first use.

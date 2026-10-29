@@ -16,30 +16,13 @@ import (
 // or switch. A choice rides on the next message's configOptionValues, over
 // what the last turn used, at creation and in a running conversation alike.
 
-// effortOption is the agent's reasoning effort, its choices those model
-// allows.
-func effortOption(cap catalog.Capability, model string) (catalog.ConfigOption, bool) {
-	if model == "" {
-		for _, o := range cap.Options {
-			if o.ID == "model" || o.Category == "model" {
-				model = str(o.Current)
-			}
-		}
-	}
+// effortOption is the agent's reasoning effort, of its settings as
+// runCapability fits them to the model.
+func effortOption(cap catalog.Capability) (catalog.ConfigOption, bool) {
 	for _, o := range cap.Options {
-		if o.Type != "select" || o.ID != "reasoning_effort" && o.Category != "thought_level" {
-			continue
+		if isEffort(o) {
+			return o, len(o.Choices) > 0
 		}
-		if efforts, ok := cap.Efforts[model]; ok {
-			var kept []catalog.Choice
-			for _, ch := range o.Choices {
-				if slices.Contains(efforts, ch.Value) {
-					kept = append(kept, ch)
-				}
-			}
-			o.Choices = kept
-		}
-		return o, len(o.Choices) > 0
 	}
 	return catalog.ConfigOption{}, false
 }
@@ -160,13 +143,14 @@ func menuOptions(cap catalog.Capability) (selects, switches []catalog.ConfigOpti
 }
 
 // runValue is a setting as the composer shows it: chosen, else as the last
-// turn left it, else the agent's current value.
+// turn left it, else the agent's current value; one the setting can't take,
+// as an effort the model lacks, shows as its current value, as in Lody.
 func (a *App) runValue(key string, o catalog.ConfigOption, last map[string]any) any {
 	if v, ok := a.runValues[key][o.ID]; ok {
-		return v
+		return optionValue(o, v)
 	}
 	if v, ok := last[o.ID]; ok {
-		return v
+		return optionValue(o, v)
 	}
 	return o.Current
 }
@@ -178,22 +162,27 @@ func (a *App) setRunValue(key, id string, v any) {
 	a.runValues[key][id] = v
 }
 
-// chosenRunValues are the settings chosen for key's next message, an
-// effort the model doesn't allow left out.
+// chosenRunValues are the settings chosen for key's next message, as
+// Lody sends them for model: an effort the model doesn't allow left out,
+// and a setting the model doesn't have, as Fast or the effort of a model
+// declared without them.
 func (a *App) chosenRunValues(key, agentConfig, model string) map[string]any {
 	chosen := a.runValues[key]
 	if len(chosen) == 0 {
 		return nil
 	}
-	cap := a.catalog.Capabilities[agentConfig]
+	cap := a.runCapability(agentConfig, model)
+	reported := a.catalog.Capabilities[agentConfig].Options
 	out := map[string]any{}
 	for id, v := range chosen {
-		out[id] = v
-	}
-	if o, ok := effortOption(cap, model); ok {
-		if v, set := out[o.ID]; set && !slices.ContainsFunc(o.Choices, func(ch catalog.Choice) bool { return ch.Value == v }) {
-			delete(out, o.ID)
+		at := slices.IndexFunc(cap.Options, func(o catalog.ConfigOption) bool { return o.ID == id })
+		switch {
+		case at < 0 && slices.ContainsFunc(reported, func(o catalog.ConfigOption) bool { return o.ID == id }):
+			continue // the model hides it
+		case at >= 0 && isEffort(cap.Options[at]) && !slices.ContainsFunc(cap.Options[at].Choices, func(ch catalog.Choice) bool { return ch.Value == v }):
+			continue
 		}
+		out[id] = v
 	}
 	return out
 }
@@ -215,8 +204,8 @@ func (a *App) currentModel(sess *catalog.Session) string {
 // runOptions builds the effort picker and the Fast switch for key's
 // composer, and offers the effort to the cycle command.
 func (a *App) runOptions(c *ui.Context, p *palette, key, agentConfig, model string, last map[string]any) {
-	cap := a.catalog.Capabilities[agentConfig]
-	if o, ok := effortOption(cap, model); ok {
+	cap := a.runCapability(agentConfig, model)
+	if o, ok := effortOption(cap); ok {
 		current := str(a.runValue(key, o, last))
 		label, values := "", []string{}
 		var options []option
@@ -331,20 +320,23 @@ func (a *App) runConfigMenu(c *ui.Context, p *palette, key string, cap catalog.C
 
 // permissionButton is the composer's permission button, its choices the
 // agent's permission setting where it has one, else its modes, else a
-// mode-category setting standing in; it returns them for the commands
-// that step through them. key is the composer's, for its settings.
+// mode-category setting standing in, each named and described as Lody
+// does; it returns them for the commands that step through them. key is
+// the composer's, for its settings.
 func (a *App) permissionButton(c *ui.Context, p *palette, button, key, agentConfig string, modes []catalog.Mode, mode string, pickMode func(string), last map[string]any) *cycleTarget {
-	o, ok := permissionOption(a.catalog.Capabilities[agentConfig], modes)
+	cap := a.runCapability(agentConfig, "")
+	o, ok := permissionOption(cap, modes)
 	if !ok {
-		a.modeButton(c, p, button, modes, mode, pickMode)
+		modes = runModes(cap, modes)
+		a.modeButton(c, p, button, permissionControl(cap, o, false), modes, mode, pickMode)
 		return modeCycle(modes, mode, pickMode)
 	}
 	choices := make([]catalog.Mode, 0, len(o.Choices))
 	for _, ch := range o.Choices {
-		choices = append(choices, catalog.Mode{ID: ch.Value, Name: firstNonEmpty(ch.Name, ch.Value)})
+		choices = append(choices, catalog.Mode{ID: ch.Value, Name: firstNonEmpty(ch.Name, ch.Value), Description: ch.Description})
 	}
 	current := str(a.runValue(key, o, last))
 	pick := func(v string) { a.setRunValue(key, o.ID, v) }
-	a.modeButton(c, p, button, choices, current, pick)
+	a.modeButton(c, p, button, permissionControl(cap, o, true), choices, current, pick)
 	return modeCycle(choices, current, pick)
 }
