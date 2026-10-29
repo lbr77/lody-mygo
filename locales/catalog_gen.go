@@ -2832,3 +2832,113 @@ func PanelCantOpen() string { return In(i18n.Locale()).PanelCantOpen() }
 func (msgs Messages) PanelCantOpen() string {
 	return Catalog.Format(msgs.locale, "panelCantOpen", nil)
 }
+
+// TryAgain says "Try again"
+// in the language the app shows.
+func TryAgain() string { return In(i18n.Locale()).TryAgain() }
+
+// TryAgain says "Try again"
+// in the language of msgs.
+func (msgs Messages) TryAgain() string {
+	return Catalog.Format(msgs.locale, "tryAgain", nil)
+}
+
+// TerminalToggle says "Toggle terminal"
+// in the language the app shows.
+func TerminalToggle() string { return In(i18n.Locale()).TerminalToggle() }
+
+// TerminalToggle says "Toggle terminal"
+// in the language of msgs.
+func (msgs Messages) TerminalToggle() string {
+	return Catalog.Format(msgs.locale, "terminalToggle", nil)
+}
+
+// TerminalNew says "New terminal"
+// in the language the app shows.
+func TerminalNew() string { return In(i18n.Locale()).TerminalNew() }
+
+// TerminalNew says "New terminal"
+// in the language of msgs.
+func (msgs Messages) TerminalNew() string {
+	return Catalog.Format(msgs.locale, "terminalNew", nil)
+}
+
+// TerminalHide says "Hide terminal"
+// in the language the app shows.
+func TerminalHide() string { return In(i18n.Locale()).TerminalHide() }
+
+// TerminalHide says "Hide terminal"
+// in the language of msgs.
+func (msgs Messages) TerminalHide() string {
+	return Catalog.Format(msgs.locale, "terminalHide", nil)
+}
+
+// TerminalClose says "Close {title}"
+// in the language the app shows.
+func TerminalClose(title string) string { return In(i18n.Locale()).TerminalClose(title) }
+
+// TerminalClose says "Close {title}"
+// in the language of msgs.
+func (msgs Messages) TerminalClose(title string) string {
+	return Catalog.Format(msgs.locale, "terminalClose", map[string]any{"title": title})
+}
+
+// TerminalRemote says "Terminal is only available on the machine that owns this session ({machine})."
+// in the language the app shows.
+func TerminalRemote(machine string) string { return In(i18n.Locale()).TerminalRemote(machine) }
+
+// TerminalRemote says "Terminal is only available on the machine that owns this session ({machine})."
+// in the language of msgs.
+func (msgs Messages) TerminalRemote(machine string) string {
+	return Catalog.Format(msgs.locale, "terminalRemote", map[string]any{"machine": machine})
+}
+
+// TerminalStarting says "Starting terminal…"
+// in the language the app shows.
+func TerminalStarting() string { return In(i18n.Locale()).TerminalStarting() }
+
+// TerminalStarting says "Starting terminal…"
+// in the language of msgs.
+func (msgs Messages) TerminalStarting() string {
+	return Catalog.Format(msgs.locale, "terminalStarting", nil)
+}
+
+// TerminalFailed says "Couldn't start the terminal"
+// in the language the app shows.
+func TerminalFailed() string { return In(i18n.Locale()).TerminalFailed() }
+
+// TerminalFailed says "Couldn't start the terminal"
+// in the language of msgs.
+func (msgs Messages) TerminalFailed() string {
+	return Catalog.Format(msgs.locale, "terminalFailed", nil)
+}
+
+// TerminalUnavailable says "The Lody daemon isn't running on this machine."
+// in the language the app shows.
+func TerminalUnavailable() string { return In(i18n.Locale()).TerminalUnavailable() }
+
+// TerminalUnavailable says "The Lody daemon isn't running on this machine."
+// in the language of msgs.
+func (msgs Messages) TerminalUnavailable() string {
+	return Catalog.Format(msgs.locale, "terminalUnavailable", nil)
+}
+
+// TerminalDisconnected says "Disconnected from the Lody daemon."
+// in the language the app shows.
+func TerminalDisconnected() string { return In(i18n.Locale()).TerminalDisconnected() }
+
+// TerminalDisconnected says "Disconnected from the Lody daemon."
+// in the language of msgs.
+func (msgs Messages) TerminalDisconnected() string {
+	return Catalog.Format(msgs.locale, "terminalDisconnected", nil)
+}
+
+// TerminalNone says "No terminals"
+// in the language the app shows.
+func TerminalNone() string { return In(i18n.Locale()).TerminalNone() }
+
+// TerminalNone says "No terminals"
+// in the language of msgs.
+func (msgs Messages) TerminalNone() string {
+	return Catalog.Format(msgs.locale, "terminalNone", nil)
+}

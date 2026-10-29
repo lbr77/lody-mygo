@@ -23,6 +23,8 @@ func (a *App) mainView(c *ui.Context, p *palette) {
 	c.OnShortcut(ui.Cmd, ui.KeyN, func() { a.open("") })
 	c.OnShortcut(ui.Cmd, ui.KeyL, func() { a.composerFocus.Focus(c) })
 	c.OnShortcut(ui.Cmd, ui.KeyBackslash, func() { a.sidebarHidden = !a.sidebarHidden })
+	c.OnShortcut(ui.Cmd, ui.KeyJ, a.toggleTerminal)
+	c.OnShortcut(ui.Ctrl, ui.KeyBackquote, a.toggleTerminal)
 	ui.Row(c).Fill().AlignItems(ui.Stretch).Background(p.Ground).Children(func() {
 		if !a.sidebarHidden {
 			a.sidebar(c, p)
@@ -68,6 +70,9 @@ func (a *App) tabBar(c *ui.Context, p *palette, sess *catalog.Session) {
 		if sess != nil {
 			s := *sess
 			iconButton(c, p, iconMore, locales.MoreActions(), p.Hover).Menu(func(m *ui.Menu) { a.sessionMenu(m, s) })
+			if a.localMachine() != "" {
+				iconButton(c, p, iconSquareTerminal, locales.TerminalToggle(), p.Hover).OnClick(a.toggleTerminal)
+			}
 			if !a.panelOpen {
 				iconButton(c, p, iconPanelRight, locales.PanelToggle(), p.Hover).OnClick(func() { a.panelOpen = true })
 			}
@@ -123,6 +128,26 @@ func (a *App) sessionView(c *ui.Context, p *palette) {
 func (a *App) sessionMain(c *ui.Context, p *palette) {
 	sess := a.catalog.Session(a.selected)
 	a.tabBar(c, p, sess)
+	if !a.term.open || sess == nil || a.localMachine() == "" {
+		a.conversation(c, p, sess)
+		return
+	}
+	if a.term.percent == 0 {
+		a.term.percent = 60
+	}
+	// Keep each pane at least 140 DIPs high, as Lody's dock.
+	if _, h := c.Size(); h > 0 {
+		a.term.percent = min(max(a.term.percent, 140/h*100), 100-140/h*100)
+	}
+	ui.SplitVerticalPercent(c, &a.term.percent, func() {
+		ui.Column(c).Fill().MinHeight(0).Children(func() { a.conversation(c, p, sess) })
+	}, func() {
+		ui.Column(c).Fill().MinHeight(0).Children(func() { a.terminalDock(c, p, sess) })
+	}).Grow(1).MinHeight(0).FillWidth()
+}
+
+// conversation is the session's entries over the composer.
+func (a *App) conversation(c *ui.Context, p *palette, sess *catalog.Session) {
 	v := a.view
 	if v == nil || (v.Status != "live" && len(v.Entries) == 0) {
 		ui.Column(c).Grow(1).Center().Gap(10).Children(func() {

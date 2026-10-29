@@ -114,8 +114,9 @@ type App struct {
 	panelPercent   float32 // the conversation's share of the width
 	panelFile      string  // the file whose edits the panel shows
 	inspect        *inspectState
-	taskOpen       bool   // a task's dialog
-	taskEntry      string // the turn and task it shows
+	term           termDock // the terminal dock under the conversation
+	taskOpen       bool     // a task's dialog
+	taskEntry      string   // the turn and task it shows
 	taskID         string
 	page           string // "archive", or "" for chats
 	archiveSearch  string

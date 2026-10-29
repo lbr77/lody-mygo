@@ -656,5 +656,30 @@
   "panelNoFilesHint": "Files can be browsed for sessions in a local project.",
   "panelSource": "Source",
   "panelPreview": "Preview",
-  "panelCantOpen": "Couldn't open this file"
+  "panelCantOpen": "Couldn't open this file",
+  "tryAgain": "Try again",
+  "terminalToggle": "Toggle terminal",
+  "terminalNew": "New terminal",
+  "terminalHide": "Hide terminal",
+  "terminalClose": "Close {title}",
+  "@terminalClose": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "terminalRemote": "Terminal is only available on the machine that owns this session ({machine}).",
+  "@terminalRemote": {
+    "placeholders": {
+      "machine": {
+        "type": "String"
+      }
+    }
+  },
+  "terminalStarting": "Starting terminal…",
+  "terminalFailed": "Couldn't start the terminal",
+  "terminalUnavailable": "The Lody daemon isn't running on this machine.",
+  "terminalDisconnected": "Disconnected from the Lody daemon.",
+  "terminalNone": "No terminals"
 }

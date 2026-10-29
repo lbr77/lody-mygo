@@ -594,3 +594,31 @@ func TestFilesPanel(t *testing.T) {
 		t.Fatalf("file: %q", tt.Texts())
 	}
 }
+
+func TestTerminalDock(t *testing.T) {
+	a := fixture()
+	a.view.Entries = a.view.Entries[:2]
+	a.view.Working = false
+	a.term.machine, a.term.checked = "this-mac", time.Now()
+	tt := snap(t, a, "terminal-remote", false, func(tt *ui.Tester) {
+		tt.Frame()
+		if err := tt.Click("Toggle terminal"); err != nil {
+			t.Fatal(err)
+		}
+	})
+	if !a.term.open || !tt.HasText("Terminal is only available on the machine that owns this session (Studio).") {
+		t.Fatalf("remote session: %q", tt.Texts())
+	}
+	// On this machine, with no daemon to reach.
+	a.term.machine = "m1"
+	a.term.err = "The Lody daemon isn't running on this machine."
+	tt.Frame()
+	if !tt.HasText("The Lody daemon isn't running on this machine.") || !tt.HasText("Try again") {
+		t.Fatalf("no daemon: %q", tt.Texts())
+	}
+	tt.Key(ui.Cmd, ui.KeyJ)
+	tt.Frame()
+	if a.term.open {
+		t.Fatal("⌘J left the dock open")
+	}
+}

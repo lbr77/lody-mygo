@@ -278,5 +278,16 @@
   "panelNoFilesHint": "只有本地项目中的会话可以浏览文件。",
   "panelSource": "源码",
   "panelPreview": "预览",
-  "panelCantOpen": "无法打开这个文件"
+  "panelCantOpen": "无法打开这个文件",
+  "tryAgain": "重试",
+  "terminalToggle": "切换终端",
+  "terminalNew": "新建终端",
+  "terminalHide": "隐藏终端",
+  "terminalClose": "关闭 {title}",
+  "terminalRemote": "终端只能在运行这个会话的机器（{machine}）上使用。",
+  "terminalStarting": "正在启动终端…",
+  "terminalFailed": "无法启动终端",
+  "terminalUnavailable": "这台机器上没有运行 Lody 守护进程。",
+  "terminalDisconnected": "已与 Lody 守护进程断开连接。",
+  "terminalNone": "没有终端"
 }
