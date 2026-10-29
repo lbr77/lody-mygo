@@ -91,6 +91,8 @@ func (a *App) mainView(c *ui.Context, p *palette) {
 		// Settings shows its own; outside it, what the conversation asks.
 		a.confirmDialog(c, p)
 	}
+	// Over everything but the toasts, which say what its menu did.
+	a.imageViewerView(c)
 	a.toastViewport(c, p)
 }
 
@@ -197,6 +199,8 @@ func (a *App) sessionDock(c *ui.Context, p *palette, sess *catalog.Session, k fl
 
 // conversation is the session's entries over the composer.
 func (a *App) conversation(c *ui.Context, p *palette, sess *catalog.Session) {
+	// The viewer its pictures open goes with it.
+	a.holdViewer("session/" + a.selected)
 	v := a.view
 	if listFailed(v) {
 		a.messageListFailed(c, p, sess, v)
@@ -461,12 +465,17 @@ func deliveryLabel(e session.Entry) string {
 // first line, the delivery mark and time above it, and its attachments.
 func (a *App) userMessage(c *ui.Context, p *palette, e session.Entry) {
 	var images, files []session.Item
-	for _, it := range e.Items {
+	var imageKeys []string // each picture's in the conversation's gallery
+	for i, it := range e.Items {
 		switch it.Type {
 		case "image":
 			images = append(images, it)
+			imageKeys = append(imageKeys, galleryKey(e.ID, i, 0, it.ImageID))
 		case "image_group":
 			images = append(images, it.Images...)
+			for j, img := range it.Images {
+				imageKeys = append(imageKeys, galleryKey(e.ID, i, j, img.ImageID))
+			}
 		case "file":
 			files = append(files, it)
 		}
@@ -506,8 +515,12 @@ func (a *App) userMessage(c *ui.Context, p *palette, e session.Entry) {
 					if len(images) > 1 {
 						size = 112
 					}
-					for _, img := range images {
-						a.sessionImage(c, p, a.selected, img, size)
+					sessionID := a.selected
+					for i, img := range images {
+						// It opens the conversation's viewer at it, among the
+						// pictures of its turn.
+						key := imageKeys[i]
+						a.sessionImage(c, p, sessionID, img, size, func() { a.openSessionGallery(sessionID, key) })
 					}
 				})
 			}

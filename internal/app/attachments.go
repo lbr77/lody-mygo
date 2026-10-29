@@ -26,9 +26,12 @@ type pendingFile struct {
 	Size  int64
 }
 
-// remoteImage is a picture fetched for display, keyed by image id.
+// remoteImage is a picture fetched for display, keyed by image id: with
+// its bytes and their type, which the viewer copies and saves.
 type remoteImage struct {
 	bitmap  *ui.Bitmap
+	data    []byte
+	mime    string
 	loading bool
 	failed  bool
 }
@@ -306,11 +309,15 @@ func (a *App) urlImage(url string) *remoteImage {
 	return img
 }
 
-// sessionImage shows a picture of a session, fetched once and kept.
-func (a *App) sessionImage(c *ui.Context, p *palette, sessionID string, it session.Item, size float32) {
+// sessionImage shows a picture of a session, fetched once and kept: once
+// it shows, a button that opens it in the viewer, as Lody's
+// UserImageBlock.
+func (a *App) sessionImage(c *ui.Context, p *palette, sessionID string, it session.Item, size float32, open func()) {
 	key := "img:" + it.ImageID
 	img := a.sessionBitmap(sessionID, it)
-	ui.Box(c.Key(key)).Size(size, size).Radius(12).Clip().Background(p.Text.Alpha(0.05)).Label(firstNonEmpty(it.FileName, locales.Image())).Children(func() {
+	b := ui.ButtonBase(c.Key(key)).Size(size, size).Radius(12).Clip().Background(p.Text.Alpha(0.05)).Label(firstNonEmpty(it.FileName, locales.Image()))
+	b.Disabled(img == nil || img.bitmap == nil).OnClick(open)
+	b.Children(func() {
 		switch {
 		case img != nil && img.bitmap != nil:
 			// Shown as it arrives, without a fade, as Lody's.
@@ -341,7 +348,7 @@ func (a *App) sessionBitmap(sessionID string, it session.Item) *remoteImage {
 			if err == nil {
 				bm, err = ui.DecodeBitmap(data)
 			}
-			a.update(func() { a.images[key] = &remoteImage{bitmap: bm, failed: err != nil} })
+			a.update(func() { a.images[key] = &remoteImage{bitmap: bm, data: data, failed: err != nil} })
 		}()
 	}
 	return img

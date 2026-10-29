@@ -1975,5 +1975,17 @@
   "askProgress": "进度",
   "askSubmit": "提交",
   "askCustomAnswer": "输入自定义答案...",
-  "askSendFailed": "回答没有送达 Agent，请重试。"
+  "askSendFailed": "回答没有送达 Agent，请重试。",
+  "imagePreview": "图片预览",
+  "imagePreviewClose": "关闭图片预览",
+  "imagePreviewPrevious": "上一张图片",
+  "imagePreviewNext": "下一张图片",
+  "imagePreviewZoom": "全屏查看图片",
+  "imagePreviewCopy": "复制图片",
+  "imagePreviewSave": "图片另存为…",
+  "imagePreviewCopied": "已复制图片",
+  "imagePreviewSaved": "图片已保存",
+  "imagePreviewCopyFailed": "复制图片失败",
+  "imagePreviewSaveFailed": "保存图片失败",
+  "mqPreviewImage": "预览 {name}"
 }

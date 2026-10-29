@@ -806,8 +806,9 @@ func (a *App) queueBody(c *ui.Context, p *palette, st *queueView, o queueProps, 
 }
 
 // queueThumbs are a queued message's pictures, as Lody's
-// QueuedImagePreview: small rounded tiles named in their tips, and how
-// many more there are.
+// QueuedImagePreview: small rounded tiles named in their tips, each a
+// button that opens the picture in the viewer, which loads it at its size
+// then; and how many more there are.
 func (a *App) queueThumbs(c *ui.Context, p *palette, sessionID string, images []session.Item, size float32) {
 	const most = 3
 	ui.Row(c.Key("thumbs")).Gap(2).AlignItems(ui.Center).Shrink(0).Padding(1, 0, 0, 0).Children(func() {
@@ -819,7 +820,20 @@ func (a *App) queueThumbs(c *ui.Context, p *palette, sessionID string, images []
 			label := firstNonEmpty(it.FileName, locales.MqUploadedImage())
 			img := a.sessionBitmap(sessionID, it)
 			key := fmt.Sprintf("thumb/%d/%s", i, it.ImageID)
-			t := ui.Box(c.Key(key)).Size(size, size).Shrink(0).Radius(4).Border(1, p.Border.Alpha(0.4)).Background(p.Canvas.Alpha(0.6)).Clip().Label(label)
+			// One whose thumbnail can't load opens nothing.
+			failed := img == nil || img.failed
+			t := ui.ButtonBase(c.Key(key)).Size(size, size).Shrink(0).Radius(4).Border(1, p.Border.Alpha(0.4)).Background(p.Canvas.Alpha(0.6)).Clip().
+				Label(locales.MqPreviewImage(label)).Disabled(failed)
+			if !failed {
+				t.Cursor(ui.CursorPointer) // Lody's zoom-in, which has no shape here
+			}
+			owner := "queue/" + sessionID + "/" + key
+			a.holdViewer(owner)
+			t.OnClick(func() {
+				a.openViewer(it.ImageID, owner, func(string) []viewerItem {
+					return []viewerItem{{key: it.ImageID, fileName: it.FileName, picture: func() *remoteImage { return a.queuedPicture(sessionID, it) }}}
+				})
+			})
 			withTipDelay(300*time.Millisecond, func() { tip(c, p, t, label) })
 			t.Children(func() {
 				switch {

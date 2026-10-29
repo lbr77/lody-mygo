@@ -96,6 +96,7 @@ type App struct {
 	binaries      map[string]binaryProgress // what machines said of runtime downloads, by machine/agent
 	motion        settingsMotion            // what the settings' and the home's motion keeps between frames
 	attachPrev    attachPreview             // a text file's preview
+	viewer        imageViewer               // the full-screen image viewer, while it shows
 	downloads     map[string]bool           // the files downloading
 	notifyAsk     notifyAsk                 // the prompt to turn notifications on
 	// sendingFiles are a message's attachments as they upload, and
