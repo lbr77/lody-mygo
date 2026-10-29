@@ -1,0 +1,22 @@
+name: Feature request / 功能建议
+description: Something Lody Native could do. / 希望 Lody Native 支持的功能。
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What would you like to do? / 你想做什么?
+      description: The problem or the workflow, before the solution. / 先描述问题或使用场景,再说方案。
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: How might it work? / 期望的做法
+      description: If Lody already does this, say where, with a screenshot. / 如果 Lody 官方已有这个功能,请说明位置并附截图。
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives / 其他方案

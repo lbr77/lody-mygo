@@ -19,8 +19,14 @@ import (
 // without one, the description goes to the backend alone. Either way the
 // report's id comes back to pass on to the Lody team.
 
-// Version is this client's version, as reports name it.
-var Version = "dev"
+// clientVersion is this client's version: the packaged app's, from
+// mygo.json's version, or dev when run from source.
+func clientVersion() string {
+	if v := mygo.App.Version(); v != "" {
+		return v
+	}
+	return "dev"
+}
 
 type bugReport struct {
 	open        bool
@@ -45,7 +51,7 @@ func (a *App) openBugReport() {
 
 // buildInfo is what Lody appends about the reporting client.
 func buildInfo(description string) string {
-	return description + "\n\n---\nReporting client build\nVersion: " + Version + "\nClient: Lody Native (" + runtime.GOOS + "/" + runtime.GOARCH + ")"
+	return description + "\n\n---\nReporting client build\nVersion: " + clientVersion() + "\nClient: Lody Native (" + runtime.GOOS + "/" + runtime.GOARCH + ")"
 }
 
 func (a *App) submitBugReport() {

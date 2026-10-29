@@ -1,0 +1,87 @@
+name: Bug report / 问题反馈
+description: Something in Lody Native doesn't work. / Lody Native 的某个功能不正常。
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting! Lody Native is an unofficial client: problems with Lody itself (the cloud service, the CLI/daemon, agents) belong in [Lody's issues](https://github.com/LodyAI/Lody/issues).
+
+        感谢反馈!Lody Native 是第三方客户端;Lody 本身的问题(云服务、CLI/daemon、Agent)请到 [Lody 的 issues](https://github.com/LodyAI/Lody/issues) 反馈。
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened? / 发生了什么?
+      description: What you saw, and what you expected instead. / 实际看到的现象,以及你期望的结果。
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce / 复现步骤
+      placeholder: |
+        1. Open …
+        2. Click …
+        3. See …
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Lody Native version / 版本
+      description: Settings → About, or the release you downloaded. / 设置 → 关于,或下载的版本号。
+      placeholder: "0.1.0"
+    validations:
+      required: true
+
+  - type: input
+    id: macos
+    attributes:
+      label: macOS version and chip / macOS 版本与芯片
+      placeholder: "macOS 26.1, Apple M3"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: mode
+    attributes:
+      label: Connection / 连接方式
+      options:
+        - Lody Cloud / 云端
+        - Local-only (this computer's daemon) / 仅连接本机 daemon
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area / 涉及模块
+      multiple: true
+      options:
+        - Sign-in & workspaces / 登录与工作区
+        - Sidebar & sessions / 侧边栏与会话
+        - Conversation rendering / 对话渲染
+        - Composer (mentions, attachments, models) / 输入框
+        - Schedules / 定时任务
+        - Settings / 设置
+        - Terminal, files & preview / 终端、文件与预览
+        - Sharing / 分享
+        - Other / 其他
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Screenshots, recordings or logs / 截图、录屏或日志
+      description: Leave out tokens and anything private. / 请去掉 token 等隐私信息。
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks / 确认
+      options:
+        - label: I searched the existing issues. / 我已搜索过已有 issue。
+          required: true
+        - label: It happens in Lody Native, not in Lody's own apps too. / 这个问题只出现在 Lody Native,Lody 官方应用里没有。

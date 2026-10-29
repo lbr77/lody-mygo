@@ -1,52 +1,112 @@
-# Lody Native
+<p align="center">
+  <img src="icon.png" width="96" alt="Lody Native">
+</p>
 
-一个原生的 [Lody](https://github.com/LodyAI/Lody) 桌面客户端:界面由 [MyGo](https://github.com/egoist/mygo) 的 `ui` 包在 GPU 上直接绘制,**不使用 WebKit / 任何 WebView**,直接连接 Lody Cloud 的端点同步数据。样式按 Lody 桌面版的设计 token 还原(Lody Light / Vesper deep-sea 配色、侧边栏 + 工作区卡片布局、墨色主按钮、对话节奏)。
+<h1 align="center">Lody Native</h1>
 
-> 第三方项目,与 Lody 官方无关。协议实现参考自 [lody-ios](https://github.com/Innei/lody-ios)。
+<p align="center">
+  A native desktop client for <a href="https://lody.ai">Lody</a>, drawn on the GPU — no web view.
+  <br>
+  <b>English</b> · <a href="README.zh-CN.md">简体中文</a>
+</p>
 
-## 功能
+---
 
-- 浏览器设备码登录(Better Auth Device Flow,`lody-cli` client),会话令牌存在 macOS 钥匙串
-- 工作区切换;按项目分组的会话侧边栏,带「工作中 / 等待你 / 未读」状态标记
-- 实时同步会话:用户气泡、Markdown 回复(流式)、可折叠的工具调用组、思考过程、计划、文件变更
-- 发送消息(Agent 忙时自动排队)、停止运行、回应权限请求
-- 新建对话:选择机器 / Agent / 项目后发送首条消息
-- 跟随系统的浅色 / 深色模式;目录缓存让冷启动立即显示上次的侧边栏
+Lody Native is a desktop client for [Lody](https://github.com/LodyAI/Lody), written in Go. Its interface is drawn directly on the GPU by the `ui` package of [MyGo](https://github.com/egoist/mygo) — there is no WebKit, Electron or any web view — and it talks to Lody Cloud the way Lody's own apps do. It follows Lody's desktop app one to one: its layout, design tokens, wording and motion.
 
-## 架构
+> [!NOTE]
+> Lody Native is an unofficial, third-party project, not affiliated with Lody. Its protocol work follows [lody-ios](https://github.com/Innei/lody-ios) and Lody's open-source desktop app.
 
-```
-main.go                  MyGo 原生窗口(hidden-inset 标题栏)
-internal/app             状态 + 视图(登录、侧边栏、对话、输入框、新建对话、主题、图标)
-internal/cloud           backend.lody.ai:设备码登录、账号/工作区、Streams grant、Machine RPC
-internal/streams         Durable Streams 客户端:bootstrap(multipart)、long-poll、append、帧编解码、zstd
-internal/catalog         Flock 目录副本(<ws>:meta、<ws>:mf:<machine>)→ 项目/会话/机器/Agent
-internal/session         Loro 会话副本(<ws>:s:<id>,loro-go)→ 对话投影;发送/排队/停止/权限
-internal/flock           flock-rs 的 Go 绑定:官方 wasm 跑在 wazero 里,纯 Go 实现 wasm-bindgen 导入
-```
+## Features
 
-lody-ios 在一个离屏 WKWebView 里运行 Loro/Flock;这里换成了原生方案:
+- **Sign-in and workspaces** — sign in through the browser with Lody's device flow; the session is kept in the macOS Keychain. Switch, create and join workspaces.
+- **Sessions** — the sidebar groups chats by machine and project, with Lody's working / waiting / unread marks, pins, archive, forks and the sessions they opened. Conversation tabs, a ⌘K command palette with rebindable shortcuts, and ⌘F to find in a chat.
+- **Conversations** — streaming Markdown with code highlighting, math and Mermaid diagrams (flowchart, sequence, state, class, ER, XY charts); tool calls, thoughts, plans, diffs, subagents and goals; permission requests and questions; Lody's notices, from failed turns (with retry when a model is at capacity) to schedule and Agent Role proposals; sharing a message as text or an image.
+- **Composer** — `@` mentions of files, issues, pull requests, sessions and Agent Roles, `$` skills, `/` prompt shortcuts and commands; attachments; the Agent, model, reasoning effort, permission mode and MCP servers; quick replies; queueing and steering a running turn; and *Schedule send*.
+- **Schedules** — Lody's scheduled tasks: create and edit them (daily, weekdays, weekly, monthly, every few hours or minutes, once, or manual), pause, resume, run now, delete, and their run history.
+- **Your machines** — through the Lody daemon on this computer: a terminal per session, the file explorer and editor, HTML and dev-server previews, Git state and worktrees.
+- **Local-only mode** — *Settings → Preferences → Connect only to this computer's Lody* syncs with the daemon's local data plane instead of the cloud, so Lody Native works offline.
+- **Settings** — account, appearance (theme, language, font size, full width), agents and providers, MCP servers, Agent Roles, memory, prompt shortcuts, projects, GitHub, usage, sharing and billing (which opens lody.ai).
+- **English and Simplified Chinese**, following the system or chosen in Settings.
 
-- **会话(Loro)**:`github.com/aholstenson/loro-go`(cgo + 预编译 Rust 静态库)
-- **目录(Flock)**:flock-rs 没有公开源码,只有 `@loro-dev/flock-wasm`。`internal/flock` 把它的 wasm 嵌进二进制,用 [wazero](https://wazero.io)(纯 Go 的 WebAssembly 运行时)执行,并用 Go 实现了它需要的 66 个 wasm-bindgen 导入(JS 值堆、对象/数组/Map、迭代器……)。快照 / JSON 增量格式与官方实现逐字节一致。
+Everything lody-ios calls is implemented: see [docs/ios-api-parity.md](docs/ios-api-parity.md).
 
-## 构建与运行
+## Install
 
-需要 Go 1.27.3+(`GOTOOLCHAIN=auto` 会自动下载)和 Xcode 命令行工具(loro-go 需要 cgo)。
+Download the disk image from [Releases](https://github.com/lbr77/lody-mygo/releases), open it and drag **Lody Native** to Applications. It runs on macOS 12 or later, on Apple silicon and Intel.
+
+You need a Lody account, and the [Lody CLI](https://lody.ai/docs) running on the machines your agents work on.
+
+## Build from source
+
+You need Go (the version in `go.mod`; with `GOTOOLCHAIN=auto` Go fetches it) and the Xcode Command Line Tools: [loro-go](https://github.com/aholstenson/loro-go) links a prebuilt Rust library through cgo.
 
 ```sh
-CGO_ENABLED=1 go run .                    # 开发运行
-CGO_ENABLED=1 go test ./...               # 单元测试 + 无窗口 UI 测试
-CGO_ENABLED=1 go build -trimpath -ldflags "-s -w" -o build/lody-native .
-CGO_ENABLED=1 go tool mygo build          # 打包 .app / .dmg(需要先 go get -tool github.com/egoist/mygo/cmd/mygo)
+CGO_ENABLED=1 go run .                                        # run it
+CGO_ENABLED=1 go test ./...                                   # unit tests and headless UI tests
+CGO_ENABLED=1 go tool mygo build                              # build the .app and .dmg for this Mac
+CGO_ENABLED=1 go tool mygo build -platform darwin/universal   # for Apple silicon and Intel
 ```
 
-UI 测试可以导出截图:`LODY_SNAPSHOTS=/some/dir CGO_ENABLED=1 go test ./internal/app`。
+The UI tests render offscreen; set `LODY_SNAPSHOTS` to a folder to save their frames as PNGs:
 
-## 尚未实现
+```sh
+LODY_SNAPSHOTS=/tmp/snaps CGO_ENABLED=1 go test ./internal/app
+```
 
-附件/图片上传、`$` 快捷指令与 `@` 提及展开、MCP 服务器选择、模型/模式切换、steer(引导正在运行的回合)、归档/重命名/置顶操作的界面入口、文件浏览与 diff 查看器、预览隧道、机器在线状态(presence)。
+Strings live in `locales/` (`en.json`, `zh-Hans.json`); after changing them, `go tool mygo generate` writes their accessors.
 
-## 许可
+## Releases
 
-AGPL-3.0-only。内嵌的 `@loro-dev/flock-wasm` 为 AGPL-3.0-only(见 `internal/flock/wasm/LICENSE`),协议逻辑移植自 AGPL-3.0-only 的 lody-ios。图标来自 Lucide(ISC)与 Myna UI(MIT);Lody 标志归 Lody 所有。
+The [Release workflow](.github/workflows/release.yml) builds the universal app on a macOS runner when a tag `vX.Y.Z` is pushed — it must match `version` in `mygo.json` — and uploads the disk image to a draft release, to review and publish. Run it by hand to get the disk image as an artifact instead.
+
+With these repository secrets, the app is signed with your Developer ID and the disk image notarized and stapled; without them it is signed ad hoc, which Gatekeeper blocks on other Macs:
+
+| Secret | What it is |
+| --- | --- |
+| `MACOS_CERTIFICATE` | the *Developer ID Application* certificate with its private key, exported as `.p12`, in base64 |
+| `MACOS_CERTIFICATE_PASSWORD` | the password of that `.p12` |
+| `APPLE_ID` | the Apple ID of the developer account |
+| `APPLE_TEAM_ID` | the team ID, as in the identity's `(TEAMID)` |
+| `APPLE_APP_PASSWORD` | an [app-specific password](https://account.apple.com) of that Apple ID |
+
+```sh
+base64 -i certificate.p12 | gh secret set MACOS_CERTIFICATE
+gh secret set MACOS_CERTIFICATE_PASSWORD
+gh secret set APPLE_ID
+gh secret set APPLE_TEAM_ID
+gh secret set APPLE_APP_PASSWORD
+
+# bump "version" in mygo.json, commit, then:
+git tag v0.2.0 && git push origin v0.2.0
+```
+
+## How it works
+
+```
+main.go               the window (MyGo, hidden-inset title bar)
+internal/app          state and views: sidebar, conversation, composer, settings, schedules…
+internal/cloud        backend.lody.ai: device sign-in, account, Convex, Streams grants, machine RPC
+internal/streams      Durable Streams: bootstrap (multipart), long poll, append, frames, zstd
+internal/catalog      the workspace's Flock replicas (<ws>:meta, wf:workspace, mf:<machine>)
+internal/session      a session's Loro replica (<ws>:s:<id>): the conversation, sending, steering
+internal/flock        flock-rs's wasm, run in wazero, with its wasm-bindgen imports in Go
+internal/flocksync    one Flock, over its stream or the daemon's data plane
+internal/localplane   the Lody daemon's local Loro data plane (protocol 7)
+internal/localterm    the daemon's terminals and control socket
+internal/schedule     scheduled tasks: documents, the Schedule Registry, fingerprints, cron
+internal/collab       Code Collab: file trees, editing, sealed RPC
+internal/sharing      shared sessions
+locales               English and Simplified Chinese strings
+```
+
+Where lody-ios runs Loro and Flock in an offscreen WKWebView, Lody Native runs them natively: sessions through [loro-go](https://github.com/aholstenson/loro-go), and Flock — published only as `@loro-dev/flock-wasm` — by running that wasm in [wazero](https://wazero.io), a WebAssembly runtime in pure Go, with the 66 wasm-bindgen imports it needs written in Go. Snapshots and JSON deltas match the official implementation byte for byte.
+
+## Limitations
+
+- macOS only, for now.
+- Encrypted (E2EE) workspaces are shown as locked: like Lody's web and mobile apps, Lody Native has no key custody for them yet.
+
+## License
+
+[AGPL-3.0-only](LICENSE). The embedded `@loro-dev/flock-wasm` is AGPL-3.0-only (see `internal/flock/wasm/LICENSE`), and the protocol logic is ported from lody-ios, AGPL-3.0-only. Icons are from Lucide (ISC) and Myna UI (MIT). The Lody logo belongs to Lody.

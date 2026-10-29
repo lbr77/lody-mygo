@@ -1,0 +1,127 @@
+name: Release
+
+# Builds the macOS app, a universal binary for Apple silicon and Intel, as
+# a disk image: signed with the Developer ID and notarized when the signing
+# secrets are set, signed ad hoc otherwise. A tag vX.Y.Z (matching the
+# version in mygo.json) uploads it to a draft release of that tag; a manual
+# run keeps it as an artifact of the run.
+#
+# Secrets, for signing and notarization:
+#   MACOS_CERTIFICATE           the "Developer ID Application" certificate with
+#                               its private key, as a base64 .p12
+#   MACOS_CERTIFICATE_PASSWORD  the .p12's password
+#   APPLE_ID                    the Apple ID of the developer account
+#   APPLE_TEAM_ID               the team ID, as in the identity's (TEAMID)
+#   APPLE_APP_PASSWORD          an app-specific password of that Apple ID
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write # the draft release, and the upload to it
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  macos:
+    name: macOS
+    runs-on: macos-latest
+    timeout-minutes: 60
+    env:
+      # loro-go links a prebuilt Rust library through cgo, for both arches.
+      CGO_ENABLED: "1"
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+
+      - name: Check the version
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          version="$(jq -r .version mygo.json)"
+          if [ "$GITHUB_REF_NAME" != "v$version" ]; then
+            echo "::error::The tag $GITHUB_REF_NAME doesn't match the version $version in mygo.json"
+            exit 1
+          fi
+
+      - name: Test
+        run: go test ./... -timeout 600s
+
+      - name: Import the certificate and the notary credentials
+        id: signing
+        env:
+          MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
+          MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+        run: |
+          if [ -z "$MACOS_CERTIFICATE" ]; then
+            echo "::warning::No MACOS_CERTIFICATE secret: the app is signed ad hoc and not notarized, so Gatekeeper blocks it on other Macs."
+            echo "signed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          keychain="$RUNNER_TEMP/signing.keychain-db"
+          password="$(openssl rand -base64 24)"
+          security create-keychain -p "$password" "$keychain"
+          security set-keychain-settings -lut 21600 "$keychain"
+          security unlock-keychain -p "$password" "$keychain"
+          echo "$MACOS_CERTIFICATE" | base64 --decode > "$RUNNER_TEMP/certificate.p12"
+          security import "$RUNNER_TEMP/certificate.p12" -k "$keychain" \
+            -P "$MACOS_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          rm "$RUNNER_TEMP/certificate.p12"
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$password" "$keychain"
+          security list-keychains -d user -s "$keychain" login.keychain
+          xcrun notarytool store-credentials notary --keychain "$keychain" \
+            --apple-id "$APPLE_ID" --team-id "$APPLE_TEAM_ID" --password "$APPLE_APP_PASSWORD"
+
+          identity="$(security find-identity -v -p codesigning "$keychain" \
+            | sed -n 's/.*"\(Developer ID Application: .*\)"$/\1/p' | head -n 1)"
+          if [ -z "$identity" ]; then
+            echo "::error::The certificate holds no Developer ID Application identity"
+            exit 1
+          fi
+          # mygo build signs with this identity and notarizes with the
+          # profile in this keychain; mygo.json itself stays unsigned for
+          # local builds.
+          jq --arg identity "$identity" --arg keychain "$keychain" \
+            '.macos.signingIdentity = $identity | .macos.notarize = {keychainProfile: "notary", keychain: $keychain}' \
+            mygo.json > "$RUNNER_TEMP/mygo.json"
+          mv "$RUNNER_TEMP/mygo.json" mygo.json
+          echo "signed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Build
+        run: go tool mygo build -platform darwin/universal
+
+      - name: Verify the signature and the notarization
+        if: steps.signing.outputs.signed == 'true'
+        run: |
+          app="build/darwin-universal/Lody Native.app"
+          codesign --verify --deep --strict --verbose=2 "$app"
+          spctl --assess --type execute --verbose=2 "$app"
+          for dmg in build/darwin-universal/*.dmg; do
+            xcrun stapler validate "$dmg"
+          done
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: lody-native-macos
+          path: build/darwin-universal/*.dmg
+          if-no-files-found: error
+
+      - name: Upload to the draft release
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if ! gh release view "$GITHUB_REF_NAME" > /dev/null 2>&1; then
+            gh release create "$GITHUB_REF_NAME" --draft --verify-tag \
+              --title "Lody Native $GITHUB_REF_NAME" --generate-notes
+          fi
+          gh release upload "$GITHUB_REF_NAME" build/darwin-universal/*.dmg --clobber

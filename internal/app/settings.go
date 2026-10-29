@@ -8,8 +8,6 @@ import (
 	"github.com/egoist/mygo/ui"
 )
 
-const appVersion = "0.1.0"
-
 // appearanceChoices are the saved values of Appearance; appearanceLabels
 // say them.
 var appearanceChoices = []string{"System", "Light", "Dark"}
@@ -157,7 +155,7 @@ func (a *App) settingsPage(c *ui.Context, p *palette) {
 		a.rolesPage(c, p)
 	case "about":
 		settingsTitle(c, p, locales.SettingsAbout())
-		settingRow(c, p, "Lody Native "+appVersion, locales.SettingsAboutDescription(), nil)
+		settingRow(c, p, "Lody Native "+clientVersion(), locales.SettingsAboutDescription(), nil)
 		divider(c, p)
 		for _, link := range []struct{ label, url string }{
 			{locales.SettingsDocs(), "https://lody.ai/docs"},

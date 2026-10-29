@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Lody itself (cloud, CLI, daemon, agents) / Lody 官方问题
+    url: https://github.com/LodyAI/Lody/issues
+    about: Problems with Lody's service or its own apps belong there. / Lody 服务或官方应用的问题请在这里反馈。
+  - name: Lody docs / Lody 文档
+    url: https://lody.ai/docs
+    about: How Lody works. / Lody 的使用说明。

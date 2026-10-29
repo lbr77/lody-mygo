@@ -1,0 +1,50 @@
+name: Differs from Lody / 与 Lody 不一致
+description: Lody Native looks, moves or behaves differently from Lody's official app. / 界面、动画或行为与 Lody 官方应用不一致。
+labels: ["parity"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Lody Native aims to match Lody's desktop app one to one. Show what Lody does and what Lody Native does, side by side if you can.
+
+        Lody Native 的目标是与 Lody 桌面版 1:1 一致。请尽量并排展示 Lody 与 Lody Native 的差异。
+
+  - type: textarea
+    id: lody
+    attributes:
+      label: In Lody / Lody 中
+      description: What Lody's app shows or does. Screenshots or a recording help most. / Lody 官方应用的表现,截图或录屏最有帮助。
+    validations:
+      required: true
+
+  - type: textarea
+    id: native
+    attributes:
+      label: In Lody Native / Lody Native 中
+      description: What Lody Native shows or does instead. / Lody Native 的表现。
+    validations:
+      required: true
+
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Kind of difference / 差异类型
+      multiple: true
+      options:
+        - Layout or style / 布局或样式
+        - Animation / 动画
+        - Wording or translation / 文案或翻译
+        - Behaviour / 行为
+        - Missing feature / 缺少功能
+
+  - type: input
+    id: lody-version
+    attributes:
+      label: Lody app and version / Lody 应用及版本
+      placeholder: "Lody desktop 1.x / Lody iOS 1.x"
+
+  - type: input
+    id: version
+    attributes:
+      label: Lody Native version / Lody Native 版本
+      placeholder: "0.1.0"

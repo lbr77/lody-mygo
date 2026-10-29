@@ -17,7 +17,6 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
-	"syscall"
 	"time"
 
 	"github.com/google/uuid"
@@ -125,10 +124,10 @@ func checkRunDir(dir string) error {
 	if err != nil {
 		return &Error{Code: "daemon_unavailable", Message: "The Lody daemon isn't running on this machine."}
 	}
-	if !fi.IsDir() || fi.Mode().Perm()&0o077 != 0 {
+	if !fi.IsDir() || !privateDir(fi) {
 		return &Error{Code: "unsafe_run_dir", Message: dir + " isn't private to this user."}
 	}
-	if st, ok := fi.Sys().(*syscall.Stat_t); ok && int(st.Uid) != os.Getuid() {
+	if ownedByOther(fi) {
 		return &Error{Code: "unsafe_run_dir", Message: dir + " belongs to another user."}
 	}
 	return nil
