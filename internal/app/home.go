@@ -44,14 +44,26 @@ func (a *App) homeView(c *ui.Context, p *palette) {
 			if agent != nil {
 				agentLabel = agent.Name
 			}
-			a.picker(c, p, "agent", iconBot, agentLabel, a.agentOptions(), func(id string) {
+			pickAgent := func(id string) {
 				a.newChat.agent = id
 				delete(a.models, "")
 				delete(a.modes, "")
-			})
+			}
+			agents := a.agentOptions()
+			a.picker(c, p, "agent", iconBot, agentLabel, agents, pickAgent)
+			providers := &cycleTarget{current: a.newChat.agent, pick: pickAgent}
+			for _, o := range agents {
+				providers.values = append(providers.values, o.id)
+			}
+			a.surfNext.provider = providers
 			if agent != nil {
-				a.runConfig(c, p, "model/new", agent.ID, a.models[""], nil, func(id string) { a.models[""] = id })
-				a.modeButton(c, p, "mode/new", a.catalog.ModesFor(agent.ID, agent.AgentType), a.modes[""], func(id string) { a.modes[""] = id })
+				pickModel := func(id string) { a.models[""] = id }
+				a.runConfig(c, p, "model/new", agent.ID, a.models[""], nil, pickModel)
+				modes := a.catalog.ModesFor(agent.ID, agent.AgentType)
+				pickMode := func(id string) { a.modes[""] = id }
+				a.modeButton(c, p, "mode/new", modes, a.modes[""], pickMode)
+				a.surfNext.model = a.modelCycle(agent.ID, a.models[""], pickModel)
+				a.surfNext.mode = modeCycle(modes, a.modes[""], pickMode)
 			}
 		},
 	})

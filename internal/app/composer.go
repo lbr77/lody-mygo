@@ -61,12 +61,17 @@ func (a *App) bottom(c *ui.Context, p *palette, sess *catalog.Session, v *sessio
 			if current == "" && sess.LastModel != nil {
 				current = sess.LastModel.ModelID
 			}
-			a.runConfig(c, p, "model/"+sess.ID, sess.AgentConfigID, current, sess.LastModel, func(id string) { a.models[sess.ID] = id })
+			pickModel := func(id string) { a.models[sess.ID] = id }
+			a.runConfig(c, p, "model/"+sess.ID, sess.AgentConfigID, current, sess.LastModel, pickModel)
 			mode := a.modes[sess.ID]
 			if mode == "" && v != nil {
 				mode = v.ModeID
 			}
-			a.modeButton(c, p, "mode/"+sess.ID, a.catalog.ModesFor(sess.AgentConfigID, sess.AgentType), mode, func(id string) { a.modes[sess.ID] = id })
+			modes := a.catalog.ModesFor(sess.AgentConfigID, sess.AgentType)
+			pickMode := func(id string) { a.modes[sess.ID] = id }
+			a.modeButton(c, p, "mode/"+sess.ID, modes, mode, pickMode)
+			a.surfNext.model = a.modelCycle(sess.AgentConfigID, current, pickModel)
+			a.surfNext.mode = modeCycle(modes, mode, pickMode)
 		},
 	})
 }
@@ -174,6 +179,7 @@ func (a *App) composerBox(c *ui.Context, p *palette, o composerOptions) {
 			a.addFiles(dropped)
 		}
 		hasFiles := len(a.attachments) > 0
+		a.surfNext.composer = true
 		var input ui.Element
 		box.Children(func() {
 			a.attachmentChips(c, p)
@@ -183,6 +189,11 @@ func (a *App) composerBox(c *ui.Context, p *palette, o composerOptions) {
 					TextColor(p.Reading).Padding(2, 4).FillWidth().AutoFocus().Label(locales.ComposerLabel()).Bind(&a.composerFocus).
 					OnTextKey(func(k ui.TextKey) bool {
 						if a.mentionKey(k) {
+							return true
+						}
+						// ⇧Tab cycles the agent mode while the composer has the focus.
+						if k.Key == ui.KeyTab && k.Mods == ui.Shift && a.surf.mode.can() {
+							a.surf.mode.next()
 							return true
 						}
 						if k.Key == ui.KeyEnter && k.Mods&ui.Shift == 0 {
@@ -195,6 +206,10 @@ func (a *App) composerBox(c *ui.Context, p *palette, o composerOptions) {
 						}
 						return false
 					})
+				if a.focusComposer {
+					a.focusComposer = false
+					a.composerFocus.Focus(c)
+				}
 				if empty && !input.Focused() {
 					// The shortcut that focuses the box, while it waits.
 					input.Padding(2, 64, 2, 4)
@@ -506,4 +521,22 @@ func (a *App) choiceButton(c *ui.Context, p *palette, label string, suggested bo
 		})
 		chevron.Children(func() { ui.Icon(c, iconChevronDown).Size(14, 14).TextColor(ink) })
 	})
+}
+
+// modelCycle and modeCycle are the composer's models and modes, for the
+// commands that step through them.
+func (a *App) modelCycle(agentConfig, current string, pick func(string)) *cycleTarget {
+	t := &cycleTarget{current: current, pick: pick}
+	for _, m := range a.catalog.Capabilities[agentConfig].Models {
+		t.values = append(t.values, m.ModelID)
+	}
+	return t
+}
+
+func modeCycle(modes []catalog.Mode, current string, pick func(string)) *cycleTarget {
+	t := &cycleTarget{current: current, pick: pick}
+	for _, m := range modes {
+		t.values = append(t.values, m.ID)
+	}
+	return t
 }

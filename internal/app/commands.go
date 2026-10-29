@@ -1,0 +1,414 @@
+package app
+
+import (
+	"context"
+	"runtime"
+	"strings"
+
+	"github.com/egoist/mygo"
+	"github.com/egoist/mygo/ui"
+
+	"github.com/lbr77/lody-mygo/internal/catalog"
+	"github.com/lbr77/lody-mygo/locales"
+)
+
+// Lody's command registry: each application shortcut is a command, which
+// the keyboard runs and the ⌘K palette lists while its when holds. Local
+// keys (Escape in a dialog, Enter in the composer) stay with their views.
+
+type commandCategory int
+
+// The palette's order, with no query.
+const (
+	catNavigation commandCategory = iota
+	catSession
+	catEditor
+	catView
+	catWorkspace
+	catHelp
+	catOther
+)
+
+func (k commandCategory) label() string {
+	switch k {
+	case catNavigation:
+		return locales.CmdCatNavigation()
+	case catSession:
+		return locales.CmdCatSession()
+	case catEditor:
+		return locales.CmdCatEditor()
+	case catView:
+		return locales.CmdCatView()
+	case catWorkspace:
+		return locales.CmdCatWorkspace()
+	case catHelp:
+		return locales.CmdCatHelp()
+	}
+	return locales.CmdCatOther()
+}
+
+type command struct {
+	id       string
+	title    string
+	category commandCategory
+	keys     []chord // the first is the one shown
+	icon     *ui.SVG
+	when     bool
+	run      func()
+}
+
+// chord is a key binding in Lody's registry syntax, as "Mod+Shift+p": Mod
+// is Command on macOS and Control elsewhere.
+type chord struct {
+	mods ui.Modifiers
+	key  ui.Key
+	spec string
+	// local chords are the view's own, as ⇧Tab in the composer: shown, not
+	// bound app-wide.
+	local bool
+}
+
+var chordKeys = map[string]ui.Key{
+	"[": ui.KeyBracketLeft, "]": ui.KeyBracketRight, ",": ui.KeyComma, ".": ui.KeyPeriod, "`": ui.KeyBackquote,
+	"F2": ui.KeyF2, "Tab": ui.KeyTab,
+	"1": ui.Key1, "2": ui.Key2, "3": ui.Key3, "4": ui.Key4, "5": ui.Key5, "6": ui.Key6, "7": ui.Key7, "8": ui.Key8, "9": ui.Key9,
+}
+
+func keyChord(spec string) chord {
+	ch := chord{spec: spec}
+	for _, part := range strings.Split(spec, "+") {
+		switch part {
+		case "Mod":
+			ch.mods |= ui.Cmd
+		case "Ctrl":
+			ch.mods |= ui.Ctrl
+		case "Alt":
+			ch.mods |= ui.Alt
+		case "Shift":
+			ch.mods |= ui.Shift
+		default:
+			if k, ok := chordKeys[part]; ok {
+				ch.key = k
+			} else if len(part) == 1 && part[0] >= 'a' && part[0] <= 'z' {
+				ch.key = ui.KeyA + ui.Key(part[0]-'a')
+			}
+		}
+	}
+	return ch
+}
+
+func keyChords(specs ...string) []chord {
+	out := make([]chord, len(specs))
+	for i, s := range specs {
+		out[i] = keyChord(s)
+	}
+	return out
+}
+
+// parts are a chord's keys as the platform writes them, in the order
+// Lody's registry has them: ⌘ ⌥ A on macOS, Ctrl Alt A elsewhere.
+func (ch chord) parts() []string {
+	mac := runtime.GOOS == "darwin"
+	var out []string
+	for _, part := range strings.Split(ch.spec, "+") {
+		switch {
+		case part == "Mod" && mac:
+			part = "⌘"
+		case part == "Mod":
+			part = "Ctrl"
+		case part == "Ctrl" && mac:
+			part = "⌃"
+		case part == "Alt" && mac:
+			part = "⌥"
+		case part == "Shift" && mac:
+			part = "⇧"
+		case part == "Tab" && mac:
+			part = "⇥"
+		default:
+			part = strings.ToUpper(part[:1]) + part[1:]
+		}
+		out = append(out, part)
+	}
+	return out
+}
+
+// writeClipboard copies text for the commands; tests swap it.
+var writeClipboard = mygo.Clipboard.WriteText
+
+// surface is what the view on screen offers the commands, published by
+// its parts as they build: Lody's mounted command implementations.
+type surface struct {
+	composer    bool
+	save        func()
+	mode        *cycleTarget
+	model       *cycleTarget
+	provider    *cycleTarget
+	termFocused bool
+}
+
+// cycleTarget is a composer option the commands step through.
+type cycleTarget struct {
+	values  []string
+	current string
+	pick    func(string)
+}
+
+func (t *cycleTarget) can() bool { return t != nil && len(t.values) > 1 }
+
+func (t *cycleTarget) next() {
+	if !t.can() {
+		return
+	}
+	i := -1
+	for j, v := range t.values {
+		if v == t.current {
+			i = j
+		}
+	}
+	if next := t.values[(i+1)%len(t.values)]; next != t.current {
+		t.pick(next)
+	}
+}
+
+// commands are the registry as the app stands, each with its when.
+func (a *App) commands() []command {
+	sess := a.catalog.Session(a.selected)
+	if a.page != "" {
+		sess = nil
+	}
+	live := sess != nil && !sess.Archived
+	tabs := 0
+	if sess != nil {
+		// The conversation is its only tab here.
+		tabs = 1
+	}
+	branch := ""
+	if sess != nil {
+		branch = strings.TrimSpace(sess.BranchName)
+	}
+	visible := a.visibleSessionIDs()
+	s := a.surf
+	cmds := []command{
+		{id: "palette.toggle", title: locales.CmdPaletteToggle(), category: catView, keys: keyChords("Mod+k", "Mod+Shift+p"), icon: iconCommand, when: true,
+			run: func() { a.setPaletteOpen(!a.palette.open) }},
+		{id: "nav.back", title: locales.CmdNavBack(), category: catNavigation, keys: keyChords("Mod+["), icon: iconArrowLeft, when: true, run: a.goBack},
+		{id: "nav.forward", title: locales.CmdNavForward(), category: catNavigation, keys: keyChords("Mod+]"), icon: iconArrowRight, when: true, run: a.goForward},
+		{id: "app.cycleTheme", title: locales.CmdCycleTheme(), category: catView, icon: iconSunMoon, when: true, run: a.cycleTheme},
+		{id: "layout.toggleZenMode", title: locales.CmdToggleZen(), category: catView, keys: keyChords("Mod+."), icon: iconFocus, when: true, run: a.toggleZen},
+		{id: "workspace.openSettings", title: locales.CmdOpenSettings(), category: catWorkspace, keys: keyChords("Mod+,"), icon: iconSettings, when: a.workspaceID != "",
+			run: func() { a.settingsOpen = !a.settingsOpen }},
+		{id: "session.new", title: locales.CmdSessionNew(), category: catSession, keys: keyChords("Mod+n"), icon: iconSquarePen, when: a.workspaceID != "",
+			run: func() { a.open("") }},
+		{id: "sidebar.toggle", title: locales.SidebarToggle(), category: catView, keys: keyChords("Mod+b"), icon: iconSidebar, when: true, run: a.toggleSidebar},
+		{id: "session.previousVisible", title: locales.CmdPreviousVisible(), category: catNavigation, keys: keyChords("Mod+Shift+["), icon: iconArrowUp,
+			when: !a.palette.open && len(visible) > 0, run: func() { a.stepVisibleSession(-1) }},
+		{id: "session.nextVisible", title: locales.CmdNextVisible(), category: catNavigation, keys: keyChords("Mod+Shift+]"), icon: iconArrowDown,
+			when: !a.palette.open && len(visible) > 0, run: func() { a.stepVisibleSession(1) }},
+		{id: "session.focusInput", title: locales.CmdFocusInput(), category: catEditor, keys: keyChords("Mod+l"), icon: iconTextCursor, when: s.composer,
+			run: func() { a.focusComposer = true }},
+		{id: "session.saveCurrentFile", title: locales.CmdSaveFile(), category: catEditor, keys: keyChords("Mod+s"), icon: iconSave, when: s.save != nil,
+			run: func() {
+				if save := a.surf.save; save != nil {
+					save()
+				}
+			}},
+		{id: "session.cycleMode", title: locales.CmdCycleMode(), category: catSession, keys: []chord{{mods: ui.Shift, key: ui.KeyTab, spec: "Shift+Tab", local: true}},
+			icon: iconShieldCheck, when: s.mode.can(), run: func() { a.surf.mode.next() }},
+		{id: "session.cycleProvider", title: locales.CmdCycleProvider(), category: catSession, icon: iconBot, when: s.provider.can(), run: func() { a.surf.provider.next() }},
+		{id: "session.cycleModel", title: locales.CmdCycleModel(), category: catSession, icon: iconSparkles, when: s.model.can(), run: func() { a.surf.model.next() }},
+	}
+	if sess == nil {
+		return cmds
+	}
+	id := sess.ID
+	cmds = append(cmds,
+		command{id: "session.archiveCurrent", title: locales.CmdArchiveCurrent(), category: catSession, keys: keyChords("Mod+Alt+a"), icon: iconArchive, when: live,
+			run: func() { a.archiveSession(id) }},
+		command{id: "session.toggleCurrentPinned", title: locales.CmdTogglePinned(), category: catSession, keys: keyChords("Mod+Alt+p"), icon: iconPin, when: live,
+			run: func() { a.togglePinned(id) }},
+		command{id: "session.toggleExplorerSidebar", title: locales.CmdToggleExplorer(), category: catView, keys: keyChords("Mod+Alt+b"), icon: iconPanelRight, when: true,
+			run: a.togglePanel},
+		command{id: "session.newTabOrTerminal", title: locales.CmdNewTabOrTerminal(), category: catSession, keys: keyChords("Alt+n", "Mod+t"), icon: iconPlus, when: true,
+			run: func() { a.newTabOrTerminal(id) }},
+		command{id: "session.toggleTerminal", title: locales.CmdToggleTerminal(), category: catView, keys: keyChords("Ctrl+`", "Mod+j"), icon: iconSquareTerminal,
+			when: a.localMachine() != "", run: a.toggleTerminal},
+		command{id: "session.copyCurrentBranch", title: locales.CmdCopyBranch(), category: catSession, keys: keyChords("Alt+Shift+b"), icon: iconBranch, when: branch != "",
+			run: func() {
+				writeClipboard(branch)
+				a.toast("success", locales.CmdBranchCopied())
+			}},
+		command{id: "session.copyUrl", title: locales.CmdCopyURL(), category: catSession, keys: keyChords("Alt+Shift+c"), icon: iconLink, when: true,
+			run: func() { a.copySessionLink(id) }},
+		command{id: "session.renameCurrent", title: locales.CmdRenameCurrent(), category: catSession, keys: keyChords("F2"), icon: iconPencil, when: live,
+			run: func() {
+				a.sidebarHidden = false
+				a.renaming, a.renameText = id, sess.Title
+			}},
+		command{id: "session.nextTab", title: locales.CmdNextTab(), category: catNavigation, keys: keyChords("Mod+Shift+."), icon: iconChevronsRight, when: tabs > 1, run: func() {}},
+		command{id: "session.previousTab", title: locales.CmdPreviousTab(), category: catNavigation, keys: keyChords("Mod+Shift+,"), icon: iconChevronsLeft, when: tabs > 1, run: func() {}},
+	)
+	// ⌘1–⌘8 jump to a tab, ⌘9 to the last; the one tab is already shown.
+	for n := 1; n <= 8; n++ {
+		cmds = append(cmds, command{id: "session.switchToTab" + string(rune('0'+n)), title: locales.CmdSwitchToTab(n), category: catNavigation,
+			keys: keyChords("Mod+" + string(rune('0'+n))), icon: iconRectangle, when: tabs > n-1, run: func() {}})
+	}
+	return append(cmds, command{id: "session.switchToLastTab", title: locales.CmdSwitchToLastTab(), category: catNavigation, keys: keyChords("Mod+9"),
+		icon: iconArrowToLine, when: tabs > 0, run: func() {}})
+}
+
+// runCommand runs a command if it still applies.
+func (a *App) runCommand(id string) {
+	for _, cmd := range a.commands() {
+		if cmd.id == id && cmd.when {
+			cmd.run()
+			return
+		}
+	}
+}
+
+// bindCommands binds every command's chords for the window.
+func (a *App) bindCommands(c *ui.Context) {
+	for _, cmd := range a.commands() {
+		id := cmd.id
+		for _, ch := range cmd.keys {
+			if !ch.local {
+				c.OnShortcut(ch.mods, ch.key, func() { a.runCommand(id) })
+			}
+		}
+	}
+}
+
+// toggleSidebar shows or hides the sidebar; in Zen it leaves Zen with the
+// sidebar shown, as Lody's.
+func (a *App) toggleSidebar() {
+	if a.zen.on {
+		a.zen.on, a.sidebarHidden = false, false
+		return
+	}
+	a.sidebarHidden = !a.sidebarHidden
+}
+
+func (a *App) togglePanel() {
+	if a.zen.on {
+		a.zen.on, a.panelOpen = false, true
+		return
+	}
+	a.panelOpen = !a.panelOpen
+}
+
+// zenState is Lody's Zen layout: the sidebar and the panel away, as they
+// were before it.
+type zenState struct {
+	on                       bool
+	sidebarHidden, panelOpen bool
+}
+
+// toggleZen enters or leaves Zen. A layout already bare reads as Zen, so
+// the first press reveals it.
+func (a *App) toggleZen() {
+	switch {
+	case a.zen.on:
+		a.zen.on = false
+		a.sidebarHidden, a.panelOpen = a.zen.sidebarHidden, a.zen.panelOpen
+	case a.sidebarHidden && !a.panelOpen:
+		a.sidebarHidden = false
+		a.panelOpen = a.selected != ""
+	default:
+		a.zen = zenState{on: true, sidebarHidden: a.sidebarHidden, panelOpen: a.panelOpen}
+		a.sidebarHidden, a.panelOpen = true, false
+	}
+}
+
+// cycleTheme steps Light, Dark, System, as Lody's.
+func (a *App) cycleTheme() {
+	next := map[string]string{"Light": "Dark", "Dark": "System"}[a.appearance]
+	if next == "" {
+		next = "Light"
+	}
+	a.setAppearance(next)
+}
+
+// visibleSessionIDs are the sessions the sidebar lists, in its order.
+func (a *App) visibleSessionIDs() []string {
+	var ids []string
+	for _, r := range a.sideRows() {
+		if r.kind == rowSession && r.session != nil {
+			ids = append(ids, r.session.ID)
+		}
+	}
+	return ids
+}
+
+// stepVisibleSession opens the session above or below the one shown.
+func (a *App) stepVisibleSession(step int) {
+	ids := a.visibleSessionIDs()
+	if len(ids) == 0 {
+		return
+	}
+	i := -1
+	for j, id := range ids {
+		if id == a.selected {
+			i = j
+		}
+	}
+	next := min(max(i+step, 0), len(ids)-1)
+	if i < 0 && step < 0 {
+		next = 0
+	}
+	if ids[next] != a.selected {
+		a.open(ids[next])
+	}
+}
+
+func (a *App) archiveSession(id string) {
+	if a.selected == id {
+		a.open("")
+	}
+	a.catalogAction(locales.FailArchive(), func(ctx context.Context, sync *catalog.Sync) error {
+		return sync.Archive(ctx, id, true)
+	})
+}
+
+func (a *App) togglePinned(id string) {
+	s := a.catalog.Session(id)
+	if s == nil {
+		return
+	}
+	pinned := !s.Pinned
+	a.catalogAction(locales.FailPin(), func(ctx context.Context, sync *catalog.Sync) error {
+		return sync.Pin(ctx, id, pinned)
+	})
+}
+
+// copySessionLink copies Lody's link to a session, which opens it in the
+// desktop app.
+func (a *App) copySessionLink(id string) {
+	link := "lody://session/" + id
+	if a.workspaceID != "" {
+		link += "?workspace=" + a.workspaceID
+	}
+	writeClipboard(link)
+	a.toast("success", locales.CmdURLCopied())
+}
+
+// newTabOrTerminal opens a terminal while one has the focus; otherwise a
+// new chat where the session runs, with its agent, as Lody's new tab.
+func (a *App) newTabOrTerminal(id string) {
+	sess := a.catalog.Session(id)
+	if sess == nil {
+		return
+	}
+	if a.surf.termFocused {
+		a.newTerminal(id, a.termSession(id))
+		return
+	}
+	a.newChat.machine, a.newChat.project = sess.MachineID, ""
+	if strings.Contains(sess.ProjectID, ":local:") {
+		a.newChat.project = sess.ProjectID
+	}
+	a.pickNewChatDefaults()
+	if a.agent(sess.MachineID, sess.AgentConfigID) != nil {
+		a.newChat.agent = sess.AgentConfigID
+	}
+	a.open("")
+}

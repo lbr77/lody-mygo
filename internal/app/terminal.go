@@ -281,7 +281,9 @@ func (a *App) terminalDock(c *ui.Context, p *palette, sess *catalog.Session) {
 		case !local:
 			panelStatus(c, p, false, locales.TerminalRemote(a.machineName(sess.MachineID)), "")
 		case shown != nil && shown.view != nil:
-			terminal.View(c.Key("term/"+shown.id), shown.view).Grow(1).MinHeight(0).FillWidth().AutoFocus()
+			if terminal.View(c.Key("term/"+shown.id), shown.view).Grow(1).MinHeight(0).FillWidth().AutoFocus().Focused() {
+				a.surfNext.termFocused = true
+			}
 		case shown != nil && shown.err != "":
 			panelStatus(c, p, false, locales.TerminalFailed(), shown.err)
 		case shown != nil:

@@ -5,7 +5,6 @@ import (
 	"github.com/lbr77/lody-mygo/internal/cloud"
 	"github.com/lbr77/lody-mygo/locales"
 	"math"
-	"sort"
 	"strings"
 	"time"
 	"unicode/utf16"
@@ -169,10 +168,8 @@ func (a *App) sidebar(c *ui.Context, p *palette) ui.Element {
 			if navRow(c, p, iconNewChat, locales.NewChat(), a.selected == "" && a.page == "").Clicked() {
 				a.open("")
 			}
-			search := navRow(c, p, iconSearch, locales.Search(), a.searchOpen).OnClick(func() {
-				a.searchOpen, a.searchText = !a.searchOpen, ""
-			})
-			popup(c, search, &a.searchOpen, func() { a.searchPanel(c, p) })
+			// Search opens the ⌘K palette, as Lody's.
+			navRow(c, p, iconSearch, locales.Search(), a.palette.open).OnClick(func() { a.setPaletteOpen(true) })
 			navRowCount(c, p, iconInbox, locales.Inbox(), a.page == "inbox", a.inboxUnread()).OnClick(func() {
 				a.page = "inbox"
 				a.refetchKey("inbox")
@@ -483,46 +480,6 @@ func (a *App) statusMark(c *ui.Context, p *palette, s *catalog.Session, age bool
 			ui.Text(c, t).FontSize(sizeFoot).TextColor(p.SideMuted).Shrink(0)
 		}
 	}
-}
-
-// searchPanel finds a chat by title.
-func (a *App) searchPanel(c *ui.Context, p *palette) {
-	var matches []catalog.Session
-	q := strings.ToLower(strings.TrimSpace(a.searchText))
-	for _, s := range a.catalog.Sessions {
-		if q == "" || strings.Contains(strings.ToLower(s.Title), q) {
-			matches = append(matches, s)
-		}
-	}
-	sort.SliceStable(matches, func(i, j int) bool { return matches[i].LastMessageAt > matches[j].LastMessageAt })
-	if len(matches) > 12 {
-		matches = matches[:12]
-	}
-	ui.Column(c).Width(360).Gap(6).Children(func() {
-		in := ui.TextInput(c, &a.searchText).Placeholder(locales.SearchChats()).AutoFocus().Label(locales.SearchChats())
-		if in.Submitted() && len(matches) > 0 {
-			a.searchOpen = false
-			a.open(matches[0].ID)
-		}
-		ui.Column(c).Gap(1).Children(func() {
-			if len(matches) == 0 {
-				ui.Text(c, locales.SearchNoMatches()).FontSize(sizeSub).TextColor(p.Secondary).Padding(6, 8)
-			}
-			for _, s := range matches {
-				row := menuRow(c.Key(s.ID), p, s.Title)
-				if row.Clicked() {
-					a.searchOpen = false
-					a.open(s.ID)
-				}
-				row.Children(func() {
-					ui.Text(c, s.Title).FontSize(sizeSub).TextColor(p.Text).SingleLine().Grow(1).MinWidth(0)
-					if name := a.projectName(s.ProjectID); name != "" {
-						ui.Text(c, name).FontSize(sizeFoot).TextColor(p.Tertiary).SingleLine().Shrink(0).MaxWidth(120)
-					}
-				})
-			}
-		})
-	})
 }
 
 func (a *App) projectName(id string) string {

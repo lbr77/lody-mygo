@@ -12304,3 +12304,403 @@ func PrTabRepositoryIdentityUnresolved() string {
 func (msgs Messages) PrTabRepositoryIdentityUnresolved() string {
 	return Catalog.Format(msgs.locale, "prTabRepositoryIdentityUnresolved", nil)
 }
+
+// CmdPalettePlaceholder says "Search commands and chats..."
+// in the language the app shows.
+func CmdPalettePlaceholder() string { return In(i18n.Locale()).CmdPalettePlaceholder() }
+
+// CmdPalettePlaceholder says "Search commands and chats..."
+// in the language of msgs.
+func (msgs Messages) CmdPalettePlaceholder() string {
+	return Catalog.Format(msgs.locale, "cmdPalettePlaceholder", nil)
+}
+
+// CmdPaletteEmpty says "No results found."
+// in the language the app shows.
+func CmdPaletteEmpty() string { return In(i18n.Locale()).CmdPaletteEmpty() }
+
+// CmdPaletteEmpty says "No results found."
+// in the language of msgs.
+func (msgs Messages) CmdPaletteEmpty() string {
+	return Catalog.Format(msgs.locale, "cmdPaletteEmpty", nil)
+}
+
+// CmdHintNavigate says "Navigate"
+// in the language the app shows.
+func CmdHintNavigate() string { return In(i18n.Locale()).CmdHintNavigate() }
+
+// CmdHintNavigate says "Navigate"
+// in the language of msgs.
+func (msgs Messages) CmdHintNavigate() string {
+	return Catalog.Format(msgs.locale, "cmdHintNavigate", nil)
+}
+
+// CmdHintSelect says "Select"
+// in the language the app shows.
+func CmdHintSelect() string { return In(i18n.Locale()).CmdHintSelect() }
+
+// CmdHintSelect says "Select"
+// in the language of msgs.
+func (msgs Messages) CmdHintSelect() string {
+	return Catalog.Format(msgs.locale, "cmdHintSelect", nil)
+}
+
+// CmdHintClose says "Close"
+// in the language the app shows.
+func CmdHintClose() string { return In(i18n.Locale()).CmdHintClose() }
+
+// CmdHintClose says "Close"
+// in the language of msgs.
+func (msgs Messages) CmdHintClose() string {
+	return Catalog.Format(msgs.locale, "cmdHintClose", nil)
+}
+
+// CmdCatNavigation says "Navigation"
+// in the language the app shows.
+func CmdCatNavigation() string { return In(i18n.Locale()).CmdCatNavigation() }
+
+// CmdCatNavigation says "Navigation"
+// in the language of msgs.
+func (msgs Messages) CmdCatNavigation() string {
+	return Catalog.Format(msgs.locale, "cmdCatNavigation", nil)
+}
+
+// CmdCatSession says "Session"
+// in the language the app shows.
+func CmdCatSession() string { return In(i18n.Locale()).CmdCatSession() }
+
+// CmdCatSession says "Session"
+// in the language of msgs.
+func (msgs Messages) CmdCatSession() string {
+	return Catalog.Format(msgs.locale, "cmdCatSession", nil)
+}
+
+// CmdCatEditor says "Editor"
+// in the language the app shows.
+func CmdCatEditor() string { return In(i18n.Locale()).CmdCatEditor() }
+
+// CmdCatEditor says "Editor"
+// in the language of msgs.
+func (msgs Messages) CmdCatEditor() string {
+	return Catalog.Format(msgs.locale, "cmdCatEditor", nil)
+}
+
+// CmdCatView says "View"
+// in the language the app shows.
+func CmdCatView() string { return In(i18n.Locale()).CmdCatView() }
+
+// CmdCatView says "View"
+// in the language of msgs.
+func (msgs Messages) CmdCatView() string {
+	return Catalog.Format(msgs.locale, "cmdCatView", nil)
+}
+
+// CmdCatWorkspace says "Workspace"
+// in the language the app shows.
+func CmdCatWorkspace() string { return In(i18n.Locale()).CmdCatWorkspace() }
+
+// CmdCatWorkspace says "Workspace"
+// in the language of msgs.
+func (msgs Messages) CmdCatWorkspace() string {
+	return Catalog.Format(msgs.locale, "cmdCatWorkspace", nil)
+}
+
+// CmdCatHelp says "Help"
+// in the language the app shows.
+func CmdCatHelp() string { return In(i18n.Locale()).CmdCatHelp() }
+
+// CmdCatHelp says "Help"
+// in the language of msgs.
+func (msgs Messages) CmdCatHelp() string {
+	return Catalog.Format(msgs.locale, "cmdCatHelp", nil)
+}
+
+// CmdCatOther says "Other"
+// in the language the app shows.
+func CmdCatOther() string { return In(i18n.Locale()).CmdCatOther() }
+
+// CmdCatOther says "Other"
+// in the language of msgs.
+func (msgs Messages) CmdCatOther() string {
+	return Catalog.Format(msgs.locale, "cmdCatOther", nil)
+}
+
+// CmdPaletteToggle says "Open Command Palette"
+// in the language the app shows.
+func CmdPaletteToggle() string { return In(i18n.Locale()).CmdPaletteToggle() }
+
+// CmdPaletteToggle says "Open Command Palette"
+// in the language of msgs.
+func (msgs Messages) CmdPaletteToggle() string {
+	return Catalog.Format(msgs.locale, "cmdPaletteToggle", nil)
+}
+
+// CmdNavBack says "Back"
+// in the language the app shows.
+func CmdNavBack() string { return In(i18n.Locale()).CmdNavBack() }
+
+// CmdNavBack says "Back"
+// in the language of msgs.
+func (msgs Messages) CmdNavBack() string {
+	return Catalog.Format(msgs.locale, "cmdNavBack", nil)
+}
+
+// CmdNavForward says "Forward"
+// in the language the app shows.
+func CmdNavForward() string { return In(i18n.Locale()).CmdNavForward() }
+
+// CmdNavForward says "Forward"
+// in the language of msgs.
+func (msgs Messages) CmdNavForward() string {
+	return Catalog.Format(msgs.locale, "cmdNavForward", nil)
+}
+
+// CmdOpenSettings says "Open Settings"
+// in the language the app shows.
+func CmdOpenSettings() string { return In(i18n.Locale()).CmdOpenSettings() }
+
+// CmdOpenSettings says "Open Settings"
+// in the language of msgs.
+func (msgs Messages) CmdOpenSettings() string {
+	return Catalog.Format(msgs.locale, "cmdOpenSettings", nil)
+}
+
+// CmdCycleTheme says "Cycle Theme"
+// in the language the app shows.
+func CmdCycleTheme() string { return In(i18n.Locale()).CmdCycleTheme() }
+
+// CmdCycleTheme says "Cycle Theme"
+// in the language of msgs.
+func (msgs Messages) CmdCycleTheme() string {
+	return Catalog.Format(msgs.locale, "cmdCycleTheme", nil)
+}
+
+// CmdToggleZen says "Toggle Zen Layout"
+// in the language the app shows.
+func CmdToggleZen() string { return In(i18n.Locale()).CmdToggleZen() }
+
+// CmdToggleZen says "Toggle Zen Layout"
+// in the language of msgs.
+func (msgs Messages) CmdToggleZen() string {
+	return Catalog.Format(msgs.locale, "cmdToggleZen", nil)
+}
+
+// CmdSessionNew says "New Chat"
+// in the language the app shows.
+func CmdSessionNew() string { return In(i18n.Locale()).CmdSessionNew() }
+
+// CmdSessionNew says "New Chat"
+// in the language of msgs.
+func (msgs Messages) CmdSessionNew() string {
+	return Catalog.Format(msgs.locale, "cmdSessionNew", nil)
+}
+
+// CmdArchiveCurrent says "Archive Current Chat"
+// in the language the app shows.
+func CmdArchiveCurrent() string { return In(i18n.Locale()).CmdArchiveCurrent() }
+
+// CmdArchiveCurrent says "Archive Current Chat"
+// in the language of msgs.
+func (msgs Messages) CmdArchiveCurrent() string {
+	return Catalog.Format(msgs.locale, "cmdArchiveCurrent", nil)
+}
+
+// CmdTogglePinned says "Toggle Current Chat Pinned"
+// in the language the app shows.
+func CmdTogglePinned() string { return In(i18n.Locale()).CmdTogglePinned() }
+
+// CmdTogglePinned says "Toggle Current Chat Pinned"
+// in the language of msgs.
+func (msgs Messages) CmdTogglePinned() string {
+	return Catalog.Format(msgs.locale, "cmdTogglePinned", nil)
+}
+
+// CmdFocusInput says "Focus Current Input"
+// in the language the app shows.
+func CmdFocusInput() string { return In(i18n.Locale()).CmdFocusInput() }
+
+// CmdFocusInput says "Focus Current Input"
+// in the language of msgs.
+func (msgs Messages) CmdFocusInput() string {
+	return Catalog.Format(msgs.locale, "cmdFocusInput", nil)
+}
+
+// CmdToggleExplorer says "Toggle Files and Changes Sidebar"
+// in the language the app shows.
+func CmdToggleExplorer() string { return In(i18n.Locale()).CmdToggleExplorer() }
+
+// CmdToggleExplorer says "Toggle Files and Changes Sidebar"
+// in the language of msgs.
+func (msgs Messages) CmdToggleExplorer() string {
+	return Catalog.Format(msgs.locale, "cmdToggleExplorer", nil)
+}
+
+// CmdCopyBranch says "Copy Current Branch"
+// in the language the app shows.
+func CmdCopyBranch() string { return In(i18n.Locale()).CmdCopyBranch() }
+
+// CmdCopyBranch says "Copy Current Branch"
+// in the language of msgs.
+func (msgs Messages) CmdCopyBranch() string {
+	return Catalog.Format(msgs.locale, "cmdCopyBranch", nil)
+}
+
+// CmdCopyURL says "Copy Current URL"
+// in the language the app shows.
+func CmdCopyURL() string { return In(i18n.Locale()).CmdCopyURL() }
+
+// CmdCopyURL says "Copy Current URL"
+// in the language of msgs.
+func (msgs Messages) CmdCopyURL() string {
+	return Catalog.Format(msgs.locale, "cmdCopyURL", nil)
+}
+
+// CmdRenameCurrent says "Rename Current Chat"
+// in the language the app shows.
+func CmdRenameCurrent() string { return In(i18n.Locale()).CmdRenameCurrent() }
+
+// CmdRenameCurrent says "Rename Current Chat"
+// in the language of msgs.
+func (msgs Messages) CmdRenameCurrent() string {
+	return Catalog.Format(msgs.locale, "cmdRenameCurrent", nil)
+}
+
+// CmdNewTabOrTerminal says "New Tab or Terminal"
+// in the language the app shows.
+func CmdNewTabOrTerminal() string { return In(i18n.Locale()).CmdNewTabOrTerminal() }
+
+// CmdNewTabOrTerminal says "New Tab or Terminal"
+// in the language of msgs.
+func (msgs Messages) CmdNewTabOrTerminal() string {
+	return Catalog.Format(msgs.locale, "cmdNewTabOrTerminal", nil)
+}
+
+// CmdToggleTerminal says "Toggle Terminal"
+// in the language the app shows.
+func CmdToggleTerminal() string { return In(i18n.Locale()).CmdToggleTerminal() }
+
+// CmdToggleTerminal says "Toggle Terminal"
+// in the language of msgs.
+func (msgs Messages) CmdToggleTerminal() string {
+	return Catalog.Format(msgs.locale, "cmdToggleTerminal", nil)
+}
+
+// CmdSaveFile says "Save Current File"
+// in the language the app shows.
+func CmdSaveFile() string { return In(i18n.Locale()).CmdSaveFile() }
+
+// CmdSaveFile says "Save Current File"
+// in the language of msgs.
+func (msgs Messages) CmdSaveFile() string {
+	return Catalog.Format(msgs.locale, "cmdSaveFile", nil)
+}
+
+// CmdNextTab says "Switch to Next Tab"
+// in the language the app shows.
+func CmdNextTab() string { return In(i18n.Locale()).CmdNextTab() }
+
+// CmdNextTab says "Switch to Next Tab"
+// in the language of msgs.
+func (msgs Messages) CmdNextTab() string {
+	return Catalog.Format(msgs.locale, "cmdNextTab", nil)
+}
+
+// CmdPreviousTab says "Switch to Previous Tab"
+// in the language the app shows.
+func CmdPreviousTab() string { return In(i18n.Locale()).CmdPreviousTab() }
+
+// CmdPreviousTab says "Switch to Previous Tab"
+// in the language of msgs.
+func (msgs Messages) CmdPreviousTab() string {
+	return Catalog.Format(msgs.locale, "cmdPreviousTab", nil)
+}
+
+// CmdPreviousVisible says "Switch to Previous Session"
+// in the language the app shows.
+func CmdPreviousVisible() string { return In(i18n.Locale()).CmdPreviousVisible() }
+
+// CmdPreviousVisible says "Switch to Previous Session"
+// in the language of msgs.
+func (msgs Messages) CmdPreviousVisible() string {
+	return Catalog.Format(msgs.locale, "cmdPreviousVisible", nil)
+}
+
+// CmdNextVisible says "Switch to Next Session"
+// in the language the app shows.
+func CmdNextVisible() string { return In(i18n.Locale()).CmdNextVisible() }
+
+// CmdNextVisible says "Switch to Next Session"
+// in the language of msgs.
+func (msgs Messages) CmdNextVisible() string {
+	return Catalog.Format(msgs.locale, "cmdNextVisible", nil)
+}
+
+// CmdSwitchToTab says "Switch to Tab {n}"
+// in the language the app shows.
+func CmdSwitchToTab(n int) string { return In(i18n.Locale()).CmdSwitchToTab(n) }
+
+// CmdSwitchToTab says "Switch to Tab {n}"
+// in the language of msgs.
+func (msgs Messages) CmdSwitchToTab(n int) string {
+	return Catalog.Format(msgs.locale, "cmdSwitchToTab", map[string]any{"n": n})
+}
+
+// CmdSwitchToLastTab says "Switch to Last Tab"
+// in the language the app shows.
+func CmdSwitchToLastTab() string { return In(i18n.Locale()).CmdSwitchToLastTab() }
+
+// CmdSwitchToLastTab says "Switch to Last Tab"
+// in the language of msgs.
+func (msgs Messages) CmdSwitchToLastTab() string {
+	return Catalog.Format(msgs.locale, "cmdSwitchToLastTab", nil)
+}
+
+// CmdCycleMode says "Cycle Agent Mode"
+// in the language the app shows.
+func CmdCycleMode() string { return In(i18n.Locale()).CmdCycleMode() }
+
+// CmdCycleMode says "Cycle Agent Mode"
+// in the language of msgs.
+func (msgs Messages) CmdCycleMode() string {
+	return Catalog.Format(msgs.locale, "cmdCycleMode", nil)
+}
+
+// CmdCycleProvider says "Cycle ACP Provider"
+// in the language the app shows.
+func CmdCycleProvider() string { return In(i18n.Locale()).CmdCycleProvider() }
+
+// CmdCycleProvider says "Cycle ACP Provider"
+// in the language of msgs.
+func (msgs Messages) CmdCycleProvider() string {
+	return Catalog.Format(msgs.locale, "cmdCycleProvider", nil)
+}
+
+// CmdCycleModel says "Cycle Model"
+// in the language the app shows.
+func CmdCycleModel() string { return In(i18n.Locale()).CmdCycleModel() }
+
+// CmdCycleModel says "Cycle Model"
+// in the language of msgs.
+func (msgs Messages) CmdCycleModel() string {
+	return Catalog.Format(msgs.locale, "cmdCycleModel", nil)
+}
+
+// CmdURLCopied says "Session URL copied to clipboard"
+// in the language the app shows.
+func CmdURLCopied() string { return In(i18n.Locale()).CmdURLCopied() }
+
+// CmdURLCopied says "Session URL copied to clipboard"
+// in the language of msgs.
+func (msgs Messages) CmdURLCopied() string {
+	return Catalog.Format(msgs.locale, "cmdURLCopied", nil)
+}
+
+// CmdBranchCopied says "Current branch name copied to clipboard"
+// in the language the app shows.
+func CmdBranchCopied() string { return In(i18n.Locale()).CmdBranchCopied() }
+
+// CmdBranchCopied says "Current branch name copied to clipboard"
+// in the language of msgs.
+func (msgs Messages) CmdBranchCopied() string {
+	return Catalog.Format(msgs.locale, "cmdBranchCopied", nil)
+}

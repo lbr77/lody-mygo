@@ -464,7 +464,9 @@ func (a *App) fileView(c *ui.Context, p *palette, in *inspectState, s collab.Ses
 		editor.View(c, fp.code).Grow(1).MinHeight(0).FillWidth()
 		if fp.editing {
 			c.OnShortcut(ui.Shift, ui.KeyF12, func() { a.askLanguageServer(fp, s, "references", fp.code.Selection().Head) })
-			c.OnShortcut(ui.Cmd, ui.KeyS, func() { a.saveFile(fp, s) })
+			if fp.code.Buffer.Modified() && !fp.saving && fp.conflict == nil {
+				a.surfNext.save = func() { a.saveFile(fp, s) }
+			}
 			a.watchFile(c, fp, s)
 		}
 	}

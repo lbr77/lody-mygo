@@ -22,11 +22,8 @@ const (
 func (a *App) mainView(c *ui.Context, p *palette) {
 	a.openForked()
 	a.membershipSync(c)
-	c.OnShortcut(ui.Cmd, ui.KeyN, func() { a.open("") })
-	c.OnShortcut(ui.Cmd, ui.KeyL, func() { a.composerFocus.Focus(c) })
-	c.OnShortcut(ui.Cmd, ui.KeyBackslash, func() { a.sidebarHidden = !a.sidebarHidden })
-	c.OnShortcut(ui.Cmd, ui.KeyJ, a.toggleTerminal)
-	c.OnShortcut(ui.Ctrl, ui.KeyBackquote, a.toggleTerminal)
+	a.bindCommands(c)
+	defer func() { a.surf, a.surfNext = a.surfNext, surface{} }()
 	shell := ui.Row(c.Key("main")).Fill().AlignItems(ui.Stretch).Background(p.Ground).Transition(windowIn)
 	// The sidebar slides in and out as it shows and hides; the card grows
 	// into its room.
@@ -71,6 +68,7 @@ func (a *App) mainView(c *ui.Context, p *palette) {
 	a.pairingDialog(c, p)
 	a.shareDialogView(c, p)
 	a.deviceAuthDialog(c, p)
+	a.paletteView(c, p)
 	a.toastViewport(c, p)
 }
 

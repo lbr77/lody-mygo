@@ -2564,5 +2564,52 @@
     }
   },
   "prTabDiffUnavailable": "Diff content is unavailable.",
-  "prTabRepositoryIdentityUnresolved": "Cannot verify this session’s repository identity. GitHub operations are paused. Ask a workspace administrator to check Settings > GitHub, the active GitHub App installation, repository access and the original PR association."
+  "prTabRepositoryIdentityUnresolved": "Cannot verify this session’s repository identity. GitHub operations are paused. Ask a workspace administrator to check Settings > GitHub, the active GitHub App installation, repository access and the original PR association.",
+  "cmdPalettePlaceholder": "Search commands and chats...",
+  "cmdPaletteEmpty": "No results found.",
+  "cmdHintNavigate": "Navigate",
+  "cmdHintSelect": "Select",
+  "cmdHintClose": "Close",
+  "cmdCatNavigation": "Navigation",
+  "cmdCatSession": "Session",
+  "cmdCatEditor": "Editor",
+  "cmdCatView": "View",
+  "cmdCatWorkspace": "Workspace",
+  "cmdCatHelp": "Help",
+  "cmdCatOther": "Other",
+  "cmdPaletteToggle": "Open Command Palette",
+  "cmdNavBack": "Back",
+  "cmdNavForward": "Forward",
+  "cmdOpenSettings": "Open Settings",
+  "cmdCycleTheme": "Cycle Theme",
+  "cmdToggleZen": "Toggle Zen Layout",
+  "cmdSessionNew": "New Chat",
+  "cmdArchiveCurrent": "Archive Current Chat",
+  "cmdTogglePinned": "Toggle Current Chat Pinned",
+  "cmdFocusInput": "Focus Current Input",
+  "cmdToggleExplorer": "Toggle Files and Changes Sidebar",
+  "cmdCopyBranch": "Copy Current Branch",
+  "cmdCopyURL": "Copy Current URL",
+  "cmdRenameCurrent": "Rename Current Chat",
+  "cmdNewTabOrTerminal": "New Tab or Terminal",
+  "cmdToggleTerminal": "Toggle Terminal",
+  "cmdSaveFile": "Save Current File",
+  "cmdNextTab": "Switch to Next Tab",
+  "cmdPreviousTab": "Switch to Previous Tab",
+  "cmdPreviousVisible": "Switch to Previous Session",
+  "cmdNextVisible": "Switch to Next Session",
+  "cmdSwitchToTab": "Switch to Tab {n}",
+  "@cmdSwitchToTab": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "cmdSwitchToLastTab": "Switch to Last Tab",
+  "cmdCycleMode": "Cycle Agent Mode",
+  "cmdCycleProvider": "Cycle ACP Provider",
+  "cmdCycleModel": "Cycle Model",
+  "cmdURLCopied": "Session URL copied to clipboard",
+  "cmdBranchCopied": "Current branch name copied to clipboard"
 }

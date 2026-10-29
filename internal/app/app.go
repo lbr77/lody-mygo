@@ -108,8 +108,10 @@ type App struct {
 	composerFocus    ui.Handle
 	history          []string // sessions shown, for Back and Forward
 	histPos          int
-	searchOpen       bool
-	searchText       string
+	palette          paletteState
+	surf, surfNext   surface // what the view offers the commands: the last frame's, and this one's
+	zen              zenState
+	focusComposer    bool              // the composer takes the focus as it builds
 	showAll          map[string]bool   // projects listing every session
 	appearance       string            // System, Light or Dark
 	busyBehavior     string            // queue or steer, for messages sent while the agent works
