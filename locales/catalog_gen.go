@@ -2572,3 +2572,53 @@ func PanelEdit(n int) string { return In(i18n.Locale()).PanelEdit(n) }
 func (msgs Messages) PanelEdit(n int) string {
 	return Catalog.Format(msgs.locale, "panelEdit", map[string]any{"n": n})
 }
+
+// MentionFiles says "Files"
+// in the language the app shows.
+func MentionFiles() string { return In(i18n.Locale()).MentionFiles() }
+
+// MentionFiles says "Files"
+// in the language of msgs.
+func (msgs Messages) MentionFiles() string {
+	return Catalog.Format(msgs.locale, "mentionFiles", nil)
+}
+
+// MentionSkills says "Skills"
+// in the language the app shows.
+func MentionSkills() string { return In(i18n.Locale()).MentionSkills() }
+
+// MentionSkills says "Skills"
+// in the language of msgs.
+func (msgs Messages) MentionSkills() string {
+	return Catalog.Format(msgs.locale, "mentionSkills", nil)
+}
+
+// MentionSessions says "Sessions"
+// in the language the app shows.
+func MentionSessions() string { return In(i18n.Locale()).MentionSessions() }
+
+// MentionSessions says "Sessions"
+// in the language of msgs.
+func (msgs Messages) MentionSessions() string {
+	return Catalog.Format(msgs.locale, "mentionSessions", nil)
+}
+
+// MentionNoMatches says "No matches"
+// in the language the app shows.
+func MentionNoMatches() string { return In(i18n.Locale()).MentionNoMatches() }
+
+// MentionNoMatches says "No matches"
+// in the language of msgs.
+func (msgs Messages) MentionNoMatches() string {
+	return Catalog.Format(msgs.locale, "mentionNoMatches", nil)
+}
+
+// MentionOffline says "{machine} is offline"
+// in the language the app shows.
+func MentionOffline(machine string) string { return In(i18n.Locale()).MentionOffline(machine) }
+
+// MentionOffline says "{machine} is offline"
+// in the language of msgs.
+func (msgs Messages) MentionOffline(machine string) string {
+	return Catalog.Format(msgs.locale, "mentionOffline", map[string]any{"machine": machine})
+}

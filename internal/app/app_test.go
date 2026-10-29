@@ -14,6 +14,7 @@ import (
 
 	"github.com/lbr77/lody-mygo/internal/catalog"
 	"github.com/lbr77/lody-mygo/internal/cloud"
+	"github.com/lbr77/lody-mygo/internal/mention"
 	"github.com/lbr77/lody-mygo/internal/session"
 )
 
@@ -478,5 +479,66 @@ func TestChangesPanel(t *testing.T) {
 	tt.Frame()
 	if a.panelFile != "internal/catalog/sync.go" || !tt.HasText("Edit 1") {
 		t.Fatalf("file edits: %q", tt.Texts())
+	}
+}
+
+func TestMentions(t *testing.T) {
+	a := fixture()
+	a.sidebarHidden = true // it lists the same titles as the panel
+	a.view.Entries = a.view.Entries[:2]
+	a.view.Working = false
+	a.mentionSources = map[string]*mentionSource{
+		"skill|m1|m1:local:p1": {loaded: time.Now(), items: mention.Skills([]mention.SkillGroup{{Scope: "project", Dir: ".claude/skills", Skills: []mention.SkillEntry{
+			{Name: "review", Description: "Review the diff", RelativePath: ".claude/skills/review/SKILL.md"},
+			{Name: "release", Description: "Cut a release", RelativePath: ".claude/skills/release/SKILL.md"},
+		}}})},
+		"file|m1|m1:local:p1": {loaded: time.Now(), items: mention.Files([]string{"internal/app/view.go", "README.md"})},
+	}
+	tt := snap(t, a, "mentions", false, func(tt *ui.Tester) {
+		tt.Frame()
+		tt.Type("@")
+		tt.Frame()
+	})
+	for _, want := range []string{"Files", "Skills", "Sessions"} {
+		if !tt.HasText(want) {
+			t.Fatalf("no %s category: %q", want, tt.Texts())
+		}
+	}
+	tt.Type("view")
+	tt.Frame()
+	if !tt.HasText("view.go") {
+		t.Fatalf("no file match: %q", tt.Texts())
+	}
+	tt.Key(0, ui.KeyEnter)
+	tt.Frame()
+	if a.draft != "@internal/app/view.go " {
+		t.Fatalf("draft = %q", a.draft)
+	}
+	tt.Type("$re")
+	tt.Frame()
+	if !tt.HasText("$review") || !tt.HasText("$release") {
+		t.Fatalf("skills: %q", tt.Texts())
+	}
+	tt.Key(0, ui.KeyDown)
+	tt.Key(0, ui.KeyTab)
+	tt.Frame()
+	if a.draft != "@internal/app/view.go $release " {
+		t.Fatalf("draft = %q", a.draft)
+	}
+	tt.Type("@session:")
+	tt.Frame()
+	if err := tt.Click("Sidebar status marks"); err != nil {
+		t.Fatalf("%v: %q", err, tt.Texts())
+	}
+	tt.Frame()
+	if a.draft != "@internal/app/view.go $release @session:s2 " {
+		t.Fatalf("draft = %q", a.draft)
+	}
+	tt.Type("@nothing")
+	tt.Frame()
+	tt.Key(0, ui.KeyEscape)
+	tt.Frame()
+	if tt.HasText("No matches") || a.mention.active {
+		t.Fatalf("Escape left the panel open: %q", tt.Texts())
 	}
 }

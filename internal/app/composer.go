@@ -167,13 +167,17 @@ func (a *App) composerBox(c *ui.Context, p *palette, o composerOptions) {
 			a.addFiles(dropped)
 		}
 		hasFiles := len(a.attachments) > 0
+		var input ui.Element
 		box.Children(func() {
 			a.attachmentChips(c, p)
 			ui.Box(c).FillWidth().Children(func() {
 				empty := strings.TrimSpace(a.draft) == "" && !hasFiles
-				input := ui.TextAreaBase(c, &a.draft).Lines(2, 10).Placeholder(o.placeholder).FontSize(sizeBody).LineHeight(24.0/14).
+				input = ui.TextAreaBase(c, &a.draft).Lines(2, 10).Placeholder(o.placeholder).FontSize(sizeBody).LineHeight(24.0/14).
 					TextColor(p.Reading).Padding(2, 4).FillWidth().AutoFocus().Label(locales.ComposerLabel()).Bind(&a.composerFocus).
 					OnTextKey(func(k ui.TextKey) bool {
+						if a.mentionKey(k) {
+							return true
+						}
 						if k.Key == ui.KeyEnter && k.Mods&ui.Shift == 0 {
 							if o.canSend && (strings.TrimSpace(k.Text()) != "" || len(a.attachments) > 0) {
 								a.draft = k.Text()
@@ -220,6 +224,7 @@ func (a *App) composerBox(c *ui.Context, p *palette, o composerOptions) {
 				})
 			})
 		})
+		a.mentionPanel(c, p, box, input)
 		if a.sendError != "" {
 			ui.Text(c, a.sendError).FontSize(sizeFoot).TextColor(p.Danger).Padding(0, 6).Selectable()
 		}

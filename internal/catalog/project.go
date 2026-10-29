@@ -87,6 +87,14 @@ type Capability struct {
 	// Steer is whether the agent's runtime acknowledges messages given to
 	// a running turn.
 	Steer bool `json:"steer,omitempty"`
+	// Commands are the agent's slash commands.
+	Commands []Command `json:"commands,omitempty"`
+}
+
+// Command is an agent's slash command.
+type Command struct {
+	Name        string `json:"name"`
+	Description string `json:"description,omitempty"`
 }
 
 // Mode is a permission mode of an agent.
@@ -221,6 +229,12 @@ func projectMachine(rows []flock.Row, machineID string) Catalog {
 						name = id
 					}
 					capability.Modes = append(capability.Modes, Mode{ID: id, Name: name})
+				}
+			}
+			for _, m := range anyList(value["availableCommands"]) {
+				cmd := object(m)
+				if name := text(cmd["name"]); name != "" {
+					capability.Commands = append(capability.Commands, Command{Name: name, Description: text(cmd["description"])})
 				}
 			}
 			capability.Steer = value["acknowledgedSteer"] == true && value["provenance"] == "runtime"

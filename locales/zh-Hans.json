@@ -252,5 +252,10 @@
   "panelChanges": "变更",
   "panelNoChanges": "还没有变更",
   "panelNoChangesHint": "Agent 在这个会话中编辑的文件会显示在这里。",
-  "panelEdit": "第 {n} 次修改"
+  "panelEdit": "第 {n} 次修改",
+  "mentionFiles": "文件",
+  "mentionSkills": "技能",
+  "mentionSessions": "会话",
+  "mentionNoMatches": "没有匹配项",
+  "mentionOffline": "{machine} 已离线"
 }

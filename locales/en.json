@@ -609,5 +609,17 @@
         "type": "int"
       }
     }
+  },
+  "mentionFiles": "Files",
+  "mentionSkills": "Skills",
+  "mentionSessions": "Sessions",
+  "mentionNoMatches": "No matches",
+  "mentionOffline": "{machine} is offline",
+  "@mentionOffline": {
+    "placeholders": {
+      "machine": {
+        "type": "String"
+      }
+    }
   }
 }

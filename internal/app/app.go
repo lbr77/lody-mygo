@@ -118,6 +118,8 @@ type App struct {
 	taskID         string
 	page           string // "archive", or "" for chats
 	archiveSearch  string
+	mention        mentionState // the composer's mention panel
+	mentionSources map[string]*mentionSource
 	diffs          map[string]*editor.DiffState // tool diffs of the open session
 	md             markdown.Options
 	mdMuted        markdown.Options
@@ -183,6 +185,13 @@ func (a *App) update(fn func()) {
 		return
 	}
 	a.win.Update(fn)
+}
+
+// redraw asks for a frame after a handler changed what the view shows.
+func (a *App) redraw() {
+	if a.win != nil {
+		a.win.Update(func() {})
+	}
 }
 
 func (a *App) refreshAccount() {
@@ -499,7 +508,9 @@ func (a *App) send() {
 	if (text == "" && len(files) == 0) || a.sending || a.replica == nil || sess == nil || a.conn == nil {
 		return
 	}
-	r, sync, userID, workspace := a.replica, a.sync, a.account.User.ID, a.conn.ID
+	r, sync, userID, workspace, conn := a.replica, a.sync, a.account.User.ID, a.conn.ID, a.conn
+	target := a.mentionTarget()
+	skills, sessions := a.mentionItems(target)
 	working := a.view != nil && a.view.Working || sess.Working()
 	turn := session.Turn{
 		Text:         text,
@@ -523,6 +534,7 @@ func (a *App) send() {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
 		defer cancel()
 		state := session.NotSent
+		turn.Text = expandMentions(ctx, conn, userID, target, text, skills, sessions)
 		blocks, err := a.upload(ctx, workspace, r.ID, files)
 		if err == nil {
 			turn.Attachments = blocks
@@ -637,7 +649,9 @@ func (a *App) startChat() {
 		return
 	}
 	id := uuid.NewString()
-	sync, userID, workspace := a.sync, a.account.User.ID, a.conn.ID
+	sync, userID, workspace, conn := a.sync, a.account.User.ID, a.conn.ID, a.conn
+	target := a.mentionTarget()
+	skills, sessions := a.mentionItems(target)
 	model, mode := a.models[""], a.modes[""]
 	title := draftTitle(text)
 	if title == "" && len(files) > 0 {
@@ -674,7 +688,7 @@ func (a *App) startChat() {
 		if blocks, err = a.upload(ctx, workspace, id, files); err == nil {
 			if err = r.WaitReady(ctx); err == nil {
 				state, err = r.Send(ctx, session.Turn{
-					Text: text, UserID: userID, MachineID: nc.machine, ModelID: model, ModeID: mode, Attachments: blocks,
+					Text: expandMentions(ctx, conn, userID, target, text, skills, sessions), UserID: userID, MachineID: nc.machine, ModelID: model, ModeID: mode, Attachments: blocks,
 					AgentType: agent.AgentType, CLIType: agent.CLIType, MarkDispatch: sync.MarkDispatch,
 				})
 			}
