@@ -142,9 +142,10 @@ type App struct {
 	role            roleForm
 	password        passwordForm
 	projectWin      projectWindow
-	revoking        string // the share whose revoke awaits confirmation
-	taskOpen        bool   // a task's dialog
-	taskEntry       string // the turn and task it shows
+	sidebarWidth    float32 // as dragged; 0 is the default
+	revoking        string  // the share whose revoke awaits confirmation
+	taskOpen        bool    // a task's dialog
+	taskEntry       string  // the turn and task it shows
 	taskID          string
 	page            string // "archive", or "" for chats
 	archiveSearch   string
@@ -188,6 +189,7 @@ func (a *App) Start(win *mygo.Window) {
 	}
 	a.appearance = prefs.Appearance
 	a.busyBehavior = prefs.Busy
+	a.sidebarWidth = prefs.Sidebar
 	if a.appearance != "" {
 		applyAppearance(a.appearance)
 	}
@@ -757,6 +759,7 @@ type prefs struct {
 	Collapsed  map[string]bool `json:"collapsed,omitempty"`
 	Appearance string          `json:"appearance,omitempty"`
 	Busy       string          `json:"busy,omitempty"`
+	Sidebar    float32         `json:"sidebar,omitempty"` // the sidebar's width
 }
 
 func dataDir() string {
@@ -792,7 +795,7 @@ func loadPrefs() prefs {
 }
 
 func (a *App) savePrefs() {
-	writeJSON("prefs.json", prefs{Workspace: a.workspaceID, Collapsed: a.collapsed, Appearance: a.appearance, Busy: a.busyBehavior})
+	writeJSON("prefs.json", prefs{Workspace: a.workspaceID, Collapsed: a.collapsed, Appearance: a.appearance, Busy: a.busyBehavior, Sidebar: a.sidebarWidth})
 }
 
 func loadAccount() *cloud.Account {

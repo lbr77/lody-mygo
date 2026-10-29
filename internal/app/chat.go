@@ -28,6 +28,7 @@ func (a *App) mainView(c *ui.Context, p *palette) {
 	ui.Row(c).Fill().AlignItems(ui.Stretch).Background(p.Ground).Children(func() {
 		if !a.sidebarHidden {
 			a.sidebar(c, p)
+			a.sidebarHandle(c, p)
 		}
 		left := float32(0)
 		if a.sidebarHidden {
@@ -113,7 +114,7 @@ func (a *App) sessionView(c *ui.Context, p *palette) {
 	w, _ := c.Size()
 	card := w - 8
 	if !a.sidebarHidden {
-		card -= sidebarWidth
+		card -= a.sidebarW()
 	}
 	if card > 0 {
 		a.panelPercent = min(a.panelPercent, max(50, 100-280/card*100))

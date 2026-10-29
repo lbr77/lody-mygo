@@ -1347,5 +1347,6 @@
       }
     }
   },
-  "projectMCPNotOwner": "Only the owner of the project's machine changes its defaults."
+  "projectMCPNotOwner": "Only the owner of the project's machine changes its defaults.",
+  "sidebarResize": "Resize sidebar"
 }

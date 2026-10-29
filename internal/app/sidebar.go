@@ -148,7 +148,7 @@ func (a *App) sideRows() []sideRow {
 }
 
 func (a *App) sidebar(c *ui.Context, p *palette) {
-	ui.Column(c).Width(sidebarWidth).Shrink(0).Children(func() {
+	ui.Column(c).Width(a.sidebarW()).Shrink(0).Children(func() {
 		// The traffic lights sit on the left of this row.
 		ui.Row(c).Height(titleBarHeight).Shrink(0).AlignItems(ui.Center).Justify(ui.End).Padding(0, 6).Gap(2).DragWindow().Children(func() {
 			iconButton(c, p, iconSidebar, locales.SidebarToggle(), p.SideHover).OnClick(func() { a.sidebarHidden = true })
@@ -608,4 +608,41 @@ func (a *App) machineName(id string) string {
 		return locales.MachineFallback(strings.ToUpper(id[:6]))
 	}
 	return id
+}
+
+// The sidebar's width, which its right edge drags between these.
+const (
+	sidebarMin = 220
+	sidebarMax = 480
+)
+
+func (a *App) sidebarW() float32 {
+	if a.sidebarWidth == 0 {
+		return sidebarWidth
+	}
+	return min(max(a.sidebarWidth, sidebarMin), sidebarMax)
+}
+
+// sidebarHandle is the sidebar's right edge, which drags to resize it: a
+// strip over the edge that shows a line while it's hovered or dragged.
+func (a *App) sidebarHandle(c *ui.Context, p *palette) {
+	w := a.sidebarW()
+	handle := ui.Box(c).Absolute().Top(0).Bottom(0).Left(w - 3).Width(6).Cursor(ui.CursorResizeColumn).Label(locales.SidebarResize())
+	if dx, _, ok := handle.Dragged(); ok && dx != 0 {
+		// From where the last frame put the edge, as a frame may build
+		// more than once and must move it once.
+		base := w
+		if b := handle.Bounds(); b.W > 0 {
+			base = b.X + 3
+		}
+		a.sidebarWidth = min(max(base+dx, sidebarMin), sidebarMax)
+	}
+	if _, _, ended := handle.DragEnded(); ended {
+		a.savePrefs()
+	}
+	if handle.Hovered() || handle.Dragging() {
+		handle.Children(func() {
+			ui.Box(c).Width(2).Fill().Margin(0, 2).Background(p.Primary.Alpha(0.6))
+		})
+	}
 }

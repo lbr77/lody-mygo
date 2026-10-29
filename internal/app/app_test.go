@@ -875,3 +875,31 @@ func TestRoleRow(t *testing.T) {
 		t.Fatalf("lost the role's other options: %v", cfg)
 	}
 }
+
+func TestSidebarResize(t *testing.T) {
+	a := fixture()
+	tt := snap(t, a, "sidebar-resize", false, nil)
+	r, ok := tt.Find("Resize sidebar")
+	if !ok {
+		t.Fatalf("no handle: %q", tt.Texts())
+	}
+	x, y := r.X+r.W/2, r.Y+r.H/2
+	tt.Press(x, y)
+	tt.Move(x+40, y)
+	tt.Frame()
+	tt.Move(x+80, y)
+	tt.Frame()
+	tt.Release(x+80, y)
+	tt.Frame()
+	if w := a.sidebarW(); w < 370 || w > 390 {
+		t.Fatalf("width after dragging 80 = %v", w)
+	}
+	tt.Press(x+80, y)
+	tt.Move(x+500, y)
+	tt.Frame()
+	tt.Release(x+500, y)
+	tt.Frame()
+	if w := a.sidebarW(); w != sidebarMax {
+		t.Fatalf("width past the end = %v", w)
+	}
+}

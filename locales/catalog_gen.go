@@ -6578,3 +6578,13 @@ func ProjectMCPNotOwner() string { return In(i18n.Locale()).ProjectMCPNotOwner()
 func (msgs Messages) ProjectMCPNotOwner() string {
 	return Catalog.Format(msgs.locale, "projectMCPNotOwner", nil)
 }
+
+// SidebarResize says "Resize sidebar"
+// in the language the app shows.
+func SidebarResize() string { return In(i18n.Locale()).SidebarResize() }
+
+// SidebarResize says "Resize sidebar"
+// in the language of msgs.
+func (msgs Messages) SidebarResize() string {
+	return Catalog.Format(msgs.locale, "sidebarResize", nil)
+}

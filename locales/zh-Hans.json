@@ -652,5 +652,6 @@
   "projectMCPCustom": "此项目使用自己的列表；之后在工作区默认启用的服务器不会自动加入。",
   "projectMCPNoConnection": "尚未配置连接；添加连接前不会加载。",
   "projectMCPToggle": "新对话默认启用 {name}",
-  "projectMCPNotOwner": "只有此项目所在机器的所有者可以修改默认设置。"
+  "projectMCPNotOwner": "只有此项目所在机器的所有者可以修改默认设置。",
+  "sidebarResize": "调整侧边栏宽度"
 }
