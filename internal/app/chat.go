@@ -23,6 +23,7 @@ const (
 
 func (a *App) mainView(c *ui.Context, p *palette) {
 	a.openForked()
+	a.tickSends()
 	a.membershipSync(c)
 	a.bindCommands(c)
 	defer func() { a.surf, a.surfNext = a.surfNext, surface{} }()
@@ -531,7 +532,8 @@ func (a *App) userMessage(c *ui.Context, p *palette, e session.Entry) {
 					ui.Text(c, e.Author.Name).FontSize(sizeCaption).TextColor(p.Secondary)
 				}
 			})
-			if len(images) > 0 {
+			// Rewritten, its attachments are the editor's to keep or leave.
+			if len(images) > 0 && !editing {
 				ui.Row(c).Wrap().Gap(6).Justify(ui.End).Children(func() {
 					size := float32(160)
 					if len(images) > 1 {
@@ -546,7 +548,7 @@ func (a *App) userMessage(c *ui.Context, p *palette, e session.Entry) {
 					}
 				})
 			}
-			if len(files) > 0 {
+			if len(files) > 0 && !editing {
 				a.fileCards(c, p, a.selected, files, true)
 			}
 			if editing {

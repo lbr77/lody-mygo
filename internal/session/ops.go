@@ -4,10 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
 	"github.com/google/uuid"
+
+	"github.com/lbr77/lody-mygo/internal/cloud"
 )
 
 // What a client asks a session's machine besides a turn, as Lody's chat
@@ -66,57 +69,203 @@ func EditableUser(entries []Entry, forkable bool) *Entry {
 	return u
 }
 
-// editBlocks are the message's input with its text replaced: its
-// attachments stay.
-func editBlocks(u Entry, text string) []any {
-	var original []any
+// inputBlocksOf is the message's input as it was sent; one written
+// without it is rebuilt from what the conversation shows: its text, then
+// its pictures and files.
+func inputBlocksOf(u Entry) []any {
 	if u.Config != nil {
-		original = list(u.Config["inputBlocks"])
-	}
-	if original == nil {
-		for _, it := range u.Items {
-			switch it.Type {
-			case "text":
-				original = append(original, map[string]any{"type": "text", "text": it.Text})
-			}
+		if blocks := list(u.Config["inputBlocks"]); blocks != nil {
+			return blocks
 		}
 	}
 	var out []any
-	replaced := false
-	for _, b := range original {
-		block := obj(b)
-		if str(block["type"]) == "text" {
-			if !replaced {
-				out = append(out, map[string]any{"type": "text", "text": text})
-				replaced = true
+	for _, it := range u.Items {
+		switch it.Type {
+		case "text":
+			out = append(out, map[string]any{"type": "text", "text": it.Text})
+		case "image", "file":
+			out = append(out, itemBlock(it))
+		case "image_group":
+			for _, img := range it.Images {
+				out = append(out, itemBlock(img))
 			}
-			continue
 		}
-		out = append(out, b)
-	}
-	if !replaced {
-		out = append(out, map[string]any{"type": "text", "text": text})
 	}
 	return out
 }
 
-// EditAndResend replaces the last user message with text and runs the
-// turn again from the reply before it.
-func (r *Replica) EditAndResend(ctx context.Context, machineID, userID, cliType, agentType string, u Entry, text string) error {
-	return editAndResend(ctx, r.machineRPC, r.ID, machineID, userID, cliType, agentType, u, text)
+// itemBlock is the input block a picture or file shown in the
+// conversation stands for, with the fields Lody's inputBlock keeps.
+func itemBlock(it Item) map[string]any {
+	b := map[string]any{"type": it.Type}
+	set := func(k string, v any, ok bool) {
+		if ok {
+			b[k] = v
+		}
+	}
+	if it.Type == "image" {
+		set("imageId", it.ImageID, it.ImageID != "")
+	} else {
+		set("fileId", it.FileID, it.FileID != "")
+		set("textPreview", it.TextPreview, true)
+		set("transport", it.Transport, it.Transport != "")
+		set("machineId", it.FileMachine, it.FileMachine != "")
+		set("uploadedAt", it.UploadedAt, it.UploadedAt != 0)
+	}
+	set("fileName", it.FileName, it.FileName != "")
+	set("mimeType", it.MimeType, it.MimeType != "")
+	set("sizeBytes", float64(it.SizeBytes), it.SizeBytes > 0)
+	set("storageSessionId", it.StorageSessionID, it.StorageSessionID != "")
+	return b
 }
 
-func editAndResend(ctx context.Context, call rpc, sessionID, machineID, userID, cliType, agentType string, u Entry, text string) error {
-	text = strings.TrimSpace(text)
-	if text == "" {
-		return errors.New("session: empty message")
+func isAttachment(b map[string]any) bool {
+	t := str(b["type"])
+	return t == "image" || t == "file"
+}
+
+// EditAttachment is one of the last message's pictures and files as an
+// edit sees it, as Lody's editAttachments: the id the edit keeps it by,
+// the block its input carries, and the item the conversation shows.
+type EditAttachment struct {
+	ID    string
+	Block map[string]any
+	Item  Item
+}
+
+// EditAttachments are the message's pictures and files in the order sent,
+// each "original:<n>".
+func EditAttachments(u Entry) []EditAttachment {
+	shown := map[string]Item{}
+	for _, it := range u.Items {
+		for _, x := range append([]Item{it}, it.Images...) {
+			switch {
+			case x.Type == "image" && x.ImageID != "":
+				shown["image:"+x.ImageID] = x
+			case x.Type == "file" && x.FileID != "":
+				shown["file:"+x.FileID] = x
+			}
+		}
+	}
+	var out []EditAttachment
+	for _, b := range inputBlocksOf(u) {
+		m := obj(b)
+		if !isAttachment(m) {
+			continue
+		}
+		it, ok := shown[str(m["type"])+":"+str(m["imageId"])+str(m["fileId"])]
+		if !ok {
+			it = Item{Type: str(m["type"]), ImageID: str(m["imageId"]), FileID: str(m["fileId"]), FileName: str(m["fileName"]),
+				MimeType: str(m["mimeType"]), StorageSessionID: str(m["storageSessionId"])}
+		}
+		if it.SizeBytes == 0 {
+			it.SizeBytes = int64(num(m["sizeBytes"]))
+		}
+		out = append(out, EditAttachment{ID: fmt.Sprintf("original:%d", len(out)), Block: m, Item: it})
+	}
+	return out
+}
+
+// Edit is what replaces the last user message, as Lody's editSession
+// sends it: its text, the ids of the attachments it keeps
+// (EditAttachments), and the blocks of the files added, uploaded.
+type Edit struct {
+	Text     string
+	Retained []string
+	Added    []map[string]any
+}
+
+// errEditAttachments is an edit keeping an attachment the message never
+// had, or one twice.
+var errEditAttachments = errors.New("session: invalid attachment")
+
+// editBlocks are the message's input as the edit leaves it: the text in
+// place of its own, the attachments kept where they were and those added
+// after them, and anything else it carried, as references, as it was. It
+// holds Lody's limits: 16 attachments, 8 of each kind.
+func editBlocks(u Entry, e Edit) ([]any, error) {
+	text := strings.TrimSpace(e.Text)
+	known := map[string]bool{}
+	for _, at := range EditAttachments(u) {
+		known[at.ID] = true
+	}
+	keep := map[string]bool{}
+	for _, id := range e.Retained {
+		if !known[id] || keep[id] {
+			return nil, errEditAttachments
+		}
+		keep[id] = true
+	}
+	var out []any
+	textBlock := map[string]any{"type": "text", "text": text}
+	// after is where what is added goes: behind the last attachment, else
+	// behind the text.
+	replaced, after, n := false, -1, 0
+	for _, b := range inputBlocksOf(u) {
+		block := obj(b)
+		switch {
+		case str(block["type"]) == "text":
+			if !replaced && text != "" {
+				out = append(out, textBlock)
+				after = len(out)
+			}
+			replaced = true
+		case isAttachment(block):
+			if keep[fmt.Sprintf("original:%d", n)] {
+				out = append(out, b)
+			}
+			n++
+			after = len(out)
+		default:
+			out = append(out, b)
+		}
+	}
+	if !replaced && text != "" {
+		out = append(out, textBlock)
+		after = len(out)
+	}
+	if after < 0 {
+		after = len(out)
+	}
+	blocks := append([]any(nil), out[:after]...)
+	for _, b := range e.Added {
+		blocks = append(blocks, b)
+	}
+	blocks = append(blocks, out[after:]...)
+	images, files := 0, 0
+	for _, b := range blocks {
+		switch str(obj(b)["type"]) {
+		case "image":
+			images++
+		case "file":
+			files++
+		}
+	}
+	if images+files > cloud.MaxAttachments || images > cloud.MaxImages || files > cloud.MaxFiles {
+		return nil, errors.New("session: too many attachments")
+	}
+	if text == "" && images+files == 0 {
+		return nil, errors.New("session: empty message")
+	}
+	return blocks, nil
+}
+
+// EditAndResend replaces the last user message with the edit and runs
+// the turn again from the reply before it.
+func (r *Replica) EditAndResend(ctx context.Context, machineID, userID, cliType, agentType string, u Entry, e Edit) error {
+	return editAndResend(ctx, r.machineRPC, r.ID, machineID, userID, cliType, agentType, u, e)
+}
+
+func editAndResend(ctx context.Context, call rpc, sessionID, machineID, userID, cliType, agentType string, u Entry, e Edit) error {
+	blocks, err := editBlocks(u, e)
+	if err != nil {
+		return err
 	}
 	config := map[string]any{}
 	for k, v := range u.Config {
 		config[k] = v
 	}
-	blocks := editBlocks(u, text)
-	config["inputBlocks"], config["prompt"] = blocks, text
+	config["inputBlocks"], config["prompt"] = blocks, strings.TrimSpace(e.Text)
 	config["cliType"], config["agentType"] = cliType, agentType
 	raw, err := call(ctx, machineID, "session/edit-and-resend", map[string]any{
 		"sessionId":             sessionID,

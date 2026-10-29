@@ -47,6 +47,14 @@ func (a *App) addFiles(paths []string) {
 			files++
 		}
 	}
+	a.attachments = append(a.attachments, a.admitFiles(images, files, paths)...)
+}
+
+// admitFiles is what of paths a message with images and files attached
+// already can take within Lody's limits, reporting what it refused; a
+// picture's thumbnail is read as it is taken.
+func (a *App) admitFiles(images, files int, paths []string) []pendingFile {
+	var out []pendingFile
 	for _, path := range paths {
 		info, err := os.Stat(path)
 		name := filepath.Base(path)
@@ -60,9 +68,9 @@ func (a *App) addFiles(paths []string) {
 		case info.Size() > cloud.MaxFileBytes:
 			a.sendError = locales.AttachTooLarge(name)
 			continue
-		case len(a.attachments) >= cloud.MaxAttachments:
+		case images+files >= cloud.MaxAttachments:
 			a.sendError = locales.AttachTooMany(cloud.MaxAttachments)
-			return
+			return out
 		}
 		f := pendingFile{Path: path, Name: name, Image: cloud.IsImage(path), Size: info.Size()}
 		if f.Image && images >= cloud.MaxImages || !f.Image && files >= cloud.MaxFiles {
@@ -75,8 +83,9 @@ func (a *App) addFiles(paths []string) {
 		} else {
 			files++
 		}
-		a.attachments = append(a.attachments, f)
+		out = append(out, f)
 	}
+	return out
 }
 
 // pickFiles opens the system's file dialog. It waits for the user, so it
@@ -119,8 +128,6 @@ func (a *App) attachmentChips(c *ui.Context, p *palette) {
 	if len(files) == 0 {
 		return
 	}
-	// Progress moves as Lody's transition-[clip-path] and -[width] do.
-	progress := func(f pendingFile) float32 { return min(100, max(0, a.fileProgress[f.Path])) }
 	ui.Row(c).Wrap().Gap(8).Padding(2, 2, 6, 2).Children(func() {
 		for i, f := range files {
 			index := i
@@ -128,51 +135,72 @@ func (a *App) attachmentChips(c *ui.Context, p *palette) {
 			if uploading || a.sending {
 				remove = nil // they go with the message being sent
 			}
-			if f.Image {
-				img := a.images["file:"+f.Path]
-				open := a.popover("peek/" + f.Path)
-				thumb := ui.ButtonBase(c.Key(f.Path)).Size(56, 56).Radius(10).Clip().Background(p.Text.Alpha(0.05)).Label(f.Name).Cursor(ui.CursorPointer)
-				thumb.OnClick(func() { *open = !*open })
-				thumb.Children(func() {
-					if img != nil && img.bitmap != nil {
-						ui.Image(c, img.bitmap).Size(56, 56).Fit(ui.Cover)
-					} else {
-						ui.Box(c).Size(56, 56).Center().Children(func() { ui.Icon(c, iconImage).Size(20, 20).TextColor(p.Secondary) })
-					}
-					if uploading {
-						// A wash over what is still to go, receding from the top.
-						left := 56 * (100 - progress(f)) / 100
-						ui.Box(c.Key("wash")).Absolute().Left(0).Right(0).Bottom(0).Height(left).Background(ui.RGBA(0, 0, 0, 0.45)).
-							Transition(ui.ElementTransition{Size: true, Duration: 150 * time.Millisecond, Ease: ui.CubicBezier(0.4, 0, 0.2, 1)})
-						return
-					}
-					removeButton(c, p, f.Name, remove)
-				})
-				if img != nil && img.bitmap != nil {
-					a.imagePeek(c, p, thumb, open, img.bitmap, f.Name)
-				}
-				continue
-			}
-			chip := ui.Row(c.Key(f.Path)).Height(44).Padding(0, 32, 0, 10).Radius(10).Gap(8).AlignItems(ui.Center).Background(p.Text.Alpha(0.05)).MaxWidth(240)
+			progress := float32(-1)
 			if uploading {
-				chip.Clip() // the bar keeps to the chip's corners
+				progress = a.fileProgress[f.Path]
 			}
-			chip.Children(func() {
-				ui.Icon(c, iconFile).Size(18, 18).TextColor(p.Secondary)
-				ui.Column(c).MinWidth(0).Gap(1).Children(func() {
-					ui.Text(c, f.Name).FontSize(sizeFoot).FontWeight(500).TextColor(p.Text).SingleLine()
-					ui.Text(c, byteSize(f.Size)).FontSize(sizeCaption).TextColor(p.Secondary)
-				})
-				if uploading {
-					ui.Box(c.Key("bar")).Absolute().Left(0).Right(0).Bottom(0).Height(4).Background(p.Text.Alpha(0.08)).Children(func() {
-						ui.Box(c).Height(4).WidthPercent(progress(f)).Background(p.Primary).
-							Transition(ui.ElementTransition{Size: true, Duration: 150 * time.Millisecond, Ease: ui.CubicBezier(0.4, 0, 0.2, 1)})
-					})
-					return
-				}
-				removeButton(c, p, f.Name, remove)
-			})
+			var bm *ui.Bitmap
+			if img := a.images["file:"+f.Path]; img != nil {
+				bm = img.bitmap
+			}
+			a.attachmentChip(c, p, f.Path, f.Name, f.Image, f.Size, bm, progress, remove)
 		}
+	})
+}
+
+// attachmentChip is an attachment in the composer, or in the message
+// editor: a picture's 56px thumbnail, whose click peeks at it, or a
+// file's chip with its name and size. While it uploads (progress 0 to
+// 100, else negative) it shows how far it has gone, else its remove
+// button.
+func (a *App) attachmentChip(c *ui.Context, p *palette, key, name string, image bool, size int64, bm *ui.Bitmap, progress float32, remove func()) {
+	uploading := progress >= 0
+	// Progress moves as Lody's transition-[clip-path] and -[width] do.
+	progress = min(100, max(0, progress))
+	if image {
+		open := a.popover("peek/" + key)
+		thumb := ui.ButtonBase(c.Key(key)).Size(56, 56).Radius(10).Clip().Background(p.Text.Alpha(0.05)).Label(name).Cursor(ui.CursorPointer)
+		thumb.OnClick(func() { *open = !*open })
+		thumb.Children(func() {
+			if bm != nil {
+				ui.Image(c, bm).Size(56, 56).Fit(ui.Cover)
+			} else {
+				ui.Box(c).Size(56, 56).Center().Children(func() { ui.Icon(c, iconImage).Size(20, 20).TextColor(p.Secondary) })
+			}
+			if uploading {
+				// A wash over what is still to go, receding from the top.
+				left := 56 * (100 - progress) / 100
+				ui.Box(c.Key("wash")).Absolute().Left(0).Right(0).Bottom(0).Height(left).Background(ui.RGBA(0, 0, 0, 0.45)).
+					Transition(ui.ElementTransition{Size: true, Duration: 150 * time.Millisecond, Ease: ui.CubicBezier(0.4, 0, 0.2, 1)})
+				return
+			}
+			removeButton(c, p, name, remove)
+		})
+		if bm != nil {
+			a.imagePeek(c, p, thumb, open, bm, name)
+		}
+		return
+	}
+	chip := ui.Row(c.Key(key)).Height(44).Padding(0, 32, 0, 10).Radius(10).Gap(8).AlignItems(ui.Center).Background(p.Text.Alpha(0.05)).MaxWidth(240)
+	if uploading {
+		chip.Clip() // the bar keeps to the chip's corners
+	}
+	chip.Children(func() {
+		ui.Icon(c, iconFile).Size(18, 18).TextColor(p.Secondary)
+		ui.Column(c).MinWidth(0).Gap(1).Children(func() {
+			ui.Text(c, name).FontSize(sizeFoot).FontWeight(500).TextColor(p.Text).SingleLine()
+			if size > 0 {
+				ui.Text(c, byteSize(size)).FontSize(sizeCaption).TextColor(p.Secondary)
+			}
+		})
+		if uploading {
+			ui.Box(c.Key("bar")).Absolute().Left(0).Right(0).Bottom(0).Height(4).Background(p.Text.Alpha(0.08)).Children(func() {
+				ui.Box(c).Height(4).WidthPercent(progress).Background(p.Primary).
+					Transition(ui.ElementTransition{Size: true, Duration: 150 * time.Millisecond, Ease: ui.CubicBezier(0.4, 0, 0.2, 1)})
+			})
+			return
+		}
+		removeButton(c, p, name, remove)
 	})
 }
 

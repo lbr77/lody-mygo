@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"strings"
 	"testing"
 	"time"
 )
@@ -59,7 +61,7 @@ func TestEditAndResend(t *testing.T) {
 	var calls []call
 	u := Entry{ID: "u1", Role: "user", Config: map[string]any{"modelId": "m", "inputBlocks": []any{
 		map[string]any{"type": "text", "text": "old"}, map[string]any{"type": "image", "imageId": "i1"}}}}
-	err := editAndResend(context.Background(), fakeRPC(&calls, `{"success":true}`), "s1", "m1", "u", "builtin", "codex", u, " new text ")
+	err := editAndResend(context.Background(), fakeRPC(&calls, `{"success":true}`), "s1", "m1", "u", "builtin", "codex", u, Edit{Text: " new text ", Retained: []string{"original:0"}})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -71,10 +73,65 @@ func TestEditAndResend(t *testing.T) {
 		blocks[1].(map[string]any)["imageId"] != "i1" || cfg["agentType"] != "codex" {
 		t.Fatalf("params = %v", p)
 	}
-	err = editAndResend(context.Background(), fakeRPC(&calls, `{"success":false,"error":{"code":"SESSION_BUSY","message":"busy"}}`), "s1", "m1", "u", "builtin", "codex", u, "x")
+	err = editAndResend(context.Background(), fakeRPC(&calls, `{"success":false,"error":{"code":"SESSION_BUSY","message":"busy"}}`), "s1", "m1", "u", "builtin", "codex", u, Edit{Text: "x"})
 	var op *OpError
 	if !errors.As(err, &op) || op.Code != "SESSION_BUSY" {
 		t.Fatalf("err = %v", err)
+	}
+}
+
+// An edit keeps the attachments it names where they were, drops the
+// rest, and adds the files uploaded behind them, before references.
+func TestEditBlocks(t *testing.T) {
+	img := func(id string) map[string]any {
+		return map[string]any{"type": "image", "imageId": id, "mimeType": "image/png"}
+	}
+	ref := map[string]any{"type": "comment_reference", "path": "a.go"}
+	u := Entry{ID: "u1", Role: "user", Config: map[string]any{"inputBlocks": []any{
+		map[string]any{"type": "text", "text": "old"}, img("i1"),
+		map[string]any{"type": "file", "fileId": "f1", "fileName": "a.txt", "sizeBytes": float64(9)}, img("i2"), ref}},
+		Items: []Item{{Type: "text", Text: "old"}, {Type: "image_group", Images: []Item{{Type: "image", ImageID: "i1"}, {Type: "image", ImageID: "i2"}}},
+			{Type: "file", FileID: "f1", FileName: "a.txt", SizeBytes: 9}}}
+	ats := EditAttachments(u)
+	if len(ats) != 3 || ats[0].ID != "original:0" || ats[1].Item.FileName != "a.txt" || ats[1].Item.SizeBytes != 9 || ats[2].Block["imageId"] != "i2" {
+		t.Fatalf("attachments %+v", ats)
+	}
+	added := map[string]any{"type": "file", "fileId": "f2"}
+	blocks, err := editBlocks(u, Edit{Text: "new", Retained: []string{"original:1"}, Added: []map[string]any{added}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var got []string
+	for _, b := range blocks {
+		m := b.(map[string]any)
+		got = append(got, str(m["type"])+":"+str(m["text"])+str(m["imageId"])+str(m["fileId"])+str(m["path"]))
+	}
+	if strings.Join(got, " ") != "text:new file:f1 file:f2 comment_reference:a.go" {
+		t.Fatalf("blocks %q", got)
+	}
+	if _, err := editBlocks(u, Edit{Text: "x", Retained: []string{"original:9"}}); err == nil {
+		t.Fatal("kept an attachment the message never had")
+	}
+	if _, err := editBlocks(u, Edit{Text: " "}); err == nil {
+		t.Fatal("an edit leaving nothing went")
+	}
+	// Only pictures left, no text: the text block goes.
+	blocks, _ = editBlocks(u, Edit{Retained: []string{"original:0"}})
+	if len(blocks) != 2 || blocks[0].(map[string]any)["imageId"] != "i1" {
+		t.Fatalf("pictures only %v", blocks)
+	}
+	// Without the input as sent, it is what the conversation shows.
+	bare := Entry{ID: "u2", Items: []Item{{Type: "text", Text: "hi"}, {Type: "file", FileID: "f9", FileName: "b.log", SizeBytes: 3, Transport: "r2"}}}
+	blocks, _ = editBlocks(bare, Edit{Text: "hello", Retained: []string{"original:0"}})
+	if len(blocks) != 2 || blocks[1].(map[string]any)["fileId"] != "f9" || blocks[1].(map[string]any)["transport"] != "r2" {
+		t.Fatalf("rebuilt %v", blocks)
+	}
+	many := make([]map[string]any, 9)
+	for i := range many {
+		many[i] = img(fmt.Sprint("n", i))
+	}
+	if _, err := editBlocks(u, Edit{Text: "x", Added: many}); err == nil {
+		t.Fatal("nine pictures went")
 	}
 }
 

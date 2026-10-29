@@ -4251,5 +4251,6 @@
   "checkoutPendingLater": "Later",
   "checkoutPendingGoToCheckout": "Go to checkout",
   "runConfigTitle": "Run configuration",
-  "runConfigPlan": "Plan"
+  "runConfigPlan": "Plan",
+  "noticeRetry": "Retry"
 }

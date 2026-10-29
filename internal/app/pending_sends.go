@@ -13,16 +13,19 @@ import (
 )
 
 // Lody's pending sends: a message whose attachments still have to upload,
-// or one sent behind such a message in the same conversation, is held in
-// memory rather than written, and the composer is free at once. Each
-// conversation's held messages go out in the order sent, one at a time:
-// a message's attachments upload one after another, then its user turn is
-// written and handed to the machine. A message that fails holds the
-// conversation's later ones behind it until it is sent again or canceled.
-// Nothing keeps them: closing the workspace loses them. A held message
-// shows where it is going, in the conversation as a pending message or,
-// routed to the queue because the agent was busy, as a pending row of Up
-// next, and gives way to the real message once that is written.
+// or one sent behind such a message in the same conversation, is held
+// rather than written, and the composer is free at once. Each
+// conversation's held messages go out in the order sent, one at a time,
+// while the workspace is connected: a message's attachments upload one
+// after another, then its user turn is written and handed to the machine.
+// A message that fails holds the conversation's later ones behind it
+// until it is sent again or canceled. Held messages are kept on disk, as
+// lody-ios's outbox and Lody's durable inputs (outbox.go), so closing the
+// workspace or quitting does not lose them: they go on when it opens
+// again. A held message shows where it is going, in the conversation as a
+// pending message or, routed to the queue because the agent was busy, as
+// a pending row of Up next, and gives way to the real message once that
+// is written.
 
 // sendAttachment is one of a held message's attachments, as Lody's
 // SessionAttachmentDraft: its file; once uploaded, the block that stands
@@ -55,6 +58,13 @@ type pendingSend struct {
 	// was made for: canceled before anything was written there, the
 	// conversation goes too, as Lody never writes it.
 	fresh bool
+	// persisted is a message kept on disk as it stands, which leaving
+	// does not lose.
+	persisted bool
+	// writing is a message whose write has begun: taken up again after a
+	// restart, it is written only if the conversation hasn't it, never
+	// twice.
+	writing bool
 }
 
 // pendingSends are the workspace's held messages in the order sent, as
@@ -68,6 +78,9 @@ type pendingSends struct {
 	epoch   int
 	running map[string]bool               // conversations whose first held message is going out
 	cancels map[string]context.CancelFunc // what is under way, by message
+	// scope is the file the workspace's held messages are kept in, once
+	// taken up from it (restoreSends).
+	scope string
 }
 
 // uploadAttachment uploads one attachment of a held message to Lody Cloud,
@@ -78,12 +91,29 @@ var uploadAttachment = func(ctx context.Context, a *App, workspace, sessionID st
 }
 
 // sendTurn writes a held message's turn and hands it to the machine, once
-// its conversation, created with it, has synced; tests swap it.
+// its conversation, created with it, has synced; tests swap it. A turn
+// the conversation has already, a held message's sent again after a
+// restart, counts as written.
 var sendTurn = func(ctx context.Context, r *session.Replica, t session.Turn) (string, error) {
 	if err := r.WaitReady(ctx); err != nil {
 		return session.NotSent, err
 	}
-	return r.Send(ctx, t)
+	state, err := r.Send(ctx, t)
+	if errors.Is(err, session.ErrTurnExists) {
+		return session.Uploaded, nil
+	}
+	return state, err
+}
+
+// openSendReplica follows a conversation a held message is written to
+// while it isn't open, as one taken up after a restart, until done is
+// called; tests swap it.
+var openSendReplica = func(a *App, sessionID string) (r *session.Replica, done func()) {
+	if a.conn == nil {
+		return nil, nil
+	}
+	r = session.OpenLocal(a.conn, a.local, sessionID, func(*session.View) {})
+	return r, r.Close
 }
 
 func (q *pendingSends) find(id string) *pendingSend {
@@ -120,8 +150,9 @@ func (q *pendingSends) remove(id string) {
 	q.list = out
 }
 
-// dispose drops every held message, stopping what is under way, as
-// closing the workspace does.
+// dispose lets go of every held message, stopping what is under way, as
+// closing the workspace does; what is kept on disk stays, for when it
+// opens again.
 func (q *pendingSends) dispose() {
 	for _, cancel := range q.cancels {
 		cancel()
@@ -129,41 +160,52 @@ func (q *pendingSends) dispose() {
 	*q = pendingSends{seq: q.seq, epoch: q.epoch + 1}
 }
 
-// holdSend holds a message, last of its conversation's, and starts the
-// conversation's sends if none is going out, as Lody's enqueue.
+// holdSend holds a message, last of its conversation's, keeps it on disk,
+// and starts the conversation's sends if none is going out, as Lody's
+// enqueue.
 func (a *App) holdSend(s *pendingSend) {
+	a.restoreSends()
 	q := &a.pending
 	q.seq++
 	s.seq = q.seq
 	q.list = append(q.list, s)
+	a.saveSends()
 	a.drainSends(s.sessionID)
 }
 
+// sendsConnected is whether held messages go now: the workspace's sync
+// is live, as lody-ios's outbox waits for a connection.
+func (a *App) sendsConnected() bool { return a.syncState.Live }
+
 // drainSends sends a conversation's first held message, unless one is
-// going out already or it failed, which holds the rest behind it.
+// going out already or it failed, which holds the rest behind it, or the
+// workspace is offline, when it waits.
 func (a *App) drainSends(sessionID string) {
 	q := &a.pending
 	head := q.head(sessionID)
-	if q.running[sessionID] || head == nil || head.err != "" {
+	if q.running[sessionID] || head == nil || head.err != "" || !a.sendsConnected() {
 		return
 	}
 	a.attemptSend(head)
 }
 
 // writeJob is what a held message's write takes, read on the main thread
-// once its attachments are ready.
+// once its attachments are ready: done lets go of a replica opened for
+// it, once written.
 type writeJob struct {
 	r      *session.Replica
+	done   func()
 	turn   session.Turn
 	expand func(ctx context.Context) (string, []map[string]any)
 	err    error
 }
 
 // attemptSend sends a held message. Its attachments not yet uploaded go
-// one at a time, each reporting as it goes; after one fails the rest are
-// still tried, so that sending again moves only what failed, and the
-// first failure is the message's. Ready, its turn is written through its
-// conversation's replica as it is then.
+// one at a time, each reporting as it goes and kept on disk once
+// uploaded; after one fails the rest are still tried, so that sending
+// again moves only what failed, and the first failure is the message's.
+// Ready, it is marked as writing on disk and its turn written through its
+// conversation's replica as it is then, or one opened for it.
 func (a *App) attemptSend(s *pendingSend) {
 	q := &a.pending
 	if q.running == nil {
@@ -186,12 +228,16 @@ func (a *App) attemptSend(s *pendingSend) {
 			todo = append(todo, upload{i, at.file})
 		}
 	}
-	// patch changes attachment i, while the message is still held: one
-	// canceled is gone, and what its attempt still reports with it.
-	patch := func(i int, fn func(*sendAttachment)) {
+	// patch changes attachment i, while the message is still held, and
+	// with save keeps it so: one canceled is gone, and what its attempt
+	// still reports with it, as is what a closed workspace's reports.
+	patch := func(i int, save bool, fn func(*sendAttachment)) {
 		a.update(func() {
-			if s := q.find(id); s != nil && i < len(s.attachments) {
+			if s := q.find(id); s != nil && q.epoch == epoch && i < len(s.attachments) {
 				fn(&s.attachments[i])
+				if save {
+					a.saveSends()
+				}
 			}
 		})
 	}
@@ -208,7 +254,7 @@ func (a *App) attemptSend(s *pendingSend) {
 			block, err := uploadAttachment(ctx, a, workspace, sid, u.f, func(sent, total int64) {
 				if total > 0 {
 					pct := float32(sent) * 100 / float32(total)
-					patch(u.i, func(at *sendAttachment) { at.progress = pct })
+					patch(u.i, false, func(at *sendAttachment) { at.progress = pct })
 				}
 			})
 			if ctx.Err() != nil {
@@ -219,10 +265,10 @@ func (a *App) attemptSend(s *pendingSend) {
 					failure = err
 				}
 				reason := err.Error()
-				patch(u.i, func(at *sendAttachment) { at.err, at.progress = reason, 0 })
+				patch(u.i, true, func(at *sendAttachment) { at.err, at.progress = reason, 0 })
 				continue
 			}
-			patch(u.i, func(at *sendAttachment) { at.ready, at.err, at.progress = block, "", 100 })
+			patch(u.i, true, func(at *sendAttachment) { at.ready, at.err, at.progress = block, "", 100 })
 		}
 		if ctx.Err() != nil || failure != nil {
 			settle(session.NotSent, failure)
@@ -240,10 +286,23 @@ func (a *App) attemptSend(s *pendingSend) {
 			for _, at := range s.attachments {
 				t.Attachments = append(t.Attachments, at.ready)
 			}
-			r := a.replicaFor(s)
-			job := writeJob{r: r, turn: t, expand: s.expand}
-			if r == nil {
+			if t.MarkDispatch == nil {
+				// Taken up after a restart, it dispatches as sent now.
+				t.MarkDispatch = a.sync.MarkDispatch
+			}
+			expand := s.expand
+			if expand == nil {
+				expand = a.sendExpand(s.sessionID, s.text)
+			}
+			job := writeJob{r: a.replicaFor(s), turn: t, expand: expand}
+			if job.r == nil {
+				job.r, job.done = openSendReplica(a, s.sessionID)
+			}
+			if job.r == nil {
 				job.err = errors.New("session: not open")
+			} else if !s.writing {
+				s.writing = true
+				a.saveSends()
 			}
 			jobs <- job
 		})
@@ -252,7 +311,10 @@ func (a *App) attemptSend(s *pendingSend) {
 		case job = <-jobs:
 		case <-ctx.Done():
 		}
-		if job.r == nil {
+		if job.done != nil {
+			defer job.done()
+		}
+		if job.r == nil || ctx.Err() != nil {
 			settle(session.NotSent, job.err)
 			return
 		}
@@ -267,8 +329,10 @@ func (a *App) attemptSend(s *pendingSend) {
 }
 
 // sendSettled ends a held message's attempt: written, it leaves, and its
-// conversation's next goes; not, it keeps why and holds the rest. One
-// canceled meanwhile has gone already, and the next goes.
+// conversation's next goes; not, it keeps why and holds the rest, or,
+// the workspace gone offline meanwhile, waits for it to come back. One
+// canceled meanwhile has gone already, and the next goes. What it comes
+// to is kept on disk.
 func (a *App) sendSettled(epoch int, id, sessionID, state string, err error) {
 	q := &a.pending
 	if epoch != q.epoch {
@@ -279,20 +343,39 @@ func (a *App) sendSettled(epoch int, id, sessionID, state string, err error) {
 	s := q.find(id)
 	switch {
 	case s == nil:
+	case state == session.NotSent && !a.sendsConnected():
+		s.writing = false
+		s.wait()
+		a.saveSends()
+		return
 	case state == session.NotSent && err != nil:
-		s.err = sendErrorText(err)
+		s.writing, s.err = false, sendErrorText(err)
+		a.saveSends()
 		return
 	case state == session.NotSent:
 		// Stopped without a reason: it is tried again when sent again.
-		s.err = locales.PendingMessageUploadFailed()
+		s.writing, s.err = false, locales.PendingMessageUploadFailed()
+		a.saveSends()
 		return
 	default:
 		q.remove(id)
+		a.saveSends()
 		if err != nil {
 			a.sendError = locales.SentUnconfirmed()
 		}
 	}
 	a.drainSends(sessionID)
+}
+
+// wait readies a failed message to go again: what of it did not upload
+// starts over.
+func (s *pendingSend) wait() {
+	s.err = ""
+	for i := range s.attachments {
+		if at := &s.attachments[i]; at.ready == nil {
+			at.err, at.progress = "", 0
+		}
+	}
 }
 
 // sendErrorText says why a message was not sent.
@@ -310,17 +393,14 @@ func (a *App) retrySend(id string) {
 	if s == nil {
 		return
 	}
-	s.err = ""
-	for i := range s.attachments {
-		if at := &s.attachments[i]; at.ready == nil {
-			at.err, at.progress = "", 0
-		}
-	}
+	s.wait()
+	a.saveSends()
 	a.drainSends(s.sessionID)
 }
 
-// cancelSend drops a held message, stopping what of it is under way; its
-// conversation's next goes once that has stopped, or at once.
+// cancelSend drops a held message, on disk too, stopping what of it is
+// under way; its conversation's next goes once that has stopped, or at
+// once.
 func (a *App) cancelSend(id string) {
 	q := &a.pending
 	s := q.find(id)
@@ -331,6 +411,7 @@ func (a *App) cancelSend(id string) {
 		cancel()
 	}
 	q.remove(id)
+	a.saveSends()
 	if s.fresh && !q.hasSession(s.sessionID) && a.unwritten(s.sessionID) {
 		a.dropFreshSession(s.sessionID)
 		return

@@ -21050,3 +21050,13 @@ func RunConfigPlan() string { return In(i18n.Locale()).RunConfigPlan() }
 func (msgs Messages) RunConfigPlan() string {
 	return Catalog.Format(msgs.locale, "runConfigPlan", nil)
 }
+
+// NoticeRetry says "Retry"
+// in the language the app shows.
+func NoticeRetry() string { return In(i18n.Locale()).NoticeRetry() }
+
+// NoticeRetry says "Retry"
+// in the language of msgs.
+func (msgs Messages) NoticeRetry() string {
+	return Catalog.Format(msgs.locale, "noticeRetry", nil)
+}

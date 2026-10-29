@@ -237,7 +237,9 @@ func dashedRule(c *ui.Context, p *palette) {
 }
 
 // chatFailedNotice is a failed turn: its title, the raw error and the
-// remedy, Copy error, and a retry when the model was at capacity.
+// remedy, Copy error, and on the latest failure the agent can go on from
+// a retry that continues the turn, offering automatic ones when the model
+// was at capacity.
 func (a *App) chatFailedNotice(c *ui.Context, p *palette, e session.Entry, it session.Item) {
 	meta := it.Notice
 	reason, code, message := noticeText(meta, "reason"), noticeText(meta, "code"), noticeText(meta, "message")
@@ -253,8 +255,12 @@ func (a *App) chatFailedNotice(c *ui.Context, p *palette, e session.Entry, it se
 		tone = "muted"
 	}
 	var retry func()
-	if reason == "acp_provider_overloaded" && sess != nil && latestCapacityFailure(a.view) == it.ID {
-		retry = func() { a.capacityRetryButton(c, p, it.ID) }
+	if latest, _ := latestRetryableFailure(a.view); sess != nil && latest == it.ID {
+		if reason == "acp_provider_overloaded" {
+			retry = func() { a.capacityRetryButton(c, p, it.ID) }
+		} else {
+			retry = func() { a.errorRetryButton(c, p, it.ID, reason) }
+		}
 	}
 	footer := func() {
 		if diag != nil && diag.installURL != "" {
@@ -283,35 +289,67 @@ func (a *App) chatFailedNotice(c *ui.Context, p *palette, e session.Entry, it se
 	})
 }
 
-// latestCapacityFailure is the capacity failure a retry would continue:
-// the last failure's notice, if no user turn came after it.
-func latestCapacityFailure(v *session.View) string {
+// recoverableReasons are the failures a turn goes on from when asked, as
+// Lody's: the model at capacity, the provider's API or the agent failing,
+// the agent gone, silent or not ready. A refusal, as a sign-in wanted or
+// an archived chat, is not one.
+var recoverableReasons = map[string]bool{
+	"acp_provider_overloaded": true, "acp_upstream_api_error": true, "acp_internal_error": true, "acp_unknown_error": true,
+	"agent_disconnected": true, "agent_no_output": true, "acp_not_ready": true,
+}
+
+// latestRetryableFailure is the failure a retry would continue, its notice
+// and reason: the last failure, if it is one to go on from and no user
+// turn came after it, as a newer message supersedes it.
+func latestRetryableFailure(v *session.View) (id, reason string) {
 	if v == nil {
-		return ""
+		return "", ""
 	}
 	for i := len(v.Entries) - 1; i >= 0; i-- {
 		e := v.Entries[i]
 		if e.Role == "user" {
-			return ""
+			return "", ""
 		}
-		for _, it := range e.Items {
-			if it.Type == "system_notice" && it.Title == "chat_failed" {
-				if noticeText(it.Notice, "reason") == "acp_provider_overloaded" {
-					return it.ID
-				}
-				return ""
+		for j := len(e.Items) - 1; j >= 0; j-- {
+			it := e.Items[j]
+			if it.Type != "system_notice" || it.Title != "chat_failed" {
+				continue
 			}
+			reason := noticeText(it.Notice, "reason")
+			// Without Git on the machine, going on fails the same way.
+			if !recoverableReasons[reason] || noticeText(it.Notice, "code") == "git_executable_not_found" {
+				return "", ""
+			}
+			return it.ID, reason
 		}
 	}
-	return ""
+	return "", ""
 }
 
-// capacityPrompt is what a retry after a capacity failure sends.
-const capacityPrompt = "Continue working from where you left off. The previous turn stopped because the selected model was at capacity."
+// What a retry sends: the turn goes on, told why it stopped.
+const (
+	capacityPrompt = "Continue working from where you left off. The previous turn stopped because the selected model was at capacity."
+	errorPrompt    = "Continue working from where you left off. The previous turn stopped because of an agent error."
+)
 
-// capRetry is a chat's capacity retries: the first click allows three
-// automatic ones, 5s after a failure and twice as long each time after,
-// which a click stops.
+func continuationPrompt(reason string) string {
+	if reason == "acp_provider_overloaded" {
+		return capacityPrompt
+	}
+	return errorPrompt
+}
+
+// canContinue is whether a retry may go now, as Lody's canRetry: the
+// conversation synced, its agent not working, the chat not archived.
+func (a *App) canContinue() bool {
+	sess := a.catalog.Session(a.selected)
+	return sess != nil && !sess.Archived && a.view != nil && !a.view.Working
+}
+
+// capRetry is a chat's retries after failures. At capacity, the first
+// click allows three automatic ones, 5s after a failure and twice as long
+// each time after, which a click stops; another failure is retried by a
+// click alone.
 type capRetry struct {
 	auto      bool
 	attempts  int
@@ -344,12 +382,16 @@ func (a *App) capacityRetryButton(c *ui.Context, p *palette, notice string) {
 	if st.handled[notice] && !st.pending {
 		return
 	}
+	ready := a.canContinue()
 	exhausted := st.auto && st.attempts >= capMaxAuto
-	counting := st.auto && !exhausted && !st.pending && !st.handled[notice]
+	counting := st.auto && !exhausted && !st.pending && !st.handled[notice] && ready
 	// The countdown, as Lody's: 5s·2ⁿ after n automatic retries, the time
-	// left read every 250ms.
+	// left read every 250ms; it starts over once the chat can go on again.
 	delay := capFirstDelay << st.attempts
 	var left time.Duration
+	if !counting {
+		st.countFor = ""
+	}
 	if counting {
 		if st.countFor != notice {
 			st.countFor, st.countFrom = notice, c.Now()
@@ -357,7 +399,7 @@ func (a *App) capacityRetryButton(c *ui.Context, p *palette, notice string) {
 		since := c.Now().Sub(st.countFrom)
 		if since >= delay {
 			counting = false
-			a.capacityRetry(notice, true)
+			a.continueTurn(notice, "acp_provider_overloaded", true)
 		} else {
 			tick := since / capTick * capTick
 			left = delay - tick
@@ -375,15 +417,7 @@ func (a *App) capacityRetryButton(c *ui.Context, p *palette, notice string) {
 	case st.auto:
 		label = locales.NoticeRetryNow()
 	}
-	b := ui.ButtonBase(c.Key("cap-retry")).Height(28).Padding(0, 10).Radius(14).Background(p.Secondary.Alpha(0.04)).Cursor(ui.CursorPointer).
-		Disabled(st.pending).Clip().Transition(twFade)
-	if st.pending {
-		b.Opacity(0.5)
-	}
-	hovered := b.Hovered() && !st.pending
-	if hovered {
-		b.Background(p.Secondary.Alpha(0.07))
-	}
+	b, hovered := retryPill(c, p, "cap-retry", st.pending || !ready)
 	// Counting down, a click stops it, and the button says so.
 	name := label
 	if counting {
@@ -395,7 +429,7 @@ func (a *App) capacityRetryButton(c *ui.Context, p *palette, notice string) {
 			return
 		}
 		st.attempts, st.auto = 0, true
-		a.capacityRetry(notice, false)
+		a.continueTurn(notice, "acp_provider_overloaded", false)
 	})
 	b.Children(func() {
 		if counting {
@@ -423,8 +457,46 @@ func (a *App) capacityRetryButton(c *ui.Context, p *palette, notice string) {
 	})
 }
 
-// capacityRetry continues the turn a capacity failure stopped.
-func (a *App) capacityRetry(notice string, automatic bool) {
+// retryPill is the retry's pill at a failure's trailing edge, as Lody's:
+// a faint well that darkens under the pointer, half faded while it can't
+// be pressed. It reports whether the pointer is over it.
+func retryPill(c *ui.Context, p *palette, key string, disabled bool) (ui.Element, bool) {
+	b := ui.ButtonBase(c.Key(key)).Height(28).Padding(0, 10).Radius(14).Background(p.Secondary.Alpha(0.04)).Cursor(ui.CursorPointer).
+		Disabled(disabled).Clip().Transition(twFade)
+	if disabled {
+		b.Opacity(0.5)
+	}
+	hovered := b.Hovered() && !disabled
+	if hovered {
+		b.Background(p.Secondary.Alpha(0.07))
+	}
+	return b, hovered
+}
+
+// errorRetryButton is the retry of a turn an agent error stopped: a click
+// continues it, Retrying… while that goes, and the pill leaves once it
+// went. It offers no automatic retries: those wait out a busy model.
+func (a *App) errorRetryButton(c *ui.Context, p *palette, notice, reason string) {
+	st := a.capState()
+	if st.handled[notice] && !st.pending {
+		return
+	}
+	label := locales.NoticeRetry()
+	if st.pending {
+		label = locales.NoticeRetrying()
+	}
+	b, _ := retryPill(c, p, "error-retry", st.pending || !a.canContinue())
+	b.Label(label).OnClick(func() { a.continueTurn(notice, reason, false) })
+	b.Children(func() {
+		ui.Text(c, label).FontSize(sizeFoot).TextColor(p.Text.Alpha(0.8))
+	})
+}
+
+// continueTurn sends the continuation of the turn a failure stopped: one
+// new turn, written once; a write that may have landed is never resent.
+// Not written, control goes back to the reader, and why shows as a send's
+// would.
+func (a *App) continueTurn(notice, reason string, automatic bool) {
 	st := a.capState()
 	if st.pending || st.handled[notice] {
 		return
@@ -435,7 +507,7 @@ func (a *App) capacityRetry(notice string, automatic bool) {
 		return
 	}
 	turn := session.Turn{
-		MCPServerIDs: a.mcpSelection(a.selected), Text: capacityPrompt, UserID: a.userID(),
+		MCPServerIDs: a.mcpSelection(a.selected), Text: continuationPrompt(reason), UserID: a.userID(),
 		MachineID: sess.MachineID, AgentType: sess.AgentType, CLIType: sess.CLIType, Resume: sess.Resume,
 		ModelID: a.models[a.selected], ModeID: a.modes[a.selected],
 		ConfigOptionValues: a.chosenRunValues(a.selected, sess.AgentConfigID, a.currentModel(sess)), MarkDispatch: a.sync.MarkDispatch,
@@ -445,12 +517,13 @@ func (a *App) capacityRetry(notice string, automatic bool) {
 	go func() {
 		ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 		defer cancel()
-		state, err := r.Send(ctx, turn)
+		state, err := sendTurn(ctx, r, turn)
 		a.update(func() {
 			st.pending = false
 			if err != nil && state == session.NotSent {
 				// Not accepted: control goes back to the reader.
 				st.auto = false
+				a.sendError = sendErrorText(err)
 				return
 			}
 			st.handled[notice] = true

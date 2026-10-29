@@ -2086,5 +2086,6 @@
   "checkoutPendingLater": "稍后",
   "checkoutPendingGoToCheckout": "前往支付",
   "runConfigTitle": "运行设置",
-  "runConfigPlan": "计划"
+  "runConfigPlan": "计划",
+  "noticeRetry": "重试"
 }

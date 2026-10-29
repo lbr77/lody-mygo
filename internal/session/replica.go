@@ -465,6 +465,26 @@ type Turn struct {
 
 var errNotReady = errors.New("session: not synced yet")
 
+// ErrTurnExists is a send whose turn id the conversation or its queue has
+// already, as Lody's runtime refuses to replay a write.
+var ErrTurnExists = errors.New("session: the turn was written already")
+
+// hasTurnLocked reports whether history or the queue holds turn id.
+// Callers hold r.mu.
+func (r *Replica) hasTurnLocked(history []any, id string) bool {
+	for _, h := range history {
+		if str(obj(h)["id"]) == id {
+			return true
+		}
+	}
+	for _, q := range list(deepValue(r.doc.GetMovableList(loro.AsContainerId("mq")).GetDeepValue())) {
+		if str(obj(q)["userTurnId"]) == id {
+			return true
+		}
+	}
+	return false
+}
+
 // Send writes a user turn and hands it to the machine. It returns how far it
 // got; a turn past Unknown is never resent automatically.
 func (r *Replica) Send(ctx context.Context, t Turn) (string, error) {
@@ -506,6 +526,12 @@ func (r *Replica) Send(ctx context.Context, t Turn) (string, error) {
 	r.mu.Lock()
 	history := list(deepValue(r.doc.GetList(loro.AsContainerId("history")).GetDeepValue()))
 	queueLen := r.doc.GetMovableList(loro.AsContainerId("mq")).Len()
+	if t.ID != "" && r.hasTurnLocked(history, t.ID) {
+		// A turn the sender chose the id of is never written twice: one
+		// already there may be a write whose answer was lost.
+		r.mu.Unlock()
+		return Unknown, ErrTurnExists
+	}
 	config := inputConfig(history, t, text)
 	// A guide steers the unfinished reply; without one it goes the usual
 	// way, never orphaned.

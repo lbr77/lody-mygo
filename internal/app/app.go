@@ -624,9 +624,12 @@ func (a *App) signOutLocal() {
 	dir := dataDir()
 	os.Remove(filepath.Join(dir, "account.json"))
 	os.Remove(filepath.Join(dir, "prefs.json"))
-	if cached, err := filepath.Glob(filepath.Join(dir, "catalog-*.json")); err == nil {
-		for _, f := range cached {
-			os.Remove(f)
+	// The catalogs kept, and the messages held to send, go with the account.
+	for _, pattern := range []string{"catalog-*.json", "outbox-*.json"} {
+		if cached, err := filepath.Glob(filepath.Join(dir, pattern)); err == nil {
+			for _, f := range cached {
+				os.Remove(f)
+			}
 		}
 	}
 	a.drafts = map[string]string{}
@@ -635,7 +638,6 @@ func (a *App) signOutLocal() {
 	a.phase = phaseSignedOut
 }
 
-// open shows a session and follows its stream.
 // open shows a session, or New chat for "", recording it for Back.
 func (a *App) open(id string) {
 	a.page = ""
