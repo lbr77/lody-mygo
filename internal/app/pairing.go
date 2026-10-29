@@ -448,7 +448,7 @@ func deviceMark(c *ui.Context, p *palette, state string) {
 		ui.Row(c).Size(48, 48).Shrink(0).Radius(14).Center().Background(raisedGround(p)).Shadow(0, 1, 2, 0, ui.RGBA(0, 0, 0, 0.08)).
 			Border(0.5, p.CardRim).Children(fn)
 	}
-	ui.Row(c.Key("device-mark")).Height(48).AlignItems(ui.Center).Children(func() {
+	ui.Row(c.Key("device-mark")).Height(48).AlignItems(ui.Center).Role(ui.RoleImage).Label(locales.DeviceMarkLabel()).Children(func() {
 		tile(func() { ui.Icon(c, iconTerminal).Size(22, 22).TextColor(p.Text) })
 		conn := ui.Box(c.Key("connector")).Size(76, 48).Shrink(0)
 		done := conn.AnimateWith("done", b2f(state == "done"), durSlow, cssEase)

@@ -561,9 +561,19 @@ func (a *App) homeLine(c *ui.Context, p *palette, lists map[string]*nowList, wee
 		if b := a.boardSegment(c, p, "week", locales.HomeBoardWeek(), func() { weekSummary(c, p, week) }); shown == "week" {
 			pill = b
 		}
+		// The end of the line folds the board, or unfolds the last one
+		// open, as Lody's.
+		end, icon := locales.HomeBoardUnfold(), iconChevronsUpDown
 		if shown != "" {
-			iconButton(c, p, iconChevronUp, locales.HomeBoardFold(), p.Hover).Size(28, 28).OnClick(func() { a.setHomeBoard("") })
+			end, icon = locales.HomeBoardFold(), iconChevronsDownUp
 		}
+		iconButton(c.Key("fold"), p, icon, end, p.Hover).Size(24, 24).OnClick(func() {
+			if shown != "" {
+				a.setHomeBoard("")
+				return
+			}
+			a.setHomeBoard(firstNonEmpty(a.lastHomeBoard, "now"))
+		})
 	})
 	origin := line.Bounds()
 	if shown != "" && pill.W > 0 {
@@ -586,6 +596,9 @@ func (a *App) homeLine(c *ui.Context, p *palette, lists map[string]*nowList, wee
 }
 
 func (a *App) setHomeBoard(board string) {
+	if board != "" {
+		a.lastHomeBoard = board
+	}
 	a.homeBoard = board
 	a.savePrefs()
 }

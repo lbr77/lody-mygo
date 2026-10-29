@@ -3637,5 +3637,7 @@
   "changeCatCode": "Code",
   "changeCatDoc": "Docs",
   "changeCatTest": "Tests",
-  "changeCatDev": "Dev"
+  "changeCatDev": "Dev",
+  "homeBoardUnfold": "Unfold",
+  "deviceMarkLabel": "Terminal and Lody"
 }

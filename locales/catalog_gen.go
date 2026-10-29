@@ -18602,3 +18602,23 @@ func ChangeCatDev() string { return In(i18n.Locale()).ChangeCatDev() }
 func (msgs Messages) ChangeCatDev() string {
 	return Catalog.Format(msgs.locale, "changeCatDev", nil)
 }
+
+// HomeBoardUnfold says "Unfold"
+// in the language the app shows.
+func HomeBoardUnfold() string { return In(i18n.Locale()).HomeBoardUnfold() }
+
+// HomeBoardUnfold says "Unfold"
+// in the language of msgs.
+func (msgs Messages) HomeBoardUnfold() string {
+	return Catalog.Format(msgs.locale, "homeBoardUnfold", nil)
+}
+
+// DeviceMarkLabel says "Terminal and Lody"
+// in the language the app shows.
+func DeviceMarkLabel() string { return In(i18n.Locale()).DeviceMarkLabel() }
+
+// DeviceMarkLabel says "Terminal and Lody"
+// in the language of msgs.
+func (msgs Messages) DeviceMarkLabel() string {
+	return Catalog.Format(msgs.locale, "deviceMarkLabel", nil)
+}

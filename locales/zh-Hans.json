@@ -1845,5 +1845,7 @@
   "changeCatCode": "代码",
   "changeCatDoc": "文档",
   "changeCatTest": "测试",
-  "changeCatDev": "开发"
+  "changeCatDev": "开发",
+  "homeBoardUnfold": "展开",
+  "deviceMarkLabel": "终端与 Lody"
 }
