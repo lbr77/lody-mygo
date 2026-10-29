@@ -481,3 +481,35 @@ func TestHTMLPreview(t *testing.T) {
 		t.Fatalf("preview %v: %q", in.preview.htmlPreview, tt.Texts())
 	}
 }
+
+func TestComposerFull(t *testing.T) {
+	for _, c := range []struct {
+		text         string
+		start, end   int
+		wrap, prefix string
+		want         string
+		caret        int
+	}{
+		{"make it bold", 8, 12, "**", "", "make it **bold**", 16},
+		{"x", 1, 1, "`", "", "x``", 2},
+		{"one\ntwo", 5, 5, "", "## ", "one\n## two", 8},
+	} {
+		got, caret := applyFormat(c.text, c.start, c.end, c.wrap, c.prefix)
+		if got != c.want || caret != c.caret {
+			t.Errorf("%q: %q %d, want %q %d", c.text, got, caret, c.want, c.caret)
+		}
+	}
+	a := fixture()
+	a.view.Working = false
+	a.view.Entries = a.view.Entries[:2]
+	tt := snap(t, a, "composer-full", false, func(tt *ui.Tester) {
+		tt.Frame()
+		if err := tt.Click("Expand composer"); err != nil {
+			t.Fatal(err)
+		}
+		tt.Frame()
+	})
+	if !a.composerFull || !tt.HasText("Collapse composer") || tt.HasText("Port the Flock catalog runtime from the iOS client to Go, without a web view.") {
+		t.Fatalf("full %v: %q", a.composerFull, tt.Texts())
+	}
+}

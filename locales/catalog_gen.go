@@ -14150,3 +14150,93 @@ func TabSuggestSimplify() string { return In(i18n.Locale()).TabSuggestSimplify()
 func (msgs Messages) TabSuggestSimplify() string {
 	return Catalog.Format(msgs.locale, "tabSuggestSimplify", nil)
 }
+
+// ComposerExpand says "Expand composer"
+// in the language the app shows.
+func ComposerExpand() string { return In(i18n.Locale()).ComposerExpand() }
+
+// ComposerExpand says "Expand composer"
+// in the language of msgs.
+func (msgs Messages) ComposerExpand() string {
+	return Catalog.Format(msgs.locale, "composerExpand", nil)
+}
+
+// ComposerCollapse says "Collapse composer"
+// in the language the app shows.
+func ComposerCollapse() string { return In(i18n.Locale()).ComposerCollapse() }
+
+// ComposerCollapse says "Collapse composer"
+// in the language of msgs.
+func (msgs Messages) ComposerCollapse() string {
+	return Catalog.Format(msgs.locale, "composerCollapse", nil)
+}
+
+// FormatHeading says "Heading"
+// in the language the app shows.
+func FormatHeading() string { return In(i18n.Locale()).FormatHeading() }
+
+// FormatHeading says "Heading"
+// in the language of msgs.
+func (msgs Messages) FormatHeading() string {
+	return Catalog.Format(msgs.locale, "formatHeading", nil)
+}
+
+// FormatBold says "Bold"
+// in the language the app shows.
+func FormatBold() string { return In(i18n.Locale()).FormatBold() }
+
+// FormatBold says "Bold"
+// in the language of msgs.
+func (msgs Messages) FormatBold() string {
+	return Catalog.Format(msgs.locale, "formatBold", nil)
+}
+
+// FormatItalic says "Italic"
+// in the language the app shows.
+func FormatItalic() string { return In(i18n.Locale()).FormatItalic() }
+
+// FormatItalic says "Italic"
+// in the language of msgs.
+func (msgs Messages) FormatItalic() string {
+	return Catalog.Format(msgs.locale, "formatItalic", nil)
+}
+
+// FormatStrikethrough says "Strikethrough"
+// in the language the app shows.
+func FormatStrikethrough() string { return In(i18n.Locale()).FormatStrikethrough() }
+
+// FormatStrikethrough says "Strikethrough"
+// in the language of msgs.
+func (msgs Messages) FormatStrikethrough() string {
+	return Catalog.Format(msgs.locale, "formatStrikethrough", nil)
+}
+
+// FormatCode says "Code"
+// in the language the app shows.
+func FormatCode() string { return In(i18n.Locale()).FormatCode() }
+
+// FormatCode says "Code"
+// in the language of msgs.
+func (msgs Messages) FormatCode() string {
+	return Catalog.Format(msgs.locale, "formatCode", nil)
+}
+
+// FormatList says "Bulleted list"
+// in the language the app shows.
+func FormatList() string { return In(i18n.Locale()).FormatList() }
+
+// FormatList says "Bulleted list"
+// in the language of msgs.
+func (msgs Messages) FormatList() string {
+	return Catalog.Format(msgs.locale, "formatList", nil)
+}
+
+// FormatQuote says "Quote"
+// in the language the app shows.
+func FormatQuote() string { return In(i18n.Locale()).FormatQuote() }
+
+// FormatQuote says "Quote"
+// in the language of msgs.
+func (msgs Messages) FormatQuote() string {
+	return Catalog.Format(msgs.locale, "formatQuote", nil)
+}

@@ -3,6 +3,7 @@ package app
 import (
 	"github.com/lbr77/lody-mygo/locales"
 	"strings"
+	"time"
 
 	"github.com/egoist/mygo/ui"
 
@@ -49,14 +50,15 @@ func (a *App) bottom(c *ui.Context, p *palette, sess *catalog.Session, v *sessio
 		busyLabel = locales.Steer()
 	}
 	a.composerBox(c, p, composerOptions{
-		sessionID: a.selected,
-		quota:     quota,
-		hint:      hint,
-		busyLabel: busyLabel,
-		canSend:   ready && !a.sending,
-		working:   working,
-		onSend:    a.send,
-		onStop:    a.stop,
+		sessionID:  a.selected,
+		expandable: true,
+		quota:      quota,
+		hint:       hint,
+		busyLabel:  busyLabel,
+		canSend:    ready && !a.sending,
+		working:    working,
+		onSend:     a.send,
+		onStop:     a.stop,
 		above: func() {
 			a.quickReplyRow(c, p, sess, v)
 			if sess != nil {
@@ -114,8 +116,23 @@ func pendingPermission(v *session.View) (session.Entry, session.Item, bool) {
 }
 
 func bottomColumn(c *ui.Context, fn func()) {
-	ui.Row(c).Shrink(0).FillWidth().Justify(ui.Center).Padding(0, 0, 8, 0).Children(func() {
-		ui.Column(c).Grow(1).MinWidth(0).MaxWidth(columnWidth+2*columnGutter).Padding(0, columnGutter).Gap(8).Children(fn)
+	bottomColumnFull(c, false, fn)
+}
+
+// bottomColumnFull is the bottom column, taking the room the conversation
+// leaves when full.
+func bottomColumnFull(c *ui.Context, full bool, fn func()) {
+	row := ui.Row(c).Shrink(0).FillWidth().Justify(ui.Center).Padding(0, 0, 8, 0)
+	col := ui.Column(c)
+	if full {
+		row.Grow(1).MinHeight(0).AlignItems(ui.Stretch).Padding(8, 0, 8, 0)
+	}
+	row.Children(func() {
+		col = ui.Column(c).Grow(1).MinWidth(0).MaxWidth(columnWidth+2*columnGutter).Padding(0, columnGutter).Gap(8)
+		if full {
+			col.MinHeight(0)
+		}
+		col.Children(fn)
 	})
 }
 
@@ -171,6 +188,7 @@ type composerOptions struct {
 	above       func() // between the hint and the box
 	footer      func()
 	sessionID   string // the chat the composer writes to; "" for a new one
+	expandable  bool   // the composer can take the conversation's room, as lody-ios's full screen
 	quota       string // the Free quota's count-down, over the input
 }
 
@@ -183,14 +201,19 @@ func (a *App) composerBox(c *ui.Context, p *palette, o composerOptions) {
 	if o.sendSize == 0 {
 		o.sendSize = 28
 	}
-	bottomColumn(c, func() {
+	full := o.expandable && a.composerFull
+	bottomColumnFull(c, full, func() {
 		if o.hint != "" {
 			ui.Text(c, o.hint).FontSize(sizeFoot).TextColor(p.Secondary).Padding(0, 6)
 		}
 		if o.above != nil {
 			o.above()
 		}
-		box := ui.Column(c).FillWidth().Radius(16).Border(1, p.ComposerBorder).Background(p.Composer).Padding(8, 10).Gap(4)
+		box := ui.Column(c.Key("composer")).FillWidth().Radius(16).Border(1, p.ComposerBorder).Background(p.Composer).Padding(8, 10).Gap(4).
+			Transition(ui.ElementTransition{Size: true, Duration: 420 * time.Millisecond, Ease: easeSheet})
+		if full {
+			box.Grow(1).MinHeight(0)
+		}
 		if !p.Dark {
 			box.Shadow(0, 10, 28, -14, ui.RGBA(0, 0, 0, 0.16))
 		}
@@ -201,13 +224,24 @@ func (a *App) composerBox(c *ui.Context, p *palette, o composerOptions) {
 		a.surfNext.composer = true
 		var input ui.Element
 		box.Children(func() {
+			if full {
+				a.formatBar(c, p)
+			}
 			if o.quota != "" {
 				ui.Text(c, o.quota).FontSize(13).TextColor(p.Secondary).Padding(2, 6, 0, 6)
 			}
 			a.attachmentChips(c, p)
-			ui.Box(c).FillWidth().Children(func() {
+			field := ui.Box(c).FillWidth()
+			if full {
+				field.Grow(1).MinHeight(0)
+			}
+			field.Children(func() {
 				empty := strings.TrimSpace(a.draft) == "" && !hasFiles
-				input = ui.TextAreaBase(c, &a.draft).Lines(2, 10).Placeholder(o.placeholder).FontSize(sizeBody).LineHeight(24.0/14).
+				lines := 10
+				if full {
+					lines = 400
+				}
+				input = ui.TextAreaBase(c, &a.draft).Lines(2, lines).Placeholder(o.placeholder).FontSize(sizeBody).LineHeight(24.0/14).
 					TextColor(p.Reading).Padding(2, 4).FillWidth().AutoFocus().Label(locales.ComposerLabel()).Bind(&a.composerFocus).
 					OnTextKey(func(k ui.TextKey) bool {
 						if a.mentionKey(k) {
@@ -228,6 +262,10 @@ func (a *App) composerBox(c *ui.Context, p *palette, o composerOptions) {
 						}
 						return false
 					})
+				if full {
+					input.FillHeight()
+				}
+				a.composerSel[0], a.composerSel[1] = input.TextSelection()
 				if a.focusComposer {
 					a.focusComposer = false
 					a.composerFocus.Focus(c)
@@ -245,6 +283,16 @@ func (a *App) composerBox(c *ui.Context, p *palette, o composerOptions) {
 					o.footer()
 				}
 				ui.Spacer(c)
+				if o.expandable {
+					icon, label := iconMaximize, locales.ComposerExpand()
+					if full {
+						icon, label = iconMinimize, locales.ComposerCollapse()
+					}
+					iconButton(c, p, icon, label, p.Hover).Size(26, 26).OnClick(func() {
+						a.composerFull = !a.composerFull
+						a.focusComposer = true
+					})
+				}
 				if a.sending {
 					if a.uploading != "" {
 						ui.Text(c, a.uploading).FontSize(sizeFoot).TextColor(p.Secondary).Shrink(0)
@@ -593,4 +641,58 @@ func composerHint(commands, mentions, skills bool) string {
 		return locales.HintSkills()
 	}
 	return locales.ComposerPlaceholder()
+}
+
+// formatBar is lody-ios's format bar over a full composer: Markdown
+// around the selection, or at the start of its line.
+func (a *App) formatBar(c *ui.Context, p *palette) {
+	type format struct {
+		icon         *ui.SVG
+		label        string
+		wrap, prefix string
+	}
+	formats := []format{
+		{iconHeading, locales.FormatHeading(), "", "## "},
+		{iconBold, locales.FormatBold(), "**", ""},
+		{iconItalic, locales.FormatItalic(), "*", ""},
+		{iconStrike, locales.FormatStrikethrough(), "~~", ""},
+		{iconCode, locales.FormatCode(), "`", ""},
+		{iconList, locales.FormatList(), "", "- "},
+		{iconQuote, locales.FormatQuote(), "", "> "},
+	}
+	ui.Row(c.Key("format")).Height(32).Gap(2).AlignItems(ui.Center).Transition(popIn).Children(func() {
+		for _, f := range formats {
+			format := f
+			iconButton(c, p, f.icon, f.label, p.Hover).Size(28, 28).OnClick(func() {
+				text, caret := applyFormat(a.draft, a.composerSel[0], a.composerSel[1], format.wrap, format.prefix)
+				a.draft = text
+				a.mention.moveCaret, a.mention.caretTo = true, caret
+				a.focusComposer = true
+			})
+		}
+	})
+}
+
+// applyFormat wraps the runes start..end of text in wrap, or puts prefix
+// at the start of their line, returning the text and where the caret goes.
+func applyFormat(text string, start, end int, wrap, prefix string) (string, int) {
+	r := []rune(text)
+	start, end = min(max(start, 0), len(r)), min(max(end, 0), len(r))
+	if start > end {
+		start, end = end, start
+	}
+	if prefix != "" {
+		line := start
+		for line > 0 && r[line-1] != '\n' {
+			line--
+		}
+		out := string(r[:line]) + prefix + string(r[line:])
+		return out, end + len([]rune(prefix))
+	}
+	out := string(r[:start]) + wrap + string(r[start:end]) + wrap + string(r[end:])
+	if start == end {
+		// Nothing chosen: the caret goes between the marks.
+		return out, start + len([]rune(wrap))
+	}
+	return out, end + 2*len([]rune(wrap))
 }

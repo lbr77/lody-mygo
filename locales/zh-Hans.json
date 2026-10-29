@@ -1403,5 +1403,14 @@
   "tabClose": "关闭",
   "tabSuggestReview": "审查此分支上的改动",
   "tabSuggestSummarize": "总结此分支上的改动",
-  "tabSuggestSimplify": "简化此分支上的改动"
+  "tabSuggestSimplify": "简化此分支上的改动",
+  "composerExpand": "展开输入框",
+  "composerCollapse": "收起输入框",
+  "formatHeading": "标题",
+  "formatBold": "粗体",
+  "formatItalic": "斜体",
+  "formatStrikethrough": "删除线",
+  "formatCode": "代码",
+  "formatList": "项目符号列表",
+  "formatQuote": "引用"
 }

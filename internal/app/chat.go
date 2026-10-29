@@ -212,6 +212,11 @@ func (a *App) conversation(c *ui.Context, p *palette, sess *catalog.Session) {
 		return
 	}
 	a.syncMarkdown(p)
+	if a.composerFull {
+		// The composer has the conversation's room, as lody-ios's full screen.
+		a.bottom(c, p, sess, v)
+		return
+	}
 	entries := v.Entries
 	a.indexFind(entries)
 	a.revealFind()

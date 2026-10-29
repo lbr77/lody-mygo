@@ -2827,5 +2827,14 @@
   "tabClose": "Close",
   "tabSuggestReview": "Review the changes on this branch",
   "tabSuggestSummarize": "Summarize the changes on this branch",
-  "tabSuggestSimplify": "Simplify the changes on this branch"
+  "tabSuggestSimplify": "Simplify the changes on this branch",
+  "composerExpand": "Expand composer",
+  "composerCollapse": "Collapse composer",
+  "formatHeading": "Heading",
+  "formatBold": "Bold",
+  "formatItalic": "Italic",
+  "formatStrikethrough": "Strikethrough",
+  "formatCode": "Code",
+  "formatList": "Bulleted list",
+  "formatQuote": "Quote"
 }

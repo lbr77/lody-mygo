@@ -111,6 +111,8 @@ type App struct {
 	history          []string // sessions shown, for Back and Forward
 	histPos          int
 	palette          paletteState
+	composerFull     bool                     // the composer has the conversation's room
+	composerSel      [2]int                   // the composer's selection, as last built
 	tabGroups        map[string]*tabGroup     // conversation tabs, by the session they sit beside
 	activeDraft      string                   // the draft tab shown, if one is
 	msgShare         messageShare             // a reply made an image
@@ -671,6 +673,8 @@ func (a *App) send() {
 		MarkDispatch:       sync.MarkDispatch,
 	}
 	a.recordActivity()
+	// Sending gives the conversation its room back.
+	a.composerFull = false
 	a.sending, a.sendError, a.uploading = true, "", ""
 	a.sendingID = a.selected
 	a.draft, a.attachments = "", nil
