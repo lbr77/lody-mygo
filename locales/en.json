@@ -3247,5 +3247,10 @@
   "arpUpdate": "Update Agent Role?",
   "arpNameInUse": "Agent Role name is already in use",
   "arpRoleGone": "Agent Role no longer exists",
-  "arpNotEditable": "Agent Role is not editable"
+  "arpNotEditable": "Agent Role is not editable",
+  "schedRunNowHelp": "Run with the last saved prompt, Agent, Project and permission mode. Unsaved edits are excluded. This may run alongside existing work.",
+  "schedConfirm": "Confirm",
+  "cmdSchedulesNew": "New Schedule",
+  "cmdSchedulesOpen": "Open Schedules",
+  "cmdSchedulesPause": "Pause Schedule"
 }

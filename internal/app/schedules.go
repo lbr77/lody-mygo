@@ -1105,6 +1105,25 @@ func (a *App) toggleSchedule(row schedule.Row) {
 	})
 }
 
+// pausableSchedule is the open schedule when Pause Schedule applies: its
+// owner's, running, and a task.
+func (a *App) pausableSchedule() *schedule.Row {
+	if !a.sched.modal || a.page != "schedules" {
+		return nil
+	}
+	row := a.sched.reg.Row(a.sched.open)
+	if row == nil || row.OwnerID != a.userID() || !row.Enabled || row.ScheduledMessage {
+		return nil
+	}
+	return row
+}
+
+// confirmRun asks before a run from the open schedule, which takes what
+// was last saved, not the form's edits.
+func (a *App) confirmRun(row schedule.Row) {
+	a.confirmSafe(locales.SchedRunNow(), locales.SchedRunNowHelp(), locales.SchedConfirm(), func() { a.runSchedule(row) })
+}
+
 func (a *App) runSchedule(row schedule.Row) {
 	user := a.userID()
 	a.schedAct(func(ctx context.Context, s *schedule.Store) error {
@@ -1205,7 +1224,7 @@ func (a *App) schedHeader(c *ui.Context, p *palette, f *schedForm, row *schedule
 				if row.Trigger.Kind == "manual" {
 					b := outlineButton(c, p, iconPlay, locales.SchedRunNow()).Disabled(!owner || a.sched.acting || !a.canRunSchedules(row.MachineID))
 					r := *row
-					b.OnClick(func() { a.runSchedule(r) })
+					b.OnClick(func() { a.confirmRun(r) })
 				} else {
 					label := locales.SchedPaused()
 					if row.Enabled {
@@ -1221,9 +1240,15 @@ func (a *App) schedHeader(c *ui.Context, p *palette, f *schedForm, row *schedule
 				actions := a.schedActions(*row, a.sched.reg.Runtime[row.ScheduleID])
 				var rest []schedAction
 				for _, act := range actions {
-					if act.key != "open" && act.key != "toggle" {
-						rest = append(rest, act)
+					switch act.key {
+					case "open", "toggle":
+						continue
+					case "run":
+						// Run now from the open schedule asks first.
+						r := *row
+						act.run = func() { a.confirmRun(r) }
 					}
+					rest = append(rest, act)
 				}
 				if len(rest) > 0 {
 					iconButton(c.Key("more"), p, iconMore, locales.SchedMore(), p.Hover).Menu(func(m *ui.Menu) { schedMenu(m, rest) })

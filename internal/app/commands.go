@@ -239,6 +239,19 @@ func (a *App) commands() []command {
 		{id: "nav.forward", title: locales.CmdNavForward(), category: catNavigation, keys: keyChords("Mod+]"), icon: iconArrowRight, when: true, run: a.goForward},
 		{id: "app.cycleTheme", title: locales.CmdCycleTheme(), category: catView, icon: iconSunMoon, when: true, run: a.cycleTheme},
 		{id: "layout.toggleZenMode", title: locales.CmdToggleZen(), category: catView, keys: keyChords("Mod+."), icon: iconFocus, when: true, run: a.toggleZen},
+		{id: "schedules.open", title: locales.CmdSchedulesOpen(), category: catWorkspace, icon: iconListTodo, when: a.workspaceID != "",
+			run: func() { a.page = "schedules" }},
+		{id: "schedules.new", title: locales.CmdSchedulesNew(), category: catWorkspace, icon: iconCalendarClock, when: a.workspaceID != "",
+			run: func() {
+				a.page = "schedules"
+				a.newSchedule()
+			}},
+		{id: "schedules.pause", title: locales.CmdSchedulesPause(), category: catWorkspace, icon: iconPause, when: a.pausableSchedule() != nil,
+			run: func() {
+				if row := a.pausableSchedule(); row != nil {
+					a.toggleSchedule(*row)
+				}
+			}},
 		{id: "workspace.openSettings", title: locales.CmdOpenSettings(), category: catWorkspace, keys: keyChords("Mod+,"), icon: iconSettings, when: a.workspaceID != "",
 			run: func() { a.settingsOpen = !a.settingsOpen }},
 		{id: "session.new", title: locales.CmdSessionNew(), category: catSession, keys: keyChords("Mod+n"), icon: iconSquarePen, when: a.workspaceID != "",

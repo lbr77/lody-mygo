@@ -16550,3 +16550,53 @@ func ArpNotEditable() string { return In(i18n.Locale()).ArpNotEditable() }
 func (msgs Messages) ArpNotEditable() string {
 	return Catalog.Format(msgs.locale, "arpNotEditable", nil)
 }
+
+// SchedRunNowHelp says "Run with the last saved prompt, Agent, Project and permission mode. Unsaved edits are excluded. This may run alongsid…"
+// in the language the app shows.
+func SchedRunNowHelp() string { return In(i18n.Locale()).SchedRunNowHelp() }
+
+// SchedRunNowHelp says "Run with the last saved prompt, Agent, Project and permission mode. Unsaved edits are excluded. This may run alongsid…"
+// in the language of msgs.
+func (msgs Messages) SchedRunNowHelp() string {
+	return Catalog.Format(msgs.locale, "schedRunNowHelp", nil)
+}
+
+// SchedConfirm says "Confirm"
+// in the language the app shows.
+func SchedConfirm() string { return In(i18n.Locale()).SchedConfirm() }
+
+// SchedConfirm says "Confirm"
+// in the language of msgs.
+func (msgs Messages) SchedConfirm() string {
+	return Catalog.Format(msgs.locale, "schedConfirm", nil)
+}
+
+// CmdSchedulesNew says "New Schedule"
+// in the language the app shows.
+func CmdSchedulesNew() string { return In(i18n.Locale()).CmdSchedulesNew() }
+
+// CmdSchedulesNew says "New Schedule"
+// in the language of msgs.
+func (msgs Messages) CmdSchedulesNew() string {
+	return Catalog.Format(msgs.locale, "cmdSchedulesNew", nil)
+}
+
+// CmdSchedulesOpen says "Open Schedules"
+// in the language the app shows.
+func CmdSchedulesOpen() string { return In(i18n.Locale()).CmdSchedulesOpen() }
+
+// CmdSchedulesOpen says "Open Schedules"
+// in the language of msgs.
+func (msgs Messages) CmdSchedulesOpen() string {
+	return Catalog.Format(msgs.locale, "cmdSchedulesOpen", nil)
+}
+
+// CmdSchedulesPause says "Pause Schedule"
+// in the language the app shows.
+func CmdSchedulesPause() string { return In(i18n.Locale()).CmdSchedulesPause() }
+
+// CmdSchedulesPause says "Pause Schedule"
+// in the language of msgs.
+func (msgs Messages) CmdSchedulesPause() string {
+	return Catalog.Format(msgs.locale, "cmdSchedulesPause", nil)
+}

@@ -1642,5 +1642,10 @@
   "arpUpdate": "更新 Agent Role？",
   "arpNameInUse": "Agent Role 名称已被使用",
   "arpRoleGone": "Agent Role 已不存在",
-  "arpNotEditable": "Agent Role 不可编辑"
+  "arpNotEditable": "Agent Role 不可编辑",
+  "schedRunNowHelp": "使用上次保存的提示词、Agent、Project 和权限模式运行，不包含尚未保存的修改。可能与已有任务同时运行。",
+  "schedConfirm": "确认",
+  "cmdSchedulesNew": "新建定时任务",
+  "cmdSchedulesOpen": "打开定时任务",
+  "cmdSchedulesPause": "暂停定时任务"
 }

@@ -263,3 +263,36 @@ func TestScheduleSend(t *testing.T) {
 		t.Fatal("still queued")
 	}
 }
+
+// Run now from an open schedule asks first, as it runs what was last
+// saved; the palette opens Schedules, a new one, and pauses the open one.
+func TestScheduleRunConfirmAndCommands(t *testing.T) {
+	a := schedFixture()
+	a.sched.open, a.sched.modal = "s2", true
+	a.sched.form = &schedForm{id: "s2", owner: "u1", title: "Release notes", machine: "m1", agent: "a1"}
+	a.confirmRun(*a.sched.reg.Row("s2"))
+	if !a.confirming.open || !a.confirming.safe || a.confirming.body != "Run with the last saved prompt, Agent, Project and permission mode. Unsaved edits are excluded. This may run alongside existing work." {
+		t.Fatalf("confirmation %+v", a.confirming)
+	}
+	a.confirming = confirmation{}
+	// s2 is the user's and enabled: Pause Schedule applies to it.
+	if row := a.pausableSchedule(); row == nil || row.ScheduleID != "s2" {
+		t.Fatalf("pausable %+v", row)
+	}
+	a.sched.open = "s3" // paused
+	if a.pausableSchedule() != nil {
+		t.Fatal("a paused schedule is pausable")
+	}
+	a.page = ""
+	a.sched.modal = false
+	a.runCommand("schedules.new")
+	if a.page != "schedules" || a.sched.form == nil || !a.sched.form.create {
+		t.Fatalf("new schedule: page %q form %+v", a.page, a.sched.form)
+	}
+	a.closeSchedule()
+	a.page = ""
+	a.runCommand("schedules.open")
+	if a.page != "schedules" {
+		t.Fatalf("open schedules: page %q", a.page)
+	}
+}

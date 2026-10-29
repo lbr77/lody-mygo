@@ -170,10 +170,16 @@ type confirmation struct {
 	action      string
 	run         func()
 	notice      bool // only tells: one button, in ink, no cancel
+	safe        bool // not destructive: the action in ink, with a cancel
 }
 
 func (a *App) confirm(title, body, action string, run func()) {
 	a.confirming = confirmation{open: true, title: title, body: body, action: action, run: run}
+}
+
+// confirmSafe asks before something that isn't destructive.
+func (a *App) confirmSafe(title, body, action string, run func()) {
+	a.confirming = confirmation{open: true, title: title, body: body, action: action, run: run, safe: true}
 }
 
 func (a *App) confirmDialog(c *ui.Context, p *palette) {
@@ -194,7 +200,7 @@ func (a *App) confirmDialog(c *ui.Context, p *palette) {
 				ghostButton(c, p, locales.Cancel()).Border(1, p.Border).OnClick(func() { cf.open = false })
 			}
 			fill := p.Danger
-			if cf.notice {
+			if cf.notice || cf.safe {
 				fill = p.Text
 			}
 			b := ui.ButtonBase(c).Height(28).Padding(0, 12).Radius(8).Background(fill).Cursor(ui.CursorPointer).Label(cf.action)
@@ -206,7 +212,7 @@ func (a *App) confirmDialog(c *ui.Context, p *palette) {
 			})
 			b.Children(func() {
 				ink := ui.RGB(255, 255, 255)
-				if cf.notice {
+				if cf.notice || cf.safe {
 					ink = p.Canvas
 				}
 				ui.Text(c, cf.action).FontSize(sizeSub).FontWeight(500).TextColor(ink)
