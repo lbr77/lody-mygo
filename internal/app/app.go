@@ -110,6 +110,9 @@ type App struct {
 	archiveFilter  string // "", "chats" or a project id
 	deleting       *catalog.Session
 	deleteOpen     bool
+	taskOpen       bool   // a task's dialog
+	taskEntry      string // the turn and task it shows
+	taskID         string
 	page           string // "archive", or "" for chats
 	archiveSearch  string
 	diffs          map[string]*editor.DiffState // tool diffs of the open session

@@ -28,13 +28,10 @@ func (a *App) archiveView(c *ui.Context, p *palette) {
 		ui.Icon(c, iconArchive).Size(16, 16).TextColor(p.Text)
 		ui.Text(c, locales.ArchiveTitle()).FontSize(sizeBody).FontWeight(600).TextColor(p.Text)
 		label := locales.ArchiveAll()
-		switch {
-		case a.archiveFilter == "chats":
-			label = locales.SidebarChats()
-		case a.archiveFilter != "":
-			label = firstNonEmpty(a.projectName(a.archiveFilter), locales.HomeProject())
+		if a.archiveFilter == "mine" {
+			label = locales.ArchiveMine()
 		}
-		a.toolbarPicker(c, p, "archive/filter", nil, label, a.archiveFilters(), a.archiveFilter, func(id string) { a.archiveFilter = id })
+		a.toolbarPicker(c, p, "archive/filter", nil, label, []option{{"", locales.ArchiveAll()}, {"mine", locales.ArchiveMine()}}, a.archiveFilter, func(id string) { a.archiveFilter = id })
 	})
 
 	sessions := a.archivedSessions()
@@ -117,11 +114,7 @@ func (a *App) archivedSessions() []catalog.Session {
 		if q != "" && !strings.Contains(strings.ToLower(s.Title), q) && !strings.Contains(strings.ToLower(s.BranchName), q) {
 			continue
 		}
-		project := a.catalog.Project(s.ProjectID)
-		switch {
-		case a.archiveFilter == "chats" && project != nil:
-			continue
-		case a.archiveFilter != "" && a.archiveFilter != "chats" && s.ProjectID != a.archiveFilter:
+		if a.archiveFilter == "mine" && (a.account == nil || s.UserID != a.account.User.ID) {
 			continue
 		}
 		out = append(out, s)
@@ -173,20 +166,6 @@ func (a *App) archiveGroups(sessions []catalog.Session) []archiveGroup {
 		groups[i].sessions = append(groups[i].sessions, s)
 	}
 	return groups
-}
-
-func (a *App) archiveFilters() []option {
-	out := []option{{"", locales.ArchiveAll()}, {"chats", locales.SidebarChats()}}
-	seen := map[string]bool{}
-	for _, s := range a.catalog.Sessions {
-		if s.Archived && !seen[s.ProjectID] {
-			if pr := a.catalog.Project(s.ProjectID); pr != nil {
-				seen[s.ProjectID] = true
-				out = append(out, option{pr.ID, pr.Name})
-			}
-		}
-	}
-	return out
 }
 
 func (a *App) archivedRow(c *ui.Context, p *palette, s catalog.Session) {

@@ -5,6 +5,7 @@ import (
 	"github.com/lbr77/lody-mygo/locales"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/egoist/mygo/ui"
 	"github.com/egoist/mygo/ui/markdown"
@@ -216,6 +217,9 @@ func (a *App) userMessage(c *ui.Context, p *palette, e session.Entry, firstQueue
 					ui.Icon(c, iconCircleCheck).Size(14, 14).TextColor(p.Primary)
 				}
 				ui.Text(c, conversationTime(e.Timestamp, time.Now())).FontSize(sizeCaption).TextColor(p.Secondary)
+				if e.Author != nil {
+					ui.Text(c, e.Author.Name).FontSize(sizeCaption).TextColor(p.Secondary)
+				}
 			})
 			if len(images) > 0 {
 				ui.Row(c).Wrap().Gap(6).Justify(ui.End).Children(func() {
@@ -232,17 +236,41 @@ func (a *App) userMessage(c *ui.Context, p *palette, e session.Entry, firstQueue
 				fileChip(c, p, f)
 			}
 			if text := e.Text(); text != "" {
-				bubble := ui.Text(c, text).Selectable().FontSize(sizeBody).LineHeight(24.0/14).TextColor(p.Reading).
-					Padding(12, 16).Radius(14).Background(p.UserBubble).MinWidth(0)
+				// A long message folds to its first lines, as Lody's.
+				long := strings.Count(text, "\n") >= 10 || utf8.RuneCountInString(text) > 900
+				key := e.ID + "/more"
+				open := a.expanded[key]
+				bubble := ui.Column(c).Padding(12, 16).Radius(14).Background(p.UserBubble).MinWidth(0).Gap(6)
 				if e.Queued {
 					bubble.Opacity(0.7)
 				}
+				bubble.Children(func() {
+					body := ui.Text(c, text).Selectable().FontSize(sizeBody).LineHeight(24.0 / 14).TextColor(p.Reading)
+					if long && !open {
+						body.MaxLines(8)
+					}
+					if long {
+						label := locales.ShowMore()
+						if open {
+							label = locales.ShowLess()
+						}
+						ui.Text(c, label).FontSize(sizeFoot).TextColor(p.Secondary).AlignSelf(ui.End).Cursor(ui.CursorPointer).
+							Label(label).OnClick(func() { a.expanded[key] = !a.expanded[key] })
+					}
+				})
 			}
 			if e.Queued && a.view != nil && a.view.Working {
 				a.queuedActions(c, p, e, firstQueued)
 			}
 		})
 		ui.Box(c).Margin(28, 0, 0, 0).Children(func() {
+			if e.Author != nil {
+				// An agent wrote it: its mark, not a person.
+				ui.Row(c).Size(32, 32).Center().Children(func() {
+					ui.Icon(c, agentGlyph(e.Author.AgentType)).Size(20, 20).TextColor(p.Secondary)
+				})
+				return
+			}
 			if a.account != nil && (e.UserID == "" || e.UserID == a.account.User.ID) {
 				a.accountAvatar(c, p, 32)
 			} else {
@@ -297,16 +325,18 @@ func conversationTime(ts string, now time.Time) string {
 	return locales.MessageEarlier(t)
 }
 
-// formatDuration is Lody's: "12s", "1m 05s", "1h 02m 05s".
+// formatDuration is Lody's compact duration in the app's language: "12s",
+// "1m 05s", "1h 02m 05s"; "12秒", "1分05秒".
 func formatDuration(d time.Duration) string {
-	s := int(d.Round(time.Second).Seconds())
+	s := int(d / time.Second) // whole seconds, as Lody floors them
+	pad := func(n int) string { return fmt.Sprintf("%02d", n) }
 	switch {
 	case s < 60:
-		return fmt.Sprintf("%ds", s)
+		return locales.DurationSeconds(fmt.Sprint(s))
 	case s < 3600:
-		return fmt.Sprintf("%dm %02ds", s/60, s%60)
+		return locales.DurationMinutes(fmt.Sprint(s/60), pad(s%60))
 	}
-	return fmt.Sprintf("%dh %02dm %02ds", s/3600, s%3600/60, s%60)
+	return locales.DurationHours(fmt.Sprint(s/3600), pad(s%3600/60), pad(s%60))
 }
 
 // syncMarkdown keeps the Markdown themes in step with the palette.

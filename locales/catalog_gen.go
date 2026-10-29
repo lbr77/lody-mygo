@@ -1601,6 +1601,16 @@ func (msgs Messages) ArchiveAll() string {
 	return Catalog.Format(msgs.locale, "archiveAll", nil)
 }
 
+// ArchiveMine says "My sessions"
+// in the language the app shows.
+func ArchiveMine() string { return In(i18n.Locale()).ArchiveMine() }
+
+// ArchiveMine says "My sessions"
+// in the language of msgs.
+func (msgs Messages) ArchiveMine() string {
+	return Catalog.Format(msgs.locale, "archiveMine", nil)
+}
+
 // ArchiveSearchPlaceholder says "Search archived sessions…"
 // in the language the app shows.
 func ArchiveSearchPlaceholder() string { return In(i18n.Locale()).ArchiveSearchPlaceholder() }
@@ -2249,4 +2259,276 @@ func SettingsLicense() string { return In(i18n.Locale()).SettingsLicense() }
 // in the language of msgs.
 func (msgs Messages) SettingsLicense() string {
 	return Catalog.Format(msgs.locale, "settingsLicense", nil)
+}
+
+// DurationSeconds says "{s}s"
+// in the language the app shows.
+func DurationSeconds(s string) string { return In(i18n.Locale()).DurationSeconds(s) }
+
+// DurationSeconds says "{s}s"
+// in the language of msgs.
+func (msgs Messages) DurationSeconds(s string) string {
+	return Catalog.Format(msgs.locale, "durationSeconds", map[string]any{"s": s})
+}
+
+// DurationMinutes says "{m}m {s}s"
+// in the language the app shows.
+func DurationMinutes(m string, s string) string { return In(i18n.Locale()).DurationMinutes(m, s) }
+
+// DurationMinutes says "{m}m {s}s"
+// in the language of msgs.
+func (msgs Messages) DurationMinutes(m string, s string) string {
+	return Catalog.Format(msgs.locale, "durationMinutes", map[string]any{"m": m, "s": s})
+}
+
+// DurationHours says "{h}h {m}m {s}s"
+// in the language the app shows.
+func DurationHours(h string, m string, s string) string {
+	return In(i18n.Locale()).DurationHours(h, m, s)
+}
+
+// DurationHours says "{h}h {m}m {s}s"
+// in the language of msgs.
+func (msgs Messages) DurationHours(h string, m string, s string) string {
+	return Catalog.Format(msgs.locale, "durationHours", map[string]any{"h": h, "m": m, "s": s})
+}
+
+// TasksWaitingBackground says "{count, plural, one {Waiting on # background task} other {Waiting on # background tasks}}"
+// in the language the app shows.
+func TasksWaitingBackground(count int) string { return In(i18n.Locale()).TasksWaitingBackground(count) }
+
+// TasksWaitingBackground says "{count, plural, one {Waiting on # background task} other {Waiting on # background tasks}}"
+// in the language of msgs.
+func (msgs Messages) TasksWaitingBackground(count int) string {
+	return Catalog.Format(msgs.locale, "tasksWaitingBackground", map[string]any{"count": count})
+}
+
+// TasksCountBackground says "{count, plural, one {# background task} other {# background tasks}}"
+// in the language the app shows.
+func TasksCountBackground(count int) string { return In(i18n.Locale()).TasksCountBackground(count) }
+
+// TasksCountBackground says "{count, plural, one {# background task} other {# background tasks}}"
+// in the language of msgs.
+func (msgs Messages) TasksCountBackground(count int) string {
+	return Catalog.Format(msgs.locale, "tasksCountBackground", map[string]any{"count": count})
+}
+
+// TasksWaiting says "{count, plural, one {Waiting on # task} other {Waiting on # tasks}}"
+// in the language the app shows.
+func TasksWaiting(count int) string { return In(i18n.Locale()).TasksWaiting(count) }
+
+// TasksWaiting says "{count, plural, one {Waiting on # task} other {Waiting on # tasks}}"
+// in the language of msgs.
+func (msgs Messages) TasksWaiting(count int) string {
+	return Catalog.Format(msgs.locale, "tasksWaiting", map[string]any{"count": count})
+}
+
+// TasksCount says "{count, plural, one {# task} other {# tasks}}"
+// in the language the app shows.
+func TasksCount(count int) string { return In(i18n.Locale()).TasksCount(count) }
+
+// TasksCount says "{count, plural, one {# task} other {# tasks}}"
+// in the language of msgs.
+func (msgs Messages) TasksCount(count int) string {
+	return Catalog.Format(msgs.locale, "tasksCount", map[string]any{"count": count})
+}
+
+// TasksInBackground says "{count} in background"
+// in the language the app shows.
+func TasksInBackground(count int) string { return In(i18n.Locale()).TasksInBackground(count) }
+
+// TasksInBackground says "{count} in background"
+// in the language of msgs.
+func (msgs Messages) TasksInBackground(count int) string {
+	return Catalog.Format(msgs.locale, "tasksInBackground", map[string]any{"count": count})
+}
+
+// TaskBash says "Bash"
+// in the language the app shows.
+func TaskBash() string { return In(i18n.Locale()).TaskBash() }
+
+// TaskBash says "Bash"
+// in the language of msgs.
+func (msgs Messages) TaskBash() string {
+	return Catalog.Format(msgs.locale, "taskBash", nil)
+}
+
+// TaskDefault says "Task"
+// in the language the app shows.
+func TaskDefault() string { return In(i18n.Locale()).TaskDefault() }
+
+// TaskDefault says "Task"
+// in the language of msgs.
+func (msgs Messages) TaskDefault() string {
+	return Catalog.Format(msgs.locale, "taskDefault", nil)
+}
+
+// TaskCancelled says "Cancelled"
+// in the language the app shows.
+func TaskCancelled() string { return In(i18n.Locale()).TaskCancelled() }
+
+// TaskCancelled says "Cancelled"
+// in the language of msgs.
+func (msgs Messages) TaskCancelled() string {
+	return Catalog.Format(msgs.locale, "taskCancelled", nil)
+}
+
+// TaskCompleted says "Completed"
+// in the language the app shows.
+func TaskCompleted() string { return In(i18n.Locale()).TaskCompleted() }
+
+// TaskCompleted says "Completed"
+// in the language of msgs.
+func (msgs Messages) TaskCompleted() string {
+	return Catalog.Format(msgs.locale, "taskCompleted", nil)
+}
+
+// TaskFailed says "Failed"
+// in the language the app shows.
+func TaskFailed() string { return In(i18n.Locale()).TaskFailed() }
+
+// TaskFailed says "Failed"
+// in the language of msgs.
+func (msgs Messages) TaskFailed() string {
+	return Catalog.Format(msgs.locale, "taskFailed", nil)
+}
+
+// TaskPending says "Pending"
+// in the language the app shows.
+func TaskPending() string { return In(i18n.Locale()).TaskPending() }
+
+// TaskPending says "Pending"
+// in the language of msgs.
+func (msgs Messages) TaskPending() string {
+	return Catalog.Format(msgs.locale, "taskPending", nil)
+}
+
+// TaskRunning says "Running"
+// in the language the app shows.
+func TaskRunning() string { return In(i18n.Locale()).TaskRunning() }
+
+// TaskRunning says "Running"
+// in the language of msgs.
+func (msgs Messages) TaskRunning() string {
+	return Catalog.Format(msgs.locale, "taskRunning", nil)
+}
+
+// TaskUnknown says "Status unknown"
+// in the language the app shows.
+func TaskUnknown() string { return In(i18n.Locale()).TaskUnknown() }
+
+// TaskUnknown says "Status unknown"
+// in the language of msgs.
+func (msgs Messages) TaskUnknown() string {
+	return Catalog.Format(msgs.locale, "taskUnknown", nil)
+}
+
+// TaskRunningTool says "Running {tool}"
+// in the language the app shows.
+func TaskRunningTool(tool string) string { return In(i18n.Locale()).TaskRunningTool(tool) }
+
+// TaskRunningTool says "Running {tool}"
+// in the language of msgs.
+func (msgs Messages) TaskRunningTool(tool string) string {
+	return Catalog.Format(msgs.locale, "taskRunningTool", map[string]any{"tool": tool})
+}
+
+// TaskThinking says "Thinking"
+// in the language the app shows.
+func TaskThinking() string { return In(i18n.Locale()).TaskThinking() }
+
+// TaskThinking says "Thinking"
+// in the language of msgs.
+func (msgs Messages) TaskThinking() string {
+	return Catalog.Format(msgs.locale, "taskThinking", nil)
+}
+
+// TaskPlanUpdated says "Updated its plan"
+// in the language the app shows.
+func TaskPlanUpdated() string { return In(i18n.Locale()).TaskPlanUpdated() }
+
+// TaskPlanUpdated says "Updated its plan"
+// in the language of msgs.
+func (msgs Messages) TaskPlanUpdated() string {
+	return Catalog.Format(msgs.locale, "taskPlanUpdated", nil)
+}
+
+// TaskBrief says "Brief"
+// in the language the app shows.
+func TaskBrief() string { return In(i18n.Locale()).TaskBrief() }
+
+// TaskBrief says "Brief"
+// in the language of msgs.
+func (msgs Messages) TaskBrief() string {
+	return Catalog.Format(msgs.locale, "taskBrief", nil)
+}
+
+// TaskResult says "Result"
+// in the language the app shows.
+func TaskResult() string { return In(i18n.Locale()).TaskResult() }
+
+// TaskResult says "Result"
+// in the language of msgs.
+func (msgs Messages) TaskResult() string {
+	return Catalog.Format(msgs.locale, "taskResult", nil)
+}
+
+// TaskError says "Error"
+// in the language the app shows.
+func TaskError() string { return In(i18n.Locale()).TaskError() }
+
+// TaskError says "Error"
+// in the language of msgs.
+func (msgs Messages) TaskError() string {
+	return Catalog.Format(msgs.locale, "taskError", nil)
+}
+
+// TaskActivity says "Activity"
+// in the language the app shows.
+func TaskActivity() string { return In(i18n.Locale()).TaskActivity() }
+
+// TaskActivity says "Activity"
+// in the language of msgs.
+func (msgs Messages) TaskActivity() string {
+	return Catalog.Format(msgs.locale, "taskActivity", nil)
+}
+
+// TaskNoSteps says "No steps were received."
+// in the language the app shows.
+func TaskNoSteps() string { return In(i18n.Locale()).TaskNoSteps() }
+
+// TaskNoSteps says "No steps were received."
+// in the language of msgs.
+func (msgs Messages) TaskNoSteps() string {
+	return Catalog.Format(msgs.locale, "taskNoSteps", nil)
+}
+
+// TaskUnknownExplanation says "Lody lost track of this run. It may still be running, or may have stopped."
+// in the language the app shows.
+func TaskUnknownExplanation() string { return In(i18n.Locale()).TaskUnknownExplanation() }
+
+// TaskUnknownExplanation says "Lody lost track of this run. It may still be running, or may have stopped."
+// in the language of msgs.
+func (msgs Messages) TaskUnknownExplanation() string {
+	return Catalog.Format(msgs.locale, "taskUnknownExplanation", nil)
+}
+
+// ShowMore says "Show more"
+// in the language the app shows.
+func ShowMore() string { return In(i18n.Locale()).ShowMore() }
+
+// ShowMore says "Show more"
+// in the language of msgs.
+func (msgs Messages) ShowMore() string {
+	return Catalog.Format(msgs.locale, "showMore", nil)
+}
+
+// ShowLess says "Show less"
+// in the language the app shows.
+func ShowLess() string { return In(i18n.Locale()).ShowLess() }
+
+// ShowLess says "Show less"
+// in the language of msgs.
+func (msgs Messages) ShowLess() string {
+	return Catalog.Format(msgs.locale, "showLess", nil)
 }

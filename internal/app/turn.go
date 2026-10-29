@@ -27,6 +27,8 @@ func blocks(items []session.Item) []block {
 	var out []block
 	for _, it := range items {
 		switch {
+		case it.Type == "subagent_task":
+			continue // the task card shows these
 		case it.Type == "text":
 			out = append(out, block{text: true, items: []session.Item{it}, key: it.ID})
 		default:
@@ -75,11 +77,18 @@ func (a *App) assistantMessage(c *ui.Context, p *palette, e session.Entry) {
 			ui.Column(c.Key("b/"+b.key)).FillWidth().Margin(top, 0, 0, 0).Children(el)
 			prevText, first = b.text, false
 		}
+		tasks := collectTasks(e.Items)
+		taskCard := func() {
+			if len(tasks) > 0 {
+				ui.Column(c.Key("tasks")).FillWidth().Margin(12, 0, 0, 0).Children(func() { a.taskPanel(c, p, e, tasks) })
+			}
+		}
 		if !e.Finished {
 			for bi, b := range bs {
 				last := bi == len(bs)-1
 				place(b, func() { a.block(c, p, e, b, last) })
 			}
+			taskCard()
 			return
 		}
 		k := answerStart(bs)
@@ -102,6 +111,7 @@ func (a *App) assistantMessage(c *ui.Context, p *palette, e session.Entry) {
 		for _, b := range bs[k:] {
 			place(b, func() { a.block(c, p, e, b, false) })
 		}
+		taskCard()
 		if len(e.FileDiffs) > 0 {
 			ui.Column(c).FillWidth().Margin(12, 0, 0, 0).Children(func() { a.editedFiles(c, p, e) })
 		}

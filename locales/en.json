@@ -406,6 +406,7 @@
   "file": "File",
   "archiveTitle": "Archive",
   "archiveAll": "All sessions",
+  "archiveMine": "My sessions",
   "archiveSearchPlaceholder": "Search archived sessions…",
   "archiveSearch": "Search archive",
   "archiveByProject": "By project",
@@ -498,5 +499,104 @@
   "settingsAboutDescription": "A native Lody client: MyGo draws it on the GPU, without a web view, and it syncs with Lody Cloud directly.",
   "settingsDocs": "Lody documentation",
   "settingsSource": "Source code",
-  "settingsLicense": "License"
+  "settingsLicense": "License",
+  "durationSeconds": "{s}s",
+  "@durationSeconds": {
+    "placeholders": {
+      "s": {
+        "type": "String"
+      }
+    }
+  },
+  "durationMinutes": "{m}m {s}s",
+  "@durationMinutes": {
+    "placeholders": {
+      "m": {
+        "type": "String"
+      },
+      "s": {
+        "type": "String"
+      }
+    }
+  },
+  "durationHours": "{h}h {m}m {s}s",
+  "@durationHours": {
+    "placeholders": {
+      "h": {
+        "type": "String"
+      },
+      "m": {
+        "type": "String"
+      },
+      "s": {
+        "type": "String"
+      }
+    }
+  },
+  "tasksWaitingBackground": "{count, plural, one {Waiting on # background task} other {Waiting on # background tasks}}",
+  "@tasksWaitingBackground": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tasksCountBackground": "{count, plural, one {# background task} other {# background tasks}}",
+  "@tasksCountBackground": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tasksWaiting": "{count, plural, one {Waiting on # task} other {Waiting on # tasks}}",
+  "@tasksWaiting": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tasksCount": "{count, plural, one {# task} other {# tasks}}",
+  "@tasksCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tasksInBackground": "{count} in background",
+  "@tasksInBackground": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "taskBash": "Bash",
+  "taskDefault": "Task",
+  "taskCancelled": "Cancelled",
+  "taskCompleted": "Completed",
+  "taskFailed": "Failed",
+  "taskPending": "Pending",
+  "taskRunning": "Running",
+  "taskUnknown": "Status unknown",
+  "taskRunningTool": "Running {tool}",
+  "@taskRunningTool": {
+    "placeholders": {
+      "tool": {
+        "type": "String"
+      }
+    }
+  },
+  "taskThinking": "Thinking",
+  "taskPlanUpdated": "Updated its plan",
+  "taskBrief": "Brief",
+  "taskResult": "Result",
+  "taskError": "Error",
+  "taskActivity": "Activity",
+  "taskNoSteps": "No steps were received.",
+  "taskUnknownExplanation": "Lody lost track of this run. It may still be running, or may have stopped.",
+  "showMore": "Show more",
+  "showLess": "Show less"
 }

@@ -55,9 +55,30 @@ type PlanEntry struct {
 	Content, Status string
 }
 
+// Subagent is a task the agent started: a subagent, or a background
+// command or watcher.
 type Subagent struct {
+	TaskID, ParentTaskID                       string
 	Description, Status, Summary, Error, Actor string
+	TaskType, SubagentType                     string
+	State                                      string // pending, running, completed, failed, cancelled or unknown
+	Background, SkipTranscript                 bool
+	Started, Ended                             float64 // epoch seconds
+	LastTool, Progress                         string
 	Items                                      []Item
+}
+
+// Running reports whether the task is still worth waiting on.
+func (s *Subagent) Running() bool { return s.State == "running" || s.State == "pending" }
+
+// Bash reports whether the task runs a shell command.
+func (s *Subagent) Bash() bool { return s.Actor == "local_bash" || s.TaskType == "local_bash" }
+
+// Author is who wrote a message the user didn't: another session's agent.
+type Author struct {
+	Agent     bool
+	Name      string
+	AgentType string
 }
 
 // Entry is one turn of the conversation.
@@ -70,7 +91,8 @@ type Entry struct {
 	Timestamp  string
 	UserTurnID string
 	Model      string
-	UserID     string // who wrote a user message
+	UserID     string  // who wrote a user message
+	Author     *Author // set when an agent wrote it
 	Items      []Item
 	// A steer is a message given to a running turn: SteerMode is native or
 	// interrupt, SteerState confirming, accepted or unknown.
@@ -249,14 +271,40 @@ func summarizeItem(raw map[string]any, identity string) Item {
 			it.Plan = append(it.Plan, PlanEntry{Content: str(entry["content"]), Status: status})
 		}
 	case "subagent_task":
+		run := obj(raw["run"])
 		sa := &Subagent{
-			Description: str(raw["description"]),
-			Status:      str(raw["status"]),
-			Summary:     str(raw["summary"]),
-			Error:       str(raw["error"]),
-			Actor:       str(raw["actor"]),
+			TaskID:         str(raw["taskId"]),
+			ParentTaskID:   str(raw["parentTaskId"]),
+			Description:    str(raw["description"]),
+			Status:         str(raw["status"]),
+			Summary:        str(raw["summary"]),
+			Error:          str(raw["error"]),
+			Actor:          str(raw["actor"]),
+			TaskType:       str(raw["taskType"]),
+			SubagentType:   str(raw["subagentType"]),
+			Background:     raw["isBackgrounded"] == true,
+			SkipTranscript: raw["skipTranscript"] == true,
+			Started:        num(raw["startedAtEpochSeconds"]),
+			Ended:          num(raw["endedAtEpochSeconds"]),
+			LastTool:       firstOf(str(obj(run["progress"])["lastToolName"]), str(raw["lastToolName"])),
+			Progress:       str(obj(run["progress"])["summary"]),
 		}
-		for i, r := range list(obj(raw["run"])["items"]) {
+		if sa.TaskID == "" {
+			sa.TaskID = identity
+		}
+		// A normalized run's snapshot says how it stands; a legacy task has
+		// only its status.
+		sa.State = str(obj(run["snapshot"])["state"])
+		if sa.State == "" {
+			sa.State = sa.Status
+			if sa.State == "in_progress" {
+				sa.State = "running"
+			}
+		}
+		if sa.State == "" {
+			sa.State = "pending"
+		}
+		for i, r := range list(run["items"]) {
 			child := obj(r)
 			switch str(child["type"]) {
 			case "text", "thought", "tool_call", "plan":
@@ -266,6 +314,28 @@ func summarizeItem(raw map[string]any, identity string) Item {
 		it.Subagent = sa
 	}
 	return it
+}
+
+func firstOf(values ...string) string {
+	for _, v := range values {
+		if v != "" {
+			return v
+		}
+	}
+	return ""
+}
+
+// authorOf reads a message's author: only an agent's is of interest.
+func authorOf(v any) *Author {
+	a := obj(v)
+	if a == nil || str(a["kind"]) != "agent" {
+		return nil
+	}
+	name := str(obj(a["role"])["name"])
+	if name == "" {
+		name = firstOf(str(a["name"]), str(a["agentType"]), "Agent")
+	}
+	return &Author{Agent: true, Name: name, AgentType: str(a["agentType"])}
 }
 
 // identityAt is the id Lody gives an element of a list: its Loro op id.
@@ -341,6 +411,7 @@ func project(doc *loro.LoroDoc, status, reason string) *View {
 			Timestamp:  str(e["timestamp"]),
 			UserTurnID: str(e["userTurnId"]),
 			UserID:     str(e["userId"]),
+			Author:     authorOf(e["author"]),
 			StartedAt:  num(e["startedAt"]),
 			EndedAt:    num(e["endedAt"]),
 		}

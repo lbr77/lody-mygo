@@ -1,6 +1,9 @@
 package app
 
 import (
+	"strings"
+	"time"
+
 	"github.com/egoist/mygo/i18n"
 	"image/png"
 	"os"
@@ -366,7 +369,7 @@ func TestChinese(t *testing.T) {
 	a.view.Entries = a.view.Entries[:2]
 	a.view.Working = false
 	tt := snap(t, a, "chinese", false, nil)
-	for _, want := range []string{"新对话", "搜索", "已置顶", "工作了1m 12s", "添加附件", "权限模式：默认", "复制"} {
+	for _, want := range []string{"新对话", "搜索", "已置顶", "工作了1分12秒", "添加附件", "权限模式：默认", "复制"} {
 		if !tt.HasText(want) {
 			t.Errorf("missing %q in %q", want, tt.Texts())
 		}
@@ -377,5 +380,78 @@ func TestChinese(t *testing.T) {
 		if !tt.HasText(want) {
 			t.Errorf("missing %q in %q", want, tt.Texts())
 		}
+	}
+}
+
+// backgroundFixture is a turn waiting on two background commands, after a
+// message an agent wrote, as in Lody.
+func backgroundFixture() *App {
+	a := fixture()
+	started := float64(time.Now().Add(-6*time.Minute - 49*time.Second).Unix())
+	long := strings.Repeat("P7 is done; please review commit 7a8fdd3 on feature/bilibili-p1.\n", 14)
+	a.view.Entries = []session.Entry{
+		{ID: "u1", Role: "user", Status: "handled", Timestamp: "2026-10-29T14:53:00Z", Author: &session.Author{Agent: true, Name: "Claude Code", AgentType: "claude"},
+			Items: []session.Item{{ID: "t", Type: "text", Text: long}}},
+		{ID: "r1", Role: "assistant", UserTurnID: "u1", StartedAt: float64(time.Now().Add(-6 * time.Minute).UnixMilli()), Items: []session.Item{
+			{ID: "x1", Type: "text", Text: "Reviewing P7: starting the two gate runs first, and going through the code in parallel."},
+			{ID: "s1", Type: "subagent_task", Subagent: &session.Subagent{TaskID: "b1", Actor: "local_bash", Description: "Run full make test twice on P7", State: "running", Background: true, Started: started}},
+			{ID: "s2", Type: "subagent_task", Subagent: &session.Subagent{TaskID: "b2", Actor: "local_bash", Description: "Wait for both P7 gate runs", State: "running", Background: true, Started: started,
+				Items: []session.Item{{ID: "c", Type: "tool_call", Kind: "execute", Title: "sleep 60", Status: "in_progress"}}}},
+		}},
+	}
+	return a
+}
+
+func TestBackgroundTasks(t *testing.T) {
+	a := backgroundFixture()
+	tt := snap(t, a, "background-tasks", false, nil)
+	for _, want := range []string{"Waiting on 2 background tasks", "Bash", "Run full make test twice on P7", "Wait for both P7 gate runs", "6m 49s", "Running sleep 60", "Claude Code", "Show more"} {
+		if !tt.HasText(want) {
+			t.Errorf("missing %q in %q", want, tt.Texts())
+		}
+	}
+	if err := tt.Click("Bash · Wait for both P7 gate runs"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if !a.taskOpen || !tt.HasText("Activity") {
+		t.Fatalf("task dialog: %q", tt.Texts())
+	}
+
+	i18n.SetLocaleFunc(func() string { return "zh-Hans" })
+	defer i18n.SetLocaleFunc(func() string { return "en" })
+	a = backgroundFixture()
+	tt = snap(t, a, "background-tasks-zh", false, nil)
+	for _, want := range []string{"正在等待 2 个后台任务", "6分49秒", "展开"} {
+		if !tt.HasText(want) {
+			t.Errorf("missing %q in %q", want, tt.Texts())
+		}
+	}
+}
+
+func TestDurations(t *testing.T) {
+	for d, want := range map[time.Duration]string{12 * time.Second: "12s", 6*time.Minute + 9*time.Second: "6m 09s", time.Hour + 2*time.Minute + 5*time.Second: "1h 02m 05s"} {
+		if got := formatDuration(d); got != want {
+			t.Errorf("formatDuration(%v) = %q, want %q", d, got, want)
+		}
+	}
+	i18n.SetLocaleFunc(func() string { return "zh-Hans" })
+	defer i18n.SetLocaleFunc(func() string { return "en" })
+	if got := formatDuration(6*time.Minute + 49*time.Second); got != "6分49秒" {
+		t.Errorf("zh: %q", got)
+	}
+}
+
+func TestArchiveMine(t *testing.T) {
+	a := fixture()
+	a.catalog.Sessions = append(a.catalog.Sessions,
+		catalog.Session{ID: "a1", Title: "Mine", Archived: true, UserID: "u1", CreatedAt: "2026-09-01T00:00:00Z"},
+		catalog.Session{ID: "a2", Title: "Theirs", Archived: true, UserID: "someone", CreatedAt: "2026-09-02T00:00:00Z"})
+	if got := len(a.archivedSessions()); got != 2 {
+		t.Fatalf("all = %d", got)
+	}
+	a.archiveFilter = "mine"
+	if got := a.archivedSessions(); len(got) != 1 || got[0].Title != "Mine" {
+		t.Fatalf("mine = %+v", got)
 	}
 }
