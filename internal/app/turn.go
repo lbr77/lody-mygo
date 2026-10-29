@@ -539,7 +539,7 @@ func (a *App) turnFooter(c *ui.Context, p *palette, e session.Entry, hovered boo
 	row.Children(func() {
 		// Copied, the button wears a check for 1.2s, as Lody's.
 		cm := &a.chatMotion
-		icon, label := iconCopy, locales.Copy()
+		icon, label := iconCopy, locales.CopyResponse()
 		if cm.copiedTurn == e.ID && time.Since(cm.copiedAt) < 1200*time.Millisecond {
 			icon, label = iconCheck, locales.PlanCopied()
 			c.After(1200*time.Millisecond - time.Since(cm.copiedAt))

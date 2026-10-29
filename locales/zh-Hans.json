@@ -1832,5 +1832,12 @@
   "ctxGoToOpener": "跳转到发起会话",
   "connLoading": "连接中…",
   "connReconnecting": "正在重连…",
-  "connSyncing": "正在同步工作区…"
+  "connSyncing": "正在同步工作区…",
+  "planStatusCompleted": "已完成",
+  "planStatusInProgress": "进行中",
+  "planStatusPending": "待执行",
+  "copyResponse": "复制回答",
+  "goalExpandObjective": "展开 Goal 目标",
+  "goalCollapseObjective": "收起 Goal 目标",
+  "copyContextHint": "复制截至此条的对话"
 }

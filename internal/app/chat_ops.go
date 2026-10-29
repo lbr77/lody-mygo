@@ -174,8 +174,8 @@ func (a *App) forkButton(c *ui.Context, p *palette, e session.Entry) {
 			a.fork(turn, true, false, "")
 		}
 		m.sep()
-		if m.item("copy-context", iconCopy, locales.HmCopyContext(), menuItem{disabled: a.view == nil}) {
-			a.copyConversation(a.selected)
+		if m.item("copy-context", iconCopy, locales.HmCopyContext(), menuItem{disabled: a.view == nil, tip: locales.CopyContextHint()}) {
+			a.copyConversationThrough(a.selected, turn)
 		}
 	})
 }
@@ -398,7 +398,11 @@ func (a *App) goalObjective(c *ui.Context, p *palette, key, objective string, op
 		row.Label(locales.GoalObjective())
 		return
 	}
-	row.Cursor(ui.CursorPointer).Transition(twFade).OnClick(func() { a.expanded[key] = !a.expanded[key] })
+	toggle := locales.GoalExpandObjective()
+	if open {
+		toggle = locales.GoalCollapseObjective()
+	}
+	row.Label(toggle).Cursor(ui.CursorPointer).Transition(twFade).OnClick(func() { a.expanded[key] = !a.expanded[key] })
 	if row.Hovered() {
 		row.Background(p.Canvas.Alpha(0.4))
 	}

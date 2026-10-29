@@ -40,6 +40,9 @@ type menuItem struct {
 	tip         string
 	detail      string // a second line, under the label
 	end         func() // what ends the row: a copy mark, a switch, a status
+	// indicator draws the icon in the label's ink: a tick or a radio dot
+	// saying what is chosen, as @lody/ui's indicator, not a hint.
+	indicator bool
 }
 
 // row lays out a row: its icon box, label and end, highlighted while the
@@ -64,6 +67,9 @@ func (m *lodyMenu) row(key string, icon *ui.SVG, label string, o menuItem, extra
 		lodyTooltip(c, p, r, o.tip)
 	}
 	ink, hint := p.Text, p.Tertiary
+	if o.indicator {
+		hint = p.Text
+	}
 	if o.destructive {
 		ink, hint = p.Danger, p.Danger
 	}

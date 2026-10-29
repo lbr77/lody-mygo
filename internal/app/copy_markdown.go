@@ -1,9 +1,11 @@
 package app
 
 import (
+	"slices"
 	"strings"
 
 	"github.com/lbr77/lody-mygo/internal/convmd"
+	"github.com/lbr77/lody-mygo/internal/session"
 	"github.com/lbr77/lody-mygo/locales"
 )
 
@@ -11,6 +13,13 @@ import (
 // "Copy as Markdown": sized to paste into another chat, its trims named in
 // the toast. A turn still being written is said so at the top.
 func (a *App) copyConversation(id string) {
+	a.copyConversationThrough(id, "")
+}
+
+// copyConversationThrough copies the conversation up to and including the
+// entry through, the whole of it when through is "", as Lody's Copy
+// context does from a message.
+func (a *App) copyConversationThrough(id, through string) {
 	v := a.view
 	if v == nil || id != a.selected || len(v.Entries) == 0 {
 		a.toast("error", locales.AccessHistoryEmpty())
@@ -39,6 +48,14 @@ func (a *App) copyConversation(id string) {
 		}
 	}
 	entries := foldNotices(v.Entries)
+	if through != "" {
+		end := slices.IndexFunc(entries, func(e session.Entry) bool { return e.ID == through })
+		if end < 0 {
+			a.toast("error", locales.AccessHistoryEmpty())
+			return
+		}
+		entries = entries[:end+1]
+	}
 	if last := entries[len(entries)-1]; last.Role == "assistant" && !last.Finished {
 		opt.IncompleteFinalResponse = locales.AccessIncomplete()
 	}

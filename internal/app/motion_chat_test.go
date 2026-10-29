@@ -39,7 +39,7 @@ func TestPlanBar(t *testing.T) {
 		{Content: "Wire the stream", Status: "pending"},
 	}}}, items...)
 	tt := snap(t, a, "plan-bar", false, nil)
-	head := locales.TaskRunning() + ": Port the runtime"
+	head := locales.PlanStatusInProgress() + ": Port the runtime"
 	if !tt.HasText(head) || !tt.HasText("1/3") || tt.HasText("Wire the stream") {
 		t.Fatalf("plan bar: %q", tt.Texts())
 	}

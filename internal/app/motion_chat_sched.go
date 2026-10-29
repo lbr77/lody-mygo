@@ -34,7 +34,7 @@ func (m *lodyMenu) radio(key, label string, on bool, count string) bool {
 	if on {
 		icon = iconRadioDot
 	}
-	o := menuItem{}
+	o := menuItem{indicator: true}
 	if count != "" {
 		c, p := m.c, m.p
 		o.end = func() { ui.Text(c, count).FontSize(sizeSub).TextColor(p.Text).Shrink(0) }

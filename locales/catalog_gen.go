@@ -18472,3 +18472,73 @@ func ConnSyncing() string { return In(i18n.Locale()).ConnSyncing() }
 func (msgs Messages) ConnSyncing() string {
 	return Catalog.Format(msgs.locale, "connSyncing", nil)
 }
+
+// PlanStatusCompleted says "Completed"
+// in the language the app shows.
+func PlanStatusCompleted() string { return In(i18n.Locale()).PlanStatusCompleted() }
+
+// PlanStatusCompleted says "Completed"
+// in the language of msgs.
+func (msgs Messages) PlanStatusCompleted() string {
+	return Catalog.Format(msgs.locale, "planStatusCompleted", nil)
+}
+
+// PlanStatusInProgress says "In progress"
+// in the language the app shows.
+func PlanStatusInProgress() string { return In(i18n.Locale()).PlanStatusInProgress() }
+
+// PlanStatusInProgress says "In progress"
+// in the language of msgs.
+func (msgs Messages) PlanStatusInProgress() string {
+	return Catalog.Format(msgs.locale, "planStatusInProgress", nil)
+}
+
+// PlanStatusPending says "Pending"
+// in the language the app shows.
+func PlanStatusPending() string { return In(i18n.Locale()).PlanStatusPending() }
+
+// PlanStatusPending says "Pending"
+// in the language of msgs.
+func (msgs Messages) PlanStatusPending() string {
+	return Catalog.Format(msgs.locale, "planStatusPending", nil)
+}
+
+// CopyResponse says "Copy response"
+// in the language the app shows.
+func CopyResponse() string { return In(i18n.Locale()).CopyResponse() }
+
+// CopyResponse says "Copy response"
+// in the language of msgs.
+func (msgs Messages) CopyResponse() string {
+	return Catalog.Format(msgs.locale, "copyResponse", nil)
+}
+
+// GoalExpandObjective says "Expand goal objective"
+// in the language the app shows.
+func GoalExpandObjective() string { return In(i18n.Locale()).GoalExpandObjective() }
+
+// GoalExpandObjective says "Expand goal objective"
+// in the language of msgs.
+func (msgs Messages) GoalExpandObjective() string {
+	return Catalog.Format(msgs.locale, "goalExpandObjective", nil)
+}
+
+// GoalCollapseObjective says "Collapse goal objective"
+// in the language the app shows.
+func GoalCollapseObjective() string { return In(i18n.Locale()).GoalCollapseObjective() }
+
+// GoalCollapseObjective says "Collapse goal objective"
+// in the language of msgs.
+func (msgs Messages) GoalCollapseObjective() string {
+	return Catalog.Format(msgs.locale, "goalCollapseObjective", nil)
+}
+
+// CopyContextHint says "Copy the conversation through this message"
+// in the language the app shows.
+func CopyContextHint() string { return In(i18n.Locale()).CopyContextHint() }
+
+// CopyContextHint says "Copy the conversation through this message"
+// in the language of msgs.
+func (msgs Messages) CopyContextHint() string {
+	return Catalog.Format(msgs.locale, "copyContextHint", nil)
+}

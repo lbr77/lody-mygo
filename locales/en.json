@@ -3624,5 +3624,12 @@
   "ctxGoToOpener": "Go to Opener Session",
   "connLoading": "Connecting…",
   "connReconnecting": "Reconnecting…",
-  "connSyncing": "Syncing workspace…"
+  "connSyncing": "Syncing workspace…",
+  "planStatusCompleted": "Completed",
+  "planStatusInProgress": "In progress",
+  "planStatusPending": "Pending",
+  "copyResponse": "Copy response",
+  "goalExpandObjective": "Expand goal objective",
+  "goalCollapseObjective": "Collapse goal objective",
+  "copyContextHint": "Copy the conversation through this message"
 }

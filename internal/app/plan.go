@@ -327,17 +327,15 @@ func planStatusIcon(c *ui.Context, p *palette, status string) ui.Element {
 	return ui.Icon(c, iconCircle).Size(16, 16).Shrink(0).TextColor(p.Secondary)
 }
 
-// planStatusLabel names a plan step's status.
-// TODO(strings): Lody says "In progress" (进行中) and "Pending" (待执行);
-// Running and Pending stand in until those are in the catalog.
+// planStatusLabel names a plan step's status, as Lody's plan bar does.
 func planStatusLabel(status string) string {
 	switch status {
 	case "completed":
-		return locales.TaskCompleted()
+		return locales.PlanStatusCompleted()
 	case "in_progress":
-		return locales.TaskRunning()
+		return locales.PlanStatusInProgress()
 	}
-	return locales.TaskPending()
+	return locales.PlanStatusPending()
 }
 
 // lastPlan is the turn's latest plan: the steps of its last plan update.
