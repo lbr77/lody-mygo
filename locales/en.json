@@ -2789,5 +2789,38 @@
     }
   },
   "chipCopied": "Share link copied",
-  "chipStopped": "Sharing stopped"
+  "chipStopped": "Sharing stopped",
+  "msgShareActions": "Message actions",
+  "msgShareCopyMessage": "Copy entire message",
+  "msgShareCopied": "Message copied",
+  "msgShareGenerateImage": "Generate image…",
+  "msgSharePreview": "Image preview",
+  "msgShareSelectBlocks": "Select content",
+  "msgShareSelectAll": "Select all",
+  "msgShareSelectNone": "Deselect all",
+  "msgShareSelectedCount": "{n} of {total} selected",
+  "@msgShareSelectedCount": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "msgShareEmptySelection": "Select at least one block to generate an image.",
+  "msgShareTooLarge": "This reply is too large for one image. You can copy its text instead.",
+  "msgShareDone": "Done",
+  "msgShareSaveImage": "Save image…",
+  "msgShareCopyImage": "Copy image",
+  "msgShareImageCopied": "Image copied",
+  "msgShareImageSaved": "Image saved",
+  "msgShareBlockHeading": "Heading",
+  "msgShareBlockParagraph": "Paragraph",
+  "msgShareBlockList": "List",
+  "msgShareBlockCode": "Code",
+  "msgShareBlockTable": "Table",
+  "msgShareBlockQuote": "Quote",
+  "msgShareBlockDivider": "Divider"
 }

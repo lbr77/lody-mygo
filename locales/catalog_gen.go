@@ -13868,3 +13868,235 @@ func ChipStopped() string { return In(i18n.Locale()).ChipStopped() }
 func (msgs Messages) ChipStopped() string {
 	return Catalog.Format(msgs.locale, "chipStopped", nil)
 }
+
+// MsgShareActions says "Message actions"
+// in the language the app shows.
+func MsgShareActions() string { return In(i18n.Locale()).MsgShareActions() }
+
+// MsgShareActions says "Message actions"
+// in the language of msgs.
+func (msgs Messages) MsgShareActions() string {
+	return Catalog.Format(msgs.locale, "msgShareActions", nil)
+}
+
+// MsgShareCopyMessage says "Copy entire message"
+// in the language the app shows.
+func MsgShareCopyMessage() string { return In(i18n.Locale()).MsgShareCopyMessage() }
+
+// MsgShareCopyMessage says "Copy entire message"
+// in the language of msgs.
+func (msgs Messages) MsgShareCopyMessage() string {
+	return Catalog.Format(msgs.locale, "msgShareCopyMessage", nil)
+}
+
+// MsgShareCopied says "Message copied"
+// in the language the app shows.
+func MsgShareCopied() string { return In(i18n.Locale()).MsgShareCopied() }
+
+// MsgShareCopied says "Message copied"
+// in the language of msgs.
+func (msgs Messages) MsgShareCopied() string {
+	return Catalog.Format(msgs.locale, "msgShareCopied", nil)
+}
+
+// MsgShareGenerateImage says "Generate image…"
+// in the language the app shows.
+func MsgShareGenerateImage() string { return In(i18n.Locale()).MsgShareGenerateImage() }
+
+// MsgShareGenerateImage says "Generate image…"
+// in the language of msgs.
+func (msgs Messages) MsgShareGenerateImage() string {
+	return Catalog.Format(msgs.locale, "msgShareGenerateImage", nil)
+}
+
+// MsgSharePreview says "Image preview"
+// in the language the app shows.
+func MsgSharePreview() string { return In(i18n.Locale()).MsgSharePreview() }
+
+// MsgSharePreview says "Image preview"
+// in the language of msgs.
+func (msgs Messages) MsgSharePreview() string {
+	return Catalog.Format(msgs.locale, "msgSharePreview", nil)
+}
+
+// MsgShareSelectBlocks says "Select content"
+// in the language the app shows.
+func MsgShareSelectBlocks() string { return In(i18n.Locale()).MsgShareSelectBlocks() }
+
+// MsgShareSelectBlocks says "Select content"
+// in the language of msgs.
+func (msgs Messages) MsgShareSelectBlocks() string {
+	return Catalog.Format(msgs.locale, "msgShareSelectBlocks", nil)
+}
+
+// MsgShareSelectAll says "Select all"
+// in the language the app shows.
+func MsgShareSelectAll() string { return In(i18n.Locale()).MsgShareSelectAll() }
+
+// MsgShareSelectAll says "Select all"
+// in the language of msgs.
+func (msgs Messages) MsgShareSelectAll() string {
+	return Catalog.Format(msgs.locale, "msgShareSelectAll", nil)
+}
+
+// MsgShareSelectNone says "Deselect all"
+// in the language the app shows.
+func MsgShareSelectNone() string { return In(i18n.Locale()).MsgShareSelectNone() }
+
+// MsgShareSelectNone says "Deselect all"
+// in the language of msgs.
+func (msgs Messages) MsgShareSelectNone() string {
+	return Catalog.Format(msgs.locale, "msgShareSelectNone", nil)
+}
+
+// MsgShareSelectedCount says "{n} of {total} selected"
+// in the language the app shows.
+func MsgShareSelectedCount(n string, total string) string {
+	return In(i18n.Locale()).MsgShareSelectedCount(n, total)
+}
+
+// MsgShareSelectedCount says "{n} of {total} selected"
+// in the language of msgs.
+func (msgs Messages) MsgShareSelectedCount(n string, total string) string {
+	return Catalog.Format(msgs.locale, "msgShareSelectedCount", map[string]any{"n": n, "total": total})
+}
+
+// MsgShareEmptySelection says "Select at least one block to generate an image."
+// in the language the app shows.
+func MsgShareEmptySelection() string { return In(i18n.Locale()).MsgShareEmptySelection() }
+
+// MsgShareEmptySelection says "Select at least one block to generate an image."
+// in the language of msgs.
+func (msgs Messages) MsgShareEmptySelection() string {
+	return Catalog.Format(msgs.locale, "msgShareEmptySelection", nil)
+}
+
+// MsgShareTooLarge says "This reply is too large for one image. You can copy its text instead."
+// in the language the app shows.
+func MsgShareTooLarge() string { return In(i18n.Locale()).MsgShareTooLarge() }
+
+// MsgShareTooLarge says "This reply is too large for one image. You can copy its text instead."
+// in the language of msgs.
+func (msgs Messages) MsgShareTooLarge() string {
+	return Catalog.Format(msgs.locale, "msgShareTooLarge", nil)
+}
+
+// MsgShareDone says "Done"
+// in the language the app shows.
+func MsgShareDone() string { return In(i18n.Locale()).MsgShareDone() }
+
+// MsgShareDone says "Done"
+// in the language of msgs.
+func (msgs Messages) MsgShareDone() string {
+	return Catalog.Format(msgs.locale, "msgShareDone", nil)
+}
+
+// MsgShareSaveImage says "Save image…"
+// in the language the app shows.
+func MsgShareSaveImage() string { return In(i18n.Locale()).MsgShareSaveImage() }
+
+// MsgShareSaveImage says "Save image…"
+// in the language of msgs.
+func (msgs Messages) MsgShareSaveImage() string {
+	return Catalog.Format(msgs.locale, "msgShareSaveImage", nil)
+}
+
+// MsgShareCopyImage says "Copy image"
+// in the language the app shows.
+func MsgShareCopyImage() string { return In(i18n.Locale()).MsgShareCopyImage() }
+
+// MsgShareCopyImage says "Copy image"
+// in the language of msgs.
+func (msgs Messages) MsgShareCopyImage() string {
+	return Catalog.Format(msgs.locale, "msgShareCopyImage", nil)
+}
+
+// MsgShareImageCopied says "Image copied"
+// in the language the app shows.
+func MsgShareImageCopied() string { return In(i18n.Locale()).MsgShareImageCopied() }
+
+// MsgShareImageCopied says "Image copied"
+// in the language of msgs.
+func (msgs Messages) MsgShareImageCopied() string {
+	return Catalog.Format(msgs.locale, "msgShareImageCopied", nil)
+}
+
+// MsgShareImageSaved says "Image saved"
+// in the language the app shows.
+func MsgShareImageSaved() string { return In(i18n.Locale()).MsgShareImageSaved() }
+
+// MsgShareImageSaved says "Image saved"
+// in the language of msgs.
+func (msgs Messages) MsgShareImageSaved() string {
+	return Catalog.Format(msgs.locale, "msgShareImageSaved", nil)
+}
+
+// MsgShareBlockHeading says "Heading"
+// in the language the app shows.
+func MsgShareBlockHeading() string { return In(i18n.Locale()).MsgShareBlockHeading() }
+
+// MsgShareBlockHeading says "Heading"
+// in the language of msgs.
+func (msgs Messages) MsgShareBlockHeading() string {
+	return Catalog.Format(msgs.locale, "msgShareBlockHeading", nil)
+}
+
+// MsgShareBlockParagraph says "Paragraph"
+// in the language the app shows.
+func MsgShareBlockParagraph() string { return In(i18n.Locale()).MsgShareBlockParagraph() }
+
+// MsgShareBlockParagraph says "Paragraph"
+// in the language of msgs.
+func (msgs Messages) MsgShareBlockParagraph() string {
+	return Catalog.Format(msgs.locale, "msgShareBlockParagraph", nil)
+}
+
+// MsgShareBlockList says "List"
+// in the language the app shows.
+func MsgShareBlockList() string { return In(i18n.Locale()).MsgShareBlockList() }
+
+// MsgShareBlockList says "List"
+// in the language of msgs.
+func (msgs Messages) MsgShareBlockList() string {
+	return Catalog.Format(msgs.locale, "msgShareBlockList", nil)
+}
+
+// MsgShareBlockCode says "Code"
+// in the language the app shows.
+func MsgShareBlockCode() string { return In(i18n.Locale()).MsgShareBlockCode() }
+
+// MsgShareBlockCode says "Code"
+// in the language of msgs.
+func (msgs Messages) MsgShareBlockCode() string {
+	return Catalog.Format(msgs.locale, "msgShareBlockCode", nil)
+}
+
+// MsgShareBlockTable says "Table"
+// in the language the app shows.
+func MsgShareBlockTable() string { return In(i18n.Locale()).MsgShareBlockTable() }
+
+// MsgShareBlockTable says "Table"
+// in the language of msgs.
+func (msgs Messages) MsgShareBlockTable() string {
+	return Catalog.Format(msgs.locale, "msgShareBlockTable", nil)
+}
+
+// MsgShareBlockQuote says "Quote"
+// in the language the app shows.
+func MsgShareBlockQuote() string { return In(i18n.Locale()).MsgShareBlockQuote() }
+
+// MsgShareBlockQuote says "Quote"
+// in the language of msgs.
+func (msgs Messages) MsgShareBlockQuote() string {
+	return Catalog.Format(msgs.locale, "msgShareBlockQuote", nil)
+}
+
+// MsgShareBlockDivider says "Divider"
+// in the language the app shows.
+func MsgShareBlockDivider() string { return In(i18n.Locale()).MsgShareBlockDivider() }
+
+// MsgShareBlockDivider says "Divider"
+// in the language of msgs.
+func (msgs Messages) MsgShareBlockDivider() string {
+	return Catalog.Format(msgs.locale, "msgShareBlockDivider", nil)
+}

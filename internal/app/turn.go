@@ -482,6 +482,7 @@ func (a *App) turnFooter(c *ui.Context, p *palette, e session.Entry, hovered boo
 			}
 			mygo.Clipboard.WriteText(strings.Join(parts, "\n\n"))
 		})
+		a.messageActions(c, p, e)
 		if a.forkable(e) {
 			a.forkButton(c, p, e)
 		}

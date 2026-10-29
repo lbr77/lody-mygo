@@ -2,6 +2,10 @@ package app
 
 import (
 	"fmt"
+	"image"
+	"image/png"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -285,5 +289,44 @@ func TestModelMemory(t *testing.T) {
 	a.applyModelChoice(modelChoice{Model: "haiku", Values: map[string]any{"reasoning_effort": "high", "fast": "yes"}})
 	if a.models[""] != "haiku" || a.runValues[""]["reasoning_effort"] != nil || a.runValues[""]["fast"] != nil {
 		t.Fatalf("validated: %q %v", a.models[""], a.runValues[""])
+	}
+}
+
+func TestMessageShare(t *testing.T) {
+	a := fixture()
+	a.view.Working = false
+	a.view.Entries = a.view.Entries[:2]
+	e := a.view.Entries[1]
+	bs := shareBlocks(replyText(e))
+	if len(bs) != 3 || bs[0].kind != "paragraph" || bs[1].kind != "code" || bs[2].kind != "list" {
+		t.Fatalf("blocks %+v", bs)
+	}
+	a.openMessageShare(e)
+	if a.msgShare.image == nil || a.msgShare.tooLarge {
+		t.Fatalf("no image: %+v", a.msgShare.err)
+	}
+	// 1080 wide, as tall as the reply on paper.
+	b := a.msgShare.image.Bounds()
+	if b.Dx() != 1080 || b.Dy() < 400 || b.Dy() > 2000 {
+		t.Fatalf("image %v", b)
+	}
+	if px := a.msgShare.image.RGBAAt(8, b.Dy()-2); px.R != 250 || px.G != 248 || px.B != 243 {
+		t.Fatalf("paper %v", px)
+	}
+	if dir := os.Getenv("LODY_SNAPSHOTS"); dir != "" {
+		f, _ := os.Create(filepath.Join(dir, "share-card.png"))
+		png.Encode(f, a.msgShare.image)
+		f.Close()
+	}
+	// Picking none says so.
+	for i := range a.msgShare.picked {
+		a.msgShare.picked[i] = false
+	}
+	a.renderMessageShare()
+	if a.msgShare.image != nil {
+		t.Fatal("image of nothing")
+	}
+	if data, err := shareJPEG(image.NewRGBA(image.Rect(0, 0, 4, 4))); err != nil || len(data) == 0 {
+		t.Fatal(err)
 	}
 }

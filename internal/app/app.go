@@ -111,6 +111,7 @@ type App struct {
 	history          []string // sessions shown, for Back and Forward
 	histPos          int
 	palette          paletteState
+	msgShare         messageShare             // a reply made an image
 	createMem        map[string]*createMemory // New chat's remembered choices, by user and workspace
 	memProject       string                   // the project New chat last restored for
 	memAgentModel    string                   // the agent and model it last remembered
