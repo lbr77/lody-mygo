@@ -24,7 +24,7 @@ const (
 )
 
 type mmNode struct {
-	id, label, shape string // shape: rect, round, diamond, circle, dot, or box: a class or entity
+	id, label, shape string   // shape: rect, round, diamond, circle, dot, or box: a class or entity
 	members          []string // a box's lines under its name
 	rank, order      int
 	x, y, w, h       float32
