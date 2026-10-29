@@ -105,7 +105,13 @@ func (a *App) assistantMessage(c *ui.Context, p *palette, e session.Entry) {
 				label = locales.WorkedFor(formatDuration(d))
 			}
 			place(block{key: "work"}, func() {
-				shown := disclosure(c.Key(key), p, label, open, false, func() { a.expanded[key] = !a.expanded[key] })
+				attention := false
+				for _, b := range bs[:k] {
+					for _, it := range b.items {
+						attention = attention || it.Status == "failed" || it.Permission != nil && it.Permission.Pending
+					}
+				}
+				shown := disclosureMarked(c.Key(key), p, label, open, false, attention, func() { a.expanded[key] = !a.expanded[key] })
 				unfold(c, shown, open, func() {
 					for _, b := range bs[:k] {
 						place(b, func() { a.block(c, p, e, b, false) })
@@ -150,6 +156,13 @@ func (a *App) block(c *ui.Context, p *palette, e session.Entry, b block, last bo
 // on hover and turning as it opens. It returns how far it is open, for
 // unfold.
 func disclosure(c *ui.Context, p *palette, label string, open, live bool, toggle func()) float32 {
+	return disclosureMarked(c, p, label, open, live, false, toggle)
+}
+
+// disclosureMarked is a disclosure that, with attention, leads with the
+// orange warning lody-ios puts on a group a step of which failed or waits
+// on a permission.
+func disclosureMarked(c *ui.Context, p *palette, label string, open, live, attention bool, toggle func()) float32 {
 	head := ui.Row(c).MinHeight(24).Gap(6).AlignItems(ui.Center).Cursor(ui.CursorPointer).Label(label).OnClick(toggle)
 	shown := head.AnimateWith("open", b2f(open), foldTime, easeStandard)
 	hovered := head.Hovered()
@@ -161,6 +174,9 @@ func disclosure(c *ui.Context, p *palette, label string, open, live bool, toggle
 		ink := p.Secondary
 		if hovered {
 			ink = p.Text
+		}
+		if attention {
+			ui.Icon(c, iconTriangleAlert).Size(12, 12).TextColor(p.Warning).Shrink(0)
 		}
 		shimmerIf(c, p, live, func() { ui.Text(c, label).FontSize(sizeSub).TextColor(ink).SingleLine().MinWidth(0) })
 		if reveal > 0 {
@@ -227,7 +243,11 @@ func (a *App) activity(c *ui.Context, p *palette, e session.Entry, b block, live
 		c.After(time.Second)
 	}
 	ui.Column(c).FillWidth().Gap(2).Children(func() {
-		shown := disclosure(c.Key(key), p, label, open, live, func() { a.expanded[key] = !a.expanded[key] })
+		attention := false
+		for _, it := range b.items {
+			attention = attention || it.Status == "failed" || it.Permission != nil && it.Permission.Pending
+		}
+		shown := disclosureMarked(c.Key(key), p, label, open, live, attention, func() { a.expanded[key] = !a.expanded[key] })
 		unfold(c, shown, open, func() {
 			ui.Column(c).FillWidth().Gap(2).Children(func() {
 				for i, it := range b.items {

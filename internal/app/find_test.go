@@ -145,3 +145,17 @@ func TestProposedPlan(t *testing.T) {
 		t.Fatal("decision offered outside Codex")
 	}
 }
+
+func TestFailedActivityMark(t *testing.T) {
+	a := fixture()
+	a.view.Working = false
+	a.view.Entries = a.view.Entries[:2]
+	a.view.Entries[1].Items[2].Status = "failed"
+	tt := snap(t, a, "activity-failed", false, func(tt *ui.Tester) {
+		tt.Frame()
+		a.expanded["r1/work"] = true
+	})
+	if !tt.HasText("Worked for 1m 12s") {
+		t.Fatalf("%q", tt.Texts())
+	}
+}
