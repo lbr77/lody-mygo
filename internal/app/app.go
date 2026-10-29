@@ -82,10 +82,13 @@ type App struct {
 		mcpSet                  bool
 		mcpProject              string // the project they were chosen in
 	}
-	sessionMCP map[string][]string  // MCP servers chosen for chats' next turns
-	plusLevel  string               // the "+" menu's level: "" or "mcp"
-	gitStates  map[string]*gitState // projects' Git, by project
-	quotaAsked map[string]time.Time // when each provider's quota was last asked for
+	sessionMCP     map[string][]string  // MCP servers chosen for chats' next turns
+	homeBoard      string               // the home board open: now, week or none
+	homeBoardShown string               // the board shown, as it folds away too
+	homeNowOpen    string               // the now list shown whole
+	plusLevel      string               // the "+" menu's level: "" or "mcp"
+	gitStates      map[string]*gitState // projects' Git, by project
+	quotaAsked     map[string]time.Time // when each provider's quota was last asked for
 
 	sidebarHidden    bool
 	sideOut          float32 // how far the sidebar is out as it slides, 1 shown
@@ -241,6 +244,7 @@ func (a *App) Start(win *mygo.Window) {
 	a.appearance = prefs.Appearance
 	a.busyBehavior = prefs.Busy
 	a.sidebarWidth = prefs.Sidebar
+	a.homeBoard = prefs.HomeBoard
 	if a.appearance != "" {
 		applyAppearance(a.appearance)
 	}
@@ -851,6 +855,7 @@ type prefs struct {
 	Appearance string          `json:"appearance,omitempty"`
 	Busy       string          `json:"busy,omitempty"`
 	Sidebar    float32         `json:"sidebar,omitempty"` // the sidebar's width
+	HomeBoard  string          `json:"homeBoard,omitempty"`
 }
 
 func dataDir() string {
@@ -886,7 +891,7 @@ func loadPrefs() prefs {
 }
 
 func (a *App) savePrefs() {
-	writeJSON("prefs.json", prefs{Workspace: a.workspaceID, Collapsed: a.collapsed, Appearance: a.appearance, Busy: a.busyBehavior, Sidebar: a.sidebarWidth})
+	writeJSON("prefs.json", prefs{Workspace: a.workspaceID, Collapsed: a.collapsed, Appearance: a.appearance, Busy: a.busyBehavior, Sidebar: a.sidebarWidth, HomeBoard: a.homeBoard})
 }
 
 func loadAccount() *cloud.Account {

@@ -2290,5 +2290,132 @@
       }
     }
   },
-  "openPullRequest": "Open Pull Request"
+  "openPullRequest": "Open Pull Request",
+  "homeBoardNow": "Now",
+  "homeBoardWeek": "Last 7 days",
+  "homeBoardFold": "Fold into one line",
+  "homeNowAllCaughtUp": "All caught up",
+  "homeNowAttention": "Needs you",
+  "homeNowRunning": "Running",
+  "homeNowFinished": "Just finished",
+  "homeNowNext": "Worth continuing",
+  "homeNowQuiet": "All quiet",
+  "homeNowQuietNote": "Nothing is running or waiting on you.",
+  "homeNowShowAll": "Show all {count}",
+  "@homeNowShowAll": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homeNowShowLess": "Show less",
+  "homeNowWaiting": "Needs your reply",
+  "homeNowCiFailed": "CI failed{pr}",
+  "@homeNowCiFailed": {
+    "placeholders": {
+      "pr": {
+        "type": "String"
+      }
+    }
+  },
+  "homeNowDraft": "Draft{pr}",
+  "@homeNowDraft": {
+    "placeholders": {
+      "pr": {
+        "type": "String"
+      }
+    }
+  },
+  "homeNowReadyToMerge": "Ready to merge{pr}",
+  "@homeNowReadyToMerge": {
+    "placeholders": {
+      "pr": {
+        "type": "String"
+      }
+    }
+  },
+  "homeNowOpenPr": "In review{pr}",
+  "@homeNowOpenPr": {
+    "placeholders": {
+      "pr": {
+        "type": "String"
+      }
+    }
+  },
+  "homeWeekLines": "Code shipped, last 7 days",
+  "homeWeekLinesUnit": "{count, plural, one {line} other {lines}}",
+  "@homeWeekLinesUnit": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homeWeekDeltaUp": "↑ {percent}%",
+  "@homeWeekDeltaUp": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "homeWeekDeltaDown": "↓ {percent}%",
+  "@homeWeekDeltaDown": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "homeWeekDeltaVs": "vs the week before",
+  "homeWeekRepo": "Most-used repository",
+  "homeWeekRepoShare": "{percent}% of your sessions",
+  "@homeWeekRepoShare": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "homeWeekPrs": "PRs merged",
+  "homeWeekAgents": "Agents",
+  "homeWeekAgentShare": "{name} {percent}%",
+  "@homeWeekAgentShare": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "homeWeekUsageNamed": "Plan usage · {name}",
+  "@homeWeekUsageNamed": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "homeWeekWallDay": "{date} · {count, plural, one {# session event} other {# session events}}",
+  "@homeWeekWallDay": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homeWeekWallQuiet": "{date} · No activity",
+  "@homeWeekWallQuiet": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  }
 }

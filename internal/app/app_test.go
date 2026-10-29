@@ -1762,3 +1762,53 @@ func TestPullRequestMarks(t *testing.T) {
 		t.Fatal("PR facts")
 	}
 }
+
+func TestHomeDashboard(t *testing.T) {
+	a := fixture()
+	a.selected = ""
+	now := time.Now()
+	ms := func(d time.Duration) float64 { return float64(now.Add(-d).UnixMilli()) }
+	created := now.Add(-2 * 24 * time.Hour).UTC().Format(time.RFC3339)
+	for i := range a.catalog.Sessions {
+		s := &a.catalog.Sessions[i]
+		s.UserID, s.CreatedAt = "u1", created
+	}
+	a.catalog.Sessions[0].LastMessageAt = ms(time.Minute)               // running
+	a.catalog.Sessions[1].LastMessageAt = ms(30 * time.Minute)          // finished, unread
+	a.catalog.Sessions[2].LastMessageAt = ms(time.Hour)                 // waiting
+	a.catalog.Sessions[3].LastMessageAt, a.catalog.Sessions[3].LastReadAt = ms(2*time.Hour), ms(time.Hour)
+	a.catalog.Sessions[3].PullRequests = []catalog.PullRequest{{URL: "https://github.com/o/r/pull/12", Status: "open"}}
+	a.catalog.Sessions[0].DiffAdd, a.catalog.Sessions[0].DiffDel = 1200, 300
+	a.catalog.Sessions[1].PullRequests = []catalog.PullRequest{{URL: "https://github.com/o/r/pull/3", Status: "merged"}}
+	lists := a.homeNow(now)
+	if len(lists["attention"].items) != 1 || len(lists["running"].items) != 1 || len(lists["finished"].items) != 1 || len(lists["next"].items) != 1 {
+		t.Fatalf("lists: %d %d %d %d", len(lists["attention"].items), len(lists["running"].items), len(lists["finished"].items), len(lists["next"].items))
+	}
+	if lists["next"].items[0].reason != reasonOpenPR || lists["next"].items[0].pr != 12 {
+		t.Fatalf("next: %+v", lists["next"].items[0])
+	}
+	w := a.homeWeek(now)
+	if w.lines != 1500 || w.added != 1200 || w.mergedPRs != 1 || w.sessions != 4 || len(w.wall) != wallWeeks {
+		t.Fatalf("week: %+v", w)
+	}
+	a.homeBoard = "now"
+	tt := snap(t, a, "home-now", false, nil)
+	for _, want := range []string{"Now", "Last 7 days", "Needs you", "Running", "Just finished", "Worth continuing", "Needs your reply", "In review · #12", "1,500"} {
+		if !tt.HasText(want) {
+			t.Fatalf("no %q in %q", want, tt.Texts())
+		}
+	}
+	a.homeBoard = "week"
+	tt = snap(t, a, "home-week", false, nil)
+	for _, want := range []string{"Code shipped, last 7 days", "+1,200", "−300", "PRs merged", "Agents", "Most-used repository"} {
+		if !tt.HasText(want) {
+			t.Fatalf("no %q in %q", want, tt.Texts())
+		}
+	}
+	if got := allocateNowRows(map[string]int{"attention": 10, "running": 1, "finished": 0, "next": 5}, 12); got["attention"] != 6 || got["running"] != 1 || got["next"] != 3 {
+		t.Fatalf("allocation %v", got)
+	}
+	if d := diffSquares(1200, 300); d != [5]int{1, 1, 1, 1, 2} {
+		t.Fatalf("squares %v", d)
+	}
+}

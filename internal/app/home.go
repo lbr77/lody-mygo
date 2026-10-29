@@ -21,6 +21,7 @@ func (a *App) homeView(c *ui.Context, p *palette) {
 		ui.Text(c, homeHeading(time.Now())).FontSize(36).LineHeight(40.0 / 36).FontWeight(600).LetterSpacing(-0.9).TextColor(p.Strong).TextAlign(ui.Center)
 		switch {
 		case len(a.catalog.MachineIDs) > 0:
+			a.homeDashboard(c, p)
 		case a.synced:
 			a.noMachineHint(c, p)
 		default:

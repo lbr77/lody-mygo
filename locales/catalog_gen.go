@@ -11324,3 +11324,307 @@ func OpenPullRequest() string { return In(i18n.Locale()).OpenPullRequest() }
 func (msgs Messages) OpenPullRequest() string {
 	return Catalog.Format(msgs.locale, "openPullRequest", nil)
 }
+
+// HomeBoardNow says "Now"
+// in the language the app shows.
+func HomeBoardNow() string { return In(i18n.Locale()).HomeBoardNow() }
+
+// HomeBoardNow says "Now"
+// in the language of msgs.
+func (msgs Messages) HomeBoardNow() string {
+	return Catalog.Format(msgs.locale, "homeBoardNow", nil)
+}
+
+// HomeBoardWeek says "Last 7 days"
+// in the language the app shows.
+func HomeBoardWeek() string { return In(i18n.Locale()).HomeBoardWeek() }
+
+// HomeBoardWeek says "Last 7 days"
+// in the language of msgs.
+func (msgs Messages) HomeBoardWeek() string {
+	return Catalog.Format(msgs.locale, "homeBoardWeek", nil)
+}
+
+// HomeBoardFold says "Fold into one line"
+// in the language the app shows.
+func HomeBoardFold() string { return In(i18n.Locale()).HomeBoardFold() }
+
+// HomeBoardFold says "Fold into one line"
+// in the language of msgs.
+func (msgs Messages) HomeBoardFold() string {
+	return Catalog.Format(msgs.locale, "homeBoardFold", nil)
+}
+
+// HomeNowAllCaughtUp says "All caught up"
+// in the language the app shows.
+func HomeNowAllCaughtUp() string { return In(i18n.Locale()).HomeNowAllCaughtUp() }
+
+// HomeNowAllCaughtUp says "All caught up"
+// in the language of msgs.
+func (msgs Messages) HomeNowAllCaughtUp() string {
+	return Catalog.Format(msgs.locale, "homeNowAllCaughtUp", nil)
+}
+
+// HomeNowAttention says "Needs you"
+// in the language the app shows.
+func HomeNowAttention() string { return In(i18n.Locale()).HomeNowAttention() }
+
+// HomeNowAttention says "Needs you"
+// in the language of msgs.
+func (msgs Messages) HomeNowAttention() string {
+	return Catalog.Format(msgs.locale, "homeNowAttention", nil)
+}
+
+// HomeNowRunning says "Running"
+// in the language the app shows.
+func HomeNowRunning() string { return In(i18n.Locale()).HomeNowRunning() }
+
+// HomeNowRunning says "Running"
+// in the language of msgs.
+func (msgs Messages) HomeNowRunning() string {
+	return Catalog.Format(msgs.locale, "homeNowRunning", nil)
+}
+
+// HomeNowFinished says "Just finished"
+// in the language the app shows.
+func HomeNowFinished() string { return In(i18n.Locale()).HomeNowFinished() }
+
+// HomeNowFinished says "Just finished"
+// in the language of msgs.
+func (msgs Messages) HomeNowFinished() string {
+	return Catalog.Format(msgs.locale, "homeNowFinished", nil)
+}
+
+// HomeNowNext says "Worth continuing"
+// in the language the app shows.
+func HomeNowNext() string { return In(i18n.Locale()).HomeNowNext() }
+
+// HomeNowNext says "Worth continuing"
+// in the language of msgs.
+func (msgs Messages) HomeNowNext() string {
+	return Catalog.Format(msgs.locale, "homeNowNext", nil)
+}
+
+// HomeNowQuiet says "All quiet"
+// in the language the app shows.
+func HomeNowQuiet() string { return In(i18n.Locale()).HomeNowQuiet() }
+
+// HomeNowQuiet says "All quiet"
+// in the language of msgs.
+func (msgs Messages) HomeNowQuiet() string {
+	return Catalog.Format(msgs.locale, "homeNowQuiet", nil)
+}
+
+// HomeNowQuietNote says "Nothing is running or waiting on you."
+// in the language the app shows.
+func HomeNowQuietNote() string { return In(i18n.Locale()).HomeNowQuietNote() }
+
+// HomeNowQuietNote says "Nothing is running or waiting on you."
+// in the language of msgs.
+func (msgs Messages) HomeNowQuietNote() string {
+	return Catalog.Format(msgs.locale, "homeNowQuietNote", nil)
+}
+
+// HomeNowShowAll says "Show all {count}"
+// in the language the app shows.
+func HomeNowShowAll(count int) string { return In(i18n.Locale()).HomeNowShowAll(count) }
+
+// HomeNowShowAll says "Show all {count}"
+// in the language of msgs.
+func (msgs Messages) HomeNowShowAll(count int) string {
+	return Catalog.Format(msgs.locale, "homeNowShowAll", map[string]any{"count": count})
+}
+
+// HomeNowShowLess says "Show less"
+// in the language the app shows.
+func HomeNowShowLess() string { return In(i18n.Locale()).HomeNowShowLess() }
+
+// HomeNowShowLess says "Show less"
+// in the language of msgs.
+func (msgs Messages) HomeNowShowLess() string {
+	return Catalog.Format(msgs.locale, "homeNowShowLess", nil)
+}
+
+// HomeNowWaiting says "Needs your reply"
+// in the language the app shows.
+func HomeNowWaiting() string { return In(i18n.Locale()).HomeNowWaiting() }
+
+// HomeNowWaiting says "Needs your reply"
+// in the language of msgs.
+func (msgs Messages) HomeNowWaiting() string {
+	return Catalog.Format(msgs.locale, "homeNowWaiting", nil)
+}
+
+// HomeNowCiFailed says "CI failed{pr}"
+// in the language the app shows.
+func HomeNowCiFailed(pr string) string { return In(i18n.Locale()).HomeNowCiFailed(pr) }
+
+// HomeNowCiFailed says "CI failed{pr}"
+// in the language of msgs.
+func (msgs Messages) HomeNowCiFailed(pr string) string {
+	return Catalog.Format(msgs.locale, "homeNowCiFailed", map[string]any{"pr": pr})
+}
+
+// HomeNowDraft says "Draft{pr}"
+// in the language the app shows.
+func HomeNowDraft(pr string) string { return In(i18n.Locale()).HomeNowDraft(pr) }
+
+// HomeNowDraft says "Draft{pr}"
+// in the language of msgs.
+func (msgs Messages) HomeNowDraft(pr string) string {
+	return Catalog.Format(msgs.locale, "homeNowDraft", map[string]any{"pr": pr})
+}
+
+// HomeNowReadyToMerge says "Ready to merge{pr}"
+// in the language the app shows.
+func HomeNowReadyToMerge(pr string) string { return In(i18n.Locale()).HomeNowReadyToMerge(pr) }
+
+// HomeNowReadyToMerge says "Ready to merge{pr}"
+// in the language of msgs.
+func (msgs Messages) HomeNowReadyToMerge(pr string) string {
+	return Catalog.Format(msgs.locale, "homeNowReadyToMerge", map[string]any{"pr": pr})
+}
+
+// HomeNowOpenPr says "In review{pr}"
+// in the language the app shows.
+func HomeNowOpenPr(pr string) string { return In(i18n.Locale()).HomeNowOpenPr(pr) }
+
+// HomeNowOpenPr says "In review{pr}"
+// in the language of msgs.
+func (msgs Messages) HomeNowOpenPr(pr string) string {
+	return Catalog.Format(msgs.locale, "homeNowOpenPr", map[string]any{"pr": pr})
+}
+
+// HomeWeekLines says "Code shipped, last 7 days"
+// in the language the app shows.
+func HomeWeekLines() string { return In(i18n.Locale()).HomeWeekLines() }
+
+// HomeWeekLines says "Code shipped, last 7 days"
+// in the language of msgs.
+func (msgs Messages) HomeWeekLines() string {
+	return Catalog.Format(msgs.locale, "homeWeekLines", nil)
+}
+
+// HomeWeekLinesUnit says "{count, plural, one {line} other {lines}}"
+// in the language the app shows.
+func HomeWeekLinesUnit(count int) string { return In(i18n.Locale()).HomeWeekLinesUnit(count) }
+
+// HomeWeekLinesUnit says "{count, plural, one {line} other {lines}}"
+// in the language of msgs.
+func (msgs Messages) HomeWeekLinesUnit(count int) string {
+	return Catalog.Format(msgs.locale, "homeWeekLinesUnit", map[string]any{"count": count})
+}
+
+// HomeWeekDeltaUp says "↑ {percent}%"
+// in the language the app shows.
+func HomeWeekDeltaUp(percent int) string { return In(i18n.Locale()).HomeWeekDeltaUp(percent) }
+
+// HomeWeekDeltaUp says "↑ {percent}%"
+// in the language of msgs.
+func (msgs Messages) HomeWeekDeltaUp(percent int) string {
+	return Catalog.Format(msgs.locale, "homeWeekDeltaUp", map[string]any{"percent": percent})
+}
+
+// HomeWeekDeltaDown says "↓ {percent}%"
+// in the language the app shows.
+func HomeWeekDeltaDown(percent int) string { return In(i18n.Locale()).HomeWeekDeltaDown(percent) }
+
+// HomeWeekDeltaDown says "↓ {percent}%"
+// in the language of msgs.
+func (msgs Messages) HomeWeekDeltaDown(percent int) string {
+	return Catalog.Format(msgs.locale, "homeWeekDeltaDown", map[string]any{"percent": percent})
+}
+
+// HomeWeekDeltaVs says "vs the week before"
+// in the language the app shows.
+func HomeWeekDeltaVs() string { return In(i18n.Locale()).HomeWeekDeltaVs() }
+
+// HomeWeekDeltaVs says "vs the week before"
+// in the language of msgs.
+func (msgs Messages) HomeWeekDeltaVs() string {
+	return Catalog.Format(msgs.locale, "homeWeekDeltaVs", nil)
+}
+
+// HomeWeekRepo says "Most-used repository"
+// in the language the app shows.
+func HomeWeekRepo() string { return In(i18n.Locale()).HomeWeekRepo() }
+
+// HomeWeekRepo says "Most-used repository"
+// in the language of msgs.
+func (msgs Messages) HomeWeekRepo() string {
+	return Catalog.Format(msgs.locale, "homeWeekRepo", nil)
+}
+
+// HomeWeekRepoShare says "{percent}% of your sessions"
+// in the language the app shows.
+func HomeWeekRepoShare(percent int) string { return In(i18n.Locale()).HomeWeekRepoShare(percent) }
+
+// HomeWeekRepoShare says "{percent}% of your sessions"
+// in the language of msgs.
+func (msgs Messages) HomeWeekRepoShare(percent int) string {
+	return Catalog.Format(msgs.locale, "homeWeekRepoShare", map[string]any{"percent": percent})
+}
+
+// HomeWeekPrs says "PRs merged"
+// in the language the app shows.
+func HomeWeekPrs() string { return In(i18n.Locale()).HomeWeekPrs() }
+
+// HomeWeekPrs says "PRs merged"
+// in the language of msgs.
+func (msgs Messages) HomeWeekPrs() string {
+	return Catalog.Format(msgs.locale, "homeWeekPrs", nil)
+}
+
+// HomeWeekAgents says "Agents"
+// in the language the app shows.
+func HomeWeekAgents() string { return In(i18n.Locale()).HomeWeekAgents() }
+
+// HomeWeekAgents says "Agents"
+// in the language of msgs.
+func (msgs Messages) HomeWeekAgents() string {
+	return Catalog.Format(msgs.locale, "homeWeekAgents", nil)
+}
+
+// HomeWeekAgentShare says "{name} {percent}%"
+// in the language the app shows.
+func HomeWeekAgentShare(name string, percent int) string {
+	return In(i18n.Locale()).HomeWeekAgentShare(name, percent)
+}
+
+// HomeWeekAgentShare says "{name} {percent}%"
+// in the language of msgs.
+func (msgs Messages) HomeWeekAgentShare(name string, percent int) string {
+	return Catalog.Format(msgs.locale, "homeWeekAgentShare", map[string]any{"name": name, "percent": percent})
+}
+
+// HomeWeekUsageNamed says "Plan usage · {name}"
+// in the language the app shows.
+func HomeWeekUsageNamed(name string) string { return In(i18n.Locale()).HomeWeekUsageNamed(name) }
+
+// HomeWeekUsageNamed says "Plan usage · {name}"
+// in the language of msgs.
+func (msgs Messages) HomeWeekUsageNamed(name string) string {
+	return Catalog.Format(msgs.locale, "homeWeekUsageNamed", map[string]any{"name": name})
+}
+
+// HomeWeekWallDay says "{date} · {count, plural, one {# session event} other {# session events}}"
+// in the language the app shows.
+func HomeWeekWallDay(date string, count int) string {
+	return In(i18n.Locale()).HomeWeekWallDay(date, count)
+}
+
+// HomeWeekWallDay says "{date} · {count, plural, one {# session event} other {# session events}}"
+// in the language of msgs.
+func (msgs Messages) HomeWeekWallDay(date string, count int) string {
+	return Catalog.Format(msgs.locale, "homeWeekWallDay", map[string]any{"date": date, "count": count})
+}
+
+// HomeWeekWallQuiet says "{date} · No activity"
+// in the language the app shows.
+func HomeWeekWallQuiet(date string) string { return In(i18n.Locale()).HomeWeekWallQuiet(date) }
+
+// HomeWeekWallQuiet says "{date} · No activity"
+// in the language of msgs.
+func (msgs Messages) HomeWeekWallQuiet(date string) string {
+	return Catalog.Format(msgs.locale, "homeWeekWallQuiet", map[string]any{"date": date})
+}
