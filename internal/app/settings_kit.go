@@ -27,27 +27,34 @@ func (a *App) machineTabs(c *ui.Context, p *palette, selected *string) string {
 	if !valid {
 		*selected = ids[0]
 	}
-	ui.Row(c).FillWidth().Gap(20).BorderWidth(0, 0, 1, 0).BorderColor(p.Border).Children(func() {
+	row := ui.Row(c.Key("line-tabs")).FillWidth().Gap(20).BorderWidth(0, 0, 1, 0).BorderColor(p.Text.Alpha(0.08))
+	row.Children(func() {
+		var sel ui.Rect
 		for _, id := range ids {
 			machine := id
 			active := id == *selected
-			tab := ui.ButtonBase(c.Key(id)).Height(34).Gap(6).AlignItems(ui.Center).Cursor(ui.CursorPointer).Label(a.machineName(id)).
+			tab := ui.ButtonBase(c.Key(id)).Height(36).Gap(6).AlignItems(ui.Center).Cursor(ui.CursorPointer).Label(a.machineName(id)).
 				OnClick(func() { *selected = machine })
 			if active {
-				tab.BorderWidth(0, 0, 2, 0).BorderColor(p.Text)
+				sel = tab.Bounds()
 			}
+			ink := tab.AnimateColor("ink", map[bool]ui.Color{true: p.Text, false: p.Secondary}[active || tab.Hovered()], ui.Animation{Duration: 150 * time.Millisecond, Ease: easeStandard})
 			tab.Children(func() {
 				dot := p.Tertiary
 				if a.presence.IsOnline(machine) {
 					dot = p.Success
 				}
 				ui.Box(c).Size(6, 6).Radius(3).Background(dot)
-				ink := p.Secondary
-				if active {
-					ink = p.Strong
-				}
-				ui.Text(c, a.machineName(machine)).FontSize(sizeSub).FontWeight(map[bool]int{true: 600, false: 400}[active]).TextColor(ink).SingleLine()
+				ui.Text(c, a.machineName(machine)).FontSize(13.5).FontWeight(500).TextColor(ink).SingleLine()
 			})
+		}
+		// The current tab's line travels to the next rather than blinking:
+		// 240ms, on Lody's curve.
+		if origin := row.Bounds(); sel.W > 0 {
+			line := ui.Box(c.Key("line")).Absolute().Bottom(-1).Height(2).Radius(1).Background(p.Text)
+			x := line.AnimateWith("x", sel.X-origin.X, 240*time.Millisecond, easeLineTab)
+			w := line.AnimateWith("w", sel.W, 240*time.Millisecond, easeLineTab)
+			line.Left(x).Width(w)
 		}
 	})
 	return *selected

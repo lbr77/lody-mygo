@@ -410,11 +410,18 @@ func (a *App) fileView(c *ui.Context, p *palette, in *inspectState, s collab.Ses
 		}
 		switch {
 		case fp != nil && fp.editing:
+			// Lody's 6px marks: saving breathes in the info ink, a conflict
+			// is red, unsaved edits amber.
+			switch {
+			case fp.saving:
+				pulse(ui.Box(c.Key("saving")).Size(6, 6).Radius(3).Background(p.Primary).Tooltip(locales.WorktreeSaving()))
+			case fp.conflict != nil:
+				ui.Box(c.Key("conflict")).Size(6, 6).Radius(3).Background(p.Danger)
+			case fp.code != nil && fp.code.Buffer.Modified():
+				ui.Box(c.Key("dirty")).Size(6, 6).Radius(3).Background(p.Warning).Tooltip(locales.FileUnsaved())
+			}
 			if fp.code != nil && fp.code.Buffer.Modified() {
 				ui.Text(c, locales.FileUnsaved()).FontSize(sizeCaption).TextColor(p.Warning)
-			}
-			if fp.saving {
-				spinner(c).Size(12, 12)
 			}
 			ghostButton(c, p, locales.Done()).OnClick(func() { fp.stopEditing() })
 			modified := fp.code != nil && fp.code.Buffer.Modified()

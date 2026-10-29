@@ -29,6 +29,8 @@ var (
 
 	// pressMotion sinks a button a pixel while it is held, as Lody's.
 	pressMotion = ui.Animation{Duration: fadeTime, Ease: easeStandard}
+	// easeLineTab moves a line tab's underline.
+	easeLineTab = ui.CubicBezier(0.2, 0.8, 0.2, 1)
 	// easeSweep is the curve Lody's usage charts sweep in on.
 	easeSweep = ui.CubicBezier(0.22, 1, 0.36, 1)
 	// peekSpring grows the composer's image peek out of its thumbnail.

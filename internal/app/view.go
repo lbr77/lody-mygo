@@ -3,6 +3,7 @@ package app
 import (
 	"github.com/lbr77/lody-mygo/locales"
 	"strings"
+	"time"
 	"unicode/utf8"
 
 	"github.com/egoist/mygo"
@@ -36,12 +37,24 @@ func (a *App) signInView(c *ui.Context, p *palette) {
 		a.dither.view(c, p).DragWindow()
 		ui.Column(c).Width(440).Shrink(0).Padding(28, 40, 36, 52).Children(func() {
 			ui.Spacer(c).DragWindow()
+			// The column's parts rise in one after another, 70ms apart after
+			// 150ms, each over 500ms, as Lody's login page arrives.
+			part := 0
+			rise := func(e ui.Element) ui.Element {
+				k := e.Keyframes("rise", []ui.Keyframe{{Value: 0}, {At: 500 * time.Millisecond, Value: 1, Ease: easeSweep}},
+					ui.KeyframeOptions{Delay: 150*time.Millisecond + time.Duration(part)*70*time.Millisecond})
+				part++
+				if k < 1 {
+					e.Opacity(k).Translate(0, 10*(1-k))
+				}
+				return e
+			}
 			ui.Column(c).MaxWidth(360).Gap(24).Children(func() {
-				ui.Column(c).Gap(10).Children(func() {
+				rise(ui.Column(c.Key("signin-head"))).Gap(10).Children(func() {
 					ui.Text(c, locales.SignInTitle()).FontSize(28).FontWeight(600).LineHeight(1.2).LetterSpacing(-0.7).TextColor(p.Strong)
 					ui.Text(c, locales.SignInDescription()).FontSize(sizeBody).LineHeight(1.5).TextColor(p.Secondary)
 				})
-				ui.Column(c).Gap(12).Children(func() {
+				rise(ui.Column(c.Key("signin-action"))).Gap(12).Children(func() {
 					if a.signIn.busy {
 						a.deviceCodeCard(c, p)
 					} else if inkButton(c, p, locales.SignInOpenBrowser(), iconExternal, 40).FillWidth().Clicked() {
@@ -52,7 +65,7 @@ func (a *App) signInView(c *ui.Context, p *palette) {
 					}
 					ui.Text(c, locales.SignInHint()).FontSize(sizeFoot).TextColor(p.Secondary).TextAlign(ui.Center)
 				})
-				ui.Column(c).BorderWidth(1, 0, 0, 0).BorderColor(p.Border).Padding(16, 0, 0, 0).Children(func() {
+				rise(ui.Column(c.Key("signin-foot"))).BorderWidth(1, 0, 0, 0).BorderColor(p.Border).Padding(16, 0, 0, 0).Children(func() {
 					ui.Text(c, locales.SignInFootnote()).FontSize(sizeCaption).LineHeight(1.6).TextColor(p.Tertiary)
 				})
 			})
