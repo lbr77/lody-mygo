@@ -1356,9 +1356,12 @@ func TestWorkspaceSlugsAndLinks(t *testing.T) {
 		}
 	}
 	for link, want := range map[string][2]string{
-		"https://lody.ai/join/abc_DEF-1":  {"join", "abc_DEF-1"},
-		"https://lody.ai/invite/inv123?x": {"invite", "inv123"},
-		"https://lody.ai/settings":        {"", ""},
+		"https://lody.ai/join/abc_DEF-1":               {"join", "abc_DEF-1"},
+		"https://lody.ai/invite/inv123?x":              {"invite", "inv123"},
+		"https://lody.ai/settings":                     {"", ""},
+		"https://lody.ai/analytical/sessions/s3?tab=x": {"workspace", "analytical/s3"},
+		"https://lody.ai/my-team":                      {"workspace", "my-team/"},
+		"https://lody.ai/s/abc":                        {"", ""},
 	} {
 		if k, id := parseWorkspaceLink(link); k != want[0] || id != want[1] {
 			t.Errorf("parseWorkspaceLink(%q) = %q, %q", link, k, id)

@@ -81,118 +81,122 @@ type App struct {
 	gitStates  map[string]*gitState // projects' Git, by project
 	quotaAsked map[string]time.Time // when each provider's quota was last asked for
 
-	sidebarHidden   bool
-	sideOut         float32 // how far the sidebar is out as it slides, 1 shown
-	collapsed       map[string]bool
-	expanded        map[string]bool // activity groups in the conversation
-	workspacesOpen  bool
-	sessionList     ui.ListState
-	chatList        ui.ListState
-	pickers         map[string]*bool
-	dither          dither
-	renaming        string // session whose title is being edited
-	renameText      string
-	notice          string // a failed background action, shown in the sidebar
-	showArchived    bool
-	models          map[string]string // model chosen per session
-	composerFocus   ui.Handle
-	history         []string // sessions shown, for Back and Forward
-	histPos         int
-	searchOpen      bool
-	searchText      string
-	showAll         map[string]bool   // projects listing every session
-	appearance      string            // System, Light or Dark
-	busyBehavior    string            // queue or steer, for messages sent while the agent works
-	modes           map[string]string // permission mode chosen per session; "" for New chat
-	attachments     []pendingFile     // the composer's
-	attachDrafts    map[string][]pendingFile
-	images          map[string]*remoteImage
-	uploading       string // upload progress while sending
-	settingsOpen    bool
-	settingsTab     string
-	archiveGroup    string // "project" or "flat"
-	archiveSort     string // "newest", "oldest" or "title"
-	archiveFilter   string // "", "chats" or a project id
-	deleting        *catalog.Session
-	deleteOpen      bool
-	panelOpen       bool    // the inspector beside the conversation
-	panelPercent    float32 // the conversation's share of the width
-	panelFile       string  // the file whose edits the panel shows
-	inspect         *inspectState
-	term            termDock // the terminal dock under the conversation
-	previews        map[string]*previewState
-	convex          *cloud.Convex
-	fetches         map[string]*fetched // what the settings asked the cloud for
-	offline         bool                // fetch nothing from the cloud, as in tests
-	toggles         map[string]bool     // cloud switches flipped, until they settle
-	settingsError   string
-	settingsNotice  string // what a settings action did
-	avatarBusy      bool
-	usageRange      string
-	usageCost       bool // the usage charts show cost rather than tokens
-	editingName     bool
-	nameDraft       string
-	agentsMachine   string // the machine whose agents Settings shows
-	confirming      confirmation
-	mcp             mcpForm
-	msgEdit         messageEdit
-	forks           map[string]forkPending   // forks being made, by source session
-	forkOpen        string                   // a fork to show once the workspace lists it
-	goalPending     string                   // a goal command on its way
-	goalSeen        string                   // the goal snapshot the banner last showed
-	goalDismissed   map[string]string        // cleared goals hidden, by session
-	mcpTools        map[string]*mcpTools     // tool lists loaded, by server
-	mcpAuthStatus   map[string]mcpAuthResult // servers' sign-ins, as the daemon last said
-	general         generalForm
-	tokens          tokenForm
-	passwordNotice  string
-	renamingMachine string
-	machineDraft    string
-	provider        providerForm
-	memoryMachine   string
-	memoryForm      memoryForm
-	addProject      addProjectForm
-	shortcut        shortcutForm
-	monitors        map[string]*machineMonitor // machines observed for their resource use
-	role            roleForm
-	password        passwordForm
-	projectWin      projectWindow
-	removal         projectRemoval
-	bug             bugReport
-	deletion        accountDeletion
-	wsCreate        workspaceCreate
-	wsJoin          workspaceJoin
-	referral        referrals
-	pairing         machinePairing
-	ghProject       githubProject
-	activeDay       string  // workspace|date the user was last counted active
-	usageDay        float64 // the usage day opened, its start in ms
-	usageDayShown   float64 // the day the panel shows, as it folds away too
-	share           shareDialog
-	resetting       string               // the share whose link is being reset, in settings
-	shareJobs       map[string]*shareJob // an agent's share requests being answered, by request
-	shareReqAt      map[string]time.Time // when each conversation's requests were last read
-	ghProfileAsked  map[string]bool      // workspaces whose GitHub profile was refreshed
-	device          deviceAuth
-	toasts          []ui.Toast // to show with the next frame
-	reviewSent      string     // the sharing review last reconciled
-	reviewWriter    string
-	reviewAttempt   int
-	inboxAt         time.Time             // when the inbox was last asked for
-	pings           map[string]*pingState // machines' round trips
-	sidebarWidth    float32               // as dragged; 0 is the default
-	revoking        string                // the share whose revoke awaits confirmation
-	taskOpen        bool                  // a task's dialog
-	taskEntry       string                // the turn and task it shows
-	taskID          string
-	page            string // "archive", or "" for chats
-	archiveSearch   string
-	mention         mentionState // the composer's mention panel
-	mentionSources  map[string]*mentionSource
-	diffs           map[string]*editor.DiffState // tool diffs of the open session
-	md              markdown.Options
-	mdMuted         markdown.Options
-	mdDark          bool
+	sidebarHidden    bool
+	sideOut          float32 // how far the sidebar is out as it slides, 1 shown
+	collapsed        map[string]bool
+	expanded         map[string]bool // activity groups in the conversation
+	workspacesOpen   bool
+	sessionList      ui.ListState
+	chatList         ui.ListState
+	pickers          map[string]*bool
+	dither           dither
+	renaming         string // session whose title is being edited
+	renameText       string
+	notice           string // a failed background action, shown in the sidebar
+	showArchived     bool
+	models           map[string]string // model chosen per session
+	composerFocus    ui.Handle
+	history          []string // sessions shown, for Back and Forward
+	histPos          int
+	searchOpen       bool
+	searchText       string
+	showAll          map[string]bool   // projects listing every session
+	appearance       string            // System, Light or Dark
+	busyBehavior     string            // queue or steer, for messages sent while the agent works
+	modes            map[string]string // permission mode chosen per session; "" for New chat
+	attachments      []pendingFile     // the composer's
+	attachDrafts     map[string][]pendingFile
+	images           map[string]*remoteImage
+	uploading        string // upload progress while sending
+	settingsOpen     bool
+	settingsTab      string
+	archiveGroup     string // "project" or "flat"
+	archiveSort      string // "newest", "oldest" or "title"
+	archiveFilter    string // "", "chats" or a project id
+	deleting         *catalog.Session
+	deleteOpen       bool
+	panelOpen        bool    // the inspector beside the conversation
+	panelPercent     float32 // the conversation's share of the width
+	panelFile        string  // the file whose edits the panel shows
+	inspect          *inspectState
+	term             termDock // the terminal dock under the conversation
+	previews         map[string]*previewState
+	convex           *cloud.Convex
+	fetches          map[string]*fetched // what the settings asked the cloud for
+	offline          bool                // fetch nothing from the cloud, as in tests
+	toggles          map[string]bool     // cloud switches flipped, until they settle
+	settingsError    string
+	settingsNotice   string // what a settings action did
+	avatarBusy       bool
+	usageRange       string
+	usageCost        bool // the usage charts show cost rather than tokens
+	editingName      bool
+	nameDraft        string
+	agentsMachine    string // the machine whose agents Settings shows
+	confirming       confirmation
+	mcp              mcpForm
+	msgEdit          messageEdit
+	forks            map[string]forkPending   // forks being made, by source session
+	forkOpen         string                   // a fork to show once the workspace lists it
+	goalPending      string                   // a goal command on its way
+	goalSeen         string                   // the goal snapshot the banner last showed
+	goalDismissed    map[string]string        // cleared goals hidden, by session
+	mcpTools         map[string]*mcpTools     // tool lists loaded, by server
+	mcpAuthStatus    map[string]mcpAuthResult // servers' sign-ins, as the daemon last said
+	general          generalForm
+	tokens           tokenForm
+	passwordNotice   string
+	renamingMachine  string
+	machineDraft     string
+	provider         providerForm
+	memoryMachine    string
+	memoryForm       memoryForm
+	addProject       addProjectForm
+	shortcut         shortcutForm
+	monitors         map[string]*machineMonitor // machines observed for their resource use
+	role             roleForm
+	password         passwordForm
+	projectWin       projectWindow
+	removal          projectRemoval
+	bug              bugReport
+	deletion         accountDeletion
+	wsCreate         workspaceCreate
+	wsJoin           workspaceJoin
+	referral         referrals
+	pairing          machinePairing
+	ghProject        githubProject
+	activeDay        string  // workspace|date the user was last counted active
+	usageDay         float64 // the usage day opened, its start in ms
+	usageDayShown    float64 // the day the panel shows, as it folds away too
+	share            shareDialog
+	resetting        string    // the share whose link is being reset, in settings
+	membershipSeen   string    // user|fingerprint of the workspaces they belong to
+	membershipAt     time.Time // when it was last asked
+	membershipAsking bool
+	userNames        map[string]string    // people outside the members list, by id
+	shareJobs        map[string]*shareJob // an agent's share requests being answered, by request
+	shareReqAt       map[string]time.Time // when each conversation's requests were last read
+	ghProfileAsked   map[string]bool      // workspaces whose GitHub profile was refreshed
+	device           deviceAuth
+	toasts           []ui.Toast // to show with the next frame
+	reviewSent       string     // the sharing review last reconciled
+	reviewWriter     string
+	reviewAttempt    int
+	inboxAt          time.Time             // when the inbox was last asked for
+	pings            map[string]*pingState // machines' round trips
+	sidebarWidth     float32               // as dragged; 0 is the default
+	revoking         string                // the share whose revoke awaits confirmation
+	taskOpen         bool                  // a task's dialog
+	taskEntry        string                // the turn and task it shows
+	taskID           string
+	page             string // "archive", or "" for chats
+	archiveSearch    string
+	mention          mentionState // the composer's mention panel
+	mentionSources   map[string]*mentionSource
+	diffs            map[string]*editor.DiffState // tool diffs of the open session
+	md               markdown.Options
+	mdMuted          markdown.Options
+	mdDark           bool
 }
 
 // New returns the app. Run it with Start once the window exists.

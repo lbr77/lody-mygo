@@ -21,6 +21,7 @@ const (
 
 func (a *App) mainView(c *ui.Context, p *palette) {
 	a.openForked()
+	a.membershipSync(c)
 	c.OnShortcut(ui.Cmd, ui.KeyN, func() { a.open("") })
 	c.OnShortcut(ui.Cmd, ui.KeyL, func() { a.composerFocus.Focus(c) })
 	c.OnShortcut(ui.Cmd, ui.KeyBackslash, func() { a.sidebarHidden = !a.sidebarHidden })

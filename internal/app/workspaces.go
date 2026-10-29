@@ -260,13 +260,24 @@ var (
 	inviteLink = regexp.MustCompile(`/invite/([A-Za-z0-9_-]+)`)
 )
 
-// parseWorkspaceLink reads a lody.ai join or invitation link.
+// workspaceRoute is a link into a workspace: lody.ai/<slug>, maybe to one
+// of its conversations.
+var workspaceRoute = regexp.MustCompile(`^https?://(?:www\.)?lody\.ai/([a-z0-9]+(?:-[a-z0-9]+)*)(?:/sessions/([A-Za-z0-9_-]+))?/?(?:[?#].*)?$`)
+
+// reservedRoutes are lody.ai's pages, not workspaces.
+var reservedRoutes = map[string]bool{"join": true, "invite": true, "s": true, "docs": true, "download": true, "login": true, "device": true, "settings": true, "workspace": true, "zh": true}
+
+// parseWorkspaceLink reads a lody.ai join or invitation link, or a link
+// into a workspace (its id the slug, and the conversation after a slash).
 func parseWorkspaceLink(link string) (kind, id string) {
 	if m := joinLink.FindStringSubmatch(link); m != nil {
 		return "join", m[1]
 	}
 	if m := inviteLink.FindStringSubmatch(link); m != nil {
 		return "invite", m[1]
+	}
+	if m := workspaceRoute.FindStringSubmatch(link); m != nil && !reservedRoutes[m[1]] {
+		return "workspace", m[1] + "/" + m[2]
 	}
 	return "", ""
 }
@@ -286,6 +297,10 @@ func (a *App) lookUpLink() {
 	}
 	j.kind, j.id, j.loading, j.err, j.preview, j.done = kind, id, true, "", nil, ""
 	convex := a.convex
+	if kind == "workspace" {
+		a.openWorkspaceLink(id)
+		return
+	}
 	go func() {
 		ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 		defer cancel()
@@ -477,4 +492,70 @@ func (a *App) joinPreview(c *ui.Context, p *palette, j *workspaceJoin, pv map[st
 			})
 		}
 	})
+}
+
+// openWorkspaceLink goes to the workspace a link names, and to its
+// conversation, when the user belongs to it (auth:getWorkspaceAccessBySlug).
+func (a *App) openWorkspaceLink(id string) {
+	j := &a.wsJoin
+	slug, sessionID, _ := strings.Cut(id, "/")
+	convex := a.convex
+	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+		defer cancel()
+		var access struct {
+			Status         string `json:"status"`
+			OrganizationID string `json:"organizationId"`
+		}
+		err := convex.Query(ctx, "auth:getWorkspaceAccessBySlug", map[string]any{"slug": slug}, &access)
+		a.update(func() {
+			j.loading = false
+			switch {
+			case err != nil:
+				j.err = err.Error()
+			case access.Status == "not_member":
+				j.err = locales.WorkspaceLinkNotMember()
+			case access.Status != "member" || access.OrganizationID == "":
+				j.err = locales.JoinLinkInvalid()
+			default:
+				j.open = false
+				if access.OrganizationID != a.workspaceID {
+					a.connect(access.OrganizationID)
+				}
+				if sessionID != "" {
+					a.forkOpen = sessionID
+				}
+			}
+		})
+	}()
+}
+
+// membershipSync looks every minute for a change to the workspaces the
+// user belongs to, made elsewhere, and reads them again when one comes,
+// as Lody's desktop app does (auth:getMyWorkspaceMembershipFingerprint).
+func (a *App) membershipSync(c *ui.Context) {
+	c.After(time.Minute)
+	if a.convex == nil || a.offline || a.account == nil || a.membershipAsking || time.Since(a.membershipAt) < time.Minute {
+		return
+	}
+	a.membershipAsking, a.membershipAt = true, time.Now()
+	convex, user := a.convex, a.account.User.ID
+	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+		defer cancel()
+		var fingerprint *string
+		err := convex.Query(ctx, "auth:getMyWorkspaceMembershipFingerprint", map[string]any{}, &fingerprint)
+		a.update(func() {
+			a.membershipAsking = false
+			if err != nil || fingerprint == nil || a.account == nil || a.account.User.ID != user {
+				return
+			}
+			seen := a.membershipSeen
+			a.membershipSeen = user + "|" + *fingerprint
+			// The first answer is only where to start from.
+			if seen != "" && seen != a.membershipSeen && strings.HasPrefix(seen, user+"|") {
+				go a.refreshAccount()
+			}
+		})
+	}()
 }

@@ -11032,3 +11032,13 @@ func ProjectPageFilesLead() string { return In(i18n.Locale()).ProjectPageFilesLe
 func (msgs Messages) ProjectPageFilesLead() string {
 	return Catalog.Format(msgs.locale, "projectPageFilesLead", nil)
 }
+
+// WorkspaceLinkNotMember says "You're not a member of this workspace. Ask its owner for an invitation or a join link."
+// in the language the app shows.
+func WorkspaceLinkNotMember() string { return In(i18n.Locale()).WorkspaceLinkNotMember() }
+
+// WorkspaceLinkNotMember says "You're not a member of this workspace. Ask its owner for an invitation or a join link."
+// in the language of msgs.
+func (msgs Messages) WorkspaceLinkNotMember() string {
+	return Catalog.Format(msgs.locale, "workspaceLinkNotMember", nil)
+}

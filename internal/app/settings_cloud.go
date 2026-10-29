@@ -165,6 +165,34 @@ func (a *App) memberName(id string, byUser map[string]cloud.Member) string {
 	if m, ok := byUser[id]; ok {
 		return firstNonEmpty(m.User.Name, m.User.Email, id)
 	}
+	return a.userName(id)
+}
+
+// userName is someone's name who is not among the members, as one who
+// left, read once (auth:getUserById).
+func (a *App) userName(id string) string {
+	if name, ok := a.userNames[id]; ok {
+		return firstNonEmpty(name, id)
+	}
+	if a.userNames == nil {
+		a.userNames = map[string]string{}
+	}
+	a.userNames[id] = ""
+	if a.convex == nil || a.offline || id == "" {
+		return id
+	}
+	convex, ws := a.convex, a.workspaceID
+	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+		defer cancel()
+		var user *struct {
+			Name  string `json:"name"`
+			Email string `json:"email"`
+		}
+		if convex.Query(ctx, "auth:getUserById", map[string]any{"workspaceId": ws, "userId": id}, &user) == nil && user != nil {
+			a.update(func() { a.userNames[id] = firstNonEmpty(user.Name, user.Email) })
+		}
+	}()
 	return id
 }
 
