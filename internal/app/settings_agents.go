@@ -13,6 +13,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/lbr77/lody-mygo/internal/catalog"
+	"github.com/lbr77/lody-mygo/internal/cloud"
 	"github.com/lbr77/lody-mygo/internal/flock"
 	"github.com/lbr77/lody-mygo/locales"
 )
@@ -151,6 +152,13 @@ type providerForm struct {
 	authRequired bool           // the last test found no credentials
 	auth         *authFlow
 	binary       *binaryState
+	// Pi's extensions: the paths loaded, a scan's finds, a path typed.
+	piExt      []string
+	piScan     *piDiscovery
+	piScanning bool
+	piErr      string
+	piPath     string
+	testStop   func() // cancels the running test
 }
 
 // codexAuth is the account of a managed Codex provider: ChatGPT, or an
@@ -228,6 +236,7 @@ func (a *App) agentsPage(c *ui.Context, p *palette) {
 	slices.SortStableFunc(agents, func(x, y catalog.AgentConfig) int {
 		return strings.Compare(strings.ToLower(x.Name), strings.ToLower(y.Name))
 	})
+	a.refreshQuotas(agents)
 	if len(agents) == 0 {
 		emptyCard(c, p, locales.MachinesNoAgents())
 	} else {
@@ -295,6 +304,9 @@ func (a *App) providerRow(c *ui.Context, p *palette, ag catalog.AgentConfig) {
 			if facts := a.providerFacts(agent); len(facts) > 0 {
 				ui.Text(c, strings.Join(facts, " · ")).FontSize(sizeFoot).TextColor(p.Secondary).SingleLine()
 			}
+			if a.catalog.Capabilities[agent.ID].RateLimits {
+				quotaMeters(c, p, a.catalog.RateLimits[agent.ID], time.Now())
+			}
 		})
 		iconButton(c, p, iconMore, locales.MoreActions(), p.Hover).Menu(func(m *ui.Menu) {
 			if m.Item(locales.ProviderRefresh()).Chosen() {
@@ -315,8 +327,19 @@ func (a *App) refreshProvider(machine, configID string, done func(result string,
 	if conn == nil {
 		return
 	}
+	rid := uuid.NewString()
+	ctx, cancel := context.WithTimeout(cloud.WithRequestID(context.Background(), rid), 125*time.Second)
+	if done != nil {
+		a.provider.testStop = func() {
+			cancel()
+			go func() {
+				c, stop := context.WithTimeout(context.Background(), 15*time.Second)
+				defer stop()
+				conn.MachineRPC(c, machine, "machine/acp-capabilities-refresh-cancel", map[string]any{"requestId": rid}, 10*time.Second)
+			}()
+		}
+	}
 	go func() {
-		ctx, cancel := context.WithTimeout(context.Background(), 125*time.Second)
 		defer cancel()
 		raw, err := conn.MachineRPC(ctx, machine, "machine/acp-capabilities-refresh", map[string]any{"configId": configID, "force": true}, 120*time.Second)
 		var res struct {
@@ -394,6 +417,9 @@ func (a *App) openProvider(machine string, ag *catalog.AgentConfig) {
 		row := ag.Row
 		if ov, _ := row["runtimeOverrides"].(map[string]any); ov != nil && f.kind.pathKey != "" {
 			f.path = str(ov[f.kind.pathKey])
+			for _, x := range anyList(ov["piExtensions"]) {
+				f.piExt = append(f.piExt, str(x))
+			}
 		}
 		if acp, _ := row["customAcp"].(map[string]any); acp != nil {
 			parts := []string{shellQuote(str(acp["command"]))}
@@ -580,6 +606,16 @@ func (f *providerForm) row() (map[string]any, error) {
 		} else {
 			delete(next, k.pathKey)
 		}
+		if k.agentType == "pi" {
+			delete(next, "piExtensions")
+			if len(f.piExt) > 0 {
+				exts := make([]any, len(f.piExt))
+				for i, x := range f.piExt {
+					exts[i] = x
+				}
+				next["piExtensions"] = exts
+			}
+		}
 		if len(next) > 0 {
 			row["runtimeOverrides"] = next
 		} else {
@@ -671,7 +707,10 @@ func (a *App) saveProvider(test bool) {
 			return
 		}
 		a.refreshProvider(machine, id, func(result string, authRequired bool, err error) {
-			f.testing = false
+			if !f.testing {
+				return // cancelled
+			}
+			f.testing, f.testStop = false, nil
 			if err != nil {
 				f.testErr = err.Error()
 				return
@@ -792,6 +831,12 @@ func (a *App) providerFormView(c *ui.Context, p *palette) {
 			}
 			ui.Text(c, subtitle).FontSize(sizeFoot).TextColor(p.Secondary).SingleLine()
 		})
+		if f.testing && f.testStop != nil {
+			ghostButton(c, p, locales.Cancel()).OnClick(func() {
+				f.testStop()
+				f.testStop, f.testing = nil, false
+			})
+		}
 		test := outlineButton(c, p, iconFlask, locales.ProviderTest())
 		if f.testing || !a.binaryReady(f) {
 			test.Disabled(true).Opacity(0.6)
@@ -848,6 +893,9 @@ func (a *App) providerFormView(c *ui.Context, p *palette) {
 			a.binaryField(c, p)
 		}
 		a.accountField(c, p, managed)
+		if k.cliType == "builtin" && k.agentType == "pi" {
+			a.piExtensionsField(c, p)
+		}
 		a.titleSection(c, p)
 		a.providerSection(c, p, "prompt", locales.ProviderPrompt(), func() {
 			area(c, p, &f.prompt, locales.ProviderPromptPlaceholder(), locales.ProviderPrompt(), 4)

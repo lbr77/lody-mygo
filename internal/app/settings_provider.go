@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"slices"
 	"strings"
 	"time"
@@ -430,6 +431,256 @@ func (a *App) binaryField(c *ui.Context, p *palette) {
 			}
 			machine, agentType := f.machine, f.kind.agentType
 			outlineButton(c, p, iconDownload, label).OnClick(func() { a.installBinary(st, machine, agentType) })
+		}
+	})
+}
+
+// quotaMeters are a provider's subscription windows, as Lody's provider
+// rows show them: each window's share used, a bar, and when it resets.
+func quotaMeters(c *ui.Context, p *palette, limits []catalog.RateLimit, now time.Time) {
+	var windows []catalog.RateWindow
+	for _, l := range limits {
+		if len(l.Windows) > 0 {
+			windows = l.Windows
+			break
+		}
+	}
+	if len(windows) == 0 {
+		return
+	}
+	ui.Row(c).FillWidth().Gap(16).Margin(4, 0, 0, 0).Children(func() {
+		for i, w := range windows {
+			win := w
+			short, full := windowLabels(win)
+			used := locales.QuotaUsed(int(win.UsedPercent + 0.5))
+			reset := resetText(win.ResetsAt, now)
+			ui.Column(c.Key(i)).Grow(1).Basis(0).MinWidth(0).Gap(4).Tooltip(full + ": " + used + ", " + reset).Children(func() {
+				ui.Row(c).FillWidth().Gap(6).Children(func() {
+					ui.Text(c, short).FontSize(sizeCaption).FontWeight(500).TextColor(p.Secondary).Grow(1).SingleLine()
+					ui.Text(c, used).FontSize(sizeCaption).TextColor(p.Text).Shrink(0)
+				})
+				ui.Box(c).FillWidth().Height(4).Radius(2).Background(p.Text.Alpha(0.08)).Clip().Children(func() {
+					ui.Box(c).Height(4).Radius(2).Background(p.Text.Alpha(0.45)).WidthPercent(float32(win.UsedPercent))
+				})
+				ui.Text(c, reset).FontSize(sizeCaption).TextColor(p.Tertiary).SingleLine()
+			})
+		}
+	})
+}
+
+// windowLabels name a window short (5h, 7d) and in full.
+func windowLabels(w catalog.RateWindow) (string, string) {
+	short := locales.QuotaUsage()
+	switch s := int(w.Seconds); {
+	case s <= 0:
+	case s%86400 == 0:
+		short = fmt.Sprintf("%dd", s/86400)
+	case s%3600 == 0:
+		short = fmt.Sprintf("%dh", s/3600)
+	default:
+		short = fmt.Sprintf("%dm", s/60)
+	}
+	full := short
+	switch int(w.Seconds) {
+	case 5 * 3600:
+		full = locales.QuotaFiveHour()
+	case 7 * 86400:
+		full = locales.QuotaSevenDay()
+	}
+	if w.Label != "" {
+		short, full = short+" · "+w.Label, full+" · "+w.Label
+	}
+	return short, full
+}
+
+// resetText says when a window starts over.
+func resetText(at float64, now time.Time) string {
+	if at <= 0 {
+		return locales.QuotaResetUnknown()
+	}
+	d := time.Unix(int64(at), 0).Sub(now)
+	switch {
+	case d < time.Hour:
+		return locales.QuotaResetsMinutes(max(1, int(d.Minutes()+0.5)))
+	case d < 48*time.Hour:
+		return locales.QuotaResetsHours(int(d.Hours() + 0.5))
+	}
+	return locales.QuotaResetsDays(int(d.Hours()/24 + 0.5))
+}
+
+// refreshQuotas asks the machines for the providers' quotas the Agents
+// page shows, at most once a minute each, as Lody does while a provider
+// is in view.
+func (a *App) refreshQuotas(agents []catalog.AgentConfig) {
+	conn := a.conn
+	if conn == nil {
+		return
+	}
+	if a.quotaAsked == nil {
+		a.quotaAsked = map[string]time.Time{}
+	}
+	for _, ag := range agents {
+		if !a.catalog.Capabilities[ag.ID].QueryRateLimits || !a.presence.IsOnline(ag.MachineID) || time.Since(a.quotaAsked[ag.ID]) < time.Minute {
+			continue
+		}
+		a.quotaAsked[ag.ID] = time.Now()
+		machine, id := ag.MachineID, ag.ID
+		go func() {
+			ctx, cancel := context.WithTimeout(context.Background(), 35*time.Second)
+			defer cancel()
+			conn.MachineRPC(ctx, machine, "machine/provider-rate-limits-refresh", map[string]any{"configId": id}, 30*time.Second)
+		}()
+	}
+}
+
+// piDiscovery is what a scan of the machine's Pi found.
+type piDiscovery struct {
+	AgentDir   string `json:"agentDir"`
+	Extensions []struct {
+		Path   string `json:"path"`
+		Name   string `json:"name"`
+		Source string `json:"source"`
+	} `json:"extensions"`
+	Warnings []string `json:"warnings"`
+}
+
+// scanPiExtensions asks the machine which global Pi extensions are
+// installed.
+func (a *App) scanPiExtensions() {
+	f := &a.provider
+	conn := a.conn
+	if conn == nil || f.piScanning {
+		return
+	}
+	f.piScanning, f.piErr = true, ""
+	params := map[string]any{}
+	if f.persisted {
+		params["configId"] = f.id
+	}
+	machine := f.machine
+	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 65*time.Second)
+		defer cancel()
+		raw, err := conn.MachineRPC(ctx, machine, "machine/pi-extensions", params, 60*time.Second)
+		var res struct {
+			Success   bool        `json:"success"`
+			Discovery piDiscovery `json:"discovery"`
+			Error     string      `json:"error"`
+		}
+		if err == nil {
+			err = json.Unmarshal(raw, &res)
+		}
+		a.update(func() {
+			f.piScanning = false
+			switch {
+			case err != nil || !res.Success:
+				f.piErr = locales.PiScanFailed()
+			default:
+				f.piScan = &res.Discovery
+			}
+		})
+	}()
+}
+
+// validPiPath is an absolute path or ~/path, as Lody takes one.
+func validPiPath(p string) bool {
+	return len(p) <= 4096 && (strings.HasPrefix(p, "/") || strings.HasPrefix(p, "~/") || (len(p) > 2 && p[1] == ':'))
+}
+
+// piExtensionsField picks the Pi extensions the provider loads.
+func (a *App) piExtensionsField(c *ui.Context, p *palette) {
+	f := &a.provider
+	supported := a.machineCap(f.machine, "piExtensions") >= 1
+	a.providerSection(c, p, "pi", locales.PiTitle(), func() {
+		if !supported {
+			ui.Text(c, locales.PiUnsupported()).FontSize(sizeFoot).TextColor(p.Warning)
+			return
+		}
+		ui.Text(c, locales.PiConsent()).FontSize(sizeCaption).LineHeight(1.45).TextColor(p.Secondary)
+		ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
+			label := locales.PiScan()
+			switch {
+			case f.piScanning:
+				label = locales.PiScanning()
+			case f.piScan != nil:
+				label = locales.PiRescan()
+			}
+			b := outlineButton(c, p, iconRefresh, label)
+			if f.piScanning {
+				b.Disabled(true).Opacity(0.5)
+			} else {
+				b.OnClick(a.scanPiExtensions)
+			}
+			if f.piScan != nil && f.piScan.AgentDir != "" {
+				ui.Text(c, locales.PiScannedDir(f.piScan.AgentDir)).Font(fontMono).FontSize(sizeCaption).TextColor(p.Tertiary).SingleLine()
+			}
+		})
+		selected := map[string]bool{}
+		for _, path := range f.piExt {
+			selected[path] = true
+		}
+		toggle := func(path string) {
+			if selected[path] {
+				f.piExt = slices.DeleteFunc(f.piExt, func(x string) bool { return x == path })
+			} else if len(f.piExt) < 32 {
+				f.piExt = append(f.piExt, path)
+			} else {
+				f.piErr = locales.PiLimit()
+			}
+		}
+		row := func(path, name, note string) {
+			ui.Row(c.Key(path)).FillWidth().Gap(8).AlignItems(ui.Center).Children(func() {
+				on := selected[path]
+				was := on
+				ui.Switch(c, &on).Label(firstNonEmpty(name, path))
+				if on != was {
+					toggle(path)
+				}
+				ui.Column(c).Grow(1).MinWidth(0).Children(func() {
+					if name != "" {
+						ui.Text(c, name).FontSize(sizeSub).TextColor(p.Text).SingleLine()
+					}
+					ui.Text(c, path).Font(fontMono).FontSize(sizeCaption).TextColor(p.Secondary).SingleLine().Tooltip(path)
+				})
+				if note != "" {
+					ui.Text(c, note).FontSize(sizeCaption).TextColor(p.Tertiary)
+				}
+			})
+		}
+		seen := map[string]bool{}
+		if f.piScan != nil {
+			if len(f.piScan.Extensions) == 0 {
+				ui.Text(c, locales.PiEmpty()).FontSize(sizeFoot).TextColor(p.Secondary)
+			}
+			for _, e := range f.piScan.Extensions {
+				seen[e.Path] = true
+				row(e.Path, e.Name, e.Source)
+			}
+		}
+		for _, path := range f.piExt {
+			if !seen[path] {
+				note := ""
+				if f.piScan != nil {
+					note = locales.PiStale()
+				}
+				row(path, "", note)
+			}
+		}
+		ui.Row(c).FillWidth().Gap(6).Children(func() {
+			input(c, p, &f.piPath, locales.PiPlaceholder(), locales.PiPath()).Font(fontMono).Grow(1)
+			ghostButton(c, p, locales.PiAdd()).Border(1, p.Border).OnClick(func() {
+				path := strings.TrimSpace(f.piPath)
+				switch {
+				case !validPiPath(path):
+					f.piErr = locales.PiInvalidPath()
+				case !slices.Contains(f.piExt, path):
+					toggle(path)
+					f.piPath, f.piErr = "", ""
+				}
+			})
+		})
+		if f.piErr != "" {
+			ui.Text(c, f.piErr).FontSize(sizeFoot).TextColor(p.Danger)
 		}
 	})
 }

@@ -109,6 +109,10 @@ type Capability struct {
 	// GoalActions are the goal commands the agent takes: set, pause,
 	// resume, clear.
 	GoalActions []string `json:"goalActions,omitempty"`
+	// RateLimits is whether the agent reports its subscription windows,
+	// and QueryRateLimits whether it reports them when asked.
+	RateLimits      bool `json:"rateLimits,omitempty"`
+	QueryRateLimits bool `json:"queryRateLimits,omitempty"`
 	// CLIType and AgentType are the runtime the agent reported for.
 	CLIType   string `json:"cliType,omitempty"`
 	AgentType string `json:"agentType,omitempty"`
@@ -128,6 +132,21 @@ type ConfigOption struct {
 type Choice struct {
 	Value string `json:"value"`
 	Name  string `json:"name"`
+}
+
+// RateLimit is a provider's quota: the windows its subscription meters.
+type RateLimit struct {
+	ConfigID, CLIType, LimitID, Label string
+	Windows                           []RateWindow
+}
+
+// RateWindow is a quota window: how much of it is used, how long it is,
+// and when it starts over (Unix seconds; zero when unknown).
+type RateWindow struct {
+	Label       string
+	UsedPercent float64
+	Seconds     float64
+	ResetsAt    float64
 }
 
 // Command is an agent's slash command.
@@ -177,6 +196,7 @@ type Catalog struct {
 	Roles        []AgentRole                   `json:"-"`
 	ProjectMCP   map[string][]string           `json:"-"` // default MCP servers by project key
 	Memories     map[string][]Memory           `json:"-"` // by machine
+	RateLimits   map[string][]RateLimit        `json:"-"` // providers' quotas, by agent config
 	Removing     map[string]bool               `json:"-"` // projects their machines are removing
 }
 
@@ -239,6 +259,29 @@ func projectMachine(rows []flock.Row, machineID string) Catalog {
 		id := text(row.Key[1])
 		value := object(row.Value)
 		switch row.Key[0] {
+		case "rateLimit":
+			// ['rateLimit', configId, cliType, limitId], as the machine
+			// reports a provider's subscription windows.
+			if len(row.Key) != 4 {
+				continue
+			}
+			rl := RateLimit{ConfigID: id, CLIType: text(row.Key[2]), LimitID: firstText(text(value["limitId"]), text(row.Key[3])), Label: text(value["label"])}
+			for _, w := range anyList(value["windows"]) {
+				win := object(w)
+				used, ok := win["usedPercent"].(float64)
+				if !ok {
+					continue
+				}
+				rl.Windows = append(rl.Windows, RateWindow{Label: strings.TrimSpace(text(win["label"])), UsedPercent: math.Max(0, math.Min(100, used)),
+					Seconds: stamp(win["windowDurationSeconds"]), ResetsAt: stamp(win["resetsAtEpochSeconds"])})
+			}
+			if id == "" || len(rl.Windows) == 0 {
+				continue
+			}
+			if c.RateLimits == nil {
+				c.RateLimits = map[string][]RateLimit{}
+			}
+			c.RateLimits[id] = append(c.RateLimits[id], rl)
 		case "memory":
 			if len(row.Key) != 3 || value == nil {
 				continue
@@ -304,6 +347,9 @@ func projectMachine(rows []flock.Row, machineID string) Catalog {
 			}
 			capability.Steer = value["acknowledgedSteer"] == true && value["provenance"] == "runtime"
 			capability.SessionTitle = value["sessionTitle"] == true
+			if rl := object(value["rateLimits"]); len(rl) > 0 {
+				capability.RateLimits, capability.QueryRateLimits = true, rl["query"] == true
+			}
 			capability.Fork = value["sessionFork"] == true && value["provenance"] == "runtime"
 			for _, a := range anyList(value["goalActions"]) {
 				capability.GoalActions = append(capability.GoalActions, text(a))
@@ -582,6 +628,12 @@ func merge(meta Catalog, machines map[string]Catalog) Catalog {
 				out.Memories = map[string][]Memory{}
 			}
 			out.Memories[id] = append(out.Memories[id], mem)
+		}
+		for cfg, limits := range m.RateLimits {
+			if out.RateLimits == nil {
+				out.RateLimits = map[string][]RateLimit{}
+			}
+			out.RateLimits[cfg] = append(out.RateLimits[cfg], limits...)
 		}
 		for p := range m.Removing {
 			if out.Removing == nil {

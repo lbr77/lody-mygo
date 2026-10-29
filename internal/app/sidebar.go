@@ -464,11 +464,14 @@ func (a *App) footer(c *ui.Context, p *palette) {
 				{locales.HelpDocs(), "https://lody.ai/docs"},
 				{"GitHub", "https://github.com/LodyAI/Lody"},
 				{locales.HelpCommunity(), "https://discord.gg/E8mZtMu38s"},
-				{locales.ReportBug(), "https://github.com/lbr77/lody-mygo/issues"},
 			} {
 				if m.Item(link.label).Chosen() {
 					mygo.Shell.OpenExternal(link.url)
 				}
+			}
+			m.Separator()
+			if m.Item(locales.ReportBug()).Chosen() {
+				a.openBugReport()
 			}
 		})
 		archive := iconButton(c, p, iconArchive, locales.ArchivedChats(), p.SideHover).OnClick(func() {

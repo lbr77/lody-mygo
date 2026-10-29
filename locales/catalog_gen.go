@@ -8650,3 +8650,435 @@ func ProjectNewFolder() string { return In(i18n.Locale()).ProjectNewFolder() }
 func (msgs Messages) ProjectNewFolder() string {
 	return Catalog.Format(msgs.locale, "projectNewFolder", nil)
 }
+
+// QuotaUsed says "{percent}% used"
+// in the language the app shows.
+func QuotaUsed(percent int) string { return In(i18n.Locale()).QuotaUsed(percent) }
+
+// QuotaUsed says "{percent}% used"
+// in the language of msgs.
+func (msgs Messages) QuotaUsed(percent int) string {
+	return Catalog.Format(msgs.locale, "quotaUsed", map[string]any{"percent": percent})
+}
+
+// QuotaUsage says "Usage"
+// in the language the app shows.
+func QuotaUsage() string { return In(i18n.Locale()).QuotaUsage() }
+
+// QuotaUsage says "Usage"
+// in the language of msgs.
+func (msgs Messages) QuotaUsage() string {
+	return Catalog.Format(msgs.locale, "quotaUsage", nil)
+}
+
+// QuotaFiveHour says "5 hours usage"
+// in the language the app shows.
+func QuotaFiveHour() string { return In(i18n.Locale()).QuotaFiveHour() }
+
+// QuotaFiveHour says "5 hours usage"
+// in the language of msgs.
+func (msgs Messages) QuotaFiveHour() string {
+	return Catalog.Format(msgs.locale, "quotaFiveHour", nil)
+}
+
+// QuotaSevenDay says "7 days usage"
+// in the language the app shows.
+func QuotaSevenDay() string { return In(i18n.Locale()).QuotaSevenDay() }
+
+// QuotaSevenDay says "7 days usage"
+// in the language of msgs.
+func (msgs Messages) QuotaSevenDay() string {
+	return Catalog.Format(msgs.locale, "quotaSevenDay", nil)
+}
+
+// QuotaResetUnknown says "Reset time unknown"
+// in the language the app shows.
+func QuotaResetUnknown() string { return In(i18n.Locale()).QuotaResetUnknown() }
+
+// QuotaResetUnknown says "Reset time unknown"
+// in the language of msgs.
+func (msgs Messages) QuotaResetUnknown() string {
+	return Catalog.Format(msgs.locale, "quotaResetUnknown", nil)
+}
+
+// QuotaResetsMinutes says "{n, plural, one {Resets in # minute} other {Resets in # minutes}}"
+// in the language the app shows.
+func QuotaResetsMinutes(n int) string { return In(i18n.Locale()).QuotaResetsMinutes(n) }
+
+// QuotaResetsMinutes says "{n, plural, one {Resets in # minute} other {Resets in # minutes}}"
+// in the language of msgs.
+func (msgs Messages) QuotaResetsMinutes(n int) string {
+	return Catalog.Format(msgs.locale, "quotaResetsMinutes", map[string]any{"n": n})
+}
+
+// QuotaResetsHours says "{n, plural, one {Resets in # hour} other {Resets in # hours}}"
+// in the language the app shows.
+func QuotaResetsHours(n int) string { return In(i18n.Locale()).QuotaResetsHours(n) }
+
+// QuotaResetsHours says "{n, plural, one {Resets in # hour} other {Resets in # hours}}"
+// in the language of msgs.
+func (msgs Messages) QuotaResetsHours(n int) string {
+	return Catalog.Format(msgs.locale, "quotaResetsHours", map[string]any{"n": n})
+}
+
+// QuotaResetsDays says "{n, plural, one {Resets in # day} other {Resets in # days}}"
+// in the language the app shows.
+func QuotaResetsDays(n int) string { return In(i18n.Locale()).QuotaResetsDays(n) }
+
+// QuotaResetsDays says "{n, plural, one {Resets in # day} other {Resets in # days}}"
+// in the language of msgs.
+func (msgs Messages) QuotaResetsDays(n int) string {
+	return Catalog.Format(msgs.locale, "quotaResetsDays", map[string]any{"n": n})
+}
+
+// BugReportTitle says "Report a bug"
+// in the language the app shows.
+func BugReportTitle() string { return In(i18n.Locale()).BugReportTitle() }
+
+// BugReportTitle says "Report a bug"
+// in the language of msgs.
+func (msgs Messages) BugReportTitle() string {
+	return Catalog.Format(msgs.locale, "bugReportTitle", nil)
+}
+
+// BugReportLead says "Your report includes this client's version and system. Select a machine to also include its recent CLI logs."
+// in the language the app shows.
+func BugReportLead() string { return In(i18n.Locale()).BugReportLead() }
+
+// BugReportLead says "Your report includes this client's version and system. Select a machine to also include its recent CLI logs."
+// in the language of msgs.
+func (msgs Messages) BugReportLead() string {
+	return Catalog.Format(msgs.locale, "bugReportLead", nil)
+}
+
+// BugReportMachine says "Machine"
+// in the language the app shows.
+func BugReportMachine() string { return In(i18n.Locale()).BugReportMachine() }
+
+// BugReportMachine says "Machine"
+// in the language of msgs.
+func (msgs Messages) BugReportMachine() string {
+	return Catalog.Format(msgs.locale, "bugReportMachine", nil)
+}
+
+// BugReportNoMachine says "No machine (client diagnostics only)"
+// in the language the app shows.
+func BugReportNoMachine() string { return In(i18n.Locale()).BugReportNoMachine() }
+
+// BugReportNoMachine says "No machine (client diagnostics only)"
+// in the language of msgs.
+func (msgs Messages) BugReportNoMachine() string {
+	return Catalog.Format(msgs.locale, "bugReportNoMachine", nil)
+}
+
+// BugReportNoMachineHint says "The report will be uploaded without machine logs."
+// in the language the app shows.
+func BugReportNoMachineHint() string { return In(i18n.Locale()).BugReportNoMachineHint() }
+
+// BugReportNoMachineHint says "The report will be uploaded without machine logs."
+// in the language of msgs.
+func (msgs Messages) BugReportNoMachineHint() string {
+	return Catalog.Format(msgs.locale, "bugReportNoMachineHint", nil)
+}
+
+// BugReportNoMachines says "No machines are online. The report will still be uploaded."
+// in the language the app shows.
+func BugReportNoMachines() string { return In(i18n.Locale()).BugReportNoMachines() }
+
+// BugReportNoMachines says "No machines are online. The report will still be uploaded."
+// in the language of msgs.
+func (msgs Messages) BugReportNoMachines() string {
+	return Catalog.Format(msgs.locale, "bugReportNoMachines", nil)
+}
+
+// BugReportDescription says "What happened?"
+// in the language the app shows.
+func BugReportDescription() string { return In(i18n.Locale()).BugReportDescription() }
+
+// BugReportDescription says "What happened?"
+// in the language of msgs.
+func (msgs Messages) BugReportDescription() string {
+	return Catalog.Format(msgs.locale, "bugReportDescription", nil)
+}
+
+// BugReportDescriptionPlaceholder says "Describe what you did and what went wrong..."
+// in the language the app shows.
+func BugReportDescriptionPlaceholder() string {
+	return In(i18n.Locale()).BugReportDescriptionPlaceholder()
+}
+
+// BugReportDescriptionPlaceholder says "Describe what you did and what went wrong..."
+// in the language of msgs.
+func (msgs Messages) BugReportDescriptionPlaceholder() string {
+	return Catalog.Format(msgs.locale, "bugReportDescriptionPlaceholder", nil)
+}
+
+// BugReportBuildInfo says "Reports include the current app version and build information."
+// in the language the app shows.
+func BugReportBuildInfo() string { return In(i18n.Locale()).BugReportBuildInfo() }
+
+// BugReportBuildInfo says "Reports include the current app version and build information."
+// in the language of msgs.
+func (msgs Messages) BugReportBuildInfo() string {
+	return Catalog.Format(msgs.locale, "bugReportBuildInfo", nil)
+}
+
+// BugReportSubmit says "Share logs"
+// in the language the app shows.
+func BugReportSubmit() string { return In(i18n.Locale()).BugReportSubmit() }
+
+// BugReportSubmit says "Share logs"
+// in the language of msgs.
+func (msgs Messages) BugReportSubmit() string {
+	return Catalog.Format(msgs.locale, "bugReportSubmit", nil)
+}
+
+// BugReportSubmitNoLogs says "Submit report"
+// in the language the app shows.
+func BugReportSubmitNoLogs() string { return In(i18n.Locale()).BugReportSubmitNoLogs() }
+
+// BugReportSubmitNoLogs says "Submit report"
+// in the language of msgs.
+func (msgs Messages) BugReportSubmitNoLogs() string {
+	return Catalog.Format(msgs.locale, "bugReportSubmitNoLogs", nil)
+}
+
+// BugReportSubmitting says "Uploading logs..."
+// in the language the app shows.
+func BugReportSubmitting() string { return In(i18n.Locale()).BugReportSubmitting() }
+
+// BugReportSubmitting says "Uploading logs..."
+// in the language of msgs.
+func (msgs Messages) BugReportSubmitting() string {
+	return Catalog.Format(msgs.locale, "bugReportSubmitting", nil)
+}
+
+// BugReportSubmittingNoLogs says "Submitting..."
+// in the language the app shows.
+func BugReportSubmittingNoLogs() string { return In(i18n.Locale()).BugReportSubmittingNoLogs() }
+
+// BugReportSubmittingNoLogs says "Submitting..."
+// in the language of msgs.
+func (msgs Messages) BugReportSubmittingNoLogs() string {
+	return Catalog.Format(msgs.locale, "bugReportSubmittingNoLogs", nil)
+}
+
+// BugReportSuccessTitle says "Bug report uploaded"
+// in the language the app shows.
+func BugReportSuccessTitle() string { return In(i18n.Locale()).BugReportSuccessTitle() }
+
+// BugReportSuccessTitle says "Bug report uploaded"
+// in the language of msgs.
+func (msgs Messages) BugReportSuccessTitle() string {
+	return Catalog.Format(msgs.locale, "bugReportSuccessTitle", nil)
+}
+
+// BugReportSuccess says "The machine logs and your description were uploaded. Share this bug report ID with the Lody team:"
+// in the language the app shows.
+func BugReportSuccess() string { return In(i18n.Locale()).BugReportSuccess() }
+
+// BugReportSuccess says "The machine logs and your description were uploaded. Share this bug report ID with the Lody team:"
+// in the language of msgs.
+func (msgs Messages) BugReportSuccess() string {
+	return Catalog.Format(msgs.locale, "bugReportSuccess", nil)
+}
+
+// BugReportSuccessNoLogs says "Your description was uploaded. Share this bug report ID with the Lody team:"
+// in the language the app shows.
+func BugReportSuccessNoLogs() string { return In(i18n.Locale()).BugReportSuccessNoLogs() }
+
+// BugReportSuccessNoLogs says "Your description was uploaded. Share this bug report ID with the Lody team:"
+// in the language of msgs.
+func (msgs Messages) BugReportSuccessNoLogs() string {
+	return Catalog.Format(msgs.locale, "bugReportSuccessNoLogs", nil)
+}
+
+// BugReportNotReady says "Workspace connection is not ready yet."
+// in the language the app shows.
+func BugReportNotReady() string { return In(i18n.Locale()).BugReportNotReady() }
+
+// BugReportNotReady says "Workspace connection is not ready yet."
+// in the language of msgs.
+func (msgs Messages) BugReportNotReady() string {
+	return Catalog.Format(msgs.locale, "bugReportNotReady", nil)
+}
+
+// BugReportTimeout says "The machine did not respond. Make sure it is online and try again."
+// in the language the app shows.
+func BugReportTimeout() string { return In(i18n.Locale()).BugReportTimeout() }
+
+// BugReportTimeout says "The machine did not respond. Make sure it is online and try again."
+// in the language of msgs.
+func (msgs Messages) BugReportTimeout() string {
+	return Catalog.Format(msgs.locale, "bugReportTimeout", nil)
+}
+
+// PiTitle says "Pi extensions"
+// in the language the app shows.
+func PiTitle() string { return In(i18n.Locale()).PiTitle() }
+
+// PiTitle says "Pi extensions"
+// in the language of msgs.
+func (msgs Messages) PiTitle() string {
+	return Catalog.Format(msgs.locale, "piTitle", nil)
+}
+
+// PiConsent says "Scanning only lists installed global extensions. Selected extensions run with your permissions in Pi and its subagent…"
+// in the language the app shows.
+func PiConsent() string { return In(i18n.Locale()).PiConsent() }
+
+// PiConsent says "Scanning only lists installed global extensions. Selected extensions run with your permissions in Pi and its subagent…"
+// in the language of msgs.
+func (msgs Messages) PiConsent() string {
+	return Catalog.Format(msgs.locale, "piConsent", nil)
+}
+
+// PiUnsupported says "Update Lody and its managed Pi runtime on this machine to enable extensions."
+// in the language the app shows.
+func PiUnsupported() string { return In(i18n.Locale()).PiUnsupported() }
+
+// PiUnsupported says "Update Lody and its managed Pi runtime on this machine to enable extensions."
+// in the language of msgs.
+func (msgs Messages) PiUnsupported() string {
+	return Catalog.Format(msgs.locale, "piUnsupported", nil)
+}
+
+// PiScan says "Scan extensions"
+// in the language the app shows.
+func PiScan() string { return In(i18n.Locale()).PiScan() }
+
+// PiScan says "Scan extensions"
+// in the language of msgs.
+func (msgs Messages) PiScan() string {
+	return Catalog.Format(msgs.locale, "piScan", nil)
+}
+
+// PiRescan says "Rescan"
+// in the language the app shows.
+func PiRescan() string { return In(i18n.Locale()).PiRescan() }
+
+// PiRescan says "Rescan"
+// in the language of msgs.
+func (msgs Messages) PiRescan() string {
+	return Catalog.Format(msgs.locale, "piRescan", nil)
+}
+
+// PiScanning says "Scanning…"
+// in the language the app shows.
+func PiScanning() string { return In(i18n.Locale()).PiScanning() }
+
+// PiScanning says "Scanning…"
+// in the language of msgs.
+func (msgs Messages) PiScanning() string {
+	return Catalog.Format(msgs.locale, "piScanning", nil)
+}
+
+// PiScanFailed says "Could not scan extensions. Check the target machine and try again."
+// in the language the app shows.
+func PiScanFailed() string { return In(i18n.Locale()).PiScanFailed() }
+
+// PiScanFailed says "Could not scan extensions. Check the target machine and try again."
+// in the language of msgs.
+func (msgs Messages) PiScanFailed() string {
+	return Catalog.Format(msgs.locale, "piScanFailed", nil)
+}
+
+// PiScannedDir says "Scanned {dir}"
+// in the language the app shows.
+func PiScannedDir(dir string) string { return In(i18n.Locale()).PiScannedDir(dir) }
+
+// PiScannedDir says "Scanned {dir}"
+// in the language of msgs.
+func (msgs Messages) PiScannedDir(dir string) string {
+	return Catalog.Format(msgs.locale, "piScannedDir", map[string]any{"dir": dir})
+}
+
+// PiEmpty says "No installed global extensions found. You can add an explicit local path below."
+// in the language the app shows.
+func PiEmpty() string { return In(i18n.Locale()).PiEmpty() }
+
+// PiEmpty says "No installed global extensions found. You can add an explicit local path below."
+// in the language of msgs.
+func (msgs Messages) PiEmpty() string {
+	return Catalog.Format(msgs.locale, "piEmpty", nil)
+}
+
+// PiStale says "not in last scan"
+// in the language the app shows.
+func PiStale() string { return In(i18n.Locale()).PiStale() }
+
+// PiStale says "not in last scan"
+// in the language of msgs.
+func (msgs Messages) PiStale() string {
+	return Catalog.Format(msgs.locale, "piStale", nil)
+}
+
+// PiPath says "Extension path"
+// in the language the app shows.
+func PiPath() string { return In(i18n.Locale()).PiPath() }
+
+// PiPath says "Extension path"
+// in the language of msgs.
+func (msgs Messages) PiPath() string {
+	return Catalog.Format(msgs.locale, "piPath", nil)
+}
+
+// PiPlaceholder says "Absolute path or ~/path on the target machine"
+// in the language the app shows.
+func PiPlaceholder() string { return In(i18n.Locale()).PiPlaceholder() }
+
+// PiPlaceholder says "Absolute path or ~/path on the target machine"
+// in the language of msgs.
+func (msgs Messages) PiPlaceholder() string {
+	return Catalog.Format(msgs.locale, "piPlaceholder", nil)
+}
+
+// PiAdd says "Add path"
+// in the language the app shows.
+func PiAdd() string { return In(i18n.Locale()).PiAdd() }
+
+// PiAdd says "Add path"
+// in the language of msgs.
+func (msgs Messages) PiAdd() string {
+	return Catalog.Format(msgs.locale, "piAdd", nil)
+}
+
+// PiInvalidPath says "Use an absolute path or ~/path up to 4096 characters."
+// in the language the app shows.
+func PiInvalidPath() string { return In(i18n.Locale()).PiInvalidPath() }
+
+// PiInvalidPath says "Use an absolute path or ~/path up to 4096 characters."
+// in the language of msgs.
+func (msgs Messages) PiInvalidPath() string {
+	return Catalog.Format(msgs.locale, "piInvalidPath", nil)
+}
+
+// PiLimit says "Select at most 32 extensions."
+// in the language the app shows.
+func PiLimit() string { return In(i18n.Locale()).PiLimit() }
+
+// PiLimit says "Select at most 32 extensions."
+// in the language of msgs.
+func (msgs Messages) PiLimit() string {
+	return Catalog.Format(msgs.locale, "piLimit", nil)
+}
+
+// MachinePing says "Round trip {ms} ms"
+// in the language the app shows.
+func MachinePing(ms int) string { return In(i18n.Locale()).MachinePing(ms) }
+
+// MachinePing says "Round trip {ms} ms"
+// in the language of msgs.
+func (msgs Messages) MachinePing(ms int) string {
+	return Catalog.Format(msgs.locale, "machinePing", map[string]any{"ms": ms})
+}
+
+// MachinePingFailed says "The machine didn't answer a ping."
+// in the language the app shows.
+func MachinePingFailed() string { return In(i18n.Locale()).MachinePingFailed() }
+
+// MachinePingFailed says "The machine didn't answer a ping."
+// in the language of msgs.
+func (msgs Messages) MachinePingFailed() string {
+	return Catalog.Format(msgs.locale, "machinePingFailed", nil)
+}

@@ -2,12 +2,14 @@ package app
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
 	"time"
 
 	"github.com/egoist/mygo/ui"
+	"github.com/google/uuid"
 
 	"github.com/lbr77/lody-mygo/internal/catalog"
 	"github.com/lbr77/lody-mygo/internal/session"
@@ -468,4 +470,57 @@ func (a *App) checkLive() {
 			}
 		})
 	}()
+}
+
+// pingState is a machine's last round trip.
+type pingState struct {
+	at      time.Time
+	busy    bool
+	latency time.Duration
+	failed  bool
+}
+
+// machinePing shows how long a request takes to reach the machine and
+// come back (machine/ping), asked again every half minute while shown.
+func (a *App) machinePing(c *ui.Context, p *palette, machine string) {
+	if a.conn == nil || !a.presence.IsOnline(machine) {
+		return
+	}
+	if a.pings == nil {
+		a.pings = map[string]*pingState{}
+	}
+	st := a.pings[machine]
+	if st == nil {
+		st = &pingState{}
+		a.pings[machine] = st
+	}
+	c.After(30 * time.Second)
+	if !st.busy && time.Since(st.at) > 30*time.Second {
+		st.busy, st.at = true, time.Now()
+		conn := a.conn
+		go func() {
+			ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+			defer cancel()
+			start := time.Now()
+			raw, err := conn.MachineRPC(ctx, machine, "machine/ping", map[string]any{"requestId": uuid.NewString()}, 15*time.Second)
+			var res struct {
+				Success bool `json:"success"`
+			}
+			if err == nil {
+				err = json.Unmarshal(raw, &res)
+			}
+			took := time.Since(start)
+			a.update(func() {
+				st.busy, st.latency, st.failed = false, took, err != nil || !res.Success
+			})
+		}()
+	}
+	if st.latency == 0 && !st.failed {
+		return
+	}
+	text := locales.MachinePing(int(st.latency.Milliseconds()))
+	if st.failed {
+		text = locales.MachinePingFailed()
+	}
+	ui.Text(c, text).FontSize(sizeCaption).TextColor(p.Tertiary).Padding(0, 4)
 }

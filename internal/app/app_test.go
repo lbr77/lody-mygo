@@ -1231,3 +1231,66 @@ func TestProjectRemoval(t *testing.T) {
 		}
 	}
 }
+
+func TestQuotasBugReportPi(t *testing.T) {
+	a := fixture()
+	a.settingsOpen, a.settingsTab = true, "agents"
+	now := time.Now()
+	a.catalog.Capabilities = map[string]catalog.Capability{"a1": {RateLimits: true}}
+	a.catalog.RateLimits = map[string][]catalog.RateLimit{"a1": {{ConfigID: "a1", CLIType: "claude", Windows: []catalog.RateWindow{
+		{UsedPercent: 42, Seconds: 5 * 3600, ResetsAt: float64(now.Add(2 * time.Hour).Unix())},
+		{UsedPercent: 7.6, Seconds: 7 * 86400},
+	}}}}
+	tt := snap(t, a, "provider-quota", false, nil)
+	for _, want := range []string{"5h", "42% used", "Resets in 2 hours", "7d", "8% used", "Reset time unknown"} {
+		if !tt.HasText(want) {
+			t.Fatalf("no %q in %q", want, tt.Texts())
+		}
+	}
+	a.settingsOpen = false
+	a.openBugReport()
+	a.presence = presence.State{Live: true}
+	tt = snap(t, a, "bug-report", false, nil)
+	for _, want := range []string{"Report a bug", "No machine (client diagnostics only)", "No machines are online.", "What happened?", "Submit report"} {
+		if !tt.HasText(want) {
+			t.Fatalf("no %q in %q", want, tt.Texts())
+		}
+	}
+	a.bug.id, a.bug.machine = "br_123", "m1"
+	tt = snap(t, a, "bug-report-done", false, nil)
+	if !tt.HasText("br_123") || !tt.HasText("The machine logs and your description were uploaded.") {
+		t.Fatalf("done: %q", tt.Texts())
+	}
+	if !strings.Contains(buildInfo("it broke"), "it broke\n\n---\nReporting client build\nVersion: ") {
+		t.Fatal("build info")
+	}
+	a.bug.open = false
+	a.settingsOpen = true
+	a.catalog.MachineCaps = map[string]map[string]float64{"m1": {"piExtensions": 1}}
+	for _, k := range allKinds {
+		if k.value == "builtin:pi" {
+			a.openProvider("m1", nil)
+			a.selectKind(k)
+		}
+	}
+	a.provider.sections["pi"] = true
+	a.provider.piExt = []string{"~/ext/a"}
+	a.provider.piScan = &piDiscovery{AgentDir: "~/.pi/agent", Extensions: []struct {
+		Path   string `json:"path"`
+		Name   string `json:"name"`
+		Source string `json:"source"`
+	}{{Path: "~/.pi/agent/extensions/b", Name: "b", Source: "directory"}}}
+	tt = snap(t, a, "provider-pi", false, nil)
+	for _, want := range []string{"Pi extensions", "Rescan", "Scanned ~/.pi/agent", "~/.pi/agent/extensions/b", "not in last scan", "Add path"} {
+		if !tt.HasText(want) {
+			t.Fatalf("no %q in %q", want, tt.Texts())
+		}
+	}
+	row, err := a.provider.row()
+	if err != nil || row["runtimeOverrides"].(map[string]any)["piExtensions"].([]any)[0] != "~/ext/a" {
+		t.Fatalf("row = %v, %v", row, err)
+	}
+	if validPiPath("relative/x") || !validPiPath("~/x") || !validPiPath("/abs") {
+		t.Fatal("validPiPath")
+	}
+}

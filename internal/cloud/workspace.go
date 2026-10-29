@@ -156,6 +156,14 @@ func isProgress(result json.RawMessage) bool {
 	return json.Unmarshal(result, &head) == nil && strings.HasSuffix(head.Type, "-progress")
 }
 
+type requestIDKey struct{}
+
+// WithRequestID has the machine RPCs of ctx use id, so a later request
+// can name the one to cancel.
+func WithRequestID(ctx context.Context, id string) context.Context {
+	return context.WithValue(ctx, requestIDKey{}, id)
+}
+
 // MachineRPCProgress is MachineRPC that hands onProgress the progress
 // frames before the answer; each one restarts the timeout.
 func (w *Conn) MachineRPCProgress(ctx context.Context, machineID, method string, params any, timeout time.Duration, onProgress func(json.RawMessage)) (json.RawMessage, error) {
@@ -163,7 +171,10 @@ func (w *Conn) MachineRPCProgress(ctx context.Context, machineID, method string,
 	defer cancel()
 	idle := time.AfterFunc(timeout+3*time.Second, cancel)
 	defer idle.Stop()
-	id := uuid.NewString()
+	id, _ := ctx.Value(requestIDKey{}).(string)
+	if id == "" {
+		id = uuid.NewString()
+	}
 	replyName := fmt.Sprintf("rpc:res:%s:%s", machineID, uuid.NewString())
 	reply, err := w.Stream(ctx, replyName)
 	if err != nil {

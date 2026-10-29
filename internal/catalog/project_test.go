@@ -53,3 +53,22 @@ func TestProjectMCPKey(t *testing.T) {
 		t.Fatalf("key = %s", got)
 	}
 }
+
+func TestRateLimitRows(t *testing.T) {
+	rows := []flock.Row{
+		{Live: true, Key: []any{"rateLimit", "c1", "codex", "codex"}, Value: map[string]any{"limitId": "codex", "scope": map[string]any{"providerId": "c1"},
+			"windows": []any{map[string]any{"usedPercent": 42.0, "windowDurationSeconds": 18000.0, "resetsAtEpochSeconds": 1798800000.0},
+				map[string]any{"usedPercent": 130.0, "windowDurationSeconds": 604800.0, "resetsAtEpochSeconds": nil}}}},
+		{Live: true, Key: []any{"rateLimit", "codex", "primary"}, Value: map[string]any{"windows": []any{}}},
+		{Live: true, Key: []any{"acpCapability", "c1"}, Value: map[string]any{"cliType": "builtin", "agentType": "codex", "rateLimits": map[string]any{"version": 1.0, "query": true}}},
+	}
+	c := projectMachine(rows, "m1")
+	limits := c.RateLimits["c1"]
+	if len(limits) != 1 || len(limits[0].Windows) != 2 || limits[0].Windows[0].UsedPercent != 42 || limits[0].Windows[1].UsedPercent != 100 ||
+		limits[0].Windows[1].ResetsAt != 0 || limits[0].CLIType != "codex" {
+		t.Fatalf("limits = %+v", c.RateLimits)
+	}
+	if cap := c.Capabilities["c1"]; !cap.RateLimits || !cap.QueryRateLimits {
+		t.Fatalf("capability = %+v", cap)
+	}
+}

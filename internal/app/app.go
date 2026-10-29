@@ -78,7 +78,8 @@ type App struct {
 		worktree                bool   // the chat gets a worktree of its own
 		branch                  string // the worktree's base, picked
 	}
-	gitStates map[string]*gitState // projects' Git, by project
+	gitStates  map[string]*gitState // projects' Git, by project
+	quotaAsked map[string]time.Time // when each provider's quota was last asked for
 
 	sidebarHidden   bool
 	sideOut         float32 // how far the sidebar is out as it slides, 1 shown
@@ -157,10 +158,12 @@ type App struct {
 	password        passwordForm
 	projectWin      projectWindow
 	removal         projectRemoval
-	sidebarWidth    float32 // as dragged; 0 is the default
-	revoking        string  // the share whose revoke awaits confirmation
-	taskOpen        bool    // a task's dialog
-	taskEntry       string  // the turn and task it shows
+	bug             bugReport
+	pings           map[string]*pingState // machines' round trips
+	sidebarWidth    float32               // as dragged; 0 is the default
+	revoking        string                // the share whose revoke awaits confirmation
+	taskOpen        bool                  // a task's dialog
+	taskEntry       string                // the turn and task it shows
 	taskID          string
 	page            string // "archive", or "" for chats
 	archiveSearch   string

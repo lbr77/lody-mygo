@@ -1804,5 +1804,90 @@
     }
   },
   "projectFolderSafe": "Lody never deletes the original project folder or its files.",
-  "projectNewFolder": "New folder"
+  "projectNewFolder": "New folder",
+  "quotaUsed": "{percent}% used",
+  "@quotaUsed": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "quotaUsage": "Usage",
+  "quotaFiveHour": "5 hours usage",
+  "quotaSevenDay": "7 days usage",
+  "quotaResetUnknown": "Reset time unknown",
+  "quotaResetsMinutes": "{n, plural, one {Resets in # minute} other {Resets in # minutes}}",
+  "@quotaResetsMinutes": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "quotaResetsHours": "{n, plural, one {Resets in # hour} other {Resets in # hours}}",
+  "@quotaResetsHours": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "quotaResetsDays": "{n, plural, one {Resets in # day} other {Resets in # days}}",
+  "@quotaResetsDays": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "bugReportTitle": "Report a bug",
+  "bugReportLead": "Your report includes this client's version and system. Select a machine to also include its recent CLI logs.",
+  "bugReportMachine": "Machine",
+  "bugReportNoMachine": "No machine (client diagnostics only)",
+  "bugReportNoMachineHint": "The report will be uploaded without machine logs.",
+  "bugReportNoMachines": "No machines are online. The report will still be uploaded.",
+  "bugReportDescription": "What happened?",
+  "bugReportDescriptionPlaceholder": "Describe what you did and what went wrong...",
+  "bugReportBuildInfo": "Reports include the current app version and build information.",
+  "bugReportSubmit": "Share logs",
+  "bugReportSubmitNoLogs": "Submit report",
+  "bugReportSubmitting": "Uploading logs...",
+  "bugReportSubmittingNoLogs": "Submitting...",
+  "bugReportSuccessTitle": "Bug report uploaded",
+  "bugReportSuccess": "The machine logs and your description were uploaded. Share this bug report ID with the Lody team:",
+  "bugReportSuccessNoLogs": "Your description was uploaded. Share this bug report ID with the Lody team:",
+  "bugReportNotReady": "Workspace connection is not ready yet.",
+  "bugReportTimeout": "The machine did not respond. Make sure it is online and try again.",
+  "piTitle": "Pi extensions",
+  "piConsent": "Scanning only lists installed global extensions. Selected extensions run with your permissions in Pi and its subagents. Project extensions are not discovered. Provider registration is supported; other plugin features may not work in ACP.",
+  "piUnsupported": "Update Lody and its managed Pi runtime on this machine to enable extensions.",
+  "piScan": "Scan extensions",
+  "piRescan": "Rescan",
+  "piScanning": "Scanning…",
+  "piScanFailed": "Could not scan extensions. Check the target machine and try again.",
+  "piScannedDir": "Scanned {dir}",
+  "@piScannedDir": {
+    "placeholders": {
+      "dir": {
+        "type": "String"
+      }
+    }
+  },
+  "piEmpty": "No installed global extensions found. You can add an explicit local path below.",
+  "piStale": "not in last scan",
+  "piPath": "Extension path",
+  "piPlaceholder": "Absolute path or ~/path on the target machine",
+  "piAdd": "Add path",
+  "piInvalidPath": "Use an absolute path or ~/path up to 4096 characters.",
+  "piLimit": "Select at most 32 extensions.",
+  "machinePing": "Round trip {ms} ms",
+  "@machinePing": {
+    "placeholders": {
+      "ms": {
+        "type": "int"
+      }
+    }
+  },
+  "machinePingFailed": "The machine didn't answer a ping."
 }

@@ -111,7 +111,7 @@ func (a *App) settingsNav(c *ui.Context, p *palette) {
 		}
 		ui.Spacer(c)
 		bug := ui.ButtonBase(c).Height(32).Padding(0, 8).Radius(8).Gap(8).Justify(ui.Start).Cursor(ui.CursorPointer).Label(locales.ReportBug()).
-			OnClick(func() { mygo.Shell.OpenExternal("https://github.com/lbr77/lody-mygo/issues") }).Transition(colorFade)
+			OnClick(a.openBugReport).Transition(colorFade)
 		if bug.Hovered() {
 			bug.Background(p.SideHover)
 		}
