@@ -289,5 +289,14 @@
   "terminalFailed": "无法启动终端",
   "terminalUnavailable": "这台机器上没有运行 Lody 守护进程。",
   "terminalDisconnected": "已与 Lody 守护进程断开连接。",
-  "terminalNone": "没有终端"
+  "terminalNone": "没有终端",
+  "panelBrowser": "浏览器",
+  "openInBrowser": "在浏览器中打开",
+  "previewStop": "停止共享",
+  "previewNoWebView": "这个窗口无法显示网页。",
+  "previewNone": "这个会话没有在提供网页。",
+  "previewHint": "Lody 通过临时 Cloudflare 隧道共享它；任何拿到地址的人都能访问。",
+  "previewOwnerOnly": "只有启动这个会话的人可以共享它的预览。",
+  "previewStarting": "正在启动隧道…可能需要一分钟。",
+  "previewOpen": "打开预览"
 }

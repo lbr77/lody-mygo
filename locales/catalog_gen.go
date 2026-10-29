@@ -2942,3 +2942,93 @@ func TerminalNone() string { return In(i18n.Locale()).TerminalNone() }
 func (msgs Messages) TerminalNone() string {
 	return Catalog.Format(msgs.locale, "terminalNone", nil)
 }
+
+// PanelBrowser says "Browser"
+// in the language the app shows.
+func PanelBrowser() string { return In(i18n.Locale()).PanelBrowser() }
+
+// PanelBrowser says "Browser"
+// in the language of msgs.
+func (msgs Messages) PanelBrowser() string {
+	return Catalog.Format(msgs.locale, "panelBrowser", nil)
+}
+
+// OpenInBrowser says "Open in browser"
+// in the language the app shows.
+func OpenInBrowser() string { return In(i18n.Locale()).OpenInBrowser() }
+
+// OpenInBrowser says "Open in browser"
+// in the language of msgs.
+func (msgs Messages) OpenInBrowser() string {
+	return Catalog.Format(msgs.locale, "openInBrowser", nil)
+}
+
+// PreviewStop says "Stop sharing"
+// in the language the app shows.
+func PreviewStop() string { return In(i18n.Locale()).PreviewStop() }
+
+// PreviewStop says "Stop sharing"
+// in the language of msgs.
+func (msgs Messages) PreviewStop() string {
+	return Catalog.Format(msgs.locale, "previewStop", nil)
+}
+
+// PreviewNoWebView says "This window can't show web pages."
+// in the language the app shows.
+func PreviewNoWebView() string { return In(i18n.Locale()).PreviewNoWebView() }
+
+// PreviewNoWebView says "This window can't show web pages."
+// in the language of msgs.
+func (msgs Messages) PreviewNoWebView() string {
+	return Catalog.Format(msgs.locale, "previewNoWebView", nil)
+}
+
+// PreviewNone says "This session isn't serving a page."
+// in the language the app shows.
+func PreviewNone() string { return In(i18n.Locale()).PreviewNone() }
+
+// PreviewNone says "This session isn't serving a page."
+// in the language of msgs.
+func (msgs Messages) PreviewNone() string {
+	return Catalog.Format(msgs.locale, "previewNone", nil)
+}
+
+// PreviewHint says "Lody shares it through a temporary Cloudflare tunnel, whose address grants access to anyone who has it."
+// in the language the app shows.
+func PreviewHint() string { return In(i18n.Locale()).PreviewHint() }
+
+// PreviewHint says "Lody shares it through a temporary Cloudflare tunnel, whose address grants access to anyone who has it."
+// in the language of msgs.
+func (msgs Messages) PreviewHint() string {
+	return Catalog.Format(msgs.locale, "previewHint", nil)
+}
+
+// PreviewOwnerOnly says "Only the person who started this session can share its preview."
+// in the language the app shows.
+func PreviewOwnerOnly() string { return In(i18n.Locale()).PreviewOwnerOnly() }
+
+// PreviewOwnerOnly says "Only the person who started this session can share its preview."
+// in the language of msgs.
+func (msgs Messages) PreviewOwnerOnly() string {
+	return Catalog.Format(msgs.locale, "previewOwnerOnly", nil)
+}
+
+// PreviewStarting says "Starting the tunnel… this can take a minute."
+// in the language the app shows.
+func PreviewStarting() string { return In(i18n.Locale()).PreviewStarting() }
+
+// PreviewStarting says "Starting the tunnel… this can take a minute."
+// in the language of msgs.
+func (msgs Messages) PreviewStarting() string {
+	return Catalog.Format(msgs.locale, "previewStarting", nil)
+}
+
+// PreviewOpen says "Open preview"
+// in the language the app shows.
+func PreviewOpen() string { return In(i18n.Locale()).PreviewOpen() }
+
+// PreviewOpen says "Open preview"
+// in the language of msgs.
+func (msgs Messages) PreviewOpen() string {
+	return Catalog.Format(msgs.locale, "previewOpen", nil)
+}

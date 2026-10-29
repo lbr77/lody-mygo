@@ -681,5 +681,14 @@
   "terminalFailed": "Couldn't start the terminal",
   "terminalUnavailable": "The Lody daemon isn't running on this machine.",
   "terminalDisconnected": "Disconnected from the Lody daemon.",
-  "terminalNone": "No terminals"
+  "terminalNone": "No terminals",
+  "panelBrowser": "Browser",
+  "openInBrowser": "Open in browser",
+  "previewStop": "Stop sharing",
+  "previewNoWebView": "This window can't show web pages.",
+  "previewNone": "This session isn't serving a page.",
+  "previewHint": "Lody shares it through a temporary Cloudflare tunnel, whose address grants access to anyone who has it.",
+  "previewOwnerOnly": "Only the person who started this session can share its preview.",
+  "previewStarting": "Starting the tunnel… this can take a minute.",
+  "previewOpen": "Open preview"
 }

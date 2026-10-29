@@ -251,3 +251,20 @@ func (a *API) Account(ctx context.Context, token string) (*Account, error) {
 func (a *API) SignOut(ctx context.Context, token string) error {
 	return a.call(ctx, token, "/api/auth/sign-out", map[string]any{}, nil)
 }
+
+// PreviewToken asks the backend to sign a preview operation for the
+// machine to check: intent is what to do, where, under the machine's
+// nonce. The token is the user's, and the backend must say so.
+func (a *API) PreviewToken(ctx context.Context, token, userID string, intent map[string]any) (string, error) {
+	var res struct {
+		RequestToken    string `json:"requestToken"`
+		RequesterUserID string `json:"requesterUserId"`
+	}
+	if err := a.call(ctx, token, "/api/session-preview/request-token", intent, &res); err != nil {
+		return "", err
+	}
+	if res.RequestToken == "" || res.RequesterUserID != userID {
+		return "", errors.New("cloud: the backend didn't sign the preview request for this user")
+	}
+	return res.RequestToken, nil
+}

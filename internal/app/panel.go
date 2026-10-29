@@ -107,13 +107,24 @@ func (a *App) inspector(c *ui.Context, p *palette) {
 			BorderWidth(0, 0, 1, 0).BorderColor(p.Border).Children(func() {
 			panelTab(c, p, locales.PanelFiles(), in.tab == tabFiles).OnClick(func() { in.tab = tabFiles })
 			panelTab(c, p, locales.PanelChanges(), in.tab == tabChanges).OnClick(func() { in.tab = tabChanges })
+			if a.hasPreview() {
+				panelTab(c, p, locales.PanelBrowser(), in.tab == tabPreview).OnClick(func() { in.tab = tabPreview })
+			}
 			ui.Spacer(c)
-			iconButton(c, p, iconRefresh, locales.Refresh(), p.Hover).OnClick(func() { a.refreshInspector(in) })
+			if in.tab != tabPreview {
+				iconButton(c, p, iconRefresh, locales.Refresh(), p.Hover).OnClick(func() { a.refreshInspector(in) })
+			}
 			iconButton(c, p, iconX, locales.Close(), p.Hover).OnClick(func() { a.panelOpen = false })
 		})
-		if in.tab == tabFiles {
+		if in.tab == tabPreview && !a.hasPreview() {
+			in.tab = tabChanges
+		}
+		switch in.tab {
+		case tabFiles:
 			a.filesTab(c, p, in)
-		} else {
+		case tabPreview:
+			a.previewTab(c, p)
+		default:
 			a.changesTab(c, p, in)
 		}
 	})

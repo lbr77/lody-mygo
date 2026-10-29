@@ -129,6 +129,69 @@ type View struct {
 	AwaitingUser bool
 	ModelID      string // of the last user turn
 	ModeID       string // the permission mode of the last user turn
+	Preview      *Preview
+}
+
+// Preview is a web server the session runs that it can show, as the
+// session's agent reports it, and the tunnel that shows it, if any.
+type Preview struct {
+	Target     PreviewTarget
+	Candidate  string // reported, validating, available or invalid
+	Connection string // creating, active, closed or failed
+	PublicURL  string // the tunnel's, while it is active
+}
+
+// PreviewTarget is a server on the machine's loopback.
+type PreviewTarget struct {
+	Protocol string `json:"protocol"`
+	Host     string `json:"host"`
+	Port     int    `json:"port"`
+	Path     string `json:"path,omitempty"`
+}
+
+// Label is the server's host and port.
+func (t PreviewTarget) Label() string { return fmt.Sprintf("%s:%d", t.Host, t.Port) }
+
+func previewTarget(v any) (PreviewTarget, bool) {
+	m := obj(v)
+	t := PreviewTarget{Protocol: str(m["protocol"]), Host: strings.TrimSpace(str(m["host"])), Port: int(num(m["port"])), Path: str(m["path"])}
+	switch strings.ToLower(t.Host) {
+	case "localhost", "127.0.0.1", "::1", "[::1]":
+	default:
+		return t, false
+	}
+	if (t.Protocol != "http" && t.Protocol != "https") || t.Port < 1 || t.Port > 65535 || float64(t.Port) != num(m["port"]) {
+		return t, false
+	}
+	if t.Path != "" && !strings.HasPrefix(t.Path, "/") {
+		return t, false
+	}
+	return t, true
+}
+
+// previewOf reads the session doc's preview state as lody-ios does: the
+// candidate's target while one is reported, else the tunnel's.
+func previewOf(state map[string]any) *Preview {
+	candidate, connection := obj(state["candidate"]), obj(state["connection"])
+	p := &Preview{Candidate: str(candidate["status"]), Connection: str(connection["status"])}
+	ok := false
+	switch p.Candidate {
+	case "reported", "validating", "available":
+		p.Target, ok = previewTarget(candidate["target"])
+	}
+	if !ok {
+		switch p.Connection {
+		case "creating", "active":
+			p.Target, ok = previewTarget(connection["target"])
+		}
+	}
+	if !ok {
+		return nil
+	}
+	if p.Connection == "active" {
+		p.PublicURL = str(connection["publicUrl"])
+	}
+	return p
 }
 
 func str(v any) string {
@@ -493,6 +556,7 @@ func project(doc *loro.LoroDoc, status, reason string) *View {
 	view.Working = isWorking(raw, len(queue))
 	sess := obj(deepValue(doc.GetMap(loro.AsContainerId("session")).GetDeepValue()))
 	view.AwaitingUser = sess["awaitingUserSince"] != nil
+	view.Preview = previewOf(obj(deepValue(doc.GetMap(loro.AsContainerId("preview")).GetDeepValue())))
 	return view
 }
 

@@ -117,3 +117,19 @@ func TestThoughtTiming(t *testing.T) {
 		t.Fatal("timed a thought it never saw stream")
 	}
 }
+
+func TestPreviewOf(t *testing.T) {
+	p := previewOf(map[string]any{
+		"candidate":  map[string]any{"status": "available", "target": map[string]any{"protocol": "http", "host": "localhost", "port": 5173.0, "path": "/app"}},
+		"connection": map[string]any{"status": "active", "publicUrl": "https://a-b.trycloudflare.com/?__lody_preview_token=t", "target": map[string]any{"protocol": "http", "host": "127.0.0.1", "port": 3000.0}},
+	})
+	if p == nil || p.Target.Label() != "localhost:5173" || p.Target.Path != "/app" || p.PublicURL == "" {
+		t.Fatalf("preview = %+v", p)
+	}
+	if previewOf(map[string]any{"candidate": map[string]any{"status": "available", "target": map[string]any{"protocol": "http", "host": "10.0.0.2", "port": 80.0}}}) != nil {
+		t.Fatal("a target off the loopback")
+	}
+	if previewOf(map[string]any{"candidate": map[string]any{"status": "invalid", "target": map[string]any{"protocol": "http", "host": "localhost", "port": 80.0}}}) != nil {
+		t.Fatal("an invalid candidate")
+	}
+}

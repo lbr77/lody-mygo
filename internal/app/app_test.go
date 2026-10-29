@@ -622,3 +622,29 @@ func TestTerminalDock(t *testing.T) {
 		t.Fatal("⌘J left the dock open")
 	}
 }
+
+func TestPreviewTab(t *testing.T) {
+	a := fixture()
+	a.view.Entries = a.view.Entries[:2]
+	a.view.Working = false
+	a.panelOpen = true
+	a.view.Preview = &session.Preview{Candidate: "available", Target: session.PreviewTarget{Protocol: "http", Host: "localhost", Port: 5173, Path: "/app"}}
+	tt := snap(t, a, "preview-tab", false, func(tt *ui.Tester) {
+		tt.Frame()
+		if err := tt.Click("Browser"); err != nil {
+			t.Fatal(err)
+		}
+	})
+	if !tt.HasText("localhost:5173") || !tt.HasText("Open preview") {
+		t.Fatalf("start: %q", tt.Texts())
+	}
+	// Once the machine shares it, its page shows.
+	a.view.Preview.Connection, a.view.Preview.PublicURL = "active", "https://calm-river.trycloudflare.com/?__lody_preview_token=tok"
+	tt.Frame()
+	if ps := a.previews["s1"]; ps == nil || ps.url != "https://calm-river.trycloudflare.com/app?__lody_preview_token=tok" {
+		t.Fatalf("url: %+v", a.previews["s1"])
+	}
+	if !tt.HasText("localhost:5173/app") {
+		t.Fatalf("toolbar: %q", tt.Texts())
+	}
+}
