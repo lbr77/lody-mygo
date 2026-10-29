@@ -159,6 +159,9 @@ type App struct {
 	projectWin      projectWindow
 	removal         projectRemoval
 	bug             bugReport
+	deletion        accountDeletion
+	wsCreate        workspaceCreate
+	wsJoin          workspaceJoin
 	reviewSent      string // the sharing review last reconciled
 	reviewWriter    string
 	reviewAttempt   int

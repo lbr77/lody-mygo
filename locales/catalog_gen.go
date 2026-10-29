@@ -9232,3 +9232,537 @@ func Untitled() string { return In(i18n.Locale()).Untitled() }
 func (msgs Messages) Untitled() string {
 	return Catalog.Format(msgs.locale, "untitled", nil)
 }
+
+// AccountDeletionTitle says "Delete Account"
+// in the language the app shows.
+func AccountDeletionTitle() string { return In(i18n.Locale()).AccountDeletionTitle() }
+
+// AccountDeletionTitle says "Delete Account"
+// in the language of msgs.
+func (msgs Messages) AccountDeletionTitle() string {
+	return Catalog.Format(msgs.locale, "accountDeletionTitle", nil)
+}
+
+// AccountDeletionDescription says "Permanently delete your account and everything you own. This can't be undone."
+// in the language the app shows.
+func AccountDeletionDescription() string { return In(i18n.Locale()).AccountDeletionDescription() }
+
+// AccountDeletionDescription says "Permanently delete your account and everything you own. This can't be undone."
+// in the language of msgs.
+func (msgs Messages) AccountDeletionDescription() string {
+	return Catalog.Format(msgs.locale, "accountDeletionDescription", nil)
+}
+
+// AccountDeletionButton says "Delete Account"
+// in the language the app shows.
+func AccountDeletionButton() string { return In(i18n.Locale()).AccountDeletionButton() }
+
+// AccountDeletionButton says "Delete Account"
+// in the language of msgs.
+func (msgs Messages) AccountDeletionButton() string {
+	return Catalog.Format(msgs.locale, "accountDeletionButton", nil)
+}
+
+// AccountDeletionConfirmTitle says "Delete your account?"
+// in the language the app shows.
+func AccountDeletionConfirmTitle() string { return In(i18n.Locale()).AccountDeletionConfirmTitle() }
+
+// AccountDeletionConfirmTitle says "Delete your account?"
+// in the language of msgs.
+func (msgs Messages) AccountDeletionConfirmTitle() string {
+	return Catalog.Format(msgs.locale, "accountDeletionConfirmTitle", nil)
+}
+
+// AccountDeletionConfirmDescription says "This permanently deletes your account and every workspace you own — including shared workspaces, which are removed …"
+// in the language the app shows.
+func AccountDeletionConfirmDescription() string {
+	return In(i18n.Locale()).AccountDeletionConfirmDescription()
+}
+
+// AccountDeletionConfirmDescription says "This permanently deletes your account and every workspace you own — including shared workspaces, which are removed …"
+// in the language of msgs.
+func (msgs Messages) AccountDeletionConfirmDescription() string {
+	return Catalog.Format(msgs.locale, "accountDeletionConfirmDescription", nil)
+}
+
+// AccountDeletionTypeToConfirm says "Type {email} to confirm"
+// in the language the app shows.
+func AccountDeletionTypeToConfirm(email string) string {
+	return In(i18n.Locale()).AccountDeletionTypeToConfirm(email)
+}
+
+// AccountDeletionTypeToConfirm says "Type {email} to confirm"
+// in the language of msgs.
+func (msgs Messages) AccountDeletionTypeToConfirm(email string) string {
+	return Catalog.Format(msgs.locale, "accountDeletionTypeToConfirm", map[string]any{"email": email})
+}
+
+// AccountDeletionPlaceholder says "Enter your email address"
+// in the language the app shows.
+func AccountDeletionPlaceholder() string { return In(i18n.Locale()).AccountDeletionPlaceholder() }
+
+// AccountDeletionPlaceholder says "Enter your email address"
+// in the language of msgs.
+func (msgs Messages) AccountDeletionPlaceholder() string {
+	return Catalog.Format(msgs.locale, "accountDeletionPlaceholder", nil)
+}
+
+// AccountDeletionConfirmButton says "Delete account"
+// in the language the app shows.
+func AccountDeletionConfirmButton() string { return In(i18n.Locale()).AccountDeletionConfirmButton() }
+
+// AccountDeletionConfirmButton says "Delete account"
+// in the language of msgs.
+func (msgs Messages) AccountDeletionConfirmButton() string {
+	return Catalog.Format(msgs.locale, "accountDeletionConfirmButton", nil)
+}
+
+// WorkspaceCreateTitle says "Create New Workspace"
+// in the language the app shows.
+func WorkspaceCreateTitle() string { return In(i18n.Locale()).WorkspaceCreateTitle() }
+
+// WorkspaceCreateTitle says "Create New Workspace"
+// in the language of msgs.
+func (msgs Messages) WorkspaceCreateTitle() string {
+	return Catalog.Format(msgs.locale, "workspaceCreateTitle", nil)
+}
+
+// WorkspaceCreateLead says "Create a new workspace for your team"
+// in the language the app shows.
+func WorkspaceCreateLead() string { return In(i18n.Locale()).WorkspaceCreateLead() }
+
+// WorkspaceCreateLead says "Create a new workspace for your team"
+// in the language of msgs.
+func (msgs Messages) WorkspaceCreateLead() string {
+	return Catalog.Format(msgs.locale, "workspaceCreateLead", nil)
+}
+
+// WorkspaceCreate says "Create Workspace"
+// in the language the app shows.
+func WorkspaceCreate() string { return In(i18n.Locale()).WorkspaceCreate() }
+
+// WorkspaceCreate says "Create Workspace"
+// in the language of msgs.
+func (msgs Messages) WorkspaceCreate() string {
+	return Catalog.Format(msgs.locale, "workspaceCreate", nil)
+}
+
+// WorkspaceLimitTitle says "Workspace limit reached"
+// in the language the app shows.
+func WorkspaceLimitTitle() string { return In(i18n.Locale()).WorkspaceLimitTitle() }
+
+// WorkspaceLimitTitle says "Workspace limit reached"
+// in the language of msgs.
+func (msgs Messages) WorkspaceLimitTitle() string {
+	return Catalog.Format(msgs.locale, "workspaceLimitTitle", nil)
+}
+
+// WorkspaceLimitLead says "You have reached the free workspace limit. Create a paid workspace on lody.ai."
+// in the language the app shows.
+func WorkspaceLimitLead() string { return In(i18n.Locale()).WorkspaceLimitLead() }
+
+// WorkspaceLimitLead says "You have reached the free workspace limit. Create a paid workspace on lody.ai."
+// in the language of msgs.
+func (msgs Messages) WorkspaceLimitLead() string {
+	return Catalog.Format(msgs.locale, "workspaceLimitLead", nil)
+}
+
+// WorkspaceCreateOnWeb says "Open lody.ai"
+// in the language the app shows.
+func WorkspaceCreateOnWeb() string { return In(i18n.Locale()).WorkspaceCreateOnWeb() }
+
+// WorkspaceCreateOnWeb says "Open lody.ai"
+// in the language of msgs.
+func (msgs Messages) WorkspaceCreateOnWeb() string {
+	return Catalog.Format(msgs.locale, "workspaceCreateOnWeb", nil)
+}
+
+// WorkspaceName says "Workspace Name"
+// in the language the app shows.
+func WorkspaceName() string { return In(i18n.Locale()).WorkspaceName() }
+
+// WorkspaceName says "Workspace Name"
+// in the language of msgs.
+func (msgs Messages) WorkspaceName() string {
+	return Catalog.Format(msgs.locale, "workspaceName", nil)
+}
+
+// WorkspaceNameHint says "You can change this name later in settings"
+// in the language the app shows.
+func WorkspaceNameHint() string { return In(i18n.Locale()).WorkspaceNameHint() }
+
+// WorkspaceNameHint says "You can change this name later in settings"
+// in the language of msgs.
+func (msgs Messages) WorkspaceNameHint() string {
+	return Catalog.Format(msgs.locale, "workspaceNameHint", nil)
+}
+
+// WorkspaceNamePlaceholder says "Enter workspace name"
+// in the language the app shows.
+func WorkspaceNamePlaceholder() string { return In(i18n.Locale()).WorkspaceNamePlaceholder() }
+
+// WorkspaceNamePlaceholder says "Enter workspace name"
+// in the language of msgs.
+func (msgs Messages) WorkspaceNamePlaceholder() string {
+	return Catalog.Format(msgs.locale, "workspaceNamePlaceholder", nil)
+}
+
+// WorkspaceSlug says "Workspace Slug"
+// in the language the app shows.
+func WorkspaceSlug() string { return In(i18n.Locale()).WorkspaceSlug() }
+
+// WorkspaceSlug says "Workspace Slug"
+// in the language of msgs.
+func (msgs Messages) WorkspaceSlug() string {
+	return Catalog.Format(msgs.locale, "workspaceSlug", nil)
+}
+
+// WorkspaceSlugReset says "Use suggestion"
+// in the language the app shows.
+func WorkspaceSlugReset() string { return In(i18n.Locale()).WorkspaceSlugReset() }
+
+// WorkspaceSlugReset says "Use suggestion"
+// in the language of msgs.
+func (msgs Messages) WorkspaceSlugReset() string {
+	return Catalog.Format(msgs.locale, "workspaceSlugReset", nil)
+}
+
+// WorkspaceSlugRequired says "Workspace slug is required"
+// in the language the app shows.
+func WorkspaceSlugRequired() string { return In(i18n.Locale()).WorkspaceSlugRequired() }
+
+// WorkspaceSlugRequired says "Workspace slug is required"
+// in the language of msgs.
+func (msgs Messages) WorkspaceSlugRequired() string {
+	return Catalog.Format(msgs.locale, "workspaceSlugRequired", nil)
+}
+
+// WorkspaceSlugLength says "Use 3-40 characters"
+// in the language the app shows.
+func WorkspaceSlugLength() string { return In(i18n.Locale()).WorkspaceSlugLength() }
+
+// WorkspaceSlugLength says "Use 3-40 characters"
+// in the language of msgs.
+func (msgs Messages) WorkspaceSlugLength() string {
+	return Catalog.Format(msgs.locale, "workspaceSlugLength", nil)
+}
+
+// WorkspaceSlugChars says "Only lowercase letters, numbers, and hyphens are allowed"
+// in the language the app shows.
+func WorkspaceSlugChars() string { return In(i18n.Locale()).WorkspaceSlugChars() }
+
+// WorkspaceSlugChars says "Only lowercase letters, numbers, and hyphens are allowed"
+// in the language of msgs.
+func (msgs Messages) WorkspaceSlugChars() string {
+	return Catalog.Format(msgs.locale, "workspaceSlugChars", nil)
+}
+
+// WorkspaceSlugTrailing says "Slug cannot end with a hyphen"
+// in the language the app shows.
+func WorkspaceSlugTrailing() string { return In(i18n.Locale()).WorkspaceSlugTrailing() }
+
+// WorkspaceSlugTrailing says "Slug cannot end with a hyphen"
+// in the language of msgs.
+func (msgs Messages) WorkspaceSlugTrailing() string {
+	return Catalog.Format(msgs.locale, "workspaceSlugTrailing", nil)
+}
+
+// WorkspaceSlugTaken says "This slug is already taken"
+// in the language the app shows.
+func WorkspaceSlugTaken() string { return In(i18n.Locale()).WorkspaceSlugTaken() }
+
+// WorkspaceSlugTaken says "This slug is already taken"
+// in the language of msgs.
+func (msgs Messages) WorkspaceSlugTaken() string {
+	return Catalog.Format(msgs.locale, "workspaceSlugTaken", nil)
+}
+
+// WorkspaceSlugAvailable says "Slug available"
+// in the language the app shows.
+func WorkspaceSlugAvailable() string { return In(i18n.Locale()).WorkspaceSlugAvailable() }
+
+// WorkspaceSlugAvailable says "Slug available"
+// in the language of msgs.
+func (msgs Messages) WorkspaceSlugAvailable() string {
+	return Catalog.Format(msgs.locale, "workspaceSlugAvailable", nil)
+}
+
+// WorkspaceSlugChecking says "Checking availability..."
+// in the language the app shows.
+func WorkspaceSlugChecking() string { return In(i18n.Locale()).WorkspaceSlugChecking() }
+
+// WorkspaceSlugChecking says "Checking availability..."
+// in the language of msgs.
+func (msgs Messages) WorkspaceSlugChecking() string {
+	return Catalog.Format(msgs.locale, "workspaceSlugChecking", nil)
+}
+
+// JoinWorkspaceTitle says "Join a workspace"
+// in the language the app shows.
+func JoinWorkspaceTitle() string { return In(i18n.Locale()).JoinWorkspaceTitle() }
+
+// JoinWorkspaceTitle says "Join a workspace"
+// in the language of msgs.
+func (msgs Messages) JoinWorkspaceTitle() string {
+	return Catalog.Format(msgs.locale, "joinWorkspaceTitle", nil)
+}
+
+// JoinLead says "Paste a join link or an invitation link from lody.ai."
+// in the language the app shows.
+func JoinLead() string { return In(i18n.Locale()).JoinLead() }
+
+// JoinLead says "Paste a join link or an invitation link from lody.ai."
+// in the language of msgs.
+func (msgs Messages) JoinLead() string {
+	return Catalog.Format(msgs.locale, "joinLead", nil)
+}
+
+// JoinLink says "Link"
+// in the language the app shows.
+func JoinLink() string { return In(i18n.Locale()).JoinLink() }
+
+// JoinLink says "Link"
+// in the language of msgs.
+func (msgs Messages) JoinLink() string {
+	return Catalog.Format(msgs.locale, "joinLink", nil)
+}
+
+// JoinContinue says "Continue"
+// in the language the app shows.
+func JoinContinue() string { return In(i18n.Locale()).JoinContinue() }
+
+// JoinContinue says "Continue"
+// in the language of msgs.
+func (msgs Messages) JoinContinue() string {
+	return Catalog.Format(msgs.locale, "joinContinue", nil)
+}
+
+// JoinChecking says "Checking this link…"
+// in the language the app shows.
+func JoinChecking() string { return In(i18n.Locale()).JoinChecking() }
+
+// JoinChecking says "Checking this link…"
+// in the language of msgs.
+func (msgs Messages) JoinChecking() string {
+	return Catalog.Format(msgs.locale, "joinChecking", nil)
+}
+
+// JoinLinkInvalid says "This isn't a join or invitation link."
+// in the language the app shows.
+func JoinLinkInvalid() string { return In(i18n.Locale()).JoinLinkInvalid() }
+
+// JoinLinkInvalid says "This isn't a join or invitation link."
+// in the language of msgs.
+func (msgs Messages) JoinLinkInvalid() string {
+	return Catalog.Format(msgs.locale, "joinLinkInvalid", nil)
+}
+
+// JoinEyebrow says "Workspace access request"
+// in the language the app shows.
+func JoinEyebrow() string { return In(i18n.Locale()).JoinEyebrow() }
+
+// JoinEyebrow says "Workspace access request"
+// in the language of msgs.
+func (msgs Messages) JoinEyebrow() string {
+	return Catalog.Format(msgs.locale, "joinEyebrow", nil)
+}
+
+// JoinUnavailableTitle says "Link unavailable"
+// in the language the app shows.
+func JoinUnavailableTitle() string { return In(i18n.Locale()).JoinUnavailableTitle() }
+
+// JoinUnavailableTitle says "Link unavailable"
+// in the language of msgs.
+func (msgs Messages) JoinUnavailableTitle() string {
+	return Catalog.Format(msgs.locale, "joinUnavailableTitle", nil)
+}
+
+// JoinUnavailable says "This link is invalid, expired, or disabled."
+// in the language the app shows.
+func JoinUnavailable() string { return In(i18n.Locale()).JoinUnavailable() }
+
+// JoinUnavailable says "This link is invalid, expired, or disabled."
+// in the language of msgs.
+func (msgs Messages) JoinUnavailable() string {
+	return Catalog.Format(msgs.locale, "joinUnavailable", nil)
+}
+
+// JoinAlreadyMember says "You are already a member of this workspace."
+// in the language the app shows.
+func JoinAlreadyMember() string { return In(i18n.Locale()).JoinAlreadyMember() }
+
+// JoinAlreadyMember says "You are already a member of this workspace."
+// in the language of msgs.
+func (msgs Messages) JoinAlreadyMember() string {
+	return Catalog.Format(msgs.locale, "joinAlreadyMember", nil)
+}
+
+// JoinVerify says "Verify {email} before submitting your request."
+// in the language the app shows.
+func JoinVerify(email string) string { return In(i18n.Locale()).JoinVerify(email) }
+
+// JoinVerify says "Verify {email} before submitting your request."
+// in the language of msgs.
+func (msgs Messages) JoinVerify(email string) string {
+	return Catalog.Format(msgs.locale, "joinVerify", map[string]any{"email": email})
+}
+
+// JoinPending says "Request sent. The workspace owner will review it."
+// in the language the app shows.
+func JoinPending() string { return In(i18n.Locale()).JoinPending() }
+
+// JoinPending says "Request sent. The workspace owner will review it."
+// in the language of msgs.
+func (msgs Messages) JoinPending() string {
+	return Catalog.Format(msgs.locale, "joinPending", nil)
+}
+
+// JoinApproved says "Your request was approved."
+// in the language the app shows.
+func JoinApproved() string { return In(i18n.Locale()).JoinApproved() }
+
+// JoinApproved says "Your request was approved."
+// in the language of msgs.
+func (msgs Messages) JoinApproved() string {
+	return Catalog.Format(msgs.locale, "joinApproved", nil)
+}
+
+// JoinRejected says "Your previous request was not approved. You may submit a new reason."
+// in the language the app shows.
+func JoinRejected() string { return In(i18n.Locale()).JoinRejected() }
+
+// JoinRejected says "Your previous request was not approved. You may submit a new reason."
+// in the language of msgs.
+func (msgs Messages) JoinRejected() string {
+	return Catalog.Format(msgs.locale, "joinRejected", nil)
+}
+
+// JoinIdentity says "Submitting as {email}"
+// in the language the app shows.
+func JoinIdentity(email string) string { return In(i18n.Locale()).JoinIdentity(email) }
+
+// JoinIdentity says "Submitting as {email}"
+// in the language of msgs.
+func (msgs Messages) JoinIdentity(email string) string {
+	return Catalog.Format(msgs.locale, "joinIdentity", map[string]any{"email": email})
+}
+
+// JoinReason says "Why do you want to join?"
+// in the language the app shows.
+func JoinReason() string { return In(i18n.Locale()).JoinReason() }
+
+// JoinReason says "Why do you want to join?"
+// in the language of msgs.
+func (msgs Messages) JoinReason() string {
+	return Catalog.Format(msgs.locale, "joinReason", nil)
+}
+
+// JoinReasonPlaceholder says "Share context for the workspace owner…"
+// in the language the app shows.
+func JoinReasonPlaceholder() string { return In(i18n.Locale()).JoinReasonPlaceholder() }
+
+// JoinReasonPlaceholder says "Share context for the workspace owner…"
+// in the language of msgs.
+func (msgs Messages) JoinReasonPlaceholder() string {
+	return Catalog.Format(msgs.locale, "joinReasonPlaceholder", nil)
+}
+
+// JoinSubmit says "Submit request"
+// in the language the app shows.
+func JoinSubmit() string { return In(i18n.Locale()).JoinSubmit() }
+
+// JoinSubmit says "Submit request"
+// in the language of msgs.
+func (msgs Messages) JoinSubmit() string {
+	return Catalog.Format(msgs.locale, "joinSubmit", nil)
+}
+
+// JoinSubmitting says "Submitting…"
+// in the language the app shows.
+func JoinSubmitting() string { return In(i18n.Locale()).JoinSubmitting() }
+
+// JoinSubmitting says "Submitting…"
+// in the language of msgs.
+func (msgs Messages) JoinSubmitting() string {
+	return Catalog.Format(msgs.locale, "joinSubmitting", nil)
+}
+
+// JoinSubmitFailed says "Unable to submit this request. Please check the link and try again."
+// in the language the app shows.
+func JoinSubmitFailed() string { return In(i18n.Locale()).JoinSubmitFailed() }
+
+// JoinSubmitFailed says "Unable to submit this request. Please check the link and try again."
+// in the language of msgs.
+func (msgs Messages) JoinSubmitFailed() string {
+	return Catalog.Format(msgs.locale, "joinSubmitFailed", nil)
+}
+
+// InviteEyebrow says "Workspace invitation"
+// in the language the app shows.
+func InviteEyebrow() string { return In(i18n.Locale()).InviteEyebrow() }
+
+// InviteEyebrow says "Workspace invitation"
+// in the language of msgs.
+func (msgs Messages) InviteEyebrow() string {
+	return Catalog.Format(msgs.locale, "inviteEyebrow", nil)
+}
+
+// InviteInvitedBy says "{inviter} invited you to collaborate."
+// in the language the app shows.
+func InviteInvitedBy(inviter string) string { return In(i18n.Locale()).InviteInvitedBy(inviter) }
+
+// InviteInvitedBy says "{inviter} invited you to collaborate."
+// in the language of msgs.
+func (msgs Messages) InviteInvitedBy(inviter string) string {
+	return Catalog.Format(msgs.locale, "inviteInvitedBy", map[string]any{"inviter": inviter})
+}
+
+// WsInviteRole says "Role: {role}"
+// in the language the app shows.
+func WsInviteRole(role string) string { return In(i18n.Locale()).WsInviteRole(role) }
+
+// WsInviteRole says "Role: {role}"
+// in the language of msgs.
+func (msgs Messages) WsInviteRole(role string) string {
+	return Catalog.Format(msgs.locale, "wsInviteRole", map[string]any{"role": role})
+}
+
+// InviteMismatch says "This invitation is for another email address. Sign in with it to accept."
+// in the language the app shows.
+func InviteMismatch() string { return In(i18n.Locale()).InviteMismatch() }
+
+// InviteMismatch says "This invitation is for another email address. Sign in with it to accept."
+// in the language of msgs.
+func (msgs Messages) InviteMismatch() string {
+	return Catalog.Format(msgs.locale, "inviteMismatch", nil)
+}
+
+// InviteAccept says "Accept invitation"
+// in the language the app shows.
+func InviteAccept() string { return In(i18n.Locale()).InviteAccept() }
+
+// InviteAccept says "Accept invitation"
+// in the language of msgs.
+func (msgs Messages) InviteAccept() string {
+	return Catalog.Format(msgs.locale, "inviteAccept", nil)
+}
+
+// InviteUnavailableTitle says "Invitation unavailable"
+// in the language the app shows.
+func InviteUnavailableTitle() string { return In(i18n.Locale()).InviteUnavailableTitle() }
+
+// InviteUnavailableTitle says "Invitation unavailable"
+// in the language of msgs.
+func (msgs Messages) InviteUnavailableTitle() string {
+	return Catalog.Format(msgs.locale, "inviteUnavailableTitle", nil)
+}
+
+// InviteUnavailable says "This invitation is unavailable or expired. Ask the inviter to resend it."
+// in the language the app shows.
+func InviteUnavailable() string { return In(i18n.Locale()).InviteUnavailable() }
+
+// InviteUnavailable says "This invitation is unavailable or expired. Ask the inviter to resend it."
+// in the language of msgs.
+func (msgs Messages) InviteUnavailable() string {
+	return Catalog.Format(msgs.locale, "inviteUnavailable", nil)
+}

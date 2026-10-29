@@ -78,6 +78,8 @@ func (a *App) accountPage(c *ui.Context, p *palette) {
 			a.signOut()
 		})
 	})
+	divider(c, p)
+	a.accountDeletionRow(c, p)
 }
 
 // nameEditor is the user's name, which the pencil makes editable.
@@ -866,4 +868,83 @@ func (a *App) pickAvatar(kind string) {
 			go a.refreshAccount()
 		})
 	}()
+}
+
+// accountDeletion is the dialog that deletes the account, once the user
+// types their email.
+type accountDeletion struct {
+	open    bool
+	confirm string
+	busy    bool
+	err     string
+}
+
+// deleteAccount deletes every workspace the user owns, then the account,
+// as Lody does: a workspace that can't be deleted (one the user only
+// belongs to) doesn't stop it.
+func (a *App) deleteAccount() {
+	d := &a.deletion
+	if a.account == nil || d.busy || strings.TrimSpace(d.confirm) != a.account.User.Email {
+		return
+	}
+	d.busy, d.err = true, ""
+	api, token := a.api, a.tokenNow()
+	var workspaces []string
+	for _, w := range a.account.Workspaces {
+		workspaces = append(workspaces, w.ID)
+	}
+	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+		defer cancel()
+		for _, id := range workspaces {
+			api.Call(ctx, token, "/api/auth/organization/delete", map[string]any{"organizationId": id}, nil)
+		}
+		err := api.Call(ctx, token, "/api/auth/delete-user", map[string]any{}, nil)
+		a.update(func() {
+			d.busy = false
+			if err != nil {
+				d.err = err.Error()
+				return
+			}
+			d.open, a.settingsOpen = false, false
+			a.signOut()
+		})
+	}()
+}
+
+func (a *App) accountDeletionRow(c *ui.Context, p *palette) {
+	settingRow(c, p, locales.AccountDeletionTitle(), locales.AccountDeletionDescription(), func() {
+		ghostButton(c, p, locales.AccountDeletionButton()).Border(1, p.Danger.Alpha(0.5)).OnClick(func() {
+			a.deletion = accountDeletion{open: true}
+		})
+	})
+	d := &a.deletion
+	if !d.open || a.account == nil {
+		return
+	}
+	email := a.account.User.Email
+	sheet(c, p, &d.open, 480, func() {
+		sheetHeader(c, p, locales.AccountDeletionConfirmTitle(), locales.AccountDeletionConfirmDescription(), func() { d.open = false })
+		ui.Column(c).FillWidth().Padding(4, 20, 8, 20).Gap(8).Children(func() {
+			field(c, p, locales.AccountDeletionTypeToConfirm(email), "", func() {
+				input(c, p, &d.confirm, locales.AccountDeletionPlaceholder(), locales.AccountDeletionTypeToConfirm(email)).AutoFocus()
+			})
+			if d.err != "" {
+				ui.Text(c, d.err).FontSize(sizeFoot).TextColor(p.Danger).Selectable()
+			}
+		})
+		ui.Row(c).FillWidth().Padding(12, 20, 16, 20).Gap(8).Justify(ui.End).AlignItems(ui.Center).Children(func() {
+			ghostButton(c, p, locales.Cancel()).Border(1, p.Border).OnClick(func() { d.open = false })
+			if d.busy {
+				ui.Spinner(c).Size(14, 14)
+			}
+			ready := strings.TrimSpace(d.confirm) == email && !d.busy
+			b := ghostButton(c, p, locales.AccountDeletionConfirmButton()).Border(1, p.Danger.Alpha(0.6))
+			if ready {
+				b.OnClick(a.deleteAccount)
+			} else {
+				b.Disabled(true).Opacity(0.5)
+			}
+		})
+	})
 }

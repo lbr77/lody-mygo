@@ -1334,3 +1334,75 @@ func TestInbox(t *testing.T) {
 		t.Fatal("session from route")
 	}
 }
+
+func TestWorkspaceSlugsAndLinks(t *testing.T) {
+	for name, want := range map[string]string{
+		"Analytical Engine": "analytical-engine",
+		"  Café — Résumé ":  "cafe-resume",
+		"研究":                "workspace",
+		"":                  "",
+		"a--b__c":           "a-b-c",
+	} {
+		if got := suggestSlug(name); got != want {
+			t.Errorf("suggestSlug(%q) = %q, want %q", name, got, want)
+		}
+	}
+	if got := typedSlug("--My-Team-"); got != "my-team-" {
+		t.Errorf("typedSlug = %q", got)
+	}
+	for slug, ok := range map[string]bool{"team": true, "ab": false, "my-team-": false, "my--team": false, "My_Team": false, "": false} {
+		if (slugRuleError(slug) == "") != ok {
+			t.Errorf("slugRuleError(%q) = %q", slug, slugRuleError(slug))
+		}
+	}
+	for link, want := range map[string][2]string{
+		"https://lody.ai/join/abc_DEF-1":  {"join", "abc_DEF-1"},
+		"https://lody.ai/invite/inv123?x": {"invite", "inv123"},
+		"https://lody.ai/settings":        {"", ""},
+	} {
+		if k, id := parseWorkspaceLink(link); k != want[0] || id != want[1] {
+			t.Errorf("parseWorkspaceLink(%q) = %q, %q", link, k, id)
+		}
+	}
+}
+
+func TestWorkspaceDialogs(t *testing.T) {
+	a := fixture()
+	a.openCreateWorkspace()
+	a.wsCreate.name, a.wsCreate.slug = "Analytical Engine", "analytical-engine"
+	a.wsCreate.checked, a.wsCreate.available = "analytical-engine", true
+	tt := snap(t, a, "workspace-create", false, nil)
+	for _, want := range []string{"Create New Workspace", "Slug available"} {
+		if !tt.HasText(want) {
+			t.Fatalf("no %q in %q", want, tt.Texts())
+		}
+	}
+	a.fetches["w1|creation"] = &fetched{value: false}
+	tt = snap(t, a, "workspace-limit", false, nil)
+	if !tt.HasText("Open lody.ai") {
+		t.Fatalf("limit: %q", tt.Texts())
+	}
+	a.wsCreate.open = false
+	a.openJoinWorkspace()
+	a.wsJoin.kind = "invite"
+	a.wsJoin.preview = map[string]any{"status": "available", "organizationName": "Difference Engine", "inviterName": "Charles", "role": "member"}
+	tt = snap(t, a, "workspace-invite", false, nil)
+	for _, want := range []string{"Difference Engine", "Accept invitation"} {
+		if !tt.HasText(want) {
+			t.Fatalf("no %q in %q", want, tt.Texts())
+		}
+	}
+	a.wsJoin.kind = "join"
+	a.wsJoin.preview = map[string]any{"status": "available", "workspaceName": "Difference Engine", "viewer": map[string]any{"alreadyMember": true}}
+	tt = snap(t, a, "workspace-join", false, nil)
+	if !tt.HasText("Difference Engine") {
+		t.Fatalf("join: %q", tt.Texts())
+	}
+	a.wsJoin.open = false
+	a.settingsOpen, a.settingsTab = true, "account"
+	a.deletion = accountDeletion{open: true}
+	tt = snap(t, a, "account-delete", false, nil)
+	if !tt.HasText("ada@example.com") {
+		t.Fatalf("deletion: %q", tt.Texts())
+	}
+}

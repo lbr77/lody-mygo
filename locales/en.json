@@ -1918,5 +1918,93 @@
     }
   },
   "inboxCompleted": "Session completed.",
-  "untitled": "Untitled session"
+  "untitled": "Untitled session",
+  "accountDeletionTitle": "Delete Account",
+  "accountDeletionDescription": "Permanently delete your account and everything you own. This can't be undone.",
+  "accountDeletionButton": "Delete Account",
+  "accountDeletionConfirmTitle": "Delete your account?",
+  "accountDeletionConfirmDescription": "This permanently deletes your account and every workspace you own — including shared workspaces, which are removed for all their members. This action can't be undone.",
+  "accountDeletionTypeToConfirm": "Type {email} to confirm",
+  "@accountDeletionTypeToConfirm": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "accountDeletionPlaceholder": "Enter your email address",
+  "accountDeletionConfirmButton": "Delete account",
+  "workspaceCreateTitle": "Create New Workspace",
+  "workspaceCreateLead": "Create a new workspace for your team",
+  "workspaceCreate": "Create Workspace",
+  "workspaceLimitTitle": "Workspace limit reached",
+  "workspaceLimitLead": "You have reached the free workspace limit. Create a paid workspace on lody.ai.",
+  "workspaceCreateOnWeb": "Open lody.ai",
+  "workspaceName": "Workspace Name",
+  "workspaceNameHint": "You can change this name later in settings",
+  "workspaceNamePlaceholder": "Enter workspace name",
+  "workspaceSlug": "Workspace Slug",
+  "workspaceSlugReset": "Use suggestion",
+  "workspaceSlugRequired": "Workspace slug is required",
+  "workspaceSlugLength": "Use 3-40 characters",
+  "workspaceSlugChars": "Only lowercase letters, numbers, and hyphens are allowed",
+  "workspaceSlugTrailing": "Slug cannot end with a hyphen",
+  "workspaceSlugTaken": "This slug is already taken",
+  "workspaceSlugAvailable": "Slug available",
+  "workspaceSlugChecking": "Checking availability...",
+  "joinWorkspaceTitle": "Join a workspace",
+  "joinLead": "Paste a join link or an invitation link from lody.ai.",
+  "joinLink": "Link",
+  "joinContinue": "Continue",
+  "joinChecking": "Checking this link…",
+  "joinLinkInvalid": "This isn't a join or invitation link.",
+  "joinEyebrow": "Workspace access request",
+  "joinUnavailableTitle": "Link unavailable",
+  "joinUnavailable": "This link is invalid, expired, or disabled.",
+  "joinAlreadyMember": "You are already a member of this workspace.",
+  "joinVerify": "Verify {email} before submitting your request.",
+  "@joinVerify": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "joinPending": "Request sent. The workspace owner will review it.",
+  "joinApproved": "Your request was approved.",
+  "joinRejected": "Your previous request was not approved. You may submit a new reason.",
+  "joinIdentity": "Submitting as {email}",
+  "@joinIdentity": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "joinReason": "Why do you want to join?",
+  "joinReasonPlaceholder": "Share context for the workspace owner…",
+  "joinSubmit": "Submit request",
+  "joinSubmitting": "Submitting…",
+  "joinSubmitFailed": "Unable to submit this request. Please check the link and try again.",
+  "inviteEyebrow": "Workspace invitation",
+  "inviteInvitedBy": "{inviter} invited you to collaborate.",
+  "@inviteInvitedBy": {
+    "placeholders": {
+      "inviter": {
+        "type": "String"
+      }
+    }
+  },
+  "wsInviteRole": "Role: {role}",
+  "@wsInviteRole": {
+    "placeholders": {
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "inviteMismatch": "This invitation is for another email address. Sign in with it to accept.",
+  "inviteAccept": "Accept invitation",
+  "inviteUnavailableTitle": "Invitation unavailable",
+  "inviteUnavailable": "This invitation is unavailable or expired. Ask the inviter to resend it."
 }

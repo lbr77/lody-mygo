@@ -578,6 +578,19 @@ func (a *App) workspaceMenu(c *ui.Context, p *palette) {
 				})
 			}
 			ui.Box(c).Height(1).Background(p.Border).Margin(4, 0)
+			for _, act := range []struct {
+				icon  *ui.SVG
+				label string
+				do    func()
+			}{{iconPlus, locales.WorkspaceCreateTitle(), a.openCreateWorkspace}, {iconLink, locales.JoinWorkspaceTitle(), a.openJoinWorkspace}} {
+				act := act
+				row := menuRow(c.Key(act.label), p, act.label).OnClick(act.do)
+				row.Children(func() {
+					ui.Icon(c, act.icon).Size(16, 16).TextColor(p.Secondary)
+					ui.Text(c, act.label).FontSize(sizeSub).TextColor(p.Text)
+				})
+			}
+			ui.Box(c).Height(1).Background(p.Border).Margin(4, 0)
 		}
 		out := menuRow(c, p, locales.SignOut()).OnClick(func() {
 			a.workspacesOpen = false
