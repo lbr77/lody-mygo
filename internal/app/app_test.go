@@ -270,7 +270,7 @@ func TestAttachmentChips(t *testing.T) {
 		t.Fatal("a missing file should be reported")
 	}
 	tt := snap(t, a, "attachments", false, nil)
-	for _, want := range []string{"notes.md", "Remove screenshot.png", "Attach files"} {
+	for _, want := range []string{"notes.md", "Remove screenshot.png", "Add attachment"} {
 		if !tt.HasText(want) {
 			t.Errorf("missing %q in %q", want, tt.Texts())
 		}
