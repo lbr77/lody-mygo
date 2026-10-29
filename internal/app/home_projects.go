@@ -3,6 +3,7 @@ package app
 import (
 	"errors"
 	"regexp"
+	"sort"
 	"strings"
 	"time"
 
@@ -184,10 +185,14 @@ func (a *App) homeProjectList(c *ui.Context, p *palette, anchor ui.Element, open
 	selected := a.newChat.project
 	popup(c, anchor, open, func() {
 		ui.Scroll(c).MinWidth(240).MaxWidth(320).MaxHeight(320).Gap(1).Children(func() {
-			for i, o := range a.projectOptions() {
-				if i == 1 {
-					a.homeGroupOptions(c, p, open)
+			opts := a.projectOptions()
+			rows := append([]pickerEntry{{opt: opts[0]}}, a.pickerEntries(opts[1:])...)
+			for _, e := range rows {
+				if e.group != nil {
+					a.homeGroupOption(c, p, *e.group, open)
+					continue
 				}
+				o := e.opt
 				row := menuRow(c.Key(o.id), p, o.label)
 				if row.Clicked() {
 					a.newChat.project, a.newChat.branch = o.id, ""
@@ -215,72 +220,126 @@ func (a *App) homeProjectList(c *ui.Context, p *palette, anchor ui.Element, open
 	})
 }
 
-// homeGroupOptions are the projects of several in the list: those whose
-// folders are on another machine aren't offered here, as single folders
-// aren't; each says what it holds, or why it cannot start here, and
-// offers Edit with the pointer on it.
-func (a *App) homeGroupOptions(c *ui.Context, p *palette, open *bool) {
-	machine := a.newChat.machine
-	for _, g := range a.catalog.Groups {
-		av := a.groupAvailability(g, machine)
-		if av.elsewhere != "" {
+// pickerEntry is a row of Home's project list: a project of several, or
+// a folder or repository's option, with when it was last used.
+type pickerEntry struct {
+	group *catalog.ProjectGroup
+	opt   option
+	used  float64
+}
+
+// pickerEntries are the projects of several offered here, and the folders
+// and repositories of opts, in Lody's order: the last used first, those
+// used at all before those never, then by name. A folder or repository
+// was last used by its newest conversation, a folder failing that when it
+// was last opened; a project of several by its newest conversation.
+func (a *App) pickerEntries(opts []option) []pickerEntry {
+	byProject, byGroup := map[string]float64{}, map[string]float64{}
+	for _, s := range a.catalog.Sessions {
+		if s.Archived || s.LastMessageAt <= 0 {
 			continue
 		}
-		disabled := ""
-		switch {
-		case av.conflict:
-			disabled = locales.GroupMachinesConflict()
-		case av.missing > 0 && !a.canCloneRepositories():
-			disabled = locales.GroupMissingLocal(av.missing)
+		for _, key := range []string{s.ProjectID, "github:" + s.RepoFullName} {
+			byProject[key] = max(byProject[key], s.LastMessageAt)
 		}
-		description := disabled
-		if description == "" {
-			description = locales.PickerGroupMembers(len(g.Members))
-			if av.missing > 0 {
-				description += " · " + locales.GroupMissingClone(av.missing)
-			}
+		if s.ProjectGroupID != "" {
+			byGroup[s.ProjectGroupID] = max(byGroup[s.ProjectGroupID], s.LastMessageAt)
 		}
-		id, name := g.ID, g.Name
-		row := ui.Row(c.Key("group:"+g.ID)).FillWidth().MinHeight(30).Padding(6, 8).Radius(6).Gap(8).AlignItems(ui.Center).Label(g.Name)
-		hovered := row.Hovered()
-		reveal := row.AnimateWith("edit", b2f(hovered), durFast, easeStandard)
-		if disabled != "" {
-			row.Opacity(0.5)
-		} else {
-			row.Cursor(ui.CursorPointer).OnClick(func() {
-				a.chooseNewChatGroup(id)
-				*open = false
-			})
-			if hovered {
-				row.Background(p.Hover)
-			}
-		}
-		row.Children(func() {
-			ui.Icon(c, iconFolders).Size(16, 16).TextColor(p.Text.Alpha(0.7)).Shrink(0)
-			ui.Column(c).Grow(1).MinWidth(0).Children(func() {
-				ui.Text(c, name).FontSize(sizeSub).TextColor(p.Text).SingleLine()
-				ui.Text(c, description).FontSize(sizeCaption).LineHeight(1.3).TextColor(p.Secondary).MaxLines(2)
-			})
-			// The row chooses on a press; the button only edits.
-			edit := ui.ButtonBase(c.Key("edit")).Height(22).Padding(0, 6).Radius(6).Label(locales.PickerEditGroup(name)).
-				Opacity(reveal).Transition(colorFade)
-			if hovered {
-				edit.Cursor(ui.CursorPointer).OnClick(func() {
-					*open = false
-					a.requestProjectEdit(id)
-				})
-				if edit.Hovered() {
-					edit.Background(p.Text.Alpha(0.06))
-				}
-			} else {
-				edit.PassThrough()
-			}
-			edit.Children(func() { ui.Text(c, locales.PropEdit()).FontSize(sizeCaption).FontWeight(500).TextColor(p.Secondary) })
-			if a.newChat.project == "group:"+id {
-				ui.Icon(c, iconCheck).Size(14, 14).TextColor(p.Text)
-			}
-		})
 	}
+	var out []pickerEntry
+	for i := range a.catalog.Groups {
+		g := &a.catalog.Groups[i]
+		if a.groupAvailability(*g, a.newChat.machine).elsewhere == "" {
+			out = append(out, pickerEntry{group: g, opt: option{"group:" + g.ID, g.Name}, used: byGroup[g.ID]})
+		}
+	}
+	for _, o := range opts {
+		used := byProject[o.id]
+		if pr := a.catalog.Project(o.id); used == 0 && pr != nil {
+			used = pr.OpenedAt
+		}
+		out = append(out, pickerEntry{opt: o, used: used})
+	}
+	sort.SliceStable(out, func(i, j int) bool {
+		l, r := out[i], out[j]
+		if (l.used > 0) != (r.used > 0) {
+			return l.used > 0
+		}
+		if l.used != r.used {
+			return l.used > r.used
+		}
+		if l.opt.label != r.opt.label {
+			return lessFold(l.opt.label, r.opt.label)
+		}
+		return l.opt.id < r.opt.id
+	})
+	return out
+}
+
+// homeGroupOption is a project of several in the list, unless its
+// folders are on another machine, as single folders there aren't
+// offered: it says what it holds, or why it cannot start here, and offers
+// Edit with the pointer on it.
+func (a *App) homeGroupOption(c *ui.Context, p *palette, g catalog.ProjectGroup, open *bool) {
+	machine := a.newChat.machine
+	av := a.groupAvailability(g, machine)
+	if av.elsewhere != "" {
+		return
+	}
+	disabled := ""
+	switch {
+	case av.conflict:
+		disabled = locales.GroupMachinesConflict()
+	case av.missing > 0 && !a.canCloneRepositories():
+		disabled = locales.GroupMissingLocal(av.missing)
+	}
+	description := disabled
+	if description == "" {
+		description = locales.PickerGroupMembers(len(g.Members))
+		if av.missing > 0 {
+			description += " · " + locales.GroupMissingClone(av.missing)
+		}
+	}
+	id, name := g.ID, g.Name
+	row := ui.Row(c.Key("group:"+g.ID)).FillWidth().MinHeight(30).Padding(6, 8).Radius(6).Gap(8).AlignItems(ui.Center).Label(g.Name)
+	hovered := row.Hovered()
+	reveal := row.AnimateWith("edit", b2f(hovered), durFast, easeStandard)
+	if disabled != "" {
+		row.Opacity(0.5)
+	} else {
+		row.Cursor(ui.CursorPointer).OnClick(func() {
+			a.chooseNewChatGroup(id)
+			*open = false
+		})
+		if hovered {
+			row.Background(p.Hover)
+		}
+	}
+	row.Children(func() {
+		ui.Icon(c, iconFolders).Size(16, 16).TextColor(p.Text.Alpha(0.7)).Shrink(0)
+		ui.Column(c).Grow(1).MinWidth(0).Children(func() {
+			ui.Text(c, name).FontSize(sizeSub).TextColor(p.Text).SingleLine()
+			ui.Text(c, description).FontSize(sizeCaption).LineHeight(1.3).TextColor(p.Secondary).MaxLines(2)
+		})
+		// The row chooses on a press; the button only edits.
+		edit := ui.ButtonBase(c.Key("edit")).Height(22).Padding(0, 6).Radius(6).Label(locales.PickerEditGroup(name)).
+			Opacity(reveal).Transition(colorFade)
+		if hovered {
+			edit.Cursor(ui.CursorPointer).OnClick(func() {
+				*open = false
+				a.requestProjectEdit(id)
+			})
+			if edit.Hovered() {
+				edit.Background(p.Text.Alpha(0.06))
+			}
+		} else {
+			edit.PassThrough()
+		}
+		edit.Children(func() { ui.Text(c, locales.PropEdit()).FontSize(sizeCaption).FontWeight(500).TextColor(p.Secondary) })
+		if a.newChat.project == "group:"+id {
+			ui.Icon(c, iconCheck).Size(14, 14).TextColor(p.Text)
+		}
+	})
 }
 
 // startHomeChat sends New chat's first message: in a project of several

@@ -398,3 +398,22 @@ func TestProjectEditorChinese(t *testing.T) {
 		t.Fatalf("texts %q", tt.Texts())
 	}
 }
+
+// Home's project list puts the last used first, as Lody's picker: by each
+// one's newest conversation, those used before those never, then by name.
+func TestPickerRecency(t *testing.T) {
+	a := fixture()
+	a.newChat.machine = "m1"
+	a.catalog.Groups = []catalog.ProjectGroup{shopGroup("u1")}
+	a.catalog.Sessions = append(a.catalog.Sessions,
+		catalog.Session{ID: "w", MachineID: "m1", Title: "Web", ProjectID: "m1:local:p2", LastMessageAt: 30},
+		catalog.Session{ID: "g1", MachineID: "m1", Title: "Shop work", ProjectID: "m1:local:p2", ProjectGroupID: "g", LastMessageAt: 20},
+		catalog.Session{ID: "gone", MachineID: "m1", Title: "Archived", ProjectID: "m1:local:p1", Archived: true, LastMessageAt: 99})
+	var got []string
+	for _, e := range a.pickerEntries(a.projectOptions()[1:]) {
+		got = append(got, e.opt.id)
+	}
+	if len(got) < 3 || got[0] != "m1:local:p2" || got[1] != "group:g" || got[2] != "m1:local:p1" {
+		t.Fatalf("order %q", got)
+	}
+}
