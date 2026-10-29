@@ -138,6 +138,9 @@ type App struct {
 	memoryForm      memoryForm
 	addProject      addProjectForm
 	shortcut        shortcutForm
+	monitors        map[string]*machineMonitor // machines observed for their resource use
+	role            roleForm
+	password        passwordForm
 	revoking        string // the share whose revoke awaits confirmation
 	taskOpen        bool   // a task's dialog
 	taskEntry       string // the turn and task it shows

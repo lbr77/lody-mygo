@@ -49,6 +49,7 @@ func settingsSections() []settingsSection {
 // settingsDialog is Settings: a large dialog with its tabs on the left, as
 // Lody's.
 func (a *App) settingsDialog(c *ui.Context, p *palette) {
+	a.syncMonitors()
 	w, h := c.Size()
 	ui.DialogBase(c, &a.settingsOpen, func(backdrop, panel ui.Element) {
 		backdrop.Background(ui.RGBA(0, 0, 0, 0.28))

@@ -348,8 +348,7 @@ func (a *App) joinLink(c *ui.Context, p *palette, ws string) {
 			ghostButton(c, p, locales.JoinReject()).Border(1, p.Border).OnClick(func() {
 				a.cloudCall("mutation", "workspaceJoinRequests:reviewRequest", map[string]any{"requestId": req.ID, "decision": "rejected"}, nil, "join", "", nil)
 			})
-			// Approving may add a paid seat, which lody.ai confirms.
-			outlineButton(c, p, iconExternal, locales.JoinApprove()).OnClick(func() { a.webSettings("workspace") })
+			a.approveButton(c, p, ws, req.ID)
 		})
 	}
 }
@@ -513,6 +512,31 @@ func (a *App) deleteWorkspaceDialog(c *ui.Context, p *palette) {
 			})
 			del.Children(func() {
 				ui.Text(c, locales.WorkspaceDelete()).FontSize(sizeSub).FontWeight(500).TextColor(ui.RGB(255, 255, 255))
+			})
+		})
+	})
+}
+
+// approveButton approves a join request here when it adds no paid seat;
+// a seat that bills is confirmed on lody.ai, with the billing.
+func (a *App) approveButton(c *ui.Context, p *palette, ws, requestID string) {
+	convex := a.convex
+	f := a.fetch("seat-preview", func(ctx context.Context) (any, error) {
+		var out struct {
+			Status string `json:"status"`
+		}
+		err := convex.Query(ctx, "billing:getWorkspaceSeatInvitePreview", map[string]any{"workspaceId": ws}, &out)
+		return out.Status, err
+	})
+	status, _ := f.value.(string)
+	if status != "not_billed" {
+		outlineButton(c, p, iconExternal, locales.JoinApproveWeb()).OnClick(func() { a.webSettings("workspace") })
+		return
+	}
+	outlineButton(c, p, iconCheck, locales.JoinApprove()).OnClick(func() {
+		a.cloudCall("action", "billing:purchaseWorkspaceMemberSeat", map[string]any{"workspaceId": ws}, nil, "", "", func() {
+			a.cloudCall("mutation", "workspaceJoinRequests:reviewRequest", map[string]any{"requestId": requestID, "decision": "approved"}, nil, "join", "", func() {
+				a.refetchKey("members")
 			})
 		})
 	})

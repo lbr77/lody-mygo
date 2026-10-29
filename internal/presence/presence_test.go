@@ -57,3 +57,32 @@ func TestOnline(t *testing.T) {
 		}
 	}
 }
+
+func TestLatestSample(t *testing.T) {
+	cli := loro.NewEphemeralStore(60000)
+	put := func(key string, state map[string]any) {
+		v, err := loro.AsValue(state)
+		if err != nil {
+			t.Fatal(err)
+		}
+		cli.Set(key, v)
+	}
+	put("snapshot:m1:a", map[string]any{"kind": "snapshot", "machineId": "m1", "updatedAtMs": 1000.0, "platform": "linux",
+		"cpuLogicalCores": int64(8), "deviceCpuCores": 0.8, "effectiveMemoryBytes": 16.0 * (1 << 30), "availableMemoryBytes": 8.0 * (1 << 30),
+		"cliControlPlane":   map[string]any{"memoryBytes": 458.0 * (1 << 20), "cpuCores": 0.009},
+		"sessionsAggregate": map[string]any{"memoryBytes": nil, "cpuCores": nil}})
+	put("snapshot:m1:b", map[string]any{"kind": "snapshot", "machineId": "m1", "updatedAtMs": 500.0})
+	put("observer:m1:o", map[string]any{"kind": "observer", "machineId": "m1", "observerId": "o"})
+	// As the room delivers them: encoded, then applied elsewhere.
+	ours := loro.NewEphemeralStore(60000)
+	if err := ours.Apply(cli.EncodeAll()); err != nil {
+		t.Fatal(err)
+	}
+	s := latestSample(ours, "m1")
+	if s == nil || s.UpdatedAtMs != 1000 || s.Platform != "linux" || s.CLI.CPUCores == nil || *s.CLI.CPUCores != 0.009 || s.Sessions.CPUCores != nil {
+		t.Fatalf("sample = %+v", s)
+	}
+	if latestSample(ours, "m2") != nil {
+		t.Fatal("a sample of another machine")
+	}
+}

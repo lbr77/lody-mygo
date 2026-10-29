@@ -1002,7 +1002,8 @@
   },
   "joinNoRequests": "No requests waiting for approval.",
   "joinReject": "Reject",
-  "joinApprove": "Approve on lody.ai",
+  "joinApprove": "Approve",
+  "joinApproveWeb": "Approve on lody.ai (adds a paid seat)",
   "inviteLead": "They get an email with a link to join.",
   "inviteEmail": "Email",
   "inviteRole": "Role",
@@ -1073,7 +1074,13 @@
     }
   },
   "passwordChange": "Change password",
-  "passwordChangeHelp": "Change it on lody.ai.",
+  "passwordChangeHelp": "Changing it signs you out everywhere.",
+  "passwordChangeLead": "You'll sign in again afterwards.",
+  "passwordCurrent": "Current password",
+  "passwordNew": "New password",
+  "passwordRule": "At least 8 characters.",
+  "passwordConfirm": "Confirm new password",
+  "passwordWrong": "The current password is wrong.",
   "machineThis": "This Mac",
   "machinesRename": "Edit machine name",
   "machinesRevoke": "Revoke machine access",
@@ -1268,7 +1275,29 @@
   "shortcutsShare": "Share with the workspace",
   "shortcutsShareHint": "Off by default. Sharing and scope are separate things.",
   "rolesLead": "Named setups of an agent: its prompt, model and machines. Mention one with @ to hand it a task.",
-  "rolesNew": "New role on lody.ai",
+  "rolesNew": "New role",
+  "rolesEdit": "Edit role",
+  "roleName": "Name",
+  "roleDescription": "Description – what it's for",
+  "rolePrompt": "Prompt prefix",
+  "rolePromptHint": "Put before every task handed to the role.",
+  "roleWhere": "Runs on",
+  "roleWhereHint": "The machines it may run on, each with its agent, model, mode and memory.",
+  "roleAddMachine": "Also run on {machine}",
+  "@roleAddMachine": {
+    "placeholders": {
+      "machine": {
+        "type": "String"
+      }
+    }
+  },
+  "roleRemoveMachine": "Remove this machine",
+  "roleNoMemory": "No memory",
+  "roleShareHint": "Members can mention it with @; only you edit it.",
+  "roleNameLimit": "The name needs 1 to 60 characters.",
+  "roleDescriptionLimit": "The description is at most 140 characters.",
+  "roleEmojiLimit": "The emoji is too long.",
+  "roleNeedsAgent": "Choose an agent on at least one machine.",
   "rolesNone": "No agent roles yet.",
   "rolesDeleteTitle": "Delete {name}?",
   "@rolesDeleteTitle": {
@@ -1278,5 +1307,7 @@
       }
     }
   },
-  "rolesDeleteBody": "Chats can no longer mention it."
+  "rolesDeleteBody": "Chats can no longer mention it.",
+  "monitorWaiting": "Waiting for a resource sample",
+  "monitorDevice": "Device"
 }

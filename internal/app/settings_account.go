@@ -11,6 +11,7 @@ import (
 
 	"github.com/lbr77/lody-mygo/internal/catalog"
 	"github.com/lbr77/lody-mygo/internal/cloud"
+	"github.com/lbr77/lody-mygo/internal/presence"
 	"github.com/lbr77/lody-mygo/locales"
 )
 
@@ -380,6 +381,7 @@ func (a *App) machineCard(c *ui.Context, p *palette, id string, machines map[str
 					}
 				})
 			})
+			a.resourcePanels(c, p, id)
 		})
 	})
 }
@@ -535,8 +537,9 @@ func (a *App) passwordRow(c *ui.Context, p *palette) {
 	}
 	if hasPassword {
 		settingRow(c, p, locales.PasswordTitle(), locales.PasswordChangeHelp(), func() {
-			outlineButton(c, p, iconExternal, locales.PasswordChange()).OnClick(func() { a.webSettings("account") })
+			ghostButton(c, p, locales.PasswordChange()).Border(1, p.Border).OnClick(func() { a.password = passwordForm{open: true} })
 		})
+		a.passwordDialog(c, p)
 		return
 	}
 	desc := locales.PasswordSetHelp()
@@ -621,6 +624,191 @@ func (a *App) machineActions(c *ui.Context, p *palette, id string, m visibleMach
 		remove.Children(func() {
 			ui.Icon(c, iconLogOutAlt).Size(14, 14).TextColor(p.Danger)
 			ui.Text(c, locales.MachinesRemove()).FontSize(sizeFoot).TextColor(p.Danger)
+		})
+	})
+}
+
+// machineMonitor follows a machine's resource samples.
+type machineMonitor struct {
+	cancel context.CancelFunc
+	sample *presence.Sample
+}
+
+// syncMonitors observes the machines whose cards are open on the
+// machines page, and stops observing the rest.
+func (a *App) syncMonitors() {
+	if a.offline {
+		return
+	}
+	want := map[string]bool{}
+	if a.settingsOpen && a.settingsTab == "machines" && a.conn != nil {
+		for _, id := range a.catalog.MachineIDs {
+			if a.expanded["machine/"+id] && a.presence.IsOnline(id) {
+				want[id] = true
+			}
+		}
+	}
+	for id, m := range a.monitors {
+		if !want[id] {
+			m.cancel()
+			delete(a.monitors, id)
+		}
+	}
+	for id := range want {
+		if a.monitors[id] != nil {
+			continue
+		}
+		if a.monitors == nil {
+			a.monitors = map[string]*machineMonitor{}
+		}
+		ctx, cancel := context.WithCancel(context.Background())
+		m := &machineMonitor{cancel: cancel}
+		a.monitors[id] = m
+		conn := a.conn
+		go presence.Monitor(ctx, conn, id, func(s *presence.Sample) {
+			a.update(func() { m.sample = s })
+		})
+	}
+}
+
+// resourcePanels show what the machine's CLI, its agents' sessions and
+// the device use, as Lody's machine card does.
+func (a *App) resourcePanels(c *ui.Context, p *palette, id string) {
+	m := a.monitors[id]
+	if m == nil {
+		return
+	}
+	s := m.sample
+	if s == nil {
+		ui.Row(c).FillWidth().Padding(14).Radius(8).Gap(8).AlignItems(ui.Center).Justify(ui.Center).Background(p.Text.Alpha(0.035)).Children(func() {
+			ui.Spinner(c).Size(13, 13)
+			ui.Text(c, locales.MonitorWaiting()).FontSize(sizeFoot).TextColor(p.Secondary)
+		})
+		return
+	}
+	used := max(0, s.EffectiveMemoryBytes-s.AvailableMemoryBytes)
+	ui.Row(c).FillWidth().Gap(10).Children(func() {
+		cli := "CLI"
+		if v := a.catalog.MachineCLI[id]; v != "" {
+			cli += " · v" + v
+		}
+		resourcePanel(c, p, iconSquareTerminal, cli, cpuText(s.CLI.CPUCores), bytesText(s.CLI.MemoryBytes))
+		resourcePanel(c, p, iconCpu, "ACP sessions", cpuText(s.Sessions.CPUCores), bytesText(s.Sessions.MemoryBytes))
+		device := locales.MonitorDevice()
+		if os := firstNonEmpty(a.catalog.MachineOS[id], s.Platform); os != "" {
+			device += " · " + os
+		}
+		resourcePanel(c, p, iconGauge, device, cpuText(s.DeviceCPUCores), formatByteSize(used)+" / "+formatByteSize(s.EffectiveMemoryBytes))
+	})
+}
+
+func resourcePanel(c *ui.Context, p *palette, icon *ui.SVG, label, cpu, mem string) {
+	ui.Column(c.Key(label)).Grow(1).Basis(0).MinWidth(0).Padding(12, 14).Radius(8).Gap(8).Background(p.Text.Alpha(0.035)).Children(func() {
+		ui.Row(c).Gap(6).AlignItems(ui.Center).Children(func() {
+			ui.Icon(c, icon).Size(14, 14).TextColor(p.Secondary)
+			ui.Text(c, label).FontSize(sizeFoot).TextColor(p.Secondary).SingleLine().MinWidth(0)
+		})
+		stat := func(name, value string) {
+			ui.Row(c).Gap(10).AlignItems(ui.Center).Children(func() {
+				ui.Text(c, name).FontSize(sizeCaption).TextColor(p.Tertiary).Width(30)
+				ui.Text(c, value).FontSize(sizeBody).FontWeight(500).TextColor(p.Text).SingleLine()
+			})
+		}
+		stat("CPU", cpu)
+		stat("Mem", mem)
+	})
+}
+
+// cpuText is busy cores as a percentage of one, as Lody writes it.
+func cpuText(cores *float64) string {
+	if cores == nil {
+		return "–"
+	}
+	pct := *cores * 100
+	if pct > 0 && pct < 10 {
+		return fmt.Sprintf("%.1f%%", pct)
+	}
+	return fmt.Sprintf("%.0f%%", pct)
+}
+
+func bytesText(b *float64) string {
+	if b == nil {
+		return "–"
+	}
+	return formatByteSize(*b)
+}
+
+// formatByteSize writes bytes in 1024s, as Lody's monitor does.
+func formatByteSize(b float64) string {
+	units := []string{"B", "KB", "MB", "GB", "TB"}
+	unit := 0
+	for b >= 1024 && unit < len(units)-1 {
+		b /= 1024
+		unit++
+	}
+	if b >= 10 || unit == 0 {
+		return fmt.Sprintf("%.0f %s", b, units[unit])
+	}
+	return fmt.Sprintf("%.1f %s", b, units[unit])
+}
+
+type passwordForm struct {
+	open                     bool
+	current, next, confirmed string
+	busy                     bool
+	err                      string
+}
+
+// passwordDialog changes the password, as Lody does: it checks the
+// current one, changes it, signs out the other sessions, then this one.
+func (a *App) passwordDialog(c *ui.Context, p *palette) {
+	f := &a.password
+	if !f.open {
+		return
+	}
+	sheet(c, p, &f.open, 420, func() {
+		sheetHeader(c, p, locales.PasswordChange(), locales.PasswordChangeLead(), func() { f.open = false })
+		ui.Column(c).FillWidth().Padding(8, 20).Gap(12).Children(func() {
+			field(c, p, locales.PasswordCurrent(), "", func() { input(c, p, &f.current, "", locales.PasswordCurrent()).Password().AutoFocus() })
+			field(c, p, locales.PasswordNew(), locales.PasswordRule(), func() { input(c, p, &f.next, "", locales.PasswordNew()).Password() })
+			field(c, p, locales.PasswordConfirm(), "", func() { input(c, p, &f.confirmed, "", locales.PasswordConfirm()).Password() })
+			if f.err != "" {
+				ui.Text(c, f.err).FontSize(sizeFoot).TextColor(p.Danger)
+			}
+		})
+		ui.Row(c).FillWidth().Padding(12, 20, 16, 20).Gap(8).Justify(ui.End).Children(func() {
+			ghostButton(c, p, locales.Cancel()).Border(1, p.Border).OnClick(func() { f.open = false })
+			if f.busy {
+				ui.Spinner(c).Size(14, 14)
+			}
+			ok := f.current != "" && len(f.next) >= 8 && f.next == f.confirmed && !f.busy
+			primaryButton(c, p, locales.PasswordChange(), ok).OnClick(func() {
+				api, token, current, next := a.api, a.tokenNow(), f.current, f.next
+				f.busy, f.err = true, ""
+				go func() {
+					ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+					defer cancel()
+					var check struct {
+						Valid bool `json:"valid"`
+					}
+					err := api.Call(ctx, token, "/api/account/verify-password", map[string]any{"password": current}, &check)
+					if err == nil && !check.Valid {
+						err = fmt.Errorf("%s", locales.PasswordWrong())
+					}
+					if err == nil {
+						err = api.Call(ctx, token, "/api/auth/change-password", map[string]any{"currentPassword": current, "newPassword": next, "revokeOtherSessions": true}, nil)
+					}
+					a.update(func() {
+						f.busy = false
+						if err != nil {
+							f.err = err.Error()
+							return
+						}
+						f.open, a.settingsOpen = false, false
+						a.signOut()
+					})
+				}()
+			})
 		})
 	})
 }

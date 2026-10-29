@@ -18,6 +18,7 @@ import (
 	"github.com/lbr77/lody-mygo/internal/cloud"
 	"github.com/lbr77/lody-mygo/internal/collab"
 	"github.com/lbr77/lody-mygo/internal/mention"
+	"github.com/lbr77/lody-mygo/internal/presence"
 	"github.com/lbr77/lody-mygo/internal/session"
 	"github.com/lbr77/lody-mygo/internal/shortcuts"
 )
@@ -783,6 +784,15 @@ func TestCloudSettings(t *testing.T) {
 	check("prompt-shortcuts", "Review", "/review", "Private", "New Prompt Shortcut")
 	a.catalog.Roles = []catalog.AgentRole{{ID: "r1", OwnerUserID: "u1", Visibility: "workspace", Name: "Reviewer", Emoji: "🔍", Targets: []catalog.RoleTarget{{MachineID: "m1", AgentConfigID: "a1"}}}}
 	check("agent-roles", "Reviewer", "Shared", "Claude Code · Studio")
+	a.editRole(&a.catalog.Roles[0])
+	check("agent-roles", "Edit role", "Runs on", "Claude Code", "Share with the workspace")
+	a.role.open = false
+	a.expanded["machine/m1"] = true
+	cores, mem := 0.009, 458.0*(1<<20)
+	a.monitors = map[string]*machineMonitor{"m1": {cancel: func() {}, sample: &presence.Sample{MachineID: "m1", Platform: "darwin",
+		CLI: presence.Resource{CPUCores: &cores, MemoryBytes: &mem}, EffectiveMemoryBytes: 16 * (1 << 30), AvailableMemoryBytes: 8 * (1 << 30)}}}
+	check("machines", "CLI", "0.9%", "458 MB", "ACP sessions", "8.0 GB / 16 GB")
+	a.monitors = nil
 	tt := check("shares", "Flock port", "Revoke")
 	if err := tt.Click("Revoke"); err != nil {
 		t.Fatal(err)
@@ -836,5 +846,23 @@ func TestReplaceShortcuts(t *testing.T) {
 		if got := replaceShortcuts(in, prompts); got != want {
 			t.Errorf("replaceShortcuts(%q) = %q, want %q", in, got, want)
 		}
+	}
+}
+
+func TestRoleRow(t *testing.T) {
+	a := fixture()
+	a.editRole(nil)
+	f := &a.role
+	cfg := f.runConfig(roleTarget{machine: "m1", agent: "a1", model: "claude-opus-5-5"})
+	if cfg["modelId"] != "claude-opus-5-5" || cfg["modeId"] != nil {
+		t.Fatalf("runConfig = %v", cfg)
+	}
+	// An edit keeps the options the editor doesn't show.
+	base := catalog.AgentRole{ID: "r1", Revision: 2, Row: map[string]any{"v": 2.0, "targets": []any{
+		map[string]any{"machineId": "m1", "agentConfigId": "a1", "runConfig": map[string]any{"configOptionValues": map[string]any{"effort": "high"}}},
+	}}}
+	f.base = &base
+	if cfg := f.runConfig(roleTarget{machine: "m1", agent: "a1"}); cfg["configOptionValues"] == nil {
+		t.Fatalf("lost the role's other options: %v", cfg)
 	}
 }

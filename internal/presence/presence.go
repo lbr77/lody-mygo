@@ -47,6 +47,12 @@ func (s State) IsOnline(machineID string) bool {
 var hostSuffix = regexp.MustCompile(`^[a-z0-9.-]+$`)
 
 func channelURL(g *cloud.Grant, workspace string) (string, error) {
+	return roomURL(g, workspace, "presence", true)
+}
+
+// roomURL is the URL of an ephemeral room of the workspace's meta stream,
+// on the presence host: to follow it, or, without live, to post to it.
+func roomURL(g *cloud.Grant, workspace, room string, live bool) (string, error) {
 	base, err := url.Parse(strings.TrimSuffix(g.GatewayBaseURL, "/"))
 	if err != nil {
 		return "", err
@@ -54,7 +60,11 @@ func channelURL(g *cloud.Grant, workspace string) (string, error) {
 	if g.ShardHostSuffix != "" && hostSuffix.MatchString(strings.ToLower(g.ShardHostSuffix)) {
 		base.Scheme, base.Host = "https", "presence."+g.ShardHostSuffix
 	}
-	return strings.TrimSuffix(base.String(), "/") + "/ds/lody/" + streams.EncodeURIComponent(workspace+":meta") + "?ephemeral=presence&live=sse", nil
+	u := strings.TrimSuffix(base.String(), "/") + "/ds/lody/" + streams.EncodeURIComponent(workspace+":meta") + "?ephemeral=" + room
+	if live {
+		u += "&live=sse"
+	}
+	return u, nil
 }
 
 // Watch follows presence until ctx ends, calling onChange with each new

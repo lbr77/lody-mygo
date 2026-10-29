@@ -4785,14 +4785,24 @@ func (msgs Messages) JoinReject() string {
 	return Catalog.Format(msgs.locale, "joinReject", nil)
 }
 
-// JoinApprove says "Approve on lody.ai"
+// JoinApprove says "Approve"
 // in the language the app shows.
 func JoinApprove() string { return In(i18n.Locale()).JoinApprove() }
 
-// JoinApprove says "Approve on lody.ai"
+// JoinApprove says "Approve"
 // in the language of msgs.
 func (msgs Messages) JoinApprove() string {
 	return Catalog.Format(msgs.locale, "joinApprove", nil)
+}
+
+// JoinApproveWeb says "Approve on lody.ai (adds a paid seat)"
+// in the language the app shows.
+func JoinApproveWeb() string { return In(i18n.Locale()).JoinApproveWeb() }
+
+// JoinApproveWeb says "Approve on lody.ai (adds a paid seat)"
+// in the language of msgs.
+func (msgs Messages) JoinApproveWeb() string {
+	return Catalog.Format(msgs.locale, "joinApproveWeb", nil)
 }
 
 // InviteLead says "They get an email with a link to join."
@@ -5117,14 +5127,74 @@ func (msgs Messages) PasswordChange() string {
 	return Catalog.Format(msgs.locale, "passwordChange", nil)
 }
 
-// PasswordChangeHelp says "Change it on lody.ai."
+// PasswordChangeHelp says "Changing it signs you out everywhere."
 // in the language the app shows.
 func PasswordChangeHelp() string { return In(i18n.Locale()).PasswordChangeHelp() }
 
-// PasswordChangeHelp says "Change it on lody.ai."
+// PasswordChangeHelp says "Changing it signs you out everywhere."
 // in the language of msgs.
 func (msgs Messages) PasswordChangeHelp() string {
 	return Catalog.Format(msgs.locale, "passwordChangeHelp", nil)
+}
+
+// PasswordChangeLead says "You'll sign in again afterwards."
+// in the language the app shows.
+func PasswordChangeLead() string { return In(i18n.Locale()).PasswordChangeLead() }
+
+// PasswordChangeLead says "You'll sign in again afterwards."
+// in the language of msgs.
+func (msgs Messages) PasswordChangeLead() string {
+	return Catalog.Format(msgs.locale, "passwordChangeLead", nil)
+}
+
+// PasswordCurrent says "Current password"
+// in the language the app shows.
+func PasswordCurrent() string { return In(i18n.Locale()).PasswordCurrent() }
+
+// PasswordCurrent says "Current password"
+// in the language of msgs.
+func (msgs Messages) PasswordCurrent() string {
+	return Catalog.Format(msgs.locale, "passwordCurrent", nil)
+}
+
+// PasswordNew says "New password"
+// in the language the app shows.
+func PasswordNew() string { return In(i18n.Locale()).PasswordNew() }
+
+// PasswordNew says "New password"
+// in the language of msgs.
+func (msgs Messages) PasswordNew() string {
+	return Catalog.Format(msgs.locale, "passwordNew", nil)
+}
+
+// PasswordRule says "At least 8 characters."
+// in the language the app shows.
+func PasswordRule() string { return In(i18n.Locale()).PasswordRule() }
+
+// PasswordRule says "At least 8 characters."
+// in the language of msgs.
+func (msgs Messages) PasswordRule() string {
+	return Catalog.Format(msgs.locale, "passwordRule", nil)
+}
+
+// PasswordConfirm says "Confirm new password"
+// in the language the app shows.
+func PasswordConfirm() string { return In(i18n.Locale()).PasswordConfirm() }
+
+// PasswordConfirm says "Confirm new password"
+// in the language of msgs.
+func (msgs Messages) PasswordConfirm() string {
+	return Catalog.Format(msgs.locale, "passwordConfirm", nil)
+}
+
+// PasswordWrong says "The current password is wrong."
+// in the language the app shows.
+func PasswordWrong() string { return In(i18n.Locale()).PasswordWrong() }
+
+// PasswordWrong says "The current password is wrong."
+// in the language of msgs.
+func (msgs Messages) PasswordWrong() string {
+	return Catalog.Format(msgs.locale, "passwordWrong", nil)
 }
 
 // MachineThis says "This Mac"
@@ -6059,14 +6129,164 @@ func (msgs Messages) RolesLead() string {
 	return Catalog.Format(msgs.locale, "rolesLead", nil)
 }
 
-// RolesNew says "New role on lody.ai"
+// RolesNew says "New role"
 // in the language the app shows.
 func RolesNew() string { return In(i18n.Locale()).RolesNew() }
 
-// RolesNew says "New role on lody.ai"
+// RolesNew says "New role"
 // in the language of msgs.
 func (msgs Messages) RolesNew() string {
 	return Catalog.Format(msgs.locale, "rolesNew", nil)
+}
+
+// RolesEdit says "Edit role"
+// in the language the app shows.
+func RolesEdit() string { return In(i18n.Locale()).RolesEdit() }
+
+// RolesEdit says "Edit role"
+// in the language of msgs.
+func (msgs Messages) RolesEdit() string {
+	return Catalog.Format(msgs.locale, "rolesEdit", nil)
+}
+
+// RoleName says "Name"
+// in the language the app shows.
+func RoleName() string { return In(i18n.Locale()).RoleName() }
+
+// RoleName says "Name"
+// in the language of msgs.
+func (msgs Messages) RoleName() string {
+	return Catalog.Format(msgs.locale, "roleName", nil)
+}
+
+// RoleDescription says "Description – what it's for"
+// in the language the app shows.
+func RoleDescription() string { return In(i18n.Locale()).RoleDescription() }
+
+// RoleDescription says "Description – what it's for"
+// in the language of msgs.
+func (msgs Messages) RoleDescription() string {
+	return Catalog.Format(msgs.locale, "roleDescription", nil)
+}
+
+// RolePrompt says "Prompt prefix"
+// in the language the app shows.
+func RolePrompt() string { return In(i18n.Locale()).RolePrompt() }
+
+// RolePrompt says "Prompt prefix"
+// in the language of msgs.
+func (msgs Messages) RolePrompt() string {
+	return Catalog.Format(msgs.locale, "rolePrompt", nil)
+}
+
+// RolePromptHint says "Put before every task handed to the role."
+// in the language the app shows.
+func RolePromptHint() string { return In(i18n.Locale()).RolePromptHint() }
+
+// RolePromptHint says "Put before every task handed to the role."
+// in the language of msgs.
+func (msgs Messages) RolePromptHint() string {
+	return Catalog.Format(msgs.locale, "rolePromptHint", nil)
+}
+
+// RoleWhere says "Runs on"
+// in the language the app shows.
+func RoleWhere() string { return In(i18n.Locale()).RoleWhere() }
+
+// RoleWhere says "Runs on"
+// in the language of msgs.
+func (msgs Messages) RoleWhere() string {
+	return Catalog.Format(msgs.locale, "roleWhere", nil)
+}
+
+// RoleWhereHint says "The machines it may run on, each with its agent, model, mode and memory."
+// in the language the app shows.
+func RoleWhereHint() string { return In(i18n.Locale()).RoleWhereHint() }
+
+// RoleWhereHint says "The machines it may run on, each with its agent, model, mode and memory."
+// in the language of msgs.
+func (msgs Messages) RoleWhereHint() string {
+	return Catalog.Format(msgs.locale, "roleWhereHint", nil)
+}
+
+// RoleAddMachine says "Also run on {machine}"
+// in the language the app shows.
+func RoleAddMachine(machine string) string { return In(i18n.Locale()).RoleAddMachine(machine) }
+
+// RoleAddMachine says "Also run on {machine}"
+// in the language of msgs.
+func (msgs Messages) RoleAddMachine(machine string) string {
+	return Catalog.Format(msgs.locale, "roleAddMachine", map[string]any{"machine": machine})
+}
+
+// RoleRemoveMachine says "Remove this machine"
+// in the language the app shows.
+func RoleRemoveMachine() string { return In(i18n.Locale()).RoleRemoveMachine() }
+
+// RoleRemoveMachine says "Remove this machine"
+// in the language of msgs.
+func (msgs Messages) RoleRemoveMachine() string {
+	return Catalog.Format(msgs.locale, "roleRemoveMachine", nil)
+}
+
+// RoleNoMemory says "No memory"
+// in the language the app shows.
+func RoleNoMemory() string { return In(i18n.Locale()).RoleNoMemory() }
+
+// RoleNoMemory says "No memory"
+// in the language of msgs.
+func (msgs Messages) RoleNoMemory() string {
+	return Catalog.Format(msgs.locale, "roleNoMemory", nil)
+}
+
+// RoleShareHint says "Members can mention it with @; only you edit it."
+// in the language the app shows.
+func RoleShareHint() string { return In(i18n.Locale()).RoleShareHint() }
+
+// RoleShareHint says "Members can mention it with @; only you edit it."
+// in the language of msgs.
+func (msgs Messages) RoleShareHint() string {
+	return Catalog.Format(msgs.locale, "roleShareHint", nil)
+}
+
+// RoleNameLimit says "The name needs 1 to 60 characters."
+// in the language the app shows.
+func RoleNameLimit() string { return In(i18n.Locale()).RoleNameLimit() }
+
+// RoleNameLimit says "The name needs 1 to 60 characters."
+// in the language of msgs.
+func (msgs Messages) RoleNameLimit() string {
+	return Catalog.Format(msgs.locale, "roleNameLimit", nil)
+}
+
+// RoleDescriptionLimit says "The description is at most 140 characters."
+// in the language the app shows.
+func RoleDescriptionLimit() string { return In(i18n.Locale()).RoleDescriptionLimit() }
+
+// RoleDescriptionLimit says "The description is at most 140 characters."
+// in the language of msgs.
+func (msgs Messages) RoleDescriptionLimit() string {
+	return Catalog.Format(msgs.locale, "roleDescriptionLimit", nil)
+}
+
+// RoleEmojiLimit says "The emoji is too long."
+// in the language the app shows.
+func RoleEmojiLimit() string { return In(i18n.Locale()).RoleEmojiLimit() }
+
+// RoleEmojiLimit says "The emoji is too long."
+// in the language of msgs.
+func (msgs Messages) RoleEmojiLimit() string {
+	return Catalog.Format(msgs.locale, "roleEmojiLimit", nil)
+}
+
+// RoleNeedsAgent says "Choose an agent on at least one machine."
+// in the language the app shows.
+func RoleNeedsAgent() string { return In(i18n.Locale()).RoleNeedsAgent() }
+
+// RoleNeedsAgent says "Choose an agent on at least one machine."
+// in the language of msgs.
+func (msgs Messages) RoleNeedsAgent() string {
+	return Catalog.Format(msgs.locale, "roleNeedsAgent", nil)
 }
 
 // RolesNone says "No agent roles yet."
@@ -6097,4 +6317,24 @@ func RolesDeleteBody() string { return In(i18n.Locale()).RolesDeleteBody() }
 // in the language of msgs.
 func (msgs Messages) RolesDeleteBody() string {
 	return Catalog.Format(msgs.locale, "rolesDeleteBody", nil)
+}
+
+// MonitorWaiting says "Waiting for a resource sample"
+// in the language the app shows.
+func MonitorWaiting() string { return In(i18n.Locale()).MonitorWaiting() }
+
+// MonitorWaiting says "Waiting for a resource sample"
+// in the language of msgs.
+func (msgs Messages) MonitorWaiting() string {
+	return Catalog.Format(msgs.locale, "monitorWaiting", nil)
+}
+
+// MonitorDevice says "Device"
+// in the language the app shows.
+func MonitorDevice() string { return In(i18n.Locale()).MonitorDevice() }
+
+// MonitorDevice says "Device"
+// in the language of msgs.
+func (msgs Messages) MonitorDevice() string {
+	return Catalog.Format(msgs.locale, "monitorDevice", nil)
 }

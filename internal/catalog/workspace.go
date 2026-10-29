@@ -73,14 +73,19 @@ type AgentRole struct {
 	Emoji        string
 	PromptPrefix string
 	Targets      []RoleTarget
+	Revision     float64
+	// Row is the role as the workspace stream stores it, for edits.
+	Row map[string]any
 }
 
 // RoleTarget is a machine and agent a role runs on.
 type RoleTarget struct {
-	MachineID     string
-	AgentConfigID string
-	ModelID       string
-	ModeID        string
+	MachineID      string
+	AgentConfigID  string
+	ModelID        string
+	ModeID         string
+	Memory         string // memoryId, of the provider MemoryProvider names
+	MemoryProvider string
 }
 
 // Memory is a memory a machine links to Lody from a provider.
@@ -121,13 +126,16 @@ func projectWorkspace(rows []flock.Row) Catalog {
 			r := AgentRole{
 				ID: id, OwnerUserID: text(v["ownerUserId"]), Visibility: text(v["visibility"]), Name: strings.TrimSpace(text(v["name"])),
 				Description: text(v["description"]), Emoji: text(v["emoji"]), PromptPrefix: text(v["promptPrefix"]),
+				Revision: stamp(v["revision"]), Row: v,
 			}
 			if r.OwnerUserID == "" || r.Name == "" {
 				continue
 			}
 			target := func(t map[string]any) RoleTarget {
 				cfg := object(t["runConfig"])
-				return RoleTarget{MachineID: text(t["machineId"]), AgentConfigID: text(t["agentConfigId"]), ModelID: text(cfg["modelId"]), ModeID: text(cfg["modeId"])}
+				mem := object(cfg["memory"])
+				return RoleTarget{MachineID: text(t["machineId"]), AgentConfigID: text(t["agentConfigId"]), ModelID: text(cfg["modelId"]), ModeID: text(cfg["modeId"]),
+					Memory: text(mem["memoryId"]), MemoryProvider: text(mem["providerId"])}
 			}
 			if targets := anyList(v["targets"]); len(targets) > 0 {
 				for _, t := range targets {
