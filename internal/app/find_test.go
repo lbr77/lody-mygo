@@ -513,3 +513,18 @@ func TestComposerFull(t *testing.T) {
 		t.Fatalf("full %v: %q", a.composerFull, tt.Texts())
 	}
 }
+
+func TestMermaidState(t *testing.T) {
+	fc, ok := parseState("stateDiagram-v2\n  [*] --> Idle\n  Idle --> Working : send\n  Working --> Idle : done\n  Working --> [*]")
+	if !ok || len(fc.nodes) != 4 || len(fc.edges) != 4 || fc.edges[1].label != "send" || fc.byID["[*]start"] == nil || fc.byID["[*]end"] == nil {
+		t.Fatalf("state %+v", fc)
+	}
+	if mermaidKind("stateDiagram-v2\n[*] --> A") != "state" {
+		t.Fatal("kind")
+	}
+	a := fixture()
+	a.view.Working = false
+	a.view.Entries = a.view.Entries[:2]
+	a.view.Entries[1].Items = []session.Item{{ID: "m", Type: "text", Text: "```mermaid\nstateDiagram-v2\n  [*] --> Idle\n  Idle --> Working : send\n  Working --> Idle : done\n  Working --> [*]\n```"}}
+	snap(t, a, "mermaid-state", false, nil)
+}

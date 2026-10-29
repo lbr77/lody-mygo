@@ -132,6 +132,59 @@ func parseFlowchart(src string) (*flowchart, bool) {
 	return fc, len(fc.nodes) > 0 && len(fc.nodes)+len(fc.edges) <= mermaidMaxItems
 }
 
+var stateRe = regexp.MustCompile(`^(\[\*\]|[A-Za-z0-9_]+)\s*-->\s*(\[\*\]|[A-Za-z0-9_]+)\s*(?::\s*(.*))?$`)
+
+// parseState reads a state diagram as a flowchart: states as rounded
+// boxes, [*] as the start and end dots, transitions with their labels.
+func parseState(src string) (*flowchart, bool) {
+	fc := &flowchart{dir: "TD", byID: map[string]*mmNode{}}
+	node := func(id string, end bool) string {
+		key := id
+		if id == "[*]" {
+			key = "[*]start"
+			if end {
+				key = "[*]end"
+			}
+		}
+		if fc.byID[key] == nil {
+			n := &mmNode{id: key, label: id, shape: "round"}
+			if id == "[*]" {
+				n.label, n.shape = "", "dot"
+			}
+			fc.byID[key] = n
+			fc.nodes = append(fc.nodes, n)
+		}
+		return key
+	}
+	for i, raw := range strings.Split(src, "\n") {
+		line := strings.TrimSpace(raw)
+		if i == 0 || line == "" || strings.HasPrefix(line, "%%") || strings.HasPrefix(line, "direction") || strings.HasPrefix(line, "note") || line == "}" {
+			continue
+		}
+		if f := strings.Fields(line); len(f) >= 2 && f[0] == "state" {
+			// state "Long name" as S1
+			if j := strings.Index(line, " as "); j >= 0 {
+				id := strings.TrimSpace(line[j+4:])
+				node(id, false)
+				fc.byID[id].label = strings.Trim(strings.TrimSpace(line[len("state"):j]), `"`)
+			}
+			continue
+		}
+		if id, label, ok := strings.Cut(line, ":"); ok && !strings.Contains(id, "-->") {
+			node(strings.TrimSpace(id), false)
+			fc.byID[strings.TrimSpace(id)].label = strings.TrimSpace(label)
+			continue
+		}
+		m := stateRe.FindStringSubmatch(line)
+		if m == nil {
+			return nil, false
+		}
+		from, to := node(m[1], false), node(m[2], true)
+		fc.edges = append(fc.edges, mmEdge{from: from, to: to, label: strings.TrimSpace(m[3]), arrow: true})
+	}
+	return fc, len(fc.nodes) > 0 && len(fc.nodes)+len(fc.edges) <= mermaidMaxItems
+}
+
 // layout ranks the nodes by the longest path to them and spaces them.
 func (fc *flowchart) layout(size float32) (w, h float32) {
 	// Edges that go back up the chart, found by a walk from the first
@@ -189,6 +242,9 @@ func (fc *flowchart) layout(size float32) (w, h float32) {
 		if n.shape == "circle" {
 			d := max(n.w, n.h)
 			n.w, n.h = d, d
+		}
+		if n.shape == "dot" {
+			n.w, n.h = size, size
 		}
 	}
 	gapMain, gapCross := size*3, size*1.5
@@ -254,11 +310,26 @@ func edgePoint(n *mmNode, tx, ty float32) (float32, float32) {
 }
 
 func (fc *flowchart) draw(p *ui.Painter, ox, oy, size float32, ink, line, fill ui.Color) {
+	pairs := map[[2]string]bool{}
+	for _, e := range fc.edges {
+		pairs[[2]string{e.from, e.to}] = true
+	}
 	for _, e := range fc.edges {
 		a, b := fc.byID[e.from], fc.byID[e.to]
 		x0, y0 := edgePoint(a, b.x+b.w/2, b.y+b.h/2)
 		x1, y1 := edgePoint(b, a.x+a.w/2, a.y+a.h/2)
 		x0, y0, x1, y1 = x0+ox, y0+oy, x1+ox, y1+oy
+		var px, py float32 // the side a two-way edge keeps to
+		if pairs[[2]string{e.to, e.from}] && e.from != e.to {
+			// Two ways between the same nodes: each to its own side.
+			dx, dy := x1-x0, y1-y0
+			n := float32(math.Hypot(float64(dx), float64(dy)))
+			if n > 0 {
+				px, py = -dy/n, dx/n
+				off := size * 0.5
+				x0, y0, x1, y1 = x0+px*off, y0+py*off, x1+px*off, y1+py*off
+			}
+		}
 		if e.dashed {
 			dashLine(p, x0, y0, x1, y1, 1.2, line)
 		} else {
@@ -273,6 +344,9 @@ func (fc *flowchart) draw(p *ui.Painter, ox, oy, size float32, ink, line, fill u
 			layout := ui.ShapeText(e.label, ui.Font{Family: fontUI, Size: size * 0.85}, 0)
 			w, h := layout.Size()
 			mx, my := (x0+x1)/2, (y0+y1)/2
+			// A two-way edge's label stands off to its side.
+			mx += px * (w/2 + size*0.4)
+			my += py * (h/2 + size*0.2)
 			p.Fill(ui.Rect{X: mx - w/2 - 4, Y: my - h/2 - 2, W: w + 8, H: h + 4}, fill, 4)
 			p.TextLayout(layout, mx-w/2, my-h/2, ink)
 		}
@@ -289,6 +363,12 @@ func (fc *flowchart) draw(p *ui.Painter, ox, oy, size float32, ink, line, fill u
 			path.Close()
 			p.FillPath(path, fill)
 			p.StrokePath(path, 1.2, line)
+		case "dot":
+			p.Fill(r, ink, r.W/2)
+			if strings.HasSuffix(n.id, "end") {
+				p.Stroke(ui.Rect{X: r.X - 3, Y: r.Y - 3, W: r.W + 6, H: r.H + 6}, ink, r.W/2+3, 1.2)
+			}
+			continue
 		default:
 			radius := float32(4)
 			switch n.shape {
@@ -463,6 +543,8 @@ func mermaidKind(src string) string {
 			return "flowchart"
 		case "sequencediagram":
 			return "sequence"
+		case "statediagram", "statediagram-v2":
+			return "state"
 		}
 		return ""
 	}
@@ -484,6 +566,11 @@ func (a *App) registerMermaid(o *markdown.Options) {
 		case b.Open:
 		case kind == "flowchart":
 			if fc, ok := parseFlowchart(src); ok {
+				w, h = fc.layout(size)
+				draw = func(p *ui.Painter, x, y float32) { fc.draw(p, x, y, size, ink, line, fill) }
+			}
+		case kind == "state":
+			if fc, ok := parseState(src); ok {
 				w, h = fc.layout(size)
 				draw = func(p *ui.Painter, x, y float32) { fc.draw(p, x, y, size, ink, line, fill) }
 			}
