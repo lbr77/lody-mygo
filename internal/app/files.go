@@ -430,7 +430,7 @@ func (a *App) fileView(c *ui.Context, p *palette, in *inspectState, s collab.Ses
 			if fp.opening {
 				spinner(c).Size(12, 12)
 			}
-			iconButton(c, p, iconPencil, locales.EditFile(), p.Hover).Tooltip(locales.EditFile()).OnClick(func() { a.editFile(fp, s) })
+			iconButton(c, p, iconPencil, locales.EditFile(), p.Hover).OnClick(func() { a.editFile(fp, s) })
 		}
 		iconButton(c, p, iconCopy, locales.Copy(), p.Hover).OnClick(func() { mygo.Clipboard.WriteText(in.file) })
 	})

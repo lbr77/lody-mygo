@@ -305,7 +305,7 @@ func (a *App) pairingOptions(c *ui.Context, p *palette, pr *machinePairing) {
 		ui.Row(c).FillWidth().Padding(12, 8, 12, 12).Gap(8).Radius(6).Border(1, p.Border).Background(p.Text.Alpha(0.03)).AlignItems(ui.Start).Children(func() {
 			ui.Text(c, pr.command).Font(fontMono).FontSize(sizeCaption).LineHeight(1.65).TextColor(p.Text).Grow(1).MinWidth(0).Selectable()
 			command := pr.command
-			iconButton(c, p, iconCopy, locales.PairingCopyCommand(), p.Hover).Tooltip(locales.PairingCopyCommand()).OnClick(func() {
+			iconButton(c, p, iconCopy, locales.PairingCopyCommand(), p.Hover).OnClick(func() {
 				mygo.Clipboard.WriteText(command)
 				a.toast("success", locales.PairingCommandCopied())
 			})

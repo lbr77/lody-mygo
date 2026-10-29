@@ -110,7 +110,7 @@ func (a *App) toggle(c *ui.Context, key string, value bool, label string, disabl
 		on = v
 	}
 	was := on
-	ui.Switch(c, &on).Label(label).Disabled(disabled)
+	lodySwitch(c, &on, disabled).Label(label).Disabled(disabled)
 	if on == was {
 		return on, false
 	}

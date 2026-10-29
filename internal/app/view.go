@@ -14,7 +14,7 @@ const titleBarHeight = 44
 
 func (a *App) render(c *ui.Context) {
 	p := applyTheme(c)
-	spinnerInk = p.Secondary
+	spinnerInk, framePalette = p.Secondary, p
 	// The overlay layer stays built while nothing is in it, so that what
 	// leaves it, as a dialog closing, fades out rather than vanishing.
 	ui.Overlay(c, func() {})
@@ -139,9 +139,24 @@ func dangerGhostButton(c *ui.Context, p *palette, label string) ui.Element {
 	return b
 }
 
+// lodyTooltip is Lody's tooltip on anchor: a raised chip in the footnote
+// type, rising 4px into place as it fades in over 120ms.
+func lodyTooltip(c *ui.Context, p *palette, anchor ui.Element, label string) {
+	if label == "" {
+		return
+	}
+	ui.TooltipBase(c, anchor, func(tip ui.Element) {
+		tip.Padding(4, 8).Radius(8).MaxWidth(260).Background(p.Popover).Border(0.5, p.CardRim).
+			Shadow(0, 6, 16, -4, ui.RGBA(0, 0, 0, 0.18)).
+			Transition(ui.ElementTransition{Duration: durFast, Ease: easeStandard, Enter: &ui.Motion{Y: 4}, Exit: &ui.Motion{Y: 4}})
+		tip.Children(func() { ui.Text(c, label).FontSize(sizeFoot).LineHeight(16.0 / 12).TextColor(p.Text) })
+	})
+}
+
 // iconButton is a 28px square icon button, muted at rest.
 func iconButton(c *ui.Context, p *palette, icon *ui.SVG, label string, hover ui.Color) ui.Element {
-	b := ui.ButtonBase(c).Size(28, 28).Radius(8).Cursor(ui.CursorPointer).Label(label).Tooltip(label).Transition(colorFade)
+	b := ui.ButtonBase(c).Size(28, 28).Radius(8).Cursor(ui.CursorPointer).Label(label).Transition(colorFade)
+	lodyTooltip(c, p, b, label)
 	color := p.SideMuted
 	if b.Hovered() {
 		b.Background(hover)

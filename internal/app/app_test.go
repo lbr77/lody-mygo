@@ -88,6 +88,9 @@ func snap(t *testing.T, a *App, name string, dark bool, setup func(tt *ui.Tester
 		setup(tt)
 	}
 	tt.Frame()
+	// Let what comes in, as a dialog fading up, settle first.
+	tt.Advance(400 * time.Millisecond)
+	tt.Frame()
 	snapFrame(t, tt, name)
 	return tt
 }
@@ -422,10 +425,13 @@ func backgroundFixture() *App {
 func TestBackgroundTasks(t *testing.T) {
 	a := backgroundFixture()
 	tt := snap(t, a, "background-tasks", false, nil)
-	for _, want := range []string{"Waiting on 2 background tasks", "Bash", "Run full make test twice on P7", "Wait for both P7 gate runs", "6m 49s", "Running sleep 60", "Claude Code", "Show more"} {
+	for _, want := range []string{"Waiting on 2 background tasks", "Bash", "Run full make test twice on P7", "Wait for both P7 gate runs", "Running sleep 60", "Claude Code", "Show more"} {
 		if !tt.HasText(want) {
 			t.Errorf("missing %q in %q", want, tt.Texts())
 		}
+	}
+	if !tt.HasText("6m 49s") && !tt.HasText("6m 50s") {
+		t.Errorf("no elapsed time in %q", tt.Texts())
 	}
 	if err := tt.Click("Bash · Wait for both P7 gate runs"); err != nil {
 		t.Fatal(err)
@@ -439,10 +445,14 @@ func TestBackgroundTasks(t *testing.T) {
 	defer i18n.SetLocaleFunc(func() string { return "en" })
 	a = backgroundFixture()
 	tt = snap(t, a, "background-tasks-zh", false, nil)
-	for _, want := range []string{"正在等待 2 个后台任务", "6分49秒", "展开"} {
+	for _, want := range []string{"正在等待 2 个后台任务", "展开"} {
 		if !tt.HasText(want) {
 			t.Errorf("missing %q in %q", want, tt.Texts())
 		}
+	}
+	// The clock runs while the snapshot settles: 6m49s or a second on.
+	if !tt.HasText("6分49秒") && !tt.HasText("6分50秒") {
+		t.Errorf("no elapsed time in %q", tt.Texts())
 	}
 }
 

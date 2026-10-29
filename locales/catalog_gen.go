@@ -11202,3 +11202,13 @@ func PasswordVerifyFailed() string { return In(i18n.Locale()).PasswordVerifyFail
 func (msgs Messages) PasswordVerifyFailed() string {
 	return Catalog.Format(msgs.locale, "passwordVerifyFailed", nil)
 }
+
+// Sending says "Sending"
+// in the language the app shows.
+func Sending() string { return In(i18n.Locale()).Sending() }
+
+// Sending says "Sending"
+// in the language of msgs.
+func (msgs Messages) Sending() string {
+	return Catalog.Format(msgs.locale, "sending", nil)
+}

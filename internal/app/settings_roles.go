@@ -295,7 +295,7 @@ func (a *App) roleDialog(c *ui.Context, p *palette) {
 					ui.Text(c, locales.ShortcutsShare()).FontSize(sizeSub).FontWeight(500).TextColor(p.Text)
 					ui.Text(c, locales.RoleShareHint()).FontSize(sizeCaption).TextColor(p.Secondary)
 				})
-				ui.Switch(c, &f.shared).Label(locales.ShortcutsShare())
+				lodySwitch(c, &f.shared, false).Label(locales.ShortcutsShare())
 			})
 			if f.err != "" {
 				ui.Text(c, f.err).FontSize(sizeFoot).TextColor(p.Danger)

@@ -1110,5 +1110,6 @@
   "passwordContinue": "继续",
   "passwordMismatch": "两次输入的密码不一致。",
   "passwordCurrentRequired": "请输入当前密码。",
-  "passwordVerifyFailed": "无法验证密码，请重试。"
+  "passwordVerifyFailed": "无法验证密码，请重试。",
+  "sending": "发送中"
 }

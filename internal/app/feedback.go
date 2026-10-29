@@ -237,3 +237,26 @@ func onlineDot(c *ui.Context, p *palette, online bool) {
 		ui.Box(c).Size(10, 10).Radius(5).Background(ink)
 	})
 }
+
+// framePalette is the palette of the frame being built, for the controls
+// drawn without one passed, as switches.
+var framePalette = &lightPalette
+
+// lodySwitch is Lody's switch: a 28×16 track, a well while off and the
+// accent while on, the two crossfading, with a raised 12px thumb that
+// slides across in 120ms.
+func lodySwitch(c *ui.Context, on *bool, disabled bool) ui.Element {
+	p := framePalette
+	s := ui.SwitchBase(c, on).Size(28, 16).Radius(8).Padding(2).Shrink(0).Disabled(disabled)
+	k := s.AnimateWith("on", b2f(*on), durFast, easeStandard)
+	s.Background(p.Text.Alpha(0.12).Mix(p.Primary, k))
+	if disabled {
+		s.Opacity(0.45)
+	} else {
+		s.Cursor(ui.CursorPointer)
+	}
+	s.Children(func() {
+		ui.Box(c).Size(12, 12).Radius(6).Background(ui.Hex("#FFFFFF")).Shadow(0, 1, 2, 0, ui.RGBA(0, 0, 0, 0.2)).Translate(12*k, 0)
+	})
+	return s
+}

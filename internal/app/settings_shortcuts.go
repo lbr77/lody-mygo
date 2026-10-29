@@ -206,7 +206,7 @@ func (a *App) shortcutDialog(c *ui.Context, p *palette) {
 					ui.Text(c, locales.ShortcutsShare()).FontSize(sizeSub).FontWeight(500).TextColor(p.Text)
 					ui.Text(c, locales.ShortcutsShareHint()).FontSize(sizeCaption).TextColor(p.Secondary)
 				})
-				sw := ui.Switch(c, &f.shared).Label(locales.ShortcutsShare())
+				sw := lodySwitch(c, &f.shared, f.base != nil).Label(locales.ShortcutsShare())
 				if f.base != nil {
 					// A shortcut keeps its visibility; Lody republishes to change it.
 					sw.Disabled(true)

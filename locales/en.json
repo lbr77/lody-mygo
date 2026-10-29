@@ -2261,5 +2261,6 @@
   "passwordContinue": "Continue",
   "passwordMismatch": "Passwords do not match.",
   "passwordCurrentRequired": "Enter your current password.",
-  "passwordVerifyFailed": "Couldn't verify your password. Please try again."
+  "passwordVerifyFailed": "Couldn't verify your password. Please try again.",
+  "sending": "Sending"
 }

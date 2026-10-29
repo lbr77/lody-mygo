@@ -474,6 +474,8 @@ func (a *App) statusMark(c *ui.Context, p *palette, s *catalog.Session, age bool
 	switch {
 	case s.Waiting():
 		ui.Icon(c, iconHand).Size(12, 12).TextColor(p.Primary).Tooltip(locales.StatusWaiting())
+	case a.sending && a.sendingID == s.ID && !s.Working():
+		sendRing(c, p)
 	case a.workingMark(c, p, s.ID, s.Working(), s.Unread() && a.selected != s.ID):
 	case age:
 		if t := relativeTime(time.UnixMilli(int64(activity(*s)))); t != "" {

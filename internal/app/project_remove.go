@@ -133,7 +133,7 @@ func (a *App) removalDialog(c *ui.Context, p *palette) {
 							ui.Text(c, locales.ProjectCleanupWorktrees()).FontSize(sizeSub).FontWeight(500).TextColor(p.Text)
 							ui.Text(c, locales.ProjectCleanupHelper()).FontSize(sizeCaption).TextColor(p.Secondary)
 						})
-						sw := ui.Switch(c, &st.cleanup).Label(locales.ProjectCleanupWorktrees())
+						sw := lodySwitch(c, &st.cleanup, !online).Label(locales.ProjectCleanupWorktrees())
 						if !online {
 							sw.Disabled(true)
 						}

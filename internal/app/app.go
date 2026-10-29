@@ -71,6 +71,7 @@ type App struct {
 	drafts    map[string]string
 	draft     string // the composer, bound to the open session or New chat
 	sending   bool
+	sendingID string // the session whose message is on its way
 	sendError string
 
 	newChat struct {
@@ -608,6 +609,7 @@ func (a *App) send() {
 	}
 	a.recordActivity()
 	a.sending, a.sendError, a.uploading = true, "", ""
+	a.sendingID = a.selected
 	a.draft, a.attachments = "", nil
 	delete(a.drafts, a.selected)
 	delete(a.attachDrafts, a.selected)

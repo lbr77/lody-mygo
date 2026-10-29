@@ -257,3 +257,25 @@ func (a *App) workingMark(c *ui.Context, p *palette, id string, working, unread 
 	}
 	return true
 }
+
+// sendRing marks a row whose message is still going out, as Lody's: a
+// faint ring with a quarter of it turning every 1.2s.
+func sendRing(c *ui.Context, p *palette) {
+	ring := ui.Box(c.Key("send-ring")).Size(12, 12).Shrink(0).Label(locales.Sending())
+	k := ring.Keyframes("turn", []ui.Keyframe{{Value: 0}, {At: 1200 * time.Millisecond, Value: 1}}, ui.KeyframeOptions{Repeat: ui.RepeatForever})
+	ink := p.Primary
+	ring.Draw(func(pt *ui.Painter, r ui.Rect) {
+		cx, cy, rad := r.X+r.W/2, r.Y+r.H/2, 4.25*r.W/12
+		arc := func(from, sweep float64) [][2]float32 {
+			n := max(4, int(48*sweep))
+			pts := make([][2]float32, 0, n+1)
+			for i := 0; i <= n; i++ {
+				a := 2 * math.Pi * (from + sweep*float64(i)/float64(n))
+				pts = append(pts, [2]float32{cx + rad*float32(math.Cos(a)), cy + rad*float32(math.Sin(a))})
+			}
+			return pts
+		}
+		pt.StrokePolyline(arc(0, 1), 1.5, ink.Alpha(0.22))
+		pt.StrokePolyline(arc(-0.25+float64(k), 0.25), 1.5, ink)
+	})
+}

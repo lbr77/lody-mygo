@@ -381,7 +381,7 @@ func (a *App) userMessage(c *ui.Context, p *palette, e session.Entry, firstQueue
 			}
 			if canEdit && !editing {
 				entry := e
-				b := iconButton(c, p, iconPencil, locales.EditMessage(), p.Hover).Size(24, 24).Tooltip(locales.EditMessage()).
+				b := iconButton(c, p, iconPencil, locales.EditMessage(), p.Hover).Size(24, 24).
 					Transition(colorFade).OnClick(func() { a.startEdit(entry) })
 				// The message's actions fade in with the pointer, over 150ms.
 				b.Opacity(b.AnimateWith("shown", b2f(hovered), 150*time.Millisecond, easeStandard))

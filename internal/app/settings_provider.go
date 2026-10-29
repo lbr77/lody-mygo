@@ -266,7 +266,7 @@ func (a *App) titleSection(c *ui.Context, p *palette) {
 						on, _ = opt.Current.(bool)
 					}
 					was := on
-					ui.Switch(c, &on).Label(opt.Name)
+					lodySwitch(c, &on, false).Label(opt.Name)
 					if on != was {
 						f.title[opt.ID] = on
 					}
@@ -632,7 +632,7 @@ func (a *App) piExtensionsField(c *ui.Context, p *palette) {
 			ui.Row(c.Key(path)).FillWidth().Gap(8).AlignItems(ui.Center).Children(func() {
 				on := selected[path]
 				was := on
-				ui.Switch(c, &on).Label(firstNonEmpty(name, path))
+				lodySwitch(c, &on, false).Label(firstNonEmpty(name, path))
 				if on != was {
 					toggle(path)
 				}

@@ -537,7 +537,7 @@ func (a *App) mcpDialog(c *ui.Context, p *palette) {
 					ui.Text(c, locales.McpDefaultEnabled()).FontSize(sizeSub).FontWeight(500).TextColor(p.Text)
 					ui.Text(c, locales.McpDefaultEnabledHint()).FontSize(sizeCaption).TextColor(p.Secondary)
 				})
-				ui.Switch(c, &f.enabled).Label(locales.McpDefaultEnabled())
+				lodySwitch(c, &f.enabled, false).Label(locales.McpDefaultEnabled())
 			})
 			if f.err != "" {
 				ui.Text(c, f.err).FontSize(sizeFoot).TextColor(p.Danger)
