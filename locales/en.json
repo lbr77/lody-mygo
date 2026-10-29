@@ -4267,5 +4267,46 @@
   "deepLinkDefaultHandlerPending": "If prompted, confirm your choice in system settings.",
   "deepLinkDefaultHandlerFailed": "Unable to change the default app. Choose it in system settings.",
   "deepLinkDefaultHandlerActive": "Default app",
-  "deepLinkMakeDefault": "Set as default"
+  "deepLinkMakeDefault": "Set as default",
+  "sharesPublishedAt": "Published",
+  "sharesUpdatedAt": "Last updated",
+  "sharesConversationsLabel": "Conversations",
+  "sharesSize": "Size",
+  "sharesStatusLabel": "Status",
+  "sharesLinkRevoked": "This share has been revoked, so it has no live link.",
+  "sharesLinkOtherPublisher": "Only the member who published this share holds its link.",
+  "sharesOpenConversation": "Open conversation",
+  "sharesShowRevoked": "Show revoked ({count})",
+  "@sharesShowRevoked": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sharesPublisherProfile": "View profile for {name}",
+  "@sharesPublisherProfile": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "machinePairingDesktopClaimed": "This machine is connected.",
+  "machinePairingDesktopClaimFailed": "Could not connect this machine. Create a new connection request and try again.",
+  "magpieImportAdded": "Magpie providers added. Check Providers for setup progress.",
+  "magpieImportFailed": "Could not finish importing. Check the local agent and retry; providers already added will be kept.",
+  "magpieImportInvalidLink": "This Magpie import link is invalid.",
+  "magpieImportLocalUnavailable": "Start the local agent to import Magpie.",
+  "magpieImportPiUnavailable": "Pi is not supported on this machine.",
+  "magpieImportUpdateRequired": "Update the local agent to import Magpie.",
+  "magpieImportTitle": "Import from Magpie",
+  "magpieImportDescription": "The following agent providers will be created automatically from the Magpie gateway configuration.",
+  "magpieImportMachineLineLabel": "Current machine",
+  "magpieImportThisMachine": "This machine",
+  "magpieImportIndependentConfig": "Independent configuration",
+  "magpieImportEmpty": "No Magpie runtimes are available to import.",
+  "magpieImportImport": "Import",
+  "magpieImportImporting": "Importing…",
+  "magpieImportRuntimes": "Runtimes"
 }

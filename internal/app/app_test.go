@@ -929,14 +929,21 @@ func TestCloudSettings(t *testing.T) {
 		CLI: presence.Resource{CPUCores: &cores, MemoryBytes: &mem}, EffectiveMemoryBytes: 16 * (1 << 30), AvailableMemoryBytes: 8 * (1 << 30)}}}
 	check("machines", "CLI", "0.9%", "458 MB", "ACP sessions", "8.0 GB / 16 GB")
 	a.monitors = nil
-	tt := check("shares", "Flock port", "Revoke")
-	if err := tt.Click("Revoke"); err != nil {
+	tt := check("shares", "Flock port", "View profile for Grace Hopper")
+	if err := tt.Click("Flock port"); err != nil {
 		t.Fatal(err)
 	}
 	tt.Frame()
-	if !tt.HasText("Revoke link") || a.revoking != "sh1" {
+	tt.Advance(400 * time.Millisecond)
+	tt.Frame()
+	if err := tt.Click("Revoke share"); err != nil {
+		t.Fatalf("%v in %q", err, tt.Texts())
+	}
+	tt.Frame()
+	if !tt.HasText("The previous link will stop working. Downloaded copies cannot be recalled.") || !a.confirming.open || a.sharePages.detailOpen {
 		t.Fatalf("revoke confirmation: %q", tt.Texts())
 	}
+	a.confirming.open = false
 }
 
 func TestProviderRow(t *testing.T) {

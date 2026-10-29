@@ -228,7 +228,9 @@ type workspaceRepo struct {
 
 // githubPage is the workspace's GitHub: its app and the repositories it
 // reaches, and whether Lody acts as the user. Installing the app and
-// authorizing the user happen in the browser, as Lody's desktop app does.
+// authorizing the user happen in the browser, as Lody's desktop app does;
+// the install asks lody.ai to come back to the desktop, whose
+// lody://github-install link brings this page back, read again.
 func (a *App) githubPage(c *ui.Context, p *palette) {
 	settingsTitle(c, p, "GitHub")
 	convex, ws := a.convex, a.workspaceID
@@ -265,7 +267,7 @@ func (a *App) githubPage(c *ui.Context, p *palette) {
 		var out struct {
 			State string `json:"state"`
 		}
-		a.cloudCall("action", "github:createGitHubInstallState", map[string]any{"workspaceId": ws, "workspaceSlug": slug, "returnTarget": "web"}, &out, "", "", func() {
+		a.cloudCall("action", "github:createGitHubInstallState", map[string]any{"workspaceId": ws, "workspaceSlug": slug, "returnTarget": "desktop"}, &out, "", "", func() {
 			if out.State != "" {
 				mygo.Shell.OpenExternal("https://github.com/apps/lodyai/installations/new?state=" + url.QueryEscape(out.State))
 			}
@@ -345,6 +347,7 @@ type publishedShare struct {
 	CanManage         bool    `json:"canManage"`
 	Title             string  `json:"title"`
 	CreatedAt         float64 `json:"createdAt"`
+	UpdatedAt         float64 `json:"updatedAt"`
 	TotalBytes        float64 `json:"totalBytes"`
 	ConversationCount float64 `json:"conversationCount"`
 	CanRevoke         bool    `json:"canRevoke"`
@@ -363,11 +366,19 @@ type sharesPage struct {
 }
 
 // sharePaging is how far the published shares were paged: the cursors of
-// the pages before the one shown, as Lody's list keeps them. No page
-// outlives a switch of workspace.
+// the pages before the one shown, as Lody's list keeps them; whether the
+// revoked ones show, the share whose details or publisher show, and the
+// reset or revoke made from them. None of it outlives a switch of
+// workspace.
 type sharePaging struct {
-	workspace string
-	cursors   []string
+	workspace   string
+	cursors     []string
+	showRevoked bool
+	detail      publishedShare // the share whose details show
+	detailOpen  bool
+	profile     string // the share whose publisher's profile shows
+	profileOpen bool
+	op          *shareJob // the reset or revoke under way, or what came of it
 }
 
 // cursor is where the page shown starts: "" for the first.
@@ -419,15 +430,17 @@ func (a *App) pageShares(next string) {
 	} else {
 		sp.cursors = append(sp.cursors, next)
 	}
-	a.revoking, a.resetting = "", ""
+	sp.profile, sp.profileOpen = "", false
 	if f := a.fetches[a.workspaceID+"|"+sharesKey(sp.cursor())]; f != nil && f.load != nil && !a.offline {
 		a.reload(f, nil)
 	}
 }
 
 // sharesPage lists the static copies of sessions published from the
-// workspace, 20 at a time, and opens, copies, resets and revokes them.
-// As Lody's, Previous and Next show only once there is a page to go to.
+// workspace, 20 at a time, as Lody's desktop app does: one card of rows,
+// each opening its share's details. The revoked ones hide behind Show
+// revoked, which counts those on the page, since the server can't leave
+// them out; Previous and Next show only once there is a page to go to.
 func (a *App) sharesPage(c *ui.Context, p *palette) {
 	settingsTitle(c, p, locales.SettingsShares())
 	ui.Text(c, locales.SharesHelp()).FontSize(sizeFoot).TextColor(p.Secondary)
@@ -437,6 +450,9 @@ func (a *App) sharesPage(c *ui.Context, p *palette) {
 	}
 	f := a.sharesFetch(sp.cursor())
 	a.settingsErrorLine(c, p)
+	if op := sp.op; op != nil && !op.busy && op.err != "" {
+		ui.Text(c, op.err).FontSize(sizeFoot).TextColor(p.Danger).Selectable()
+	}
 	if !pending(c, p, f) {
 		return
 	}
@@ -444,71 +460,39 @@ func (a *App) sharesPage(c *ui.Context, p *palette) {
 	if page == nil {
 		page = &sharesPage{IsDone: true}
 	}
+	defer a.shareDetailDialog(c, p, page)
 	defer a.sharesPager(c, p, page)
-	shares := page.Page
-	if len(shares) == 0 {
+	revoked := 0
+	var shown []publishedShare
+	for _, s := range page.Page {
+		if s.Status != "active" {
+			revoked++
+		}
+		if s.Status == "active" || sp.showRevoked {
+			shown = append(shown, s)
+		}
+	}
+	if revoked > 0 {
+		label := locales.SharesShowRevoked(revoked)
+		ui.Row(c.Key("show-revoked")).FillWidth().Gap(8).AlignItems(ui.Center).Justify(ui.End).Children(func() {
+			// The label is the switch's, and flips it too.
+			ui.ButtonBase(c.Key("label")).Cursor(ui.CursorPointer).OnClick(func() { sp.showRevoked = !sp.showRevoked }).Children(func() {
+				ui.Text(c, label).FontSize(sizeFoot).TextColor(p.Secondary)
+			})
+			lodySwitch(c, &sp.showRevoked, false).Label(label)
+		})
+	}
+	if len(shown) == 0 {
 		ui.Text(c, locales.SharesNone()).FontSize(sizeFoot).TextColor(p.Tertiary)
 		return
 	}
 	byUser, _ := a.members()
-	for _, s := range shares {
-		share := s
-		facts := []string{
-			map[string]string{"active": locales.SharesActive(), "revoked": locales.SharesRevoked()}[s.Status],
-			a.memberName(s.PublisherUserID, byUser), formatDay(s.CreatedAt),
-			locales.SharesConversations(int(s.ConversationCount)), formatBytes(s.TotalBytes),
+	now := time.Now()
+	card(c, p, func() {
+		for _, s := range shown {
+			a.publishedShareRow(c, p, s, byUser, now)
 		}
-		settingRow(c.Key(s.ShareID), p, firstNonEmpty(s.Title, locales.UntitledSession()), strings.Join(facts, " · "), func() {
-			if share.Status != "active" {
-				return
-			}
-			entry := &shareEntry{ShareID: share.ShareID, RootSessionID: share.RootSessionID, PublisherUserID: share.PublisherUserID, Status: share.Status,
-				Revision: share.Revision, CredentialVersion: share.CredentialVersion, CanManage: share.CanManage, CanRevoke: share.CanRevoke}
-			mine := a.account != nil && share.PublisherUserID == a.account.User.ID
-			if a.revoking != share.ShareID && a.resetting != share.ShareID {
-				switch link := a.shareLink(entry); {
-				case link != "":
-					// The published page, in the browser, as Lody's
-					// management opens it; then its link.
-					ui.Row(c).Gap(6).Margin(0, 6, 0, 0).Children(func() {
-						iconButton(c, p, iconExternal, locales.SharesOpenPublished(), p.Text.Alpha(0.06)).Border(1, p.Border).
-							OnClick(func() { openExternal(link) })
-						ghostButton(c, p, locales.ShareCopy()).Border(1, p.Border).OnClick(func() {
-							writeClipboard(link)
-							a.toast("success", locales.ShareCopied())
-						})
-					})
-				case mine && share.CanManage:
-					tip(c, p, ghostButton(c, p, locales.ShareReset()).Border(1, p.Border), locales.SharesLinkOtherDevice()).OnClick(func() { a.resetting = share.ShareID })
-				}
-			}
-			if a.resetting == share.ShareID {
-				ui.Row(c).Gap(6).Children(func() {
-					ghostButton(c, p, locales.Cancel()).OnClick(func() { a.resetting = "" })
-					tip(c, p, ghostButton(c, p, locales.ShareReset()).Border(1, p.Danger), locales.ShareInvalidateNotice()).OnClick(func() {
-						a.resetting = ""
-						a.resetShareLink(&shareJob{root: share.RootSessionID, entry: entry, loaded: true})
-					})
-				})
-				return
-			}
-			if !share.CanRevoke {
-				return
-			}
-			if a.revoking != share.ShareID {
-				ghostButton(c, p, locales.SharesRevoke()).Border(1, p.Border).OnClick(func() { a.revoking = share.ShareID })
-				return
-			}
-			ui.Row(c).Gap(6).Children(func() {
-				ghostButton(c, p, locales.Cancel()).OnClick(func() { a.revoking = "" })
-				b := ghostButton(c, p, locales.SharesConfirmRevoke()).Border(1, p.Danger)
-				b.OnClick(func() {
-					a.revoking = ""
-					a.cloudCall("mutation", "sessionSharing:revoke", map[string]any{"shareId": share.ShareID, "expectedRevision": share.Revision}, nil, sharesKey(sp.cursor()), "", nil)
-				})
-			})
-		})
-	}
+	})
 }
 
 // sharesPager is Previous and Next under the shares, at the end: shown
@@ -530,16 +514,4 @@ func (a *App) sharesPager(c *ui.Context, p *palette, page *sharesPage) {
 		next := page.ContinueCursor
 		button(locales.SharesNext(), page.IsDone || next == "" || next == sp.cursor(), func() { a.pageShares(next) })
 	})
-}
-
-func formatBytes(n float64) string {
-	switch {
-	case n >= 1<<30:
-		return trimZero(fmt.Sprintf("%.1f", n/(1<<30))) + " GB"
-	case n >= 1<<20:
-		return trimZero(fmt.Sprintf("%.1f", n/(1<<20))) + " MB"
-	case n >= 1<<10:
-		return trimZero(fmt.Sprintf("%.1f", n/(1<<10))) + " KB"
-	}
-	return fmt.Sprintf("%.0f B", n)
 }

@@ -293,6 +293,8 @@ type App struct {
 	sharePages       sharePaging           // the published shares' pages in settings
 	link             *linkTarget           // a lody:// link waiting until it can open
 	linkDefault      linkDefault           // whether lody:// links open in this app
+	claim            machineClaim          // a pairing request a lody:// link asked this machine to take
+	magpie           magpieImport          // a Magpie import a lody:// link asked for
 	taskOpen         bool                  // a task's dialog
 	taskEntry        string                // the turn and task it shows
 	taskID           string

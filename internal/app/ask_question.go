@@ -784,32 +784,13 @@ func askInfoDialog(c *ui.Context, p *palette, st *askCard) {
 		return
 	}
 	o := st.info
-	w, h := c.Size()
-	ui.DialogBase(c, &st.infoOpen, func(backdrop, panel ui.Element) {
-		sheetIn(backdrop, panel)
-		if p.Dark {
-			backdrop.Background(ui.RGBA(0, 0, 0, 0.6))
-			panel.Background(p.Ground).InsetShadow(0, 1, 0, 0, ui.RGBA(255, 255, 255, 0.06)).
-				Shadow(0, 0, 0, 0.5, ui.RGBA(255, 255, 255, 0.08)).Shadow(0, 24, 56, -8, ui.RGBA(0, 0, 0, 0.7))
-		} else {
-			backdrop.Background(ui.RGBA(28, 28, 28, 0.5))
-			panel.Background(p.Popover).Shadow(0, 0, 0, 0.5, ui.RGBA(28, 28, 28, 0.08)).
-				Shadow(0, 2, 6, -2, ui.RGBA(28, 28, 28, 0.08)).Shadow(0, 24, 56, -12, ui.RGBA(28, 28, 28, 0.28))
-		}
-		panel.Width(min(512, w-64)).MaxHeight(h - 64).Padding(16).Gap(16).Radius(14).Label(o.Label)
-		ui.Column(c.Key("ask-info-head")).FillWidth().Gap(6).Shrink(0).Padding(0, 36, 0, 0).Children(func() {
-			ui.Text(c, o.Label).FontSize(16).LineHeight(24.0 / 16).FontWeight(600).TextColor(p.Text).MinWidth(0)
-			if o.Description != "" {
-				ui.Text(c, o.Description).FontSize(sizeBody).LineHeight(20.0 / 14).TextColor(p.Secondary).MinWidth(0)
-			}
-		})
+	_, h := c.Size()
+	lodyDialog(c, p, &st.infoOpen, o.Label, func() {
+		lodyDialogHeader(c, p, o.Label, o.Description, nil)
 		if o.Preview != "" {
 			ui.Scroll(c.Key("ask-info-preview")).FillWidth().MaxHeight(h * 0.6).Radius(10).Background(p.Text.Alpha(0.03)).Children(func() {
 				ui.Text(c, o.Preview).Font(fontMono).FontSize(sizeFoot).LineHeight(1.625).TextColor(p.Text).NoWrap().Padding(8, 12).Selectable()
 			})
-		}
-		if lodyButton(c, p, "ghost", "ask-info-close", iconX, "", true).Absolute().Top(16).Right(16).Label(locales.Close()).Clicked() {
-			st.infoOpen = false
 		}
 	})
 }
