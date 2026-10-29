@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/egoist/mygo/ui"
+	"github.com/google/uuid"
 
 	"github.com/lbr77/lody-mygo/internal/catalog"
 	"github.com/lbr77/lody-mygo/internal/flock"
@@ -344,4 +345,57 @@ func agentReadinessMark(c *ui.Context, p *palette, cliType, readiness string, pe
 	tile.Children(func() {
 		ui.Icon(c, agentIcon(cliType)).Size(18, 18).TextColor(ink).Opacity(opacity)
 	})
+}
+
+// queuedBuiltin is whether the form adds a built-in only its machine can
+// install, as bub and dimcode: its dialog waits on the setup.
+func queuedBuiltin(f *providerForm) bool {
+	t := f.agentType()
+	return f.editing == nil && f.kind.cliType == "builtin" && (t == "bub" || t == "dimcode")
+}
+
+// waitSetup shows, in place of the form, the setup its dialog waits on,
+// and reports whether it did. Once the machine publishes it, the dialog
+// edits the provider; cancelled, it is a draft again, under a new id, as
+// the cancellation stays with the old one.
+func (a *App) waitSetup(c *ui.Context, p *palette, f *providerForm) bool {
+	if f.setupWait == "" {
+		return false
+	}
+	for _, ag := range a.catalog.Agents[f.machine] {
+		if ag.ID == f.setupWait {
+			agent := ag
+			f.setupWait = ""
+			a.openProvider(f.machine, &agent)
+			return false
+		}
+	}
+	var st *catalog.ProviderSetup
+	for i, s := range a.catalog.ProviderSetups[f.machine] {
+		if s.ID == f.setupWait {
+			st = &a.catalog.ProviderSetups[f.machine][i]
+		}
+	}
+	if st == nil {
+		if f.setupSeen {
+			f.setupWait, f.setupSeen, f.id, f.persisted = "", false, uuid.NewString(), false
+			return false
+		}
+		ui.Column(c.Key("setup-wait")).Grow(1).Center().Children(func() { spinner(c).Size(18, 18) })
+		ui.Row(c).FillWidth().Padding(12, 20, 16, 20).Gap(8).Justify(ui.End).Shrink(0).Children(func() {
+			ghostButton(c, p, locales.Cancel()).Border(1, p.Border).OnClick(func() { f.open = false })
+			primaryButton(c, p, locales.ProviderCreate(), false)
+		})
+		return true
+	}
+	f.setupSeen = true
+	ui.Column(c.Key("setup-wait")).Grow(1).MinHeight(0).Padding(8, 20, 8, 20).Children(func() {
+		card(c, p, func() { a.providerSetupRow(c, p, *st) })
+	})
+	// The footer stays, its action held while the machine works.
+	ui.Row(c).FillWidth().Padding(12, 20, 16, 20).Gap(8).Justify(ui.End).AlignItems(ui.Center).Shrink(0).Children(func() {
+		ghostButton(c, p, locales.Cancel()).Border(1, p.Border).OnClick(func() { f.open = false })
+		primaryButton(c, p, locales.ProviderCreate(), false)
+	})
+	return true
 }

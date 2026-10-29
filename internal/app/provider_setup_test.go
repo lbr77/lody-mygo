@@ -63,4 +63,43 @@ func TestProviderSetupRows(t *testing.T) {
 	if a.backgroundSetup(&a.provider) {
 		t.Fatal("background setup of an edit")
 	}
+
+	// Bub only its machine can install: the dialog waits on the setup, then
+	// edits the provider it published.
+	a.provider.editing = nil
+	for _, k := range allKinds {
+		if k.value == "builtin:bub" {
+			a.selectKind(k)
+		}
+	}
+	a.provider.name = "Bub"
+	if !queuedBuiltin(&a.provider) || !a.backgroundSetup(&a.provider) {
+		t.Fatal("bub is not waited on")
+	}
+	a.saveProvider(false)
+	id := a.provider.id
+	if a.provider.setupWait != id || !a.provider.open {
+		t.Fatalf("not waiting: %+v", a.provider.setupWait)
+	}
+	a.catalog.ProviderSetups["m1"] = append(a.catalog.ProviderSetups["m1"], catalog.ProviderSetup{ID: id, MachineID: "m1", Status: "verifying", Config: map[string]any{"name": "Bub", "cliType": "builtin", "agentType": "bub"}})
+	tt.Frame()
+	tt.Advance(400 * time.Millisecond)
+	tt.Frame()
+	snapFrame(t, tt, "provider-setup-dialog")
+	if !tt.HasText("Checking credentials and provider access…") {
+		t.Fatalf("no setup in the dialog: %q", tt.Texts())
+	}
+	a.catalog.Agents["m1"] = append(a.catalog.Agents["m1"], catalog.AgentConfig{ID: id, Name: "Bub", MachineID: "m1", AgentType: "bub", CLIType: "builtin"})
+	tt.Frame()
+	if a.provider.setupWait != "" || a.provider.editing == nil || a.provider.editing.ID != id {
+		t.Fatalf("not editing the published provider: %+v", a.provider.editing)
+	}
+	// Without the protocol, Add is held, saying why.
+	a.provider.editing = nil
+	a.provider.id = "x"
+	a.catalog.MachineCaps["m1"]["providerSetup"] = 0
+	tt.Frame()
+	if !tt.HasText("Update Lody on the target machine to finish this provider setup.") {
+		t.Fatalf("no reason in %q", tt.Texts())
+	}
 }

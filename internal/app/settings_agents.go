@@ -123,9 +123,13 @@ func (k providerKind) label() string {
 var managedTypes = []string{"kimi", "devin", "grok", "claude", "codex", "pi"}
 
 type providerForm struct {
-	open      bool
-	machine   string
-	editing   *catalog.AgentConfig
+	open    bool
+	machine string
+	editing *catalog.AgentConfig
+	// setupWait is the setup a queued built-in's dialog waits on, seen
+	// once the machine's stream lists it.
+	setupWait string
+	setupSeen bool
 	kind      providerKind
 	search    string
 	id        string
@@ -704,13 +708,21 @@ func (a *App) saveProvider(test bool) {
 	f.err, f.testErr, f.tested = "", "", ""
 	machine, id := f.machine, f.id
 	if a.backgroundSetup(f) {
-		// The machine sets it up in the background, its row saying how far.
+		// The machine sets it up in the background, its row saying how far:
+		// in the list, or, for a built-in only the machine can install, here
+		// until it publishes.
+		wait := queuedBuiltin(f)
+		if wait {
+			f.setupWait, f.setupSeen = id, false
+		}
 		a.createProviderSetup(machine, id, row, func(err error) {
 			if err != nil {
-				f.err = err.Error()
+				f.err, f.setupWait = err.Error(), ""
 				return
 			}
-			f.persisted, f.open = true, false
+			if !wait {
+				f.persisted, f.open = true, false
+			}
 		})
 		return
 	}
@@ -788,7 +800,12 @@ func (a *App) providerRail(c *ui.Context, p *palette) {
 					}
 					kind := k
 					row := ui.Row(c.Key(k.value)).FillWidth().Height(34).Padding(0, 10).Radius(8).Gap(10).AlignItems(ui.Center).Cursor(ui.CursorPointer).
-						Label(k.label()).Transition(colorFade).OnClick(func() { a.selectKind(kind) })
+						Label(k.label()).Transition(colorFade).Disabled(f.setupWait != "").OnClick(func() {
+						// The kind is fixed while its setup is under way.
+						if f.setupWait == "" {
+							a.selectKind(kind)
+						}
+					})
 					selected := f.kind.value == k.value
 					switch {
 					case selected:
@@ -859,13 +876,16 @@ func (a *App) providerFormView(c *ui.Context, p *palette) {
 			})
 		}
 		test := outlineButton(c, p, iconFlask, locales.ProviderTest())
-		if f.testing || !(a.binaryReady(f) || a.backgroundSetup(f)) {
+		if f.testing || f.setupWait != "" || !(a.binaryReady(f) || a.backgroundSetup(f)) || queuedBuiltin(f) && a.machineCap(f.machine, "providerSetup") < 1 {
 			test.Disabled(true).Opacity(0.6)
 		} else {
 			test.OnClick(func() { a.saveProvider(true) })
 		}
 		iconButton(c, p, iconX, locales.Close(), p.Hover).OnClick(func() { f.open = false })
 	})
+	if a.waitSetup(c, p, f) {
+		return
+	}
 	ui.Scroll(c).Grow(1).MinHeight(0).Padding(8, 20, 8, 20).Gap(16).Children(func() {
 		if len(a.catalog.MachineIDs) > 1 && f.editing == nil {
 			field(c, p, locales.ProviderMachine(), "", func() {
@@ -971,6 +991,11 @@ func (a *App) providerFormView(c *ui.Context, p *palette) {
 			label = locales.Save()
 		}
 		ready := f.machine != "" && (k.group != "custom" || strings.TrimSpace(f.command) != "") && (a.binaryReady(f) || a.backgroundSetup(f))
+		if queuedBuiltin(f) && a.machineCap(f.machine, "providerSetup") < 1 {
+			// Only the machine can install it, and this one can't be asked.
+			ready = false
+			ui.Text(c, locales.SetupUnsupportedTarget()).FontSize(sizeCaption).TextColor(p.Secondary).Grow(1).MinWidth(0)
+		}
 		primaryButton(c, p, label, ready && !f.testing).OnClick(func() { a.saveProvider(false) })
 	})
 }
