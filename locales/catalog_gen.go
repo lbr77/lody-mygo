@@ -15526,3 +15526,33 @@ func SchedWorktree() string { return In(i18n.Locale()).SchedWorktree() }
 func (msgs Messages) SchedWorktree() string {
 	return Catalog.Format(msgs.locale, "schedWorktree", nil)
 }
+
+// SchedHistoryLoading says "Loading runs…"
+// in the language the app shows.
+func SchedHistoryLoading() string { return In(i18n.Locale()).SchedHistoryLoading() }
+
+// SchedHistoryLoading says "Loading runs…"
+// in the language of msgs.
+func (msgs Messages) SchedHistoryLoading() string {
+	return Catalog.Format(msgs.locale, "schedHistoryLoading", nil)
+}
+
+// SchedCountInChat says "{count} runs in this chat"
+// in the language the app shows.
+func SchedCountInChat(count string) string { return In(i18n.Locale()).SchedCountInChat(count) }
+
+// SchedCountInChat says "{count} runs in this chat"
+// in the language of msgs.
+func (msgs Messages) SchedCountInChat(count string) string {
+	return Catalog.Format(msgs.locale, "schedCountInChat", map[string]any{"count": count})
+}
+
+// SchedUpgrade says "Update the target machine’s CLI to edit schedules."
+// in the language the app shows.
+func SchedUpgrade() string { return In(i18n.Locale()).SchedUpgrade() }
+
+// SchedUpgrade says "Update the target machine’s CLI to edit schedules."
+// in the language of msgs.
+func (msgs Messages) SchedUpgrade() string {
+	return Catalog.Format(msgs.locale, "schedUpgrade", nil)
+}

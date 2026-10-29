@@ -17,6 +17,7 @@ import (
 	"github.com/lbr77/lody-mygo/internal/catalog"
 	"github.com/lbr77/lody-mygo/internal/localplane"
 	"github.com/lbr77/lody-mygo/internal/schedule"
+	"github.com/lbr77/lody-mygo/internal/session"
 	"github.com/lbr77/lody-mygo/locales"
 )
 
@@ -41,6 +42,10 @@ type schedState struct {
 	tab            string // settings or history
 	form           *schedForm
 	saving, acting bool
+	// The chat a schedule posts to, followed while its history shows.
+	chatID   string
+	chat     *session.Replica
+	chatView *session.View
 }
 
 // newScheduleID marks the modal as a new schedule's form.
@@ -61,6 +66,7 @@ type schedForm struct {
 	recEdited         bool
 	machine, agent    string
 	project           string // a catalog project id, or ""
+	branch            string // a GitHub project's branch, as stored
 	worktree          bool
 	dest              string
 	epoch             int
@@ -844,6 +850,7 @@ func (a *App) schedStatusView(c *ui.Context, p *palette, s schedStatus) ui.Eleme
 func (a *App) closeSchedule() {
 	a.sched.modal = false
 	a.sched.form = nil
+	a.closeSchedChat()
 }
 
 // newSchedule opens a new schedule's form: every day at 09:00, on the
@@ -945,7 +952,7 @@ func (a *App) fillForm(f *schedForm, d schedule.Document) {
 			f.project = def.MachineID + ":local:" + pr.LocalProjectID
 			f.worktree = pr.UseWorktree != nil && *pr.UseWorktree
 		case "github":
-			f.project = "github:" + pr.RepoFullName
+			f.project, f.branch = "github:"+pr.RepoFullName, pr.Branch
 		}
 	}
 	f.dest = firstNonEmpty(def.Destination.Kind, schedule.NewSession)
@@ -1032,7 +1039,9 @@ func (a *App) saveSchedule() {
 				d.Project.UseWorktree = &on
 			}
 		} else if repo, ok := strings.CutPrefix(f.project, "github:"); ok {
-			d.Project = &schedule.Project{Kind: "github", RepoFullName: repo, Branch: firstNonEmpty(a.newChat.branch, "main")}
+			// Lody writes a picked repository on its default, main; an
+			// unchanged one keeps the branch it has.
+			d.Project = &schedule.Project{Kind: "github", RepoFullName: repo, Branch: firstNonEmpty(f.branch, "main")}
 		}
 	}
 	if st.store == nil {
@@ -1136,7 +1145,12 @@ func (a *App) schedDialog(c *ui.Context, p *palette) {
 			a.schedHeader(c, p, f, row)
 			if row != nil && !f.create && !row.ScheduledMessage {
 				ui.Row(c).FillWidth().Padding(0, 24, 10, 24).Shrink(0).Children(func() {
-					segmented(c, p, "schedTab", []option{{"settings", locales.SchedTabSettings()}, {"history", locales.SchedHistory()}}, st.tab, func(v string) { st.tab = v })
+					segmented(c, p, "schedTab", []option{{"settings", locales.SchedTabSettings()}, {"history", locales.SchedHistory()}}, st.tab, func(v string) {
+						st.tab = v
+						if v != "history" {
+							a.closeSchedChat()
+						}
+					})
 				})
 			}
 			ui.Box(c).FillWidth().Height(0.5).Background(p.Border).Shrink(0)
@@ -1331,7 +1345,11 @@ func (a *App) schedFormView(c *ui.Context, p *palette, f *schedForm, row *schedu
 				} else if repo, ok := strings.CutPrefix(f.project, "github:"); ok {
 					label = repo
 				}
-				a.selectButton(c, p, "sched/project", label, projects, f.project, func(id string) { f.project = id })
+				a.selectButton(c, p, "sched/project", label, projects, f.project, func(id string) {
+					if id != f.project {
+						f.project, f.branch = id, ""
+					}
+				})
 				if strings.Contains(f.project, ":local:") {
 					ui.Checkbox(c.Key("sched/worktree"), &f.worktree, locales.SchedWorktree())
 				}
@@ -1429,6 +1447,8 @@ func (a *App) schedFormView(c *ui.Context, p *palette, f *schedForm, row *schedu
 			switch {
 			case !owner:
 				note = locales.SchedOwnerOnly()
+			case !a.canRunSchedules(f.machine):
+				note = locales.SchedUpgrade()
 			case f.err != "":
 				note = f.err
 			case f.attempted:
@@ -1440,7 +1460,7 @@ func (a *App) schedFormView(c *ui.Context, p *palette, f *schedForm, row *schedu
 			if a.sched.saving {
 				label = locales.SchedSaving()
 			}
-			primaryButton(c, p, label, owner && !a.sched.saving).OnClick(a.saveSchedule)
+			primaryButton(c, p, label, owner && !a.sched.saving && a.canRunSchedules(f.machine)).OnClick(a.saveSchedule)
 		})
 	})
 }
@@ -1624,19 +1644,130 @@ func dayToggle(c *ui.Context, p *palette, short, long string, on bool, toggle fu
 	})
 }
 
-// schedHistory is the run history: the chats a new-chat-each-run schedule
-// started, or the one chat its runs go to.
-func (a *App) schedHistory(c *ui.Context, p *palette, row schedule.Row) {
-	ui.Column(c).FillWidth().Gap(10).Padding(0, 0, 16, 0).Children(func() {
-		if row.Destination.Kind == schedule.OwnSession || row.Destination.Kind == schedule.ExistingSession {
-			chat := row.Destination.SessionID
-			if row.Destination.Kind == schedule.OwnSession {
-				epoch := 0
-				if row.Destination.Epoch != nil {
-					epoch = *row.Destination.Epoch
-				}
-				chat = schedule.OwnSessionID(row.ScheduleID, epoch)
+// schedRun is one run in the history.
+type schedRun struct {
+	id, title, when string
+	state           string // done, running or idle
+	session         string
+}
+
+// chatRuns are a schedule's runs in the chat it posts to, newest first:
+// the user turns its runs wrote, done once their reply ended.
+func chatRuns(v *session.View, scheduleID string) []session.Entry {
+	var out []session.Entry
+	for _, e := range v.Entries {
+		if e.Role == "user" && e.ScheduleRun != nil && e.ScheduleRun.ScheduleID == scheduleID {
+			out = append(out, e)
+		}
+	}
+	for i, j := 0, len(out)-1; i < j; i, j = i+1, j-1 {
+		out[i], out[j] = out[j], out[i]
+	}
+	return out
+}
+
+func runState(v *session.View, turn string) string {
+	for _, e := range v.Entries {
+		if e.Role != "user" && e.UserTurnID == turn {
+			if e.EndedAt > 0 || e.Finished {
+				return "done"
 			}
+			return "running"
+		}
+	}
+	return "idle"
+}
+
+// schedChatView follows the chat a schedule posts to while its history is
+// on screen, as Lody reads it only then.
+func (a *App) schedChatView(chat string) *session.View {
+	st := &a.sched
+	if a.selected == chat && a.view != nil {
+		return a.view
+	}
+	if a.conn == nil {
+		return nil
+	}
+	if st.chatID != chat {
+		a.closeSchedChat()
+		st.chatID = chat
+		var r *session.Replica
+		r = session.OpenLocal(a.conn, a.local, chat, func(v *session.View) {
+			a.update(func() {
+				if st.chat == r {
+					st.chatView = v
+				}
+			})
+		})
+		st.chat = r
+	}
+	return st.chatView
+}
+
+func (a *App) closeSchedChat() {
+	st := &a.sched
+	if st.chat != nil {
+		st.chat.Close()
+	}
+	st.chat, st.chatView, st.chatID = nil, nil, ""
+}
+
+// schedHistory is the run history: the chats a new-chat-each-run schedule
+// started, or the runs in the one chat it posts to.
+func (a *App) schedHistory(c *ui.Context, p *palette, row schedule.Row) {
+	now := time.Now()
+	loc := loadZone(triggerZone(row.Trigger, a.machineZone(row.MachineID)))
+	inChat := row.Destination.Kind == schedule.OwnSession || row.Destination.Kind == schedule.ExistingSession
+	var runs []schedRun
+	loading := false
+	chat := ""
+	if inChat {
+		chat = row.Destination.SessionID
+		if row.Destination.Kind == schedule.OwnSession {
+			epoch := 0
+			if row.Destination.Epoch != nil {
+				epoch = *row.Destination.Epoch
+			}
+			chat = schedule.OwnSessionID(row.ScheduleID, epoch)
+		}
+		if a.catalog.Session(chat) != nil {
+			v := a.schedChatView(chat)
+			loading = v == nil && a.conn != nil
+			if v != nil {
+				turns := chatRuns(v, row.ScheduleID)
+				for i, e := range turns {
+					when := ""
+					if t, err := time.Parse(time.RFC3339Nano, e.Timestamp); err == nil {
+						when = upcomingText(t, now, loc)
+					}
+					runs = append(runs, schedRun{id: e.ID, title: locales.SchedRunNumber(strconv.Itoa(len(turns) - i)), when: when, state: runState(v, e.ID), session: chat})
+				}
+			}
+		}
+	} else {
+		var sessions []catalog.Session
+		for _, s := range a.catalog.Sessions {
+			if s.ScheduleID == row.ScheduleID {
+				sessions = append(sessions, s)
+			}
+		}
+		sort.SliceStable(sessions, func(i, j int) bool { return sessions[i].CreatedAt > sessions[j].CreatedAt })
+		if len(sessions) > 100 {
+			sessions = sessions[:100]
+		}
+		for _, s := range sessions {
+			r := schedRun{id: s.ID, title: firstNonEmpty(s.Title, locales.SchedOpenRun()), state: "done", session: s.ID}
+			if s.Working() {
+				r.state = "running"
+			}
+			if t, err := time.Parse(time.RFC3339Nano, s.CreatedAt); err == nil {
+				r.when = upcomingText(t, now, loc)
+			}
+			runs = append(runs, r)
+		}
+	}
+	ui.Column(c).FillWidth().Gap(10).Padding(0, 0, 16, 0).Children(func() {
+		if inChat {
 			s := a.catalog.Session(chat)
 			ui.Row(c).FillWidth().Padding(12, 14).Gap(8).AlignItems(ui.Center).Radius(12).Border(0.5, p.Border).Background(p.Canvas).Children(func() {
 				ui.Icon(c, iconMessageSquare).Size(14, 14).TextColor(p.Secondary)
@@ -1652,44 +1783,39 @@ func (a *App) schedHistory(c *ui.Context, p *palette, row schedule.Row) {
 					ui.Text(c, locales.SchedDestNotCreated()).FontSize(sizeFoot).TextColor(p.Secondary)
 				}
 			})
+		}
+		switch {
+		case loading:
+			ui.Text(c, locales.SchedHistoryLoading()).FontSize(sizeFoot).TextColor(p.Secondary)
 			return
-		}
-		var runs []catalog.Session
-		for _, s := range a.catalog.Sessions {
-			if s.ScheduleID == row.ScheduleID {
-				runs = append(runs, s)
-			}
-		}
-		sort.SliceStable(runs, func(i, j int) bool { return runs[i].CreatedAt > runs[j].CreatedAt })
-		if len(runs) > 100 {
-			runs = runs[:100]
-		}
-		if len(runs) == 0 {
+		case len(runs) == 0:
 			emptyCard(c, p, locales.SchedHistoryEmpty())
 			return
+		case inChat:
+			ui.Text(c, locales.SchedCountInChat(strconv.Itoa(len(runs)))).FontSize(sizeFoot).TextColor(p.Secondary)
+		default:
+			ui.Text(c, locales.SchedCountChats(strconv.Itoa(len(runs)))).FontSize(sizeFoot).TextColor(p.Secondary)
 		}
-		ui.Text(c, locales.SchedCountChats(strconv.Itoa(len(runs)))).FontSize(sizeFoot).TextColor(p.Secondary)
 		card(c, p, func() {
-			for _, s := range runs {
-				run := s
-				r := ui.Row(c.Key(run.ID)).FillWidth().Padding(10, 14).Gap(10).AlignItems(ui.Center).Cursor(ui.CursorPointer).Label(run.Title).Transition(colorFade).
-					OnClick(func() { a.closeSchedule(); a.open(run.ID) })
+			for _, run := range runs {
+				run := run
+				r := ui.Row(c.Key(run.id)).FillWidth().Padding(10, 14).Gap(10).AlignItems(ui.Center).Cursor(ui.CursorPointer).Label(run.title).Transition(colorFade).
+					OnClick(func() { a.closeSchedule(); a.open(run.session) })
 				if r.Hovered() {
 					r.Background(p.Hover)
 				}
 				r.Children(func() {
 					ui.Box(c).Size(16, 16).Center().Children(func() {
-						if run.Working() {
+						switch run.state {
+						case "running":
 							spinner(c).Size(14, 14).Label(locales.SchedRunning())
-						} else {
-							ui.Icon(c, iconCheck).Size(14, 14).TextColor(p.Success)
+						case "done":
+							ui.Icon(c, iconCheck).Size(14, 14).TextColor(p.Success).Label(locales.SchedDone())
 						}
 					})
-					ui.Text(c, firstNonEmpty(run.Title, locales.SchedOpenRun())).FontSize(sizeSub).TextColor(p.Text).Grow(1).SingleLine().MinWidth(0)
-					if t, err := time.Parse(time.RFC3339Nano, run.CreatedAt); err == nil {
-						ui.Text(c, relativeTime(t)).FontSize(sizeCaption).TextColor(p.Tertiary).Shrink(0)
-					}
-					ui.Icon(c, iconArrowUpRight).Size(14, 14).TextColor(p.Tertiary)
+					ui.Text(c, run.title).FontSize(sizeSub).TextColor(p.Text).Grow(1).SingleLine().MinWidth(0)
+					ui.Text(c, run.when).FontSize(sizeCaption).TextColor(p.Secondary).Shrink(0)
+					ui.Icon(c, iconChevronRight).Size(14, 14).TextColor(p.Secondary)
 				})
 			}
 		})

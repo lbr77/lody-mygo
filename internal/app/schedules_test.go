@@ -9,6 +9,7 @@ import (
 	"github.com/lbr77/lody-mygo/internal/localplane"
 	"github.com/lbr77/lody-mygo/internal/localplane/localplanetest"
 	"github.com/lbr77/lody-mygo/internal/schedule"
+	"github.com/lbr77/lody-mygo/internal/session"
 )
 
 func schedFixture() *App {
@@ -142,4 +143,36 @@ func TestScheduleSave(t *testing.T) {
 
 func catalogSession(id, machine, title, scheduleID, created string) catalog.Session {
 	return catalog.Session{ID: id, MachineID: machine, Title: title, Status: "idle", ScheduleID: scheduleID, CreatedAt: created, ProjectID: machine + ":unassigned"}
+}
+
+// A schedule that posts into one chat lists its runs from that chat.
+func TestScheduleChatRuns(t *testing.T) {
+	a := schedFixture()
+	chat := schedule.OwnSessionID("s2", 0)
+	a.catalog.Sessions = append(a.catalog.Sessions, catalogSession(chat, "m1", "Release notes chat", "", "2026-10-20T01:00:00Z"))
+	a.selected = chat
+	a.view = &session.View{Status: "live", Entries: []session.Entry{
+		{ID: "u1", Role: "user", Timestamp: "2026-10-27T01:00:00Z", ScheduleRun: &session.ScheduleRun{ScheduleID: "s2"}},
+		{ID: "r1", Role: "assistant", UserTurnID: "u1", Finished: true, EndedAt: 5},
+		{ID: "u2", Role: "user", Timestamp: "2026-10-28T01:00:00Z"},
+		{ID: "u3", Role: "user", Timestamp: "2026-10-29T01:00:00Z", ScheduleRun: &session.ScheduleRun{ScheduleID: "s2"}},
+		{ID: "r3", Role: "assistant", UserTurnID: "u3"},
+	}}
+	a.page = "schedules"
+	tt := snap(t, a, "schedules-chat-runs", false, nil)
+	a.sched.open, a.sched.modal, a.sched.tab = "s2", true, "history"
+	a.sched.form = &schedForm{id: "s2", owner: "u1", title: "Release notes", enabled: true, machine: "m1", agent: "a1"}
+	tt.Frame()
+	tt.Advance(400 * time.Millisecond)
+	tt.Frame()
+	snapFrame(t, tt, "schedule-chat-runs")
+	for _, want := range []string{"Every run goes to", "Release notes chat", "2 runs in this chat", "Run 2", "Run 1", "Run now"} {
+		if !tt.HasText(want) {
+			t.Errorf("missing %q in %q", want, tt.Texts())
+		}
+	}
+	runs := chatRuns(a.view, "s2")
+	if len(runs) != 2 || runs[0].ID != "u3" || runState(a.view, "u3") != "running" || runState(a.view, "u1") != "done" {
+		t.Fatalf("runs %+v", runs)
+	}
 }

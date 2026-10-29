@@ -1540,5 +1540,8 @@
   "schedSyncError": "定时任务同步失败，正在显示已保存的任务。",
   "schedAgent": "Agent",
   "schedProject": "项目",
-  "schedWorktree": "使用工作树"
+  "schedWorktree": "使用工作树",
+  "schedHistoryLoading": "正在读取运行记录…",
+  "schedCountInChat": "该对话中共 {count} 次运行",
+  "schedUpgrade": "请更新目标机器的 CLI，以管理定时任务。"
 }

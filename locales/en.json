@@ -3117,5 +3117,15 @@
   "schedSyncError": "Schedules could not be synced. Showing saved tasks.",
   "schedAgent": "Agent",
   "schedProject": "Project",
-  "schedWorktree": "Use a worktree"
+  "schedWorktree": "Use a worktree",
+  "schedHistoryLoading": "Loading runs…",
+  "schedCountInChat": "{count} runs in this chat",
+  "@schedCountInChat": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "schedUpgrade": "Update the target machine’s CLI to edit schedules."
 }

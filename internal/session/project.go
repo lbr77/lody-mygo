@@ -113,6 +113,13 @@ type Entry struct {
 	AcpTurnID string
 	// Config is a user message's input, as it was sent.
 	Config map[string]any
+	// ScheduleRun marks a user message a schedule's run posted.
+	ScheduleRun *ScheduleRun
+}
+
+// ScheduleRun is the schedule run a user message is.
+type ScheduleRun struct {
+	ScheduleID, TurnID, Title string
 }
 
 type FileDiff struct {
@@ -507,6 +514,9 @@ func project(doc *loro.LoroDoc, status, reason string) *View {
 			StartedAt:  num(e["startedAt"]),
 			EndedAt:    num(e["endedAt"]),
 			AcpTurnID:  str(e["acpTurnId"]),
+		}
+		if run := obj(e["scheduleRun"]); run != nil && str(run["scheduleId"]) != "" {
+			entry.ScheduleRun = &ScheduleRun{ScheduleID: str(run["scheduleId"]), TurnID: str(run["turnId"]), Title: str(run["title"])}
 		}
 		if m := obj(e["modelInfo"]); m != nil {
 			entry.Model = strings.TrimSpace(str(m["name"]))
