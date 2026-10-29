@@ -1847,5 +1847,7 @@
   "changeCatTest": "测试",
   "changeCatDev": "开发",
   "homeBoardUnfold": "展开",
-  "deviceMarkLabel": "终端与 Lody"
+  "deviceMarkLabel": "终端与 Lody",
+  "schedLoading": "正在加载定时任务…",
+  "schedMachineOfflineHint": "目标机器当前未连接。"
 }

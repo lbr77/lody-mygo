@@ -308,21 +308,8 @@ func (a *App) changesTab(c *ui.Context, p *palette, in *inspectState) {
 			in.scope = []string{collab.ScopeBranch, collab.ScopeUncommitted}[picked]
 		}
 		ui.Spacer(c)
-		if cs.res != nil && cs.res.Status == "ok" {
-			add, del := 0, 0
-			for _, e := range cs.res.Entries {
-				if e.Add != nil {
-					add += *e.Add
-				}
-				if e.Del != nil {
-					del += *e.Del
-				}
-			}
-			ui.Text(c, fmt.Sprint(len(cs.res.Entries))).FontSize(sizeFoot).TextColor(p.Secondary)
-			diffCounts(c, p, add, del)
-			if len(cs.res.Entries) > 0 {
-				a.changesViewSwitch(c, p)
-			}
+		if cs.res != nil && cs.res.Status == "ok" && len(cs.res.Entries) > 0 {
+			a.changesViewSwitch(c, p)
 		}
 	})
 	switch {
@@ -335,27 +322,29 @@ func (a *App) changesTab(c *ui.Context, p *palette, in *inspectState) {
 			panelStatus(c, p, false, locales.PanelNoChanges(), "")
 			return
 		}
-		if base := cs.res.Base; base != "" && base != "diff-store" {
-			ui.Text(c, locales.PanelComparedWith(shortSHA(base))).FontSize(sizeCaption).TextColor(p.Tertiary).Padding(0, 14, 6, 14)
+		// The totals, as Lody's header has them, and what they compare with.
+		add, del := 0, 0
+		for _, e := range cs.res.Entries {
+			if e.Add != nil {
+				add += *e.Add
+			}
+			if e.Del != nil {
+				del += *e.Del
+			}
 		}
+		ui.Row(c).FillWidth().Padding(0, 14, 6, 14).Gap(6).AlignItems(ui.Center).Children(func() {
+			ui.Text(c, fmt.Sprint(len(cs.res.Entries))).FontSize(sizeFoot).TextColor(p.Secondary)
+			diffCounts(c, p, add, del)
+			if base := cs.res.Base; base != "" && base != "diff-store" {
+				ui.Text(c, "·").FontSize(sizeCaption).TextColor(p.Tertiary)
+				ui.Text(c, locales.PanelComparedWith(shortSHA(base))).FontSize(sizeCaption).TextColor(p.Tertiary).SingleLine().MinWidth(0)
+			}
+		})
 		ui.Scroll(c).Grow(1).MinHeight(0).Padding(0, 8, 12, 8).Gap(1).Children(func() {
 			if a.changesView != "files" {
 				a.changeTypes(c, p, in, cs.res.Entries)
-				if cs.res.Truncated {
-					ui.Text(c, locales.PanelTruncated()).FontSize(sizeCaption).TextColor(p.Tertiary).Padding(6, 8)
-				}
-				return
-			}
-			for _, e := range cs.res.Entries {
-				add, del := -1, -1
-				if e.Add != nil {
-					add = *e.Add
-				}
-				if e.Del != nil {
-					del = *e.Del
-				}
-				pathOf := e.Path
-				changeRow(c.Key(e.Path), p, e.Path, e.Kind(), add, del).OnClick(func() { in.change = pathOf })
+			} else {
+				a.changeFiles(c, p, in, cs.res.Entries)
 			}
 			if cs.res.Truncated {
 				ui.Text(c, locales.PanelTruncated()).FontSize(sizeCaption).TextColor(p.Tertiary).Padding(6, 8)

@@ -184,3 +184,100 @@ func (a *App) changeTypes(c *ui.Context, p *palette, in *inspectState, entries [
 		})
 	}
 }
+
+// changeNode is a folder or file of the Files tree.
+type changeNode struct {
+	name, path string
+	dirs       []*changeNode
+	files      []collab.Change
+}
+
+// changeTree folds the changes into their folders, folders before files,
+// each sorted by name.
+func changeTree(entries []collab.Change) *changeNode {
+	root := &changeNode{}
+	for _, e := range entries {
+		segs := strings.Split(strings.Trim(strings.ReplaceAll(e.Path, `\`, "/"), "/"), "/")
+		node := root
+		for i, seg := range segs[:len(segs)-1] {
+			var next *changeNode
+			for _, d := range node.dirs {
+				if d.name == seg {
+					next = d
+				}
+			}
+			if next == nil {
+				next = &changeNode{name: seg, path: strings.Join(segs[:i+1], "/")}
+				node.dirs = append(node.dirs, next)
+			}
+			node = next
+		}
+		node.files = append(node.files, e)
+	}
+	var sortNode func(n *changeNode)
+	sortNode = func(n *changeNode) {
+		slices.SortFunc(n.dirs, func(x, y *changeNode) int { return strings.Compare(strings.ToLower(x.name), strings.ToLower(y.name)) })
+		slices.SortFunc(n.files, func(x, y collab.Change) int {
+			return strings.Compare(strings.ToLower(path.Base(x.Path)), strings.ToLower(path.Base(y.Path)))
+		})
+		for _, d := range n.dirs {
+			sortNode(d)
+		}
+	}
+	sortNode(root)
+	return root
+}
+
+// changeFiles is Lody's Files view: the changed files in their folders,
+// every folder open until folded, a folder's chevron turning over 200ms.
+func (a *App) changeFiles(c *ui.Context, p *palette, in *inspectState, entries []collab.Change) {
+	var walk func(n *changeNode, depth int)
+	walk = func(n *changeNode, depth int) {
+		indent := float32(depth) * 12
+		for _, d := range n.dirs {
+			key := "chtree/" + d.path
+			open := !a.collapsed[key]
+			dir := d
+			ui.Column(c.Key("d/" + d.path)).FillWidth().Children(func() {
+				row := ui.ButtonBase(c.Key("row")).FillWidth().Height(28).Padding(0, 8, 0, 8+indent).Gap(6).Radius(6).AlignItems(ui.Center).
+					Justify(ui.Start).Cursor(ui.CursorPointer).Label(dir.name).OnClick(func() { a.collapsed[key] = open })
+				turn := row.AnimateWith("turn", b2f(open), 200*time.Millisecond, twEase)
+				row.Children(func() {
+					ui.Icon(c, iconChevronRight).Size(14, 14).TextColor(p.Secondary).Rotate(90 * turn)
+					icon := iconFolder
+					if open {
+						icon = iconFolderOpen
+					}
+					ui.Icon(c, icon).Size(16, 16).TextColor(p.Secondary).Margin(0, 6, 0, 0)
+					ui.Text(c, dir.name).FontSize(sizeBody).TextColor(p.Text).SingleLine().Grow(1).MinWidth(0)
+				})
+				if open {
+					walk(dir, depth+1)
+				}
+			})
+		}
+		for _, f := range n.files {
+			add, del := -1, -1
+			if f.Add != nil {
+				add = *f.Add
+			}
+			if f.Del != nil {
+				del = *f.Del
+			}
+			pathOf := f.Path
+			row := ui.ButtonBase(c.Key("f/"+f.Path)).FillWidth().Height(28).Padding(0, 8, 0, 8+indent+20).Gap(6).Radius(6).AlignItems(ui.Center).
+				Justify(ui.Start).Cursor(ui.CursorPointer).Label(f.Path).OnClick(func() { in.change = pathOf })
+			if row.Hovered() {
+				row.Background(p.Hover)
+			}
+			row.Children(func() {
+				ui.Icon(c, iconFile).Size(16, 16).TextColor(p.Secondary).Margin(0, 6, 0, 0)
+				ui.Text(c, path.Base(pathOf)).FontSize(sizeBody).TextColor(p.Text.Alpha(0.9)).SingleLine().Grow(1).MinWidth(0)
+				if add >= 0 && del >= 0 {
+					diffCounts(c, p, add, del)
+				}
+			})
+		}
+	}
+	walk(changeTree(entries), 0)
+}

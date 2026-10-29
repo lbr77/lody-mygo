@@ -449,7 +449,8 @@ func (a *App) schedulesPage(c *ui.Context, p *palette) {
 		}
 		switch {
 		case !st.ready:
-			ui.Column(c).FillWidth().Margin(18, 0, 0, 0).Radius(12).Border(0.5, p.Border).Background(p.Popover).Children(func() {
+			// The skeleton says what it waits for, to assistive technology.
+			ui.Column(c).FillWidth().Margin(18, 0, 0, 0).Radius(12).Border(0.5, p.Border).Background(p.Popover).Label(locales.SchedLoading()).Children(func() {
 				// Lody's Skeleton lines, a body line high, breathing every 1.6s.
 				for i := 0; i < 3; i++ {
 					ui.Row(c.Key(i)).FillWidth().Padding(16).Gap(12).AlignItems(ui.Center).Children(func() {
@@ -772,7 +773,7 @@ func (a *App) schedRow(c *ui.Context, p *palette, e schedEntry) {
 				ui.Text(c, firstNonEmpty(a.agentName(row.MachineID, row.AgentConfigID), row.AgentConfigID)).FontSize(sizeCaption).TextColor(p.Secondary).SingleLine().MinWidth(0)
 				sep()
 				if !a.presence.IsOnline(row.MachineID) {
-					tip(c, p, ui.Row(c.Key("offline")), locales.SchedMachineOffline(a.machineLabel(row.MachineID))).Gap(4).AlignItems(ui.Center).Shrink(0).Children(func() {
+					tip(c, p, ui.Row(c.Key("offline")), locales.SchedMachineOfflineHint()).Gap(4).AlignItems(ui.Center).Shrink(0).Children(func() {
 						ui.Icon(c, iconCloudOff).Size(14, 14).TextColor(p.Warning)
 						ui.Text(c, locales.SchedMachineOffline(a.machineLabel(row.MachineID))).FontSize(sizeCaption).TextColor(p.Warning).SingleLine()
 					})
@@ -1297,7 +1298,8 @@ func (a *App) selectButton(c *ui.Context, p *palette, key, label string, options
 
 func (a *App) schedFormView(c *ui.Context, p *palette, f *schedForm, row *schedule.Row) {
 	if f.loading {
-		ui.Row(c).FillWidth().Justify(ui.Center).Padding(40).Children(func() { spinner(c).Size(16, 16) })
+		// Lody says it in words, as its schedule page does while it loads.
+		ui.Text(c, locales.SchedLoading()).FontSize(sizeSub).TextColor(p.Secondary).Padding(24, 0)
 		return
 	}
 	now := time.Now()
@@ -1518,7 +1520,8 @@ func (a *App) schedFormView(c *ui.Context, p *palette, f *schedForm, row *schedu
 // when, with its time to change and a cancel while it waits.
 func (a *App) schedMessageView(c *ui.Context, p *palette, f *schedForm, row schedule.Row) {
 	if f.loading {
-		ui.Row(c).FillWidth().Justify(ui.Center).Padding(40).Children(func() { spinner(c).Size(16, 16) })
+		// Lody says it in words, as its schedule page does while it loads.
+		ui.Text(c, locales.SchedLoading()).FontSize(sizeSub).TextColor(p.Secondary).Padding(24, 0)
 		return
 	}
 	rt := a.sched.reg.Runtime[row.ScheduleID]

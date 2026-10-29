@@ -18622,3 +18622,23 @@ func DeviceMarkLabel() string { return In(i18n.Locale()).DeviceMarkLabel() }
 func (msgs Messages) DeviceMarkLabel() string {
 	return Catalog.Format(msgs.locale, "deviceMarkLabel", nil)
 }
+
+// SchedLoading says "Loading schedules…"
+// in the language the app shows.
+func SchedLoading() string { return In(i18n.Locale()).SchedLoading() }
+
+// SchedLoading says "Loading schedules…"
+// in the language of msgs.
+func (msgs Messages) SchedLoading() string {
+	return Catalog.Format(msgs.locale, "schedLoading", nil)
+}
+
+// SchedMachineOfflineHint says "The target machine is not connected right now."
+// in the language the app shows.
+func SchedMachineOfflineHint() string { return In(i18n.Locale()).SchedMachineOfflineHint() }
+
+// SchedMachineOfflineHint says "The target machine is not connected right now."
+// in the language of msgs.
+func (msgs Messages) SchedMachineOfflineHint() string {
+	return Catalog.Format(msgs.locale, "schedMachineOfflineHint", nil)
+}

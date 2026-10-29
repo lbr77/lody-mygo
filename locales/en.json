@@ -3639,5 +3639,7 @@
   "changeCatTest": "Tests",
   "changeCatDev": "Dev",
   "homeBoardUnfold": "Unfold",
-  "deviceMarkLabel": "Terminal and Lody"
+  "deviceMarkLabel": "Terminal and Lody",
+  "schedLoading": "Loading schedules…",
+  "schedMachineOfflineHint": "The target machine is not connected right now."
 }
