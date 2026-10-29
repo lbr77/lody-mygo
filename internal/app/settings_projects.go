@@ -104,7 +104,14 @@ func (a *App) projectsPage(c *ui.Context, p *palette) {
 		if !listed[machine] {
 			continue // only the user's own machines' projects, as Lody lists
 		}
-		projects := a.machineProjects(machine)
+		// A folder registered only for projects of several isn't one of
+		// its own here, as Lody's list leaves it out.
+		var projects []catalog.Project
+		for _, pr := range a.machineProjects(machine) {
+			if !pr.MemberOnly {
+				projects = append(projects, pr)
+			}
+		}
 		ui.Column(c.Key(machine)).FillWidth().Gap(2).Margin(8, 0, 4, 0).Children(func() {
 			ui.Text(c, a.machineName(machine)).FontSize(sizeBody).FontWeight(500).TextColor(p.Strong)
 			status := map[bool]string{true: locales.Online(), false: locales.Offline()}[a.presence.IsOnline(machine)]
@@ -122,7 +129,7 @@ func (a *App) projectsPage(c *ui.Context, p *palette) {
 				a.projectSettingsRow(c.Key(pr.ID), p, pr, chats[pr.ID])
 			}
 			for _, g := range bound[machine] {
-				groupSettingsRow(c, p, g)
+				a.groupSettingsRow(c, p, g)
 			}
 		})
 	}
@@ -133,28 +140,50 @@ func (a *App) projectsPage(c *ui.Context, p *palette) {
 		})
 		ui.Column(c.Key("anywhere/list")).FillWidth().Radius(10).Border(1, p.Border).Clip().Dividers(1, p.Border).Children(func() {
 			for _, g := range anywhere {
-				groupSettingsRow(c, p, g)
+				a.groupSettingsRow(c, p, g)
 			}
 		})
 	}
 	a.githubProjectSections(c, p)
-	// The folder browser opens over the wizard that asked for a folder.
-	a.projectWizardDialog(c, p)
-	a.addProjectDialog(c, p)
+	// The wizard, and the folder browser picking for it, are the editor
+	// host's, over everything.
+	if !a.addProject.selectOnly {
+		a.addProjectDialog(c, p)
+	}
 	a.projectWindow(c, p)
 	a.githubProjectWindow(c, p)
 }
 
 // groupSettingsRow is a project of several repositories or folders, as
-// Lody's line for one: its name, and how many it holds.
-func groupSettingsRow(c *ui.Context, p *palette, g catalog.ProjectGroup) {
-	ui.Row(c.Key("group/"+g.ID)).FillWidth().MinHeight(54).Padding(8, 16).Gap(10).AlignItems(ui.Center).Children(func() {
-		ui.Column(c).Grow(1).MinWidth(0).Gap(2).Children(func() {
-			ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
-				ui.Icon(c, iconFolders).Size(16, 16).TextColor(p.Secondary)
-				ui.Text(c, g.Name).FontSize(sizeBody).TextColor(p.Text).SingleLine()
+// Lody's line for one: its name and how many it holds, the whole line
+// opening it in the editor, read only for whoever did not create it; and
+// for its creator a menu that deletes it.
+func (a *App) groupSettingsRow(c *ui.Context, p *palette, g catalog.ProjectGroup) {
+	id := g.ID
+	ui.Row(c.Key("group/"+g.ID)).FillWidth().MinHeight(54).Padding(0, 8, 0, 0).Gap(4).AlignItems(ui.Center).Children(func() {
+		line := ui.ButtonBase(c.Key("open")).Grow(1).MinWidth(0).MinHeight(54).Padding(8, 12, 8, 16).Gap(10).AlignItems(ui.Center).
+			Cursor(ui.CursorPointer).Label(g.Name).Transition(colorFade).OnClick(func() { a.requestProjectEdit(id) })
+		if line.Hovered() {
+			line.Background(p.Hover)
+		}
+		line.Children(func() {
+			ui.Column(c).Grow(1).MinWidth(0).Gap(2).Children(func() {
+				ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
+					ui.Icon(c, iconFolders).Size(16, 16).TextColor(p.Secondary)
+					ui.Text(c, g.Name).FontSize(sizeBody).TextColor(p.Text).SingleLine()
+				})
+				ui.Text(c, locales.ProjectRepositoryCount(len(g.Members))).FontSize(sizeCaption).TextColor(p.Secondary).SingleLine()
 			})
-			ui.Text(c, locales.ProjectRepositoryCount(len(g.Members))).FontSize(sizeCaption).TextColor(p.Secondary).SingleLine()
+			ui.Icon(c, iconChevronRight).Size(16, 16).TextColor(p.Tertiary).Shrink(0)
+		})
+		if !a.canManageGroup(g) {
+			return
+		}
+		more := iconButton(c.Key("more"), p, iconMore, locales.MoreActions(), p.Hover)
+		lodyMenuButton(c, p, more, &a.rowMenu("group/"+g.ID).menuState, 200, 290, 32, func(m *lodyMenu) {
+			if m.item("delete", nil, locales.ProjectRemove(), menuItem{destructive: true}) {
+				a.requestProjectDelete(id)
+			}
 		})
 	})
 }

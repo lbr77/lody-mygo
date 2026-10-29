@@ -46,11 +46,131 @@ type projectWizard struct {
 	// gen tells this opening from the next, so that a folder the
 	// machine prepares for a wizard since closed is dropped.
 	gen int
+	// editing is the project an edit walks through again, as saved; nil
+	// creating one. previous is what it had, marked on the answers.
+	editing  *catalog.ProjectGroup
+	previous *wizardPrevious
+	// onCreated hears of the project once it is saved, so that what asked
+	// for it can choose it.
+	onCreated func(id string)
+	// probes are what members' repositories declare as submodules, by
+	// source, kept from one opening to the next as Lody keeps them for
+	// the page's life.
+	probes map[string]*groupProbe
+	// repos are the GitHub repositories folders turned out to be, by
+	// source, so that a folder and a GitHub member of one repository match.
+	repos map[string]string
+}
+
+// wizardPrevious is an edited project's answers before this edit: the
+// scope its members implied, and how each was used, by source.
+type wizardPrevious struct {
+	scope groupScope
+	usage map[string]string
 }
 
 // openProjectWizard opens the wizard on its first question.
 func (a *App) openProjectWizard() {
-	a.projectWizard = projectWizard{open: true, id: uuid.NewString(), step: "kind", alsoFolder: map[string]bool{}, gen: a.projectWizard.gen + 1}
+	// What was read stays; what failed is asked again.
+	probes := map[string]*groupProbe{}
+	for k, pr := range a.projectWizard.probes {
+		if !pr.done || !pr.failed {
+			probes[k] = pr
+		}
+	}
+	a.projectWizard = projectWizard{open: true, id: uuid.NewString(), step: "kind", alsoFolder: map[string]bool{}, gen: a.projectWizard.gen + 1, probes: probes}
+}
+
+// openProjectWizardFrom opens the wizard on a project it starts from, as
+// a project row's Edit project… does: the folder or repository seeded as
+// its first member and named after it, the sources open on the scope it
+// implies. A folder with a GitHub remote is listed under its repository,
+// so its key finds the repository and the seed becomes that.
+func (a *App) openProjectWizardFrom(key, name string, created func(id string)) {
+	a.openProjectWizard()
+	wz := &a.projectWizard
+	wz.onCreated = created
+	if key == "" {
+		return
+	}
+	f := a.wizardFrame()
+	o := f.byKey[key]
+	if o == nil {
+		return
+	}
+	if name == "" {
+		name = o.label
+	}
+	wz.draft = groupDraft{name: name}.add(o.source, o.label)
+	if scope, ok := scopeOf(wz.draft, f.options, f.current); ok {
+		wz.goTo("sources", scope)
+	}
+}
+
+// openProjectEditor opens a saved project in the wizard, which walks its
+// questions again from the first, its earlier answers marked "Previously
+// selected", and saves it as its next revision.
+func (a *App) openProjectEditor(g catalog.ProjectGroup) {
+	a.openProjectWizard()
+	wz := &a.projectWizard
+	f := a.wizardFrame()
+	wz.id, wz.editing, wz.draft = g.ID, &g, draftOf(g)
+	prev := &wizardPrevious{usage: map[string]string{}}
+	for _, m := range wz.draft.members {
+		prev.usage[m.source.key()] = m.usage()
+	}
+	if scope, ok := scopeOf(wz.draft, f.options, f.current); ok {
+		prev.scope, wz.scope = scope, scope
+	}
+	wz.previous = prev
+}
+
+// scopeOf is the scope a draft already implies, as Lody's: a folder
+// decides it; a repository that uses a machine's copy names the machine
+// holding one, this one first; plain clones run anywhere. An empty draft
+// implies none.
+func scopeOf(d groupDraft, options []memberOption, current string) (groupScope, bool) {
+	if len(d.members) == 0 {
+		return groupScope{}, false
+	}
+	machine := d.localMachine()
+	for _, m := range d.members {
+		if machine == "" && m.folder != nil {
+			machine = m.folder.machine
+		}
+	}
+	if machine != "" {
+		return groupScope{kind: "machine", machine: machine}, true
+	}
+	copies := map[string]bool{}
+	for _, m := range d.members {
+		if m.usage() == "localCopy" {
+			copies[m.source.key()] = true
+		}
+	}
+	var held []memberCopy
+	for _, o := range options {
+		if copies[o.key] {
+			held = append(held, o.copies...)
+		}
+	}
+	for _, cp := range held {
+		if cp.machine == current {
+			return groupScope{kind: "machine", machine: cp.machine}, true
+		}
+	}
+	if len(held) > 0 {
+		return groupScope{kind: "machine", machine: held[0].machine}, true
+	}
+	return groupScope{kind: "github"}, true
+}
+
+// prevUsage is how an edited project used a source before this edit.
+func (wz *projectWizard) prevUsage(key string) string {
+	if wz.previous == nil {
+		return ""
+	}
+	return wz.previous.usage[key]
 }
 
 // wizardSteps are the questions a scope asks: a GitHub-only project has
@@ -104,14 +224,14 @@ func (wz *projectWizard) setAlso(key string, on bool) {
 
 // fitScope keeps what a scope can hold; folders from the chosen machine
 // bind the project to it.
-func fitScope(d groupDraft, scope groupScope, options []memberOption) groupDraft {
-	d = d.retain(scope)
+func fitScope(d groupDraft, scope groupScope, f *wizardFrame) groupDraft {
+	d = d.retain(scope, f.labelOf)
 	if scope.kind != "machine" {
 		return d
 	}
 	return d.bind(scope.machine, func(repo string) string {
 		key := "github:" + strings.ToLower(repo)
-		for _, o := range options {
+		for _, o := range f.options {
 			if o.key != key {
 				continue
 			}
@@ -211,8 +331,12 @@ func (f *wizardFrame) machinesOf(o *memberOption) string {
 	return strings.Join(names, " · ")
 }
 
-// repoOf is the GitHub repository a machine published for its folder.
+// repoOf is the GitHub repository a folder is: as its machine answered
+// the editor, or else as it published it.
 func (f *wizardFrame) repoOf(s groupSource) string {
+	if repo := f.a.projectWizard.repos[s.key()]; repo != "" {
+		return repo
+	}
 	for _, pr := range f.a.catalog.Projects {
 		if pr.ID == s.machine+":local:"+s.local {
 			return pr.RepoFullName
@@ -268,6 +392,9 @@ func (a *App) projectWizardDialog(c *ui.Context, p *palette) {
 		return
 	}
 	f := a.wizardFrame()
+	if !wz.submitting {
+		a.detectSubmodules(f)
+	}
 	steps := wz.steps()
 	index := max(0, slices.Index(steps, wz.step))
 	heading, lead := "", ""
@@ -461,12 +588,19 @@ func wizardSection(c *ui.Context, p *palette, key, title, hint string, fn func()
 func (a *App) wizardKind(c *ui.Context, p *palette) {
 	wz := &a.projectWizard
 	hasMachines := len(a.catalog.MachineIDs) > 0
+	// An edit marks the answer the project had.
+	previous := func(kind string) func() {
+		if wz.previous == nil || wz.previous.scope.kind != kind {
+			return nil
+		}
+		return func() { wizardBadge(c, p, "previous", locales.WizardPrevious()) }
+	}
 	ui.Column(c).FillWidth().Gap(8).Children(func() {
 		hint := locales.WizardKindLocalHint()
 		if !hasMachines {
 			hint = locales.WizardKindNoMachines()
 		}
-		wizardChoice(c, p, "local", iconLaptop, locales.WizardKindLocal(), wz.scope.kind == "machine", !hasMachines, nil, func() { choiceText(c, p, hint) }).
+		wizardChoice(c, p, "local", iconLaptop, locales.WizardKindLocal(), wz.scope.kind == "machine", !hasMachines, previous("machine"), func() { choiceText(c, p, hint) }).
 			OnClick(func() {
 				scope := wz.scope
 				if scope.kind != "machine" {
@@ -474,7 +608,7 @@ func (a *App) wizardKind(c *ui.Context, p *palette) {
 				}
 				wz.goTo("machine", scope)
 			})
-		wizardChoice(c, p, "github", iconGithub, locales.WizardKindGithub(), wz.scope.kind == "github", false, nil, func() { choiceText(c, p, locales.WizardKindGithubHint()) }).
+		wizardChoice(c, p, "github", iconGithub, locales.WizardKindGithub(), wz.scope.kind == "github", false, previous("github"), func() { choiceText(c, p, locales.WizardKindGithubHint()) }).
 			OnClick(func() { a.chooseGroupScope(groupScope{kind: "github"}) })
 	})
 }
@@ -483,7 +617,7 @@ func (a *App) wizardKind(c *ui.Context, p *palette) {
 // longer fits, and goes on to its sources.
 func (a *App) chooseGroupScope(scope groupScope) {
 	wz := &a.projectWizard
-	wz.draft = fitScope(wz.draft, scope, a.memberOptions())
+	wz.draft = fitScope(wz.draft, scope, a.wizardFrame())
 	wz.alsoFolder = map[string]bool{}
 	wz.goTo("sources", scope)
 }
@@ -504,6 +638,9 @@ func (a *App) wizardMachineStep(c *ui.Context, p *palette, f *wizardFrame) {
 			badges := func() {
 				if m.id == f.current {
 					wizardBadge(c, p, "this", locales.WizardThisMachine())
+				}
+				if prev := wz.previous; prev != nil && prev.scope.kind == "machine" && prev.scope.machine == m.id {
+					wizardBadge(c, p, "previous", locales.WizardPrevious())
 				}
 			}
 			body := func() {
@@ -528,6 +665,7 @@ type pickRow struct {
 	key, label, detail string
 	icon               *ui.SVG
 	selected           bool
+	previous           bool // part of the project before this edit
 	toggle             func()
 }
 
@@ -559,6 +697,9 @@ func pickList(c *ui.Context, p *palette, key string, rows []pickRow, empty strin
 						ui.Text(c, r.detail).FontSize(sizeFoot).TextColor(p.Tertiary).SingleLine()
 					}
 				})
+				if r.previous {
+					wizardBadge(c, p, "previous", locales.WizardPrevious())
+				}
 			})
 		}
 	})
@@ -627,7 +768,7 @@ func (a *App) wizardSources(c *ui.Context, p *palette, f *wizardFrame) {
 		members[m.source.key()] = m
 	}
 	swap := func(from groupMember, source groupSource, label string) {
-		wz.draft = wz.draft.remove(from.id).add(source, label)
+		wz.draft = wz.draft.remove(from.id, f.labelOf).add(source, label)
 	}
 	type folderOf struct {
 		key    string
@@ -666,14 +807,17 @@ func (a *App) wizardSources(c *ui.Context, p *palette, f *wizardFrame) {
 				src := source
 				folderOfRepo[repoKey] = folderOf{key: folderKey, source: &src, label: name}
 			}
-			folderRows = append(folderRows, pickRow{key: folderKey, label: name, detail: detail, icon: icon, selected: hasFolder || legacy || both, toggle: func() {
+			// Before this edit it was this folder, or its repository from a
+			// copy of it.
+			previous := wz.prevUsage(folderKey) != "" || o.kind == "repository" && wz.prevUsage(o.key) == "localCopy"
+			folderRows = append(folderRows, pickRow{key: folderKey, label: name, detail: detail, icon: icon, selected: hasFolder || legacy || both, previous: previous, toggle: func() {
 				switch {
 				case both:
 					wz.setAlso(folderKey, false)
 				case hasFolder:
-					wz.draft = wz.draft.remove(folder.id)
+					wz.draft = wz.draft.remove(folder.id, f.labelOf)
 				case legacy:
-					wz.draft = wz.draft.remove(repo.id)
+					wz.draft = wz.draft.remove(repo.id, f.labelOf)
 				case hasRepo:
 					// Ticked as a GitHub repository already, which wins: only noted.
 					wz.setAlso(folderKey, true)
@@ -699,7 +843,7 @@ func (a *App) wizardSources(c *ui.Context, p *palette, f *wizardFrame) {
 				folderOfRepo["github:"+strings.ToLower(m.folder.repo)] = folderOf{key: key, label: f.labelOf(m)}
 			}
 			folderRows = append([]pickRow{{key: key, label: f.labelOf(m), detail: m.folder.rootPath, icon: icon, selected: true, toggle: func() {
-				wz.draft = wz.draft.remove(m.id)
+				wz.draft = wz.draft.remove(m.id, f.labelOf)
 			}}}, folderRows...)
 		}
 	}
@@ -720,7 +864,7 @@ func (a *App) wizardSources(c *ui.Context, p *palette, f *wizardFrame) {
 		// A copy-preferring member from before on this machine is the folder.
 		selected := has && member.source.kind == "github" && !(member.source.preferLocal && hasFO)
 		label := o.label
-		repoRows = append(repoRows, pickRow{key: o.key, label: label, icon: iconGithub, selected: selected, toggle: func() {
+		repoRows = append(repoRows, pickRow{key: o.key, label: label, icon: iconGithub, selected: selected, previous: wz.prevUsage(o.key) == "worktree", toggle: func() {
 			switch {
 			case selected:
 				// Still ticked as a folder: it goes back to being that folder.
@@ -728,7 +872,7 @@ func (a *App) wizardSources(c *ui.Context, p *palette, f *wizardFrame) {
 					swap(member, *fo.source, fo.label)
 					wz.setAlso(fo.key, false)
 				} else {
-					wz.draft = wz.draft.remove(member.id)
+					wz.draft = wz.draft.remove(member.id, f.labelOf)
 				}
 			case hasFolder:
 				// Ticked as a folder too: GitHub wins, so it becomes a clone.
@@ -891,7 +1035,7 @@ func (a *App) wizardDetails(c *ui.Context, p *palette, f *wizardFrame) {
 						ink = p.Text
 					}
 					b.OnClick(func() {
-						wz.draft = wz.draft.remove(m.id)
+						wz.draft = wz.draft.remove(m.id, f.labelOf)
 						if key := m.source.key(); wz.alsoFolder[key] {
 							wz.setAlso(key, false)
 						}
@@ -922,7 +1066,8 @@ func (a *App) wizardDetails(c *ui.Context, p *palette, f *wizardFrame) {
 // ticked stands at the start.
 func (a *App) wizardFooter(c *ui.Context, p *palette, f *wizardFrame) {
 	wz := &a.projectWizard
-	single := len(wz.draft.members) == 1
+	// Only creating finishes with one: an edit stays a project of several.
+	single := len(wz.draft.members) == 1 && wz.editing == nil
 	ui.Row(c.Key("footer")).FillWidth().Padding(12, 20, 16, 20).Gap(8).AlignItems(ui.Center).Shrink(0).Children(func() {
 		if wz.step == "sources" {
 			count := locales.WizardSelectedCount(len(wz.draft.members))
@@ -948,7 +1093,7 @@ func (a *App) wizardFooter(c *ui.Context, p *palette, f *wizardFrame) {
 			primaryButton(c, p, locales.WizardNext(), len(wz.draft.members) > 0).OnClick(func() {
 				draft := wz.draft
 				if wz.scope.kind != "" {
-					draft = fitScope(draft, wz.scope, f.options)
+					draft = fitScope(draft, wz.scope, f)
 				}
 				draft.name = draft.suggestName(f.labelOf, a.takenGroupNames())
 				wz.draft = draft
@@ -956,7 +1101,11 @@ func (a *App) wizardFooter(c *ui.Context, p *palette, f *wizardFrame) {
 			})
 		case wz.step == "details":
 			valid := wz.draft.validate(f.repoOf, a.takenGroupNames()).valid
-			primaryButton(c, p, locales.WizardCreate(), valid && !wz.submitting).OnClick(a.saveProjectGroup)
+			label := locales.WizardCreate()
+			if wz.editing != nil {
+				label = locales.Save()
+			}
+			primaryButton(c, p, label, valid && !wz.submitting).OnClick(a.saveProjectGroup)
 		}
 	})
 }
@@ -1004,7 +1153,7 @@ var (
 
 // preparedFolder is a machine's answer to local-project/prepare-add: the
 // local project a folder is, or would be, and, when asked to inspect it,
-// whether it is a Git repository and its GitHub remote.
+// whether it is a Git repository, its GitHub remote and its submodules.
 type preparedFolder struct {
 	LocalProjectID    string `json:"localProjectId"`
 	Name              string `json:"name"`
@@ -1013,7 +1162,25 @@ type preparedFolder struct {
 	Inspection        *struct {
 		IsGit        *bool  `json:"isGit"`
 		RepoFullName string `json:"repoFullName"`
+		Submodules   []struct {
+			Path         string `json:"path"`
+			URL          string `json:"url"`
+			RepoFullName string `json:"repoFullName"`
+		} `json:"submodules"`
 	} `json:"inspection"`
+}
+
+// submodules are those the machine inspected, each with the repository
+// it points at.
+func (pf preparedFolder) submodules() []detectedSubmodule {
+	if pf.Inspection == nil {
+		return nil
+	}
+	var out []detectedSubmodule
+	for _, s := range pf.Inspection.Submodules {
+		out = append(out, detectedSubmodule{path: s.Path, repo: firstNonEmpty(s.RepoFullName, submoduleRepo(s.URL, pf.Inspection.RepoFullName))})
+	}
+	return out
 }
 
 // git is whether the machine found a Git repository: older machines
@@ -1101,7 +1268,11 @@ func (a *App) saveProjectGroup() {
 		return
 	}
 	conn, sync, ws, gen := a.conn, a.sync, a.workspaceID, wz.gen
-	draft, row := wz.draft, wz.draft.row(wz.id, a.account.User.ID, nowMs())
+	draft, row := wz.draft, wz.draft.row(wz.id, a.account.User.ID, nowMs(), wz.editing)
+	created, id := wz.onCreated, wz.id
+	if wz.editing != nil {
+		created = nil
+	}
 	wz.submitting, wz.err = true, ""
 	go func() {
 		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
@@ -1135,6 +1306,9 @@ func (a *App) saveProjectGroup() {
 				return
 			}
 			a.closeProjectWizard()
+			if created != nil {
+				created(id)
+			}
 		})
 	}()
 }
@@ -1151,7 +1325,7 @@ func (a *App) finishSingleProject() {
 	f := a.wizardFrame()
 	draft := wz.draft
 	if wz.scope.kind != "" {
-		draft = fitScope(draft, wz.scope, f.options)
+		draft = fitScope(draft, wz.scope, f)
 	}
 	if len(draft.members) != 1 {
 		return
@@ -1241,7 +1415,7 @@ func (a *App) pickGroupFolder() {
 			var next groupDraft
 			if canInspect {
 				next = wz.draft.addFolder(groupFolder{machine: machine, local: prep.LocalProjectID, name: prep.Name, rootPath: prep.RootPath,
-					isGit: prep.git(), repo: prep.Inspection.RepoFullName})
+					isGit: prep.git(), repo: prep.Inspection.RepoFullName, submodules: prep.submodules()})
 			} else {
 				next = wz.draft.add(localSource(machine, prep.LocalProjectID), prep.Name)
 			}

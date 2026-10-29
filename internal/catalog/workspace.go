@@ -101,10 +101,13 @@ type RoleTarget struct {
 // one conversation works across, each member a GitHub repository or one
 // machine's folder in its own directory.
 type ProjectGroup struct {
-	ID          string
-	Name        string
-	OwnerUserID string
-	Members     []ProjectGroupMember
+	ID           string
+	Name         string
+	Instructions string // what the agent is told first in its conversations
+	OwnerUserID  string
+	CreatedAt    float64
+	Revision     float64 // moves on with each saved change
+	Members      []ProjectGroupMember
 	// Row is the project as the workspace stream stores it.
 	Row map[string]any
 }
@@ -119,6 +122,9 @@ type ProjectGroupMember struct {
 	PreferLocal    bool
 	MachineID      string
 	LocalProjectID string
+	// Where it sits in a conversation's directory: a top-level Dir of its
+	// own, or, as its Parent's submodule, at Path within it.
+	Dir, Parent, Path string
 }
 
 // BoundMachine is the one machine a project's folders put it on, as
@@ -210,12 +216,18 @@ func projectWorkspace(rows []flock.Row) Catalog {
 			}
 			c.Roles = append(c.Roles, r)
 		case "project":
-			g := ProjectGroup{ID: id, Name: strings.TrimSpace(text(v["name"])), OwnerUserID: text(v["ownerUserId"]), Row: v}
+			g := ProjectGroup{ID: id, Name: strings.TrimSpace(text(v["name"])), Instructions: text(v["instructions"]), OwnerUserID: text(v["ownerUserId"]),
+				CreatedAt: stamp(v["createdAtMs"]), Revision: stamp(v["revision"]), Row: v}
 			for _, raw := range anyList(v["members"]) {
 				m := object(raw)
-				src := object(m["source"])
+				src, at := object(m["source"]), object(m["placement"])
 				member := ProjectGroupMember{ID: text(m["id"]), Kind: text(src["kind"]), RepoFullName: text(src["repoFullName"]),
 					PreferLocal: src["preferLocal"] == true, MachineID: text(src["machineId"]), LocalProjectID: text(src["localProjectId"])}
+				if text(at["kind"]) == "submodule" {
+					member.Parent, member.Path = text(at["parent"]), text(at["path"])
+				} else {
+					member.Dir = text(at["dir"])
+				}
 				if member.ID == "" || (member.Kind != "github" && member.Kind != "local") {
 					continue
 				}

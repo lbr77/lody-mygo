@@ -6,6 +6,7 @@ package github
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -338,4 +339,39 @@ func (c *Client) IssuesAndPRs(ctx context.Context, repo string) ([]IssueOrPR, er
 		out = out[:200]
 	}
 	return out, nil
+}
+
+// DefaultBranch is the repository's default branch.
+func (c *Client) DefaultBranch(ctx context.Context, repo string) (string, error) {
+	var out struct {
+		DefaultBranch string `json:"default_branch"`
+	}
+	if err := c.do(ctx, http.MethodGet, repoPath(repo), nil, &out); err != nil {
+		return "", err
+	}
+	return out.DefaultBranch, nil
+}
+
+// ErrTooLarge is a file longer than a read allows.
+var ErrTooLarge = errors.New("GitHub: file too large")
+
+// FileAt reads a file of the repository at ref, as text of at most max
+// bytes; a file GitHub does not have is a 404 Error.
+func (c *Client) FileAt(ctx context.Context, repo, path, ref string, max int) (string, error) {
+	var out struct {
+		Size     int    `json:"size"`
+		Encoding string `json:"encoding"`
+		Content  string `json:"content"`
+	}
+	if err := c.do(ctx, http.MethodGet, repoPath(repo)+"/contents/"+path+"?ref="+url.QueryEscape(ref), nil, &out); err != nil {
+		return "", err
+	}
+	if out.Size > max {
+		return "", ErrTooLarge
+	}
+	if out.Encoding != "base64" {
+		return out.Content, nil
+	}
+	b, err := base64.StdEncoding.DecodeString(strings.ReplaceAll(out.Content, "\n", ""))
+	return string(b), err
 }

@@ -75,6 +75,7 @@ func (a *App) mainView(c *ui.Context, p *palette) {
 	})
 	withTipDelay(400*time.Millisecond, func() { a.compactDrawer(c, p) })
 	withTipDelay(250*time.Millisecond, func() { a.settingsDialog(c, p) })
+	a.projectEditorHost(c, p)
 	a.bugReportDialog(c, p)
 	a.createWorkspaceDialog(c, p)
 	a.joinWorkspaceDialog(c, p)

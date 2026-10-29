@@ -469,10 +469,10 @@ func TestProjectGroupDraft(t *testing.T) {
 	// A GitHub-only scope keeps no folder and no machine's copy; a machine's
 	// keeps its own folders and binds its copies.
 	d = groupDraft{}.add(groupSource{kind: "github", repo: "acme/web", preferLocal: true}, "acme/web").add(localSource("m1", "p1"), "notes").add(localSource("m2", "p2"), "docs")
-	if g := d.retain(groupScope{kind: "github"}); len(g.members) != 1 || g.members[0].source.preferLocal {
+	if g := d.retain(groupScope{kind: "github"}, nil); len(g.members) != 1 || g.members[0].source.preferLocal {
 		t.Fatalf("github %+v", g.members)
 	}
-	m := d.retain(groupScope{kind: "machine", machine: "m1"}).bind("m1", func(repo string) string { return map[string]string{"acme/web": "p7"}[repo] })
+	m := d.retain(groupScope{kind: "machine", machine: "m1"}, nil).bind("m1", func(repo string) string { return map[string]string{"acme/web": "p7"}[repo] })
 	var keys []string
 	for _, x := range m.members {
 		keys = append(keys, x.source.key())

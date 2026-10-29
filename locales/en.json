@@ -3961,5 +3961,77 @@
   "askProgress": "Progress",
   "askSubmit": "Submit",
   "askCustomAnswer": "Type a custom answer...",
-  "askSendFailed": "Your answer didn't reach the agent. Try again."
+  "askSendFailed": "Your answer didn't reach the agent. Try again.",
+  "wizardPrevious": "Previously selected",
+  "groupReadOnly": "Only the person who created this project can change it.",
+  "groupMembers": "Folders and repositories",
+  "groupInstructions": "Instructions",
+  "groupDeleteTitle": "Delete project?",
+  "groupDeleteBody": "“{name}” will be deleted. Existing conversations keep their repositories and branches; the folders and repositories themselves are untouched.",
+  "@groupDeleteBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "groupRemove": "Remove",
+  "groupErrSubmodulePath": "the submodule path is not valid",
+  "groupErrSubmoduleParent": "its parent repository is not in the project",
+  "groupErrPathOverlap": "its directory overlaps another repository",
+  "sidebarEditProject": "Edit project…",
+  "sidebarProjectSettings": "Project settings",
+  "sidebarRevealProject": "Reveal in file manager",
+  "sidebarRevealMissing": "That folder no longer exists.",
+  "sidebarRevealFailed": "Could not open that folder.",
+  "sidebarArchiveChats": "Archive chats",
+  "sidebarRemoveProject": "Remove project",
+  "sidebarGroupNewChat": "New chat in this project",
+  "pickerCreateProject": "Create project",
+  "pickerGroupMembers": "{count} repositories",
+  "@pickerGroupMembers": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pickerEditGroup": "Edit {name}",
+  "@pickerEditGroup": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pickerRemovedGroup": "Removed project",
+  "groupMissingClone": "{count} cloned on start",
+  "@groupMissingClone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "groupMachinesConflict": "Its local repositories are on different machines",
+  "groupMissingLocal": "{count} not on this machine",
+  "@groupMissingLocal": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "groupMissing": "This project no longer exists",
+  "groupMachinesConflictStatus": "This project has local folders on different machines, so they cannot share one conversation.",
+  "groupMissingLocalStatus": "This machine has no copy of {count} of this project’s repositories. Add them as local projects here, or start on another machine.",
+  "@groupMissingLocalStatus": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "groupUnsupportedMachine": "Update Lody on this machine to start conversations in multi-repository projects.",
+  "groupUnsupportedRepositoryMembers": "Update Lody on this machine to use its copies of these repositories."
 }
