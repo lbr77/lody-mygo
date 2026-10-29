@@ -186,6 +186,10 @@ func (a *App) askQuestionCard(c *ui.Context, p *palette, e session.Entry, it ses
 			}
 		},
 	}
+	// With several waiting, where this one is stands over it, at its end.
+	if a.permPager.all > 1 {
+		ui.Row(c.Key("ask-strip")).FillWidth().Justify(ui.End).AlignItems(ui.Center).Gap(2).Margin(0, 0, 4, 0).Children(func() { a.permissionPosition(c, p) })
+	}
 	questionCard(c.Key("ask/"+perm.RequestID), p, qs, st, live)
 }
 

@@ -4143,5 +4143,18 @@
         "type": "String"
       }
     }
+  },
+  "permissionPrevious": "Previous request",
+  "permissionNext": "Next request",
+  "permissionPosition": "{index}/{total}",
+  "@permissionPosition": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
   }
 }

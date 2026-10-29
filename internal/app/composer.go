@@ -1,7 +1,7 @@
 package app
 
 import (
-	"github.com/lbr77/lody-mygo/locales"
+	"slices"
 	"strings"
 	"time"
 
@@ -9,12 +9,13 @@ import (
 
 	"github.com/lbr77/lody-mygo/internal/catalog"
 	"github.com/lbr77/lody-mygo/internal/session"
+	"github.com/lbr77/lody-mygo/locales"
 )
 
 // bottom is what sits under the conversation: the info bar, then the
 // composer, or the permission card in its place while the agent asks.
 func (a *App) bottom(c *ui.Context, p *palette, sess *catalog.Session, v *session.View) {
-	if e, it, ok := pendingPermission(v); ok {
+	if e, it, ok := a.currentPermission(v); ok {
 		bottomColumn(c, func() {
 			if sess != nil {
 				a.infoBar(c, p, sess)
@@ -105,22 +106,73 @@ func (a *App) bottom(c *ui.Context, p *palette, sess *catalog.Session, v *sessio
 }
 
 // pendingPermission finds the request the agent waits on.
-func pendingPermission(v *session.View) (session.Entry, session.Item, bool) {
+// pendingRequest is a request the agent waits on: its turn and its step.
+type pendingRequest struct {
+	e  session.Entry
+	it session.Item
+}
+
+// pendingPermissions are the requests the agent waits on, in the order it
+// asked them, as Lody's findPendingPermissions.
+func pendingPermissions(v *session.View) []pendingRequest {
 	if v == nil {
-		return session.Entry{}, session.Item{}, false
+		return nil
 	}
-	for i := len(v.Entries) - 1; i >= 0; i-- {
-		e := v.Entries[i]
+	var out []pendingRequest
+	for _, e := range v.Entries {
 		if e.Role != "assistant" {
 			continue
 		}
 		for _, it := range e.Items {
 			if it.Permission != nil && it.Permission.Pending {
-				return e, it, true
+				out = append(out, pendingRequest{e, it})
 			}
 		}
 	}
-	return session.Entry{}, session.Item{}, false
+	return out
+}
+
+// permPager is which of several requests shows, as Lody's floating
+// request keeps it: the one chosen, or once it is answered and gone the
+// one that took its place, so answering walks forward.
+type permPager struct {
+	selected   string // the request chosen, by its id
+	last       int    // where the one shown was
+	index, all int    // where the one shown is, of how many
+	step       func(d int)
+}
+
+// currentPermission is the request shown in the composer's place.
+func (a *App) currentPermission(v *session.View) (session.Entry, session.Item, bool) {
+	reqs := pendingPermissions(v)
+	pg := &a.permPager
+	pg.all = len(reqs)
+	if len(reqs) == 0 {
+		pg.index = 0
+		return session.Entry{}, session.Item{}, false
+	}
+	i := slices.IndexFunc(reqs, func(r pendingRequest) bool { return r.it.Permission.RequestID == pg.selected })
+	if i < 0 {
+		i = min(pg.last, len(reqs)-1)
+	}
+	pg.last, pg.index = i, i
+	pg.step = func(d int) {
+		pg.selected = reqs[(i+d+len(reqs))%len(reqs)].it.Permission.RequestID
+	}
+	return reqs[i].e, reqs[i].it, true
+}
+
+// permissionPosition is Lody's PositionControl, with more than one request
+// waiting: previous, where this one is of them all, and next, going round.
+func (a *App) permissionPosition(c *ui.Context, p *palette) {
+	pg := &a.permPager
+	if pg.all < 2 || pg.step == nil {
+		return
+	}
+	step := pg.step
+	iconButton(c, p, iconChevronLeft, locales.PermissionPrevious(), p.Hover).Size(24, 24).OnClick(func() { step(-1) })
+	ui.Text(c, locales.PermissionPosition(pg.index+1, pg.all)).FontSize(sizeFoot).TextColor(p.Tertiary).FontFeatures("tnum").Padding(0, 2)
+	iconButton(c, p, iconChevronRight, locales.PermissionNext(), p.Hover).Size(24, 24).OnClick(func() { step(1) })
 }
 
 func bottomColumn(c *ui.Context, fn func()) {
@@ -583,6 +635,7 @@ func (a *App) permissionCard(c *ui.Context, p *palette, e session.Entry, it sess
 	card.Children(func() {
 		ui.Row(c).Gap(8).AlignItems(ui.Start).Children(func() {
 			ui.Text(c, question).FontSize(sizeBody).LineHeight(20.0 / 14).FontWeight(600).TextColor(p.Strong).Grow(1).MinWidth(0)
+			ui.Row(c).Gap(2).AlignItems(ui.Center).Children(func() { a.permissionPosition(c, p) })
 			stop := ui.ButtonBase(c).Height(24).Padding(0, 6).Radius(6).Gap(4).Cursor(ui.CursorPointer).Label(locales.StopAgent()).OnClick(a.stop).Transition(colorFade)
 			if stop.Hovered() {
 				stop.Background(p.Text.Alpha(0.06))

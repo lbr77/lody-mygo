@@ -396,3 +396,45 @@ func TestAskOptionIDs(t *testing.T) {
 		}
 	}
 }
+
+// With several requests waiting, the oldest shows first with Lody's
+// position control; previous and next go round, and answering the one
+// shown walks forward to the next.
+func TestPermissionPaging(t *testing.T) {
+	a := fixture()
+	last := &a.view.Entries[len(a.view.Entries)-1]
+	opts := []session.Option{{ID: "allow", Name: "Allow once", Kind: "allow_once"}, {ID: "reject", Name: "Reject", Kind: "reject_once"}}
+	last.Items = append(last.Items,
+		session.Item{ID: "c6", Type: "tool_call", Kind: "edit", Title: "Edit main.go", Status: "pending", Permission: &session.Permission{RequestID: "r2", Pending: true, Options: opts}},
+		session.Item{ID: "c7", Type: "tool_call", Kind: "delete", Title: "Delete old.go", Status: "pending", Permission: &session.Permission{RequestID: "r3", Pending: true, Options: opts}})
+	tt := ui.NewTester(a.render, 1100, 720)
+	tt.Frame()
+	tt.Advance(400 * time.Millisecond)
+	tt.Frame()
+	if !tt.HasText("1/3") || !tt.HasText("Run rm -rf build/") {
+		t.Fatalf("not the oldest first: %q", tt.Texts())
+	}
+	if err := tt.Click("Previous request"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if !tt.HasText("3/3") || a.permPager.selected != "r3" {
+		t.Fatalf("previous doesn't go round: %q", a.permPager.selected)
+	}
+	if err := tt.Click("Next request"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if !tt.HasText("1/3") {
+		t.Fatal("next doesn't go round")
+	}
+	tt.Click("Next request")
+	tt.Frame()
+	// r2 answered: r3 takes its place.
+	last.Items[len(last.Items)-2].Permission.Pending = false
+	tt.Frame()
+	tt.Frame()
+	if !tt.HasText("2/2") || !tt.HasText("Delete old.go") {
+		t.Fatalf("answering doesn't walk forward: %q", tt.Texts())
+	}
+}

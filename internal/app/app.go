@@ -208,6 +208,7 @@ type App struct {
 	panelPercent     float32      // the conversation's share of the width
 	panelDrag        *float32     // where a drag has the panel's edge, past where it stops
 	compactLayout    compactState // the narrow window's presentation
+	permPager        permPager    // which of several waiting requests shows
 	panelFile        string       // the file whose edits the panel shows
 	inspect          *inspectState
 	term             termDock // the terminal dock under the conversation

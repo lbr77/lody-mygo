@@ -20638,3 +20638,35 @@ func PromptResolveConflicts(repoFullName string, prLabel string, prUrl string) s
 func (msgs Messages) PromptResolveConflicts(repoFullName string, prLabel string, prUrl string) string {
 	return Catalog.Format(msgs.locale, "promptResolveConflicts", map[string]any{"repoFullName": repoFullName, "prLabel": prLabel, "prUrl": prUrl})
 }
+
+// PermissionPrevious says "Previous request"
+// in the language the app shows.
+func PermissionPrevious() string { return In(i18n.Locale()).PermissionPrevious() }
+
+// PermissionPrevious says "Previous request"
+// in the language of msgs.
+func (msgs Messages) PermissionPrevious() string {
+	return Catalog.Format(msgs.locale, "permissionPrevious", nil)
+}
+
+// PermissionNext says "Next request"
+// in the language the app shows.
+func PermissionNext() string { return In(i18n.Locale()).PermissionNext() }
+
+// PermissionNext says "Next request"
+// in the language of msgs.
+func (msgs Messages) PermissionNext() string {
+	return Catalog.Format(msgs.locale, "permissionNext", nil)
+}
+
+// PermissionPosition says "{index}/{total}"
+// in the language the app shows.
+func PermissionPosition(index int, total int) string {
+	return In(i18n.Locale()).PermissionPosition(index, total)
+}
+
+// PermissionPosition says "{index}/{total}"
+// in the language of msgs.
+func (msgs Messages) PermissionPosition(index int, total int) string {
+	return Catalog.Format(msgs.locale, "permissionPosition", map[string]any{"index": index, "total": total})
+}
