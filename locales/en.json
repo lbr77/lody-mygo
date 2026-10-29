@@ -3252,5 +3252,6 @@
   "schedConfirm": "Confirm",
   "cmdSchedulesNew": "New Schedule",
   "cmdSchedulesOpen": "Open Schedules",
-  "cmdSchedulesPause": "Pause Schedule"
+  "cmdSchedulesPause": "Pause Schedule",
+  "scrollToLatest": "Scroll to latest message"
 }

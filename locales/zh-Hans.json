@@ -1647,5 +1647,6 @@
   "schedConfirm": "确认",
   "cmdSchedulesNew": "新建定时任务",
   "cmdSchedulesOpen": "打开定时任务",
-  "cmdSchedulesPause": "暂停定时任务"
+  "cmdSchedulesPause": "暂停定时任务",
+  "scrollToLatest": "回到底部"
 }

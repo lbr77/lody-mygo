@@ -1,10 +1,14 @@
 package app
 
 import (
+	"fmt"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/egoist/mygo/ui"
+
+	"github.com/lbr77/lody-mygo/internal/session"
 )
 
 // luma is how light the window is at x, y.
@@ -77,5 +81,40 @@ func TestSidebarSlides(t *testing.T) {
 	tt.Advance(time.Second)
 	if back, ok := tt.Find("Archived chats"); !ok || back.X != shown.X {
 		t.Fatalf("the sidebar isn't back in place: %v, was %v (%v)", back, shown, ok)
+	}
+}
+
+// Scrolled up, the conversation fades at its edges and offers a way back
+// to the latest message, which spins while the agent works.
+func TestScrollToLatest(t *testing.T) {
+	a := fixture()
+	var long []session.Entry
+	for i := 0; i < 12; i++ {
+		id := fmt.Sprint("pad", i)
+		long = append(long, session.Entry{ID: "u" + id, Role: "user", Items: []session.Item{{ID: "t", Type: "text", Text: "Question " + id}}},
+			session.Entry{ID: "r" + id, Role: "assistant", UserTurnID: "u" + id, Finished: true, Items: []session.Item{{ID: "x", Type: "text", Text: strings.Repeat("A long answer line. ", 40)}}})
+	}
+	a.view.Entries = append(long, a.view.Entries...)
+	tt := snap(t, a, "scroll-latest-end", false, nil)
+	if tt.HasText("Scroll to latest message") {
+		t.Fatal("offered at the end")
+	}
+	a.chatList.ScrollTo(0, ui.Start)
+	tt.Frame()
+	tt.Frame()
+	tt.Advance(400 * time.Millisecond)
+	tt.Frame()
+	snapFrame(t, tt, "scroll-latest")
+	if !tt.HasText("Scroll to latest message") {
+		t.Fatalf("not offered when scrolled up: %q", tt.Texts())
+	}
+	if err := tt.Click("Scroll to latest message"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Advance(time.Second)
+	tt.Frame()
+	tt.Frame()
+	if !a.chatList.AtEnd() || tt.HasText("Scroll to latest message") {
+		t.Fatal("didn't go back to the end")
 	}
 }

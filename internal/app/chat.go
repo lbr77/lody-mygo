@@ -241,17 +241,65 @@ func (a *App) conversation(c *ui.Context, p *palette, sess *catalog.Session) {
 	// as Lody scrolls to a message sent.
 	a.chatList.FollowAnimation = &chatGlide
 	// Keyed by session, so that each conversation fades in as it opens.
-	ui.List(c.Key("chat/"+a.selected), &a.chatList, len(entries)+1, func(i int) {
-		if i == len(entries) {
-			a.liveStatus(c, p, v)
-			return
-		}
-		a.entry(c, p, entries, i)
-	}).Grow(1).MinHeight(0).Padding(16, 0, 24, 0).FontFeatures(a.ligatureFeatures()...).Children(func() {
-		ui.Text(c, locales.SendToStart()).FontSize(sizeSub).TextColor(p.Secondary).Margin(ui.Auto)
+	ui.Box(c.Key("chat-frame/"+a.selected)).FillWidth().Grow(1).MinHeight(0).Children(func() {
+		ui.List(c.Key("chat/"+a.selected), &a.chatList, len(entries)+1, func(i int) {
+			if i == len(entries) {
+				a.liveStatus(c, p, v)
+				return
+			}
+			a.entry(c, p, entries, i)
+		}).Fill().Padding(16, 0, 24, 0).FontFeatures(a.ligatureFeatures()...).Children(func() {
+			ui.Text(c, locales.SendToStart()).FontSize(sizeSub).TextColor(p.Secondary).Margin(ui.Auto)
+		})
+		a.chatEdges(c, p, v, len(entries))
 	})
 	a.bottom(c, p, sess, v)
 	a.findBar(c, p)
+}
+
+// chatEdges is what Lody lays over the conversation's edges: a fade into
+// the canvas at the top once it is scrolled from there and at the bottom
+// while more lies below, and a round button back to the latest message,
+// which spins while the agent works and shows its arrow under the pointer.
+func (a *App) chatEdges(c *ui.Context, p *palette, v *session.View, n int) {
+	if n == 0 {
+		return
+	}
+	first, _ := a.chatList.Visible()
+	atEnd := a.chatList.AtEnd()
+	if first > 0 {
+		ui.Box(c.Key("fade-top")).Absolute().Left(0).Right(0).Top(0).Height(48).PassThrough().Draw(func(pt *ui.Painter, r ui.Rect) {
+			pt.FillGradient(r, ui.LinearGradient{From: p.Canvas, To: p.Canvas.Alpha(0), Angle: 180}, 0)
+		})
+	}
+	if atEnd {
+		return
+	}
+	ui.Box(c.Key("fade-bottom")).Absolute().Left(0).Right(0).Bottom(0).Height(40).PassThrough().Draw(func(pt *ui.Painter, r ui.Rect) {
+		pt.FillGradient(r, ui.LinearGradient{From: p.Canvas.Alpha(0), To: p.Canvas, Angle: 180}, 0)
+	})
+	ui.Box(c.Key("to-latest")).Absolute().Left(0).Right(0).Bottom(16).PassThrough().Children(func() {
+		a.column(c, "to-latest-col", func() {
+			ui.Row(c).FillWidth().Justify(ui.End).Children(func() {
+				b := ui.ButtonBase(c.Key("scroll-latest")).Size(32, 32).Radius(16).Center().Border(0.5, p.Border).Cursor(ui.CursorPointer).
+					Label(locales.ScrollToLatest()).Tooltip(locales.ScrollToLatest()).Transition(colorFade).OnClick(a.chatList.ScrollToEnd)
+				if p.Dark {
+					b.Background(p.Hover)
+				} else {
+					b.Background(ui.Hex("#FFFFFF")).Shadow(0, 0.5, 1, 1, ui.RGBA(0, 0, 0, 0.04))
+				}
+				pressable(b, 0.96)
+				working := v != nil && v.Working
+				b.Children(func() {
+					if working && !b.Hovered() {
+						spinner(c).Size(16, 16)
+						return
+					}
+					ui.Icon(c, iconArrowDown).Size(16, 16).TextColor(p.Text)
+				})
+			})
+		})
+	})
 }
 
 // offlinePill marks a machine that isn't connected.

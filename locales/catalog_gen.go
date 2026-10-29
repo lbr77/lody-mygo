@@ -16600,3 +16600,13 @@ func CmdSchedulesPause() string { return In(i18n.Locale()).CmdSchedulesPause() }
 func (msgs Messages) CmdSchedulesPause() string {
 	return Catalog.Format(msgs.locale, "cmdSchedulesPause", nil)
 }
+
+// ScrollToLatest says "Scroll to latest message"
+// in the language the app shows.
+func ScrollToLatest() string { return In(i18n.Locale()).ScrollToLatest() }
+
+// ScrollToLatest says "Scroll to latest message"
+// in the language of msgs.
+func (msgs Messages) ScrollToLatest() string {
+	return Catalog.Format(msgs.locale, "scrollToLatest", nil)
+}
