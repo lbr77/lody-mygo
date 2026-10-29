@@ -1839,5 +1839,11 @@
   "copyResponse": "复制回答",
   "goalExpandObjective": "展开 Goal 目标",
   "goalCollapseObjective": "收起 Goal 目标",
-  "copyContextHint": "复制截至此条的对话"
+  "copyContextHint": "复制截至此条的对话",
+  "changesTypes": "类型",
+  "changesFiles": "文件",
+  "changeCatCode": "代码",
+  "changeCatDoc": "文档",
+  "changeCatTest": "测试",
+  "changeCatDev": "开发"
 }

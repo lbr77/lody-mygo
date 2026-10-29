@@ -320,6 +320,9 @@ func (a *App) changesTab(c *ui.Context, p *palette, in *inspectState) {
 			}
 			ui.Text(c, fmt.Sprint(len(cs.res.Entries))).FontSize(sizeFoot).TextColor(p.Secondary)
 			diffCounts(c, p, add, del)
+			if len(cs.res.Entries) > 0 {
+				a.changesViewSwitch(c, p)
+			}
 		}
 	})
 	switch {
@@ -336,6 +339,13 @@ func (a *App) changesTab(c *ui.Context, p *palette, in *inspectState) {
 			ui.Text(c, locales.PanelComparedWith(shortSHA(base))).FontSize(sizeCaption).TextColor(p.Tertiary).Padding(0, 14, 6, 14)
 		}
 		ui.Scroll(c).Grow(1).MinHeight(0).Padding(0, 8, 12, 8).Gap(1).Children(func() {
+			if a.changesView != "files" {
+				a.changeTypes(c, p, in, cs.res.Entries)
+				if cs.res.Truncated {
+					ui.Text(c, locales.PanelTruncated()).FontSize(sizeCaption).TextColor(p.Tertiary).Padding(6, 8)
+				}
+				return
+			}
 			for _, e := range cs.res.Entries {
 				add, del := -1, -1
 				if e.Add != nil {

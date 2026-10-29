@@ -18542,3 +18542,63 @@ func CopyContextHint() string { return In(i18n.Locale()).CopyContextHint() }
 func (msgs Messages) CopyContextHint() string {
 	return Catalog.Format(msgs.locale, "copyContextHint", nil)
 }
+
+// ChangesTypes says "Types"
+// in the language the app shows.
+func ChangesTypes() string { return In(i18n.Locale()).ChangesTypes() }
+
+// ChangesTypes says "Types"
+// in the language of msgs.
+func (msgs Messages) ChangesTypes() string {
+	return Catalog.Format(msgs.locale, "changesTypes", nil)
+}
+
+// ChangesFiles says "Files"
+// in the language the app shows.
+func ChangesFiles() string { return In(i18n.Locale()).ChangesFiles() }
+
+// ChangesFiles says "Files"
+// in the language of msgs.
+func (msgs Messages) ChangesFiles() string {
+	return Catalog.Format(msgs.locale, "changesFiles", nil)
+}
+
+// ChangeCatCode says "Code"
+// in the language the app shows.
+func ChangeCatCode() string { return In(i18n.Locale()).ChangeCatCode() }
+
+// ChangeCatCode says "Code"
+// in the language of msgs.
+func (msgs Messages) ChangeCatCode() string {
+	return Catalog.Format(msgs.locale, "changeCatCode", nil)
+}
+
+// ChangeCatDoc says "Docs"
+// in the language the app shows.
+func ChangeCatDoc() string { return In(i18n.Locale()).ChangeCatDoc() }
+
+// ChangeCatDoc says "Docs"
+// in the language of msgs.
+func (msgs Messages) ChangeCatDoc() string {
+	return Catalog.Format(msgs.locale, "changeCatDoc", nil)
+}
+
+// ChangeCatTest says "Tests"
+// in the language the app shows.
+func ChangeCatTest() string { return In(i18n.Locale()).ChangeCatTest() }
+
+// ChangeCatTest says "Tests"
+// in the language of msgs.
+func (msgs Messages) ChangeCatTest() string {
+	return Catalog.Format(msgs.locale, "changeCatTest", nil)
+}
+
+// ChangeCatDev says "Dev"
+// in the language the app shows.
+func ChangeCatDev() string { return In(i18n.Locale()).ChangeCatDev() }
+
+// ChangeCatDev says "Dev"
+// in the language of msgs.
+func (msgs Messages) ChangeCatDev() string {
+	return Catalog.Format(msgs.locale, "changeCatDev", nil)
+}

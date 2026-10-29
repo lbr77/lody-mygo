@@ -3631,5 +3631,11 @@
   "copyResponse": "Copy response",
   "goalExpandObjective": "Expand goal objective",
   "goalCollapseObjective": "Collapse goal objective",
-  "copyContextHint": "Copy the conversation through this message"
+  "copyContextHint": "Copy the conversation through this message",
+  "changesTypes": "Types",
+  "changesFiles": "Files",
+  "changeCatCode": "Code",
+  "changeCatDoc": "Docs",
+  "changeCatTest": "Tests",
+  "changeCatDev": "Dev"
 }
