@@ -3286,5 +3286,148 @@
   "outlineRail": "Conversation outline",
   "outlineUntitled": "Untitled turn",
   "outlineAgentStarted": "Started by the agent.",
-  "outlineNoReply": "No reply yet."
+  "outlineNoReply": "No reply yet.",
+  "accessPrivateToYou": "Private to you",
+  "accessSharedWithTeam": "Shared with team",
+  "accessYou": "Only you",
+  "accessTeam": "Team",
+  "accessWeb": "Web",
+  "accessAnyoneWithLink": "Anyone with the link",
+  "accessPublishTitle": "Publish to the web",
+  "accessManageLink": "Manage link",
+  "accessCopyURL": "Copy URL",
+  "accessCopyMarkdown": "Copy as Markdown",
+  "accessShareImage": "Share as image…",
+  "accessWhoCanOpen": "Who can open this",
+  "accessPanelTitle": "Share this conversation",
+  "accessShared": "Shared",
+  "accessSharedDescription": "Anyone with the link can read a published copy of this conversation.",
+  "accessShareDescription": "Publish a read-only copy of this conversation as a link.",
+  "accessOnlyOwner": "Only the device owner can share",
+  "accessRegisterDevice": "Register this device before sharing",
+  "accessTeamLabel": "Team",
+  "accessPrivate": "Private",
+  "accessChecking": "Checking visibility…",
+  "accessCheckingDescription": "Checking who can open this conversation.",
+  "accessTeamDescription": "Everyone in this workspace can open this conversation.",
+  "accessPrivateMachine": "{machine} is not shared with the team.",
+  "@accessPrivateMachine": {
+    "placeholders": {
+      "machine": {
+        "type": "String"
+      }
+    }
+  },
+  "accessPrivateProject": "{project} is not shared with the team.",
+  "@accessPrivateProject": {
+    "placeholders": {
+      "project": {
+        "type": "String"
+      }
+    }
+  },
+  "accessPrivateBoth": "Neither {machine} nor {project} is shared with the team.",
+  "@accessPrivateBoth": {
+    "placeholders": {
+      "machine": {
+        "type": "String"
+      },
+      "project": {
+        "type": "String"
+      }
+    }
+  },
+  "accessNotRegistered": "This device is not registered for team access.",
+  "accessPrivateDescription": "Only you can open this conversation.",
+  "accessThisDevice": "this device",
+  "accessThisProject": "this project",
+  "accessConfirmProject": "This shares {project} with everyone in the workspace so they can open and continue its conversations.",
+  "@accessConfirmProject": {
+    "placeholders": {
+      "project": {
+        "type": "String"
+      }
+    }
+  },
+  "accessConfirmBoth": "This shares {project} and {machine} with everyone in the workspace. Other conversations on this device may also become visible.",
+  "@accessConfirmBoth": {
+    "placeholders": {
+      "machine": {
+        "type": "String"
+      },
+      "project": {
+        "type": "String"
+      }
+    }
+  },
+  "accessConfirmMachine": "This shares {machine} with everyone in the workspace. Other conversations on this device may also become visible.",
+  "@accessConfirmMachine": {
+    "placeholders": {
+      "machine": {
+        "type": "String"
+      }
+    }
+  },
+  "accessConfirmGeneric": "Everyone in this workspace will be able to open this conversation.",
+  "accessConfirmTitle": "Share “{title}” with the team?",
+  "@accessConfirmTitle": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "accessShareAndCopy": "Share and copy link",
+  "accessShareProject": "Share project with team…",
+  "accessShareBoth": "Share project and device…",
+  "accessShareDevice": "Share device with team…",
+  "accessShareWithTeam": "Share with team…",
+  "accessURLCopied": "Session URL copied to clipboard",
+  "accessHistoryEmpty": "No conversation history to copy",
+  "accessHistoryCopied": "Conversation copied as Markdown",
+  "accessIncomplete": "The last response was still generating when copied.",
+  "accessArchived": "Archived",
+  "accessArchivedDescription": "This conversation is archived. Restore it to continue chatting.",
+  "fileUploadingFrom": "Uploading from {machine}…",
+  "@fileUploadingFrom": {
+    "placeholders": {
+      "machine": {
+        "type": "String"
+      }
+    }
+  },
+  "fileUploading": "Uploading…",
+  "fileExpired": "File expired · {size}",
+  "@fileExpired": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "fileDownloadAction": "Download file",
+  "fileCopyFailed": "Failed to copy file content",
+  "filePreviewRendered": "Rendered",
+  "filePreviewRaw": "Raw",
+  "fileDownload": "Download",
+  "filePreviewTruncated": "Preview shows only the start of this file. Download the full file to see everything.",
+  "fileDownloadFull": "Download full file",
+  "filePreviewLoading": "Loading preview…",
+  "fileDownloadFailed": "Failed to download {name}",
+  "@fileDownloadFailed": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "filePreviewFailed": "Could not load preview",
+  "fileDownloaded": "Saved {name} to Downloads",
+  "@fileDownloaded": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  }
 }

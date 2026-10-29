@@ -335,3 +335,17 @@ func fileChip(c *ui.Context, p *palette, it session.Item) {
 		})
 	})
 }
+
+// sendProgress is how much of the message going out has been sent, as a
+// percentage of its files' bytes, and whether there are bytes to measure.
+func (a *App) sendProgress() (float32, bool) {
+	var total, sent float64
+	for _, f := range a.sendingFiles {
+		total += float64(f.Size)
+		sent += float64(f.Size) * float64(min(100, max(0, a.fileProgress[f.Path]))) / 100
+	}
+	if total <= 0 {
+		return 0, false
+	}
+	return float32(sent / total * 100), true
+}

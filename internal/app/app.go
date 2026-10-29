@@ -78,6 +78,9 @@ type App struct {
 	stuck        stuckState           // a connection that has been connecting too long
 	card         hoverCard            // the sidebar's info card
 	outline      outlineRail          // the conversation's outline rail
+	access       accessPanel          // the header's access panel
+	attachPrev   attachPreview        // a text file's preview
+	downloads    map[string]bool      // the files downloading
 	notifyAsk    notifyAsk            // the prompt to turn notifications on
 	// sendingFiles are a message's attachments as they upload, and
 	// fileProgress how far each has gone, 0 to 100, by path.

@@ -45,7 +45,13 @@ type Item struct {
 	MimeType         string
 	SizeBytes        int64
 	Images           []Item // image_group
-	Goal             *Goal  // goal
+
+	// file
+	TextPreview bool    // it previews as text
+	Transport   string  // r2, in the relay store, or local, still on its machine
+	FileMachine string  // the machine a local file waits on
+	UploadedAt  float64 // when it was uploaded, in Unix milliseconds
+	Goal        *Goal   // goal
 }
 
 type Permission struct {
@@ -319,6 +325,10 @@ func summarizeItem(raw map[string]any, identity string) Item {
 		it.StorageSessionID = str(raw["storageSessionId"])
 		it.MimeType = str(raw["mimeType"])
 		it.SizeBytes = int64(num(raw["sizeBytes"]))
+		it.TextPreview = raw["textPreview"] == true
+		it.Transport = str(raw["transport"])
+		it.FileMachine = str(raw["machineId"])
+		it.UploadedAt = num(raw["uploadedAt"])
 	case "image":
 		it.FileName = str(raw["fileName"])
 		it.ImageID = str(raw["imageId"])

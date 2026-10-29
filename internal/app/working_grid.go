@@ -259,11 +259,20 @@ func (a *App) workingMark(c *ui.Context, p *palette, id string, working, unread 
 }
 
 // sendRing marks a row whose message is still going out, as Lody's: a
-// faint ring with a quarter of it turning every 1.2s.
-func sendRing(c *ui.Context, p *palette) {
+// faint ring that fills with the bytes sent, easing out over 300ms, a
+// highlight sweeping along what is filled every 1.8s so a ring waiting on
+// the next report never reads as frozen; without a size to measure, a
+// quarter of it turns every 1.2s.
+func sendRing(c *ui.Context, p *palette, progress float32, known bool) {
 	ring := ui.Box(c.Key("send-ring")).Size(12, 12).Shrink(0).Label(locales.Sending())
-	k := ring.Keyframes("turn", []ui.Keyframe{{Value: 0}, {At: 1200 * time.Millisecond, Value: 1}}, ui.KeyframeOptions{Repeat: ui.RepeatForever})
 	ink := p.Primary
+	var turn, fill, sweep float32
+	if known {
+		fill = ring.AnimateWith("fill", min(100, max(4, progress))/100, 300*time.Millisecond, ui.EaseOut)
+		sweep = ring.Keyframes("sweep", []ui.Keyframe{{Value: 0}, {At: 1800 * time.Millisecond, Value: 1}}, ui.KeyframeOptions{Repeat: ui.RepeatForever})
+	} else {
+		turn = ring.Keyframes("turn", []ui.Keyframe{{Value: 0}, {At: 1200 * time.Millisecond, Value: 1}}, ui.KeyframeOptions{Repeat: ui.RepeatForever})
+	}
 	ring.Draw(func(pt *ui.Painter, r ui.Rect) {
 		cx, cy, rad := r.X+r.W/2, r.Y+r.H/2, 4.25*r.W/12
 		arc := func(from, sweep float64) [][2]float32 {
@@ -276,6 +285,18 @@ func sendRing(c *ui.Context, p *palette) {
 			return pts
 		}
 		pt.StrokePolyline(arc(0, 1), 1.5, ink.Alpha(0.22))
-		pt.StrokePolyline(arc(-0.25+float64(k), 0.25), 1.5, ink)
+		if !known {
+			pt.StrokePolyline(arc(-0.25+float64(turn), 0.25), 1.5, ink)
+			return
+		}
+		pt.StrokePolyline(arc(-0.25, float64(fill)), 1.5, ink)
+		// The highlight: five of the ring's units long, from just before
+		// its start round to its end, showing only on what is filled.
+		circ := float32(2 * math.Pi * 4.25)
+		from := -5 + sweep*(circ+5)
+		lo, hi := max(0, from), min(from+5, fill*circ)
+		if hi > lo {
+			pt.StrokePolyline(arc(-0.25+float64(lo/circ), float64((hi-lo)/circ)), 2*r.W/12, ui.RGBA(255, 255, 255, 0.65))
+		}
 	})
 }

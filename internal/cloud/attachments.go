@@ -383,3 +383,52 @@ func (a *API) SessionImageOriginal(ctx context.Context, token, workspace, sessio
 	}
 	return b, mediaType, nil
 }
+
+// SessionFile streams a file a session holds into w, as Lody's download.
+func (a *API) SessionFile(ctx context.Context, token, workspace, session, fileID string, w io.Writer) error {
+	target := fmt.Sprintf("%s/api/workspaces/%s/session-files/%s/%s", CloudOrigin, segment(workspace), segment(session), segment(fileID))
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, target, nil)
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Authorization", "Bearer "+token)
+	res, err := (&http.Client{}).Do(req)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+	if res.StatusCode != http.StatusOK {
+		return fmt.Errorf("Failed to download file (%d)", res.StatusCode)
+	}
+	_, err = io.Copy(w, res.Body)
+	return err
+}
+
+// SessionFilePreview reads the start of a file's text preview, at most max
+// bytes of it, and whether more remains.
+func (a *API) SessionFilePreview(ctx context.Context, token, workspace, session, fileID string, size, max int64) (string, bool, error) {
+	target := fmt.Sprintf("%s/api/workspaces/%s/session-files/%s/%s/preview", CloudOrigin, segment(workspace), segment(session), segment(fileID))
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, target, nil)
+	if err != nil {
+		return "", false, err
+	}
+	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("Range", fmt.Sprintf("bytes=0-%d", max-1))
+	res, err := a.client().Do(req)
+	if err != nil {
+		return "", false, err
+	}
+	defer res.Body.Close()
+	if res.StatusCode != http.StatusOK && res.StatusCode != http.StatusPartialContent {
+		return "", false, fmt.Errorf("Preview unavailable (%d)", res.StatusCode)
+	}
+	b, err := io.ReadAll(io.LimitReader(res.Body, max))
+	if err != nil {
+		return "", false, err
+	}
+	// A cut through a character drops its start.
+	for len(b) > 0 && !utf8.Valid(b) {
+		b = b[:len(b)-1]
+	}
+	return string(b), size > int64(len(b)), nil
+}

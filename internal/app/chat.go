@@ -75,6 +75,7 @@ func (a *App) mainView(c *ui.Context, p *palette) {
 	a.shareDialogView(c, p)
 	a.deviceAuthDialog(c, p)
 	a.messageShareDialog(c, p)
+	a.filePreviewDialog(c, p)
 	a.scheduleSendDialog(c, p)
 	a.stuckBanner(c, p)
 	a.paletteView(c, p)
@@ -99,6 +100,10 @@ func (a *App) tabBar(c *ui.Context, p *palette, sess *catalog.Session) {
 		ui.Spacer(c)
 		if sess != nil {
 			s := *sess
+			if s.Archived {
+				archivedBadge(c, p)
+			}
+			a.accessControl(c, p, sess)
 			iconButton(c, p, iconMore, locales.MoreActions(), p.Hover).Menu(func(m *ui.Menu) { a.sessionMenu(m, s) })
 			if a.localMachine() != "" {
 				iconButton(c, p, iconSquareTerminal, locales.TerminalToggle(), p.Hover).OnClick(a.toggleTerminal)
@@ -420,8 +425,8 @@ func (a *App) userMessage(c *ui.Context, p *palette, e session.Entry, firstQueue
 					}
 				})
 			}
-			for _, f := range files {
-				fileChip(c, p, f)
+			if len(files) > 0 {
+				a.fileCards(c, p, a.selected, files, true)
 			}
 			if editing {
 				a.messageEditor(c, p)
@@ -574,6 +579,9 @@ func (a *App) syncMarkdown(p *palette) {
 	// A reply streams in as Lody's Streamdown reveals it: a character at a
 	// time, nothing waiting longer than 160ms, each fading in.
 	a.md.Reveal = &streamReveal
+	// Images a reply links load as a browser would; one that fails shows
+	// its description.
+	a.md.LoadImage = loadMarkdownImage
 
 	muted := *t
 	muted.FontSize = sizeSub

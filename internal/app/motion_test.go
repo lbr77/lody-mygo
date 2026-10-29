@@ -9,6 +9,7 @@ import (
 	"github.com/egoist/mygo/ui"
 
 	"github.com/lbr77/lody-mygo/internal/catalog"
+	"github.com/lbr77/lody-mygo/internal/cloud"
 	"github.com/lbr77/lody-mygo/internal/session"
 )
 
@@ -389,5 +390,120 @@ func TestOutlineRail(t *testing.T) {
 	tt.Frame()
 	if _, ok := tt.Find("Question number 4"); ok {
 		t.Fatal("rail beside a narrow pane")
+	}
+}
+
+// The header's Share pill opens Lody's access panel: who can open the
+// conversation, the audiences, and the copies; the web slides to the
+// publishing view, and back.
+func TestAccessPanel(t *testing.T) {
+	a := fixture()
+	a.offline = false
+	s := &a.catalog.Sessions[0]
+	s.Project = map[string]any{"kind": "local", "localProjectId": "p1"}
+	ws := a.workspaceID + "|"
+	a.fetches = map[string]*fetched{
+		ws + "members":  {value: []cloud.Member{{UserID: "u1"}, {UserID: "u2"}}},
+		ws + "machines": {value: []visibleMachine{{MachineID: "m1", OwnerUserID: "u1", UpdatedAt: 1}}},
+		ws + "projects": {value: []visibleProject{{MachineID: "m1", LocalProjectID: "p1", OwnerUserID: "u1", SharedWithTeam: true}}},
+	}
+	tt := snap(t, a, "access-closed", false, nil)
+	if err := tt.Click("Share"); err != nil {
+		t.Fatalf("no pill: %v in %q", err, tt.Texts())
+	}
+	tt.Frame()
+	tt.Advance(700 * time.Millisecond)
+	tt.Frame()
+	snapFrame(t, tt, "access-panel")
+	for _, want := range []string{"Private to you", "Studio is not shared with the team.", "Only you", "Team", "Web", "Copy URL"} {
+		if !tt.HasText(want) {
+			t.Errorf("missing %q in %q", want, tt.Texts())
+		}
+	}
+	if err := tt.Click("Web"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	tt.Advance(700 * time.Millisecond)
+	tt.Frame()
+	snapFrame(t, tt, "access-publish")
+	if a.access.view != "publish" || !tt.HasText("Publish to the web") {
+		t.Fatalf("not publishing: %q", tt.Texts())
+	}
+	// The panel's way back sits before its title (the sidebar has a Back
+	// of its own).
+	head, _ := tt.Find("Publish to the web")
+	tt.ClickAt(head.X-16, head.Y+head.H/2)
+	tt.Frame()
+	tt.Advance(700 * time.Millisecond)
+	tt.Frame()
+	if a.access.view != "home" || !tt.HasText("Private to you") {
+		t.Fatalf("not back: %q", tt.Texts())
+	}
+	// Choosing the team asks first.
+	if err := tt.Click("Team"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if !a.confirming.open || a.confirming.title != "Share “Port the Flock runtime to Go” with the team?" {
+		t.Fatalf("no confirmation: %+v", a.confirming)
+	}
+}
+
+// Files show as Lody's cards: a sheet drawn by kind, the type and size,
+// and an action by state; a text file opens its preview, and hovering a
+// card that opens something lifts and tilts its sheet.
+func TestFileCards(t *testing.T) {
+	a := fixture()
+	a.view.Working = false
+	now := float64(time.Now().UnixMilli())
+	a.view.Entries = []session.Entry{
+		{ID: "fu", Role: "user", Items: []session.Item{
+			{ID: "t", Type: "text", Text: "Here is the report."},
+			{ID: "f1", Type: "file", FileID: "f1", FileName: "report.pdf", MimeType: "application/pdf", SizeBytes: 2516582, UploadedAt: now},
+		}},
+		{ID: "fr", Role: "assistant", Finished: true, Items: []session.Item{
+			{ID: "t", Type: "text", Text: "Done."},
+			{ID: "f2", Type: "file", FileID: "f2", FileName: "notes.md", SizeBytes: 812, TextPreview: true, UploadedAt: now},
+			{ID: "f3", Type: "file", FileID: "f3", FileName: "data.csv", SizeBytes: 4096, Transport: "local", FileMachine: "m1"},
+			{ID: "f4", Type: "file", FileID: "f4", FileName: "old.zip", SizeBytes: 9000, UploadedAt: now - 100*24*3600*1000},
+		}},
+	}
+	tt := snap(t, a, "file-cards", false, nil)
+	for _, want := range []string{"report.pdf", "PDF · 2.4 MB", "notes.md", "MD · 812 B", "Uploading from Studio…", "File expired · 8.8 KB"} {
+		if !tt.HasText(want) {
+			t.Errorf("missing %q in %q", want, tt.Texts())
+		}
+	}
+	for name, kind := range map[string]string{"a.go": "code", "b.yaml": "data", "c.xlsx": "spreadsheet", "d.mp4": "video", "e": "binary", "f.bin": "binary"} {
+		if got := fileKind(name, ""); got != kind {
+			t.Errorf("kind of %s = %s, want %s", name, got, kind)
+		}
+	}
+	if got := fileKind("x", "image/png"); got != "image" {
+		t.Errorf("kind by media type = %s", got)
+	}
+	r, _ := tt.Find("notes.md")
+	tt.Move(r.X+r.W/2, r.Y+r.H/2)
+	tt.Frame()
+	tt.Advance(300 * time.Millisecond)
+	tt.Frame()
+	snapFrame(t, tt, "file-card-hover")
+	if err := tt.Click("notes.md"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if !a.attachPrev.open || a.attachPrev.item.FileID != "f2" || a.attachPrev.raw {
+		t.Fatalf("no rendered preview: %+v", a.attachPrev)
+	}
+	a.attachPrev.loading, a.attachPrev.text, a.attachPrev.truncated = false, "# Notes\n\nSome **notes**.", true
+	tt.Frame()
+	tt.Advance(400 * time.Millisecond)
+	tt.Frame()
+	snapFrame(t, tt, "file-preview")
+	for _, want := range []string{"Rendered", "Raw", "Notes", "Download full file"} {
+		if !tt.HasText(want) {
+			t.Errorf("preview misses %q in %q", want, tt.Texts())
+		}
 	}
 }

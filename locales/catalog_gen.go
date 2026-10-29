@@ -16940,3 +16940,615 @@ func OutlineNoReply() string { return In(i18n.Locale()).OutlineNoReply() }
 func (msgs Messages) OutlineNoReply() string {
 	return Catalog.Format(msgs.locale, "outlineNoReply", nil)
 }
+
+// AccessPrivateToYou says "Private to you"
+// in the language the app shows.
+func AccessPrivateToYou() string { return In(i18n.Locale()).AccessPrivateToYou() }
+
+// AccessPrivateToYou says "Private to you"
+// in the language of msgs.
+func (msgs Messages) AccessPrivateToYou() string {
+	return Catalog.Format(msgs.locale, "accessPrivateToYou", nil)
+}
+
+// AccessSharedWithTeam says "Shared with team"
+// in the language the app shows.
+func AccessSharedWithTeam() string { return In(i18n.Locale()).AccessSharedWithTeam() }
+
+// AccessSharedWithTeam says "Shared with team"
+// in the language of msgs.
+func (msgs Messages) AccessSharedWithTeam() string {
+	return Catalog.Format(msgs.locale, "accessSharedWithTeam", nil)
+}
+
+// AccessYou says "Only you"
+// in the language the app shows.
+func AccessYou() string { return In(i18n.Locale()).AccessYou() }
+
+// AccessYou says "Only you"
+// in the language of msgs.
+func (msgs Messages) AccessYou() string {
+	return Catalog.Format(msgs.locale, "accessYou", nil)
+}
+
+// AccessTeam says "Team"
+// in the language the app shows.
+func AccessTeam() string { return In(i18n.Locale()).AccessTeam() }
+
+// AccessTeam says "Team"
+// in the language of msgs.
+func (msgs Messages) AccessTeam() string {
+	return Catalog.Format(msgs.locale, "accessTeam", nil)
+}
+
+// AccessWeb says "Web"
+// in the language the app shows.
+func AccessWeb() string { return In(i18n.Locale()).AccessWeb() }
+
+// AccessWeb says "Web"
+// in the language of msgs.
+func (msgs Messages) AccessWeb() string {
+	return Catalog.Format(msgs.locale, "accessWeb", nil)
+}
+
+// AccessAnyoneWithLink says "Anyone with the link"
+// in the language the app shows.
+func AccessAnyoneWithLink() string { return In(i18n.Locale()).AccessAnyoneWithLink() }
+
+// AccessAnyoneWithLink says "Anyone with the link"
+// in the language of msgs.
+func (msgs Messages) AccessAnyoneWithLink() string {
+	return Catalog.Format(msgs.locale, "accessAnyoneWithLink", nil)
+}
+
+// AccessPublishTitle says "Publish to the web"
+// in the language the app shows.
+func AccessPublishTitle() string { return In(i18n.Locale()).AccessPublishTitle() }
+
+// AccessPublishTitle says "Publish to the web"
+// in the language of msgs.
+func (msgs Messages) AccessPublishTitle() string {
+	return Catalog.Format(msgs.locale, "accessPublishTitle", nil)
+}
+
+// AccessManageLink says "Manage link"
+// in the language the app shows.
+func AccessManageLink() string { return In(i18n.Locale()).AccessManageLink() }
+
+// AccessManageLink says "Manage link"
+// in the language of msgs.
+func (msgs Messages) AccessManageLink() string {
+	return Catalog.Format(msgs.locale, "accessManageLink", nil)
+}
+
+// AccessCopyURL says "Copy URL"
+// in the language the app shows.
+func AccessCopyURL() string { return In(i18n.Locale()).AccessCopyURL() }
+
+// AccessCopyURL says "Copy URL"
+// in the language of msgs.
+func (msgs Messages) AccessCopyURL() string {
+	return Catalog.Format(msgs.locale, "accessCopyURL", nil)
+}
+
+// AccessCopyMarkdown says "Copy as Markdown"
+// in the language the app shows.
+func AccessCopyMarkdown() string { return In(i18n.Locale()).AccessCopyMarkdown() }
+
+// AccessCopyMarkdown says "Copy as Markdown"
+// in the language of msgs.
+func (msgs Messages) AccessCopyMarkdown() string {
+	return Catalog.Format(msgs.locale, "accessCopyMarkdown", nil)
+}
+
+// AccessShareImage says "Share as image…"
+// in the language the app shows.
+func AccessShareImage() string { return In(i18n.Locale()).AccessShareImage() }
+
+// AccessShareImage says "Share as image…"
+// in the language of msgs.
+func (msgs Messages) AccessShareImage() string {
+	return Catalog.Format(msgs.locale, "accessShareImage", nil)
+}
+
+// AccessWhoCanOpen says "Who can open this"
+// in the language the app shows.
+func AccessWhoCanOpen() string { return In(i18n.Locale()).AccessWhoCanOpen() }
+
+// AccessWhoCanOpen says "Who can open this"
+// in the language of msgs.
+func (msgs Messages) AccessWhoCanOpen() string {
+	return Catalog.Format(msgs.locale, "accessWhoCanOpen", nil)
+}
+
+// AccessPanelTitle says "Share this conversation"
+// in the language the app shows.
+func AccessPanelTitle() string { return In(i18n.Locale()).AccessPanelTitle() }
+
+// AccessPanelTitle says "Share this conversation"
+// in the language of msgs.
+func (msgs Messages) AccessPanelTitle() string {
+	return Catalog.Format(msgs.locale, "accessPanelTitle", nil)
+}
+
+// AccessShared says "Shared"
+// in the language the app shows.
+func AccessShared() string { return In(i18n.Locale()).AccessShared() }
+
+// AccessShared says "Shared"
+// in the language of msgs.
+func (msgs Messages) AccessShared() string {
+	return Catalog.Format(msgs.locale, "accessShared", nil)
+}
+
+// AccessSharedDescription says "Anyone with the link can read a published copy of this conversation."
+// in the language the app shows.
+func AccessSharedDescription() string { return In(i18n.Locale()).AccessSharedDescription() }
+
+// AccessSharedDescription says "Anyone with the link can read a published copy of this conversation."
+// in the language of msgs.
+func (msgs Messages) AccessSharedDescription() string {
+	return Catalog.Format(msgs.locale, "accessSharedDescription", nil)
+}
+
+// AccessShareDescription says "Publish a read-only copy of this conversation as a link."
+// in the language the app shows.
+func AccessShareDescription() string { return In(i18n.Locale()).AccessShareDescription() }
+
+// AccessShareDescription says "Publish a read-only copy of this conversation as a link."
+// in the language of msgs.
+func (msgs Messages) AccessShareDescription() string {
+	return Catalog.Format(msgs.locale, "accessShareDescription", nil)
+}
+
+// AccessOnlyOwner says "Only the device owner can share"
+// in the language the app shows.
+func AccessOnlyOwner() string { return In(i18n.Locale()).AccessOnlyOwner() }
+
+// AccessOnlyOwner says "Only the device owner can share"
+// in the language of msgs.
+func (msgs Messages) AccessOnlyOwner() string {
+	return Catalog.Format(msgs.locale, "accessOnlyOwner", nil)
+}
+
+// AccessRegisterDevice says "Register this device before sharing"
+// in the language the app shows.
+func AccessRegisterDevice() string { return In(i18n.Locale()).AccessRegisterDevice() }
+
+// AccessRegisterDevice says "Register this device before sharing"
+// in the language of msgs.
+func (msgs Messages) AccessRegisterDevice() string {
+	return Catalog.Format(msgs.locale, "accessRegisterDevice", nil)
+}
+
+// AccessTeamLabel says "Team"
+// in the language the app shows.
+func AccessTeamLabel() string { return In(i18n.Locale()).AccessTeamLabel() }
+
+// AccessTeamLabel says "Team"
+// in the language of msgs.
+func (msgs Messages) AccessTeamLabel() string {
+	return Catalog.Format(msgs.locale, "accessTeamLabel", nil)
+}
+
+// AccessPrivate says "Private"
+// in the language the app shows.
+func AccessPrivate() string { return In(i18n.Locale()).AccessPrivate() }
+
+// AccessPrivate says "Private"
+// in the language of msgs.
+func (msgs Messages) AccessPrivate() string {
+	return Catalog.Format(msgs.locale, "accessPrivate", nil)
+}
+
+// AccessChecking says "Checking visibility…"
+// in the language the app shows.
+func AccessChecking() string { return In(i18n.Locale()).AccessChecking() }
+
+// AccessChecking says "Checking visibility…"
+// in the language of msgs.
+func (msgs Messages) AccessChecking() string {
+	return Catalog.Format(msgs.locale, "accessChecking", nil)
+}
+
+// AccessCheckingDescription says "Checking who can open this conversation."
+// in the language the app shows.
+func AccessCheckingDescription() string { return In(i18n.Locale()).AccessCheckingDescription() }
+
+// AccessCheckingDescription says "Checking who can open this conversation."
+// in the language of msgs.
+func (msgs Messages) AccessCheckingDescription() string {
+	return Catalog.Format(msgs.locale, "accessCheckingDescription", nil)
+}
+
+// AccessTeamDescription says "Everyone in this workspace can open this conversation."
+// in the language the app shows.
+func AccessTeamDescription() string { return In(i18n.Locale()).AccessTeamDescription() }
+
+// AccessTeamDescription says "Everyone in this workspace can open this conversation."
+// in the language of msgs.
+func (msgs Messages) AccessTeamDescription() string {
+	return Catalog.Format(msgs.locale, "accessTeamDescription", nil)
+}
+
+// AccessPrivateMachine says "{machine} is not shared with the team."
+// in the language the app shows.
+func AccessPrivateMachine(machine string) string {
+	return In(i18n.Locale()).AccessPrivateMachine(machine)
+}
+
+// AccessPrivateMachine says "{machine} is not shared with the team."
+// in the language of msgs.
+func (msgs Messages) AccessPrivateMachine(machine string) string {
+	return Catalog.Format(msgs.locale, "accessPrivateMachine", map[string]any{"machine": machine})
+}
+
+// AccessPrivateProject says "{project} is not shared with the team."
+// in the language the app shows.
+func AccessPrivateProject(project string) string {
+	return In(i18n.Locale()).AccessPrivateProject(project)
+}
+
+// AccessPrivateProject says "{project} is not shared with the team."
+// in the language of msgs.
+func (msgs Messages) AccessPrivateProject(project string) string {
+	return Catalog.Format(msgs.locale, "accessPrivateProject", map[string]any{"project": project})
+}
+
+// AccessPrivateBoth says "Neither {machine} nor {project} is shared with the team."
+// in the language the app shows.
+func AccessPrivateBoth(machine string, project string) string {
+	return In(i18n.Locale()).AccessPrivateBoth(machine, project)
+}
+
+// AccessPrivateBoth says "Neither {machine} nor {project} is shared with the team."
+// in the language of msgs.
+func (msgs Messages) AccessPrivateBoth(machine string, project string) string {
+	return Catalog.Format(msgs.locale, "accessPrivateBoth", map[string]any{"machine": machine, "project": project})
+}
+
+// AccessNotRegistered says "This device is not registered for team access."
+// in the language the app shows.
+func AccessNotRegistered() string { return In(i18n.Locale()).AccessNotRegistered() }
+
+// AccessNotRegistered says "This device is not registered for team access."
+// in the language of msgs.
+func (msgs Messages) AccessNotRegistered() string {
+	return Catalog.Format(msgs.locale, "accessNotRegistered", nil)
+}
+
+// AccessPrivateDescription says "Only you can open this conversation."
+// in the language the app shows.
+func AccessPrivateDescription() string { return In(i18n.Locale()).AccessPrivateDescription() }
+
+// AccessPrivateDescription says "Only you can open this conversation."
+// in the language of msgs.
+func (msgs Messages) AccessPrivateDescription() string {
+	return Catalog.Format(msgs.locale, "accessPrivateDescription", nil)
+}
+
+// AccessThisDevice says "this device"
+// in the language the app shows.
+func AccessThisDevice() string { return In(i18n.Locale()).AccessThisDevice() }
+
+// AccessThisDevice says "this device"
+// in the language of msgs.
+func (msgs Messages) AccessThisDevice() string {
+	return Catalog.Format(msgs.locale, "accessThisDevice", nil)
+}
+
+// AccessThisProject says "this project"
+// in the language the app shows.
+func AccessThisProject() string { return In(i18n.Locale()).AccessThisProject() }
+
+// AccessThisProject says "this project"
+// in the language of msgs.
+func (msgs Messages) AccessThisProject() string {
+	return Catalog.Format(msgs.locale, "accessThisProject", nil)
+}
+
+// AccessConfirmProject says "This shares {project} with everyone in the workspace so they can open and continue its conversations."
+// in the language the app shows.
+func AccessConfirmProject(project string) string {
+	return In(i18n.Locale()).AccessConfirmProject(project)
+}
+
+// AccessConfirmProject says "This shares {project} with everyone in the workspace so they can open and continue its conversations."
+// in the language of msgs.
+func (msgs Messages) AccessConfirmProject(project string) string {
+	return Catalog.Format(msgs.locale, "accessConfirmProject", map[string]any{"project": project})
+}
+
+// AccessConfirmBoth says "This shares {project} and {machine} with everyone in the workspace. Other conversations on this device may also becom…"
+// in the language the app shows.
+func AccessConfirmBoth(machine string, project string) string {
+	return In(i18n.Locale()).AccessConfirmBoth(machine, project)
+}
+
+// AccessConfirmBoth says "This shares {project} and {machine} with everyone in the workspace. Other conversations on this device may also becom…"
+// in the language of msgs.
+func (msgs Messages) AccessConfirmBoth(machine string, project string) string {
+	return Catalog.Format(msgs.locale, "accessConfirmBoth", map[string]any{"machine": machine, "project": project})
+}
+
+// AccessConfirmMachine says "This shares {machine} with everyone in the workspace. Other conversations on this device may also become visible."
+// in the language the app shows.
+func AccessConfirmMachine(machine string) string {
+	return In(i18n.Locale()).AccessConfirmMachine(machine)
+}
+
+// AccessConfirmMachine says "This shares {machine} with everyone in the workspace. Other conversations on this device may also become visible."
+// in the language of msgs.
+func (msgs Messages) AccessConfirmMachine(machine string) string {
+	return Catalog.Format(msgs.locale, "accessConfirmMachine", map[string]any{"machine": machine})
+}
+
+// AccessConfirmGeneric says "Everyone in this workspace will be able to open this conversation."
+// in the language the app shows.
+func AccessConfirmGeneric() string { return In(i18n.Locale()).AccessConfirmGeneric() }
+
+// AccessConfirmGeneric says "Everyone in this workspace will be able to open this conversation."
+// in the language of msgs.
+func (msgs Messages) AccessConfirmGeneric() string {
+	return Catalog.Format(msgs.locale, "accessConfirmGeneric", nil)
+}
+
+// AccessConfirmTitle says "Share “{title}” with the team?"
+// in the language the app shows.
+func AccessConfirmTitle(title string) string { return In(i18n.Locale()).AccessConfirmTitle(title) }
+
+// AccessConfirmTitle says "Share “{title}” with the team?"
+// in the language of msgs.
+func (msgs Messages) AccessConfirmTitle(title string) string {
+	return Catalog.Format(msgs.locale, "accessConfirmTitle", map[string]any{"title": title})
+}
+
+// AccessShareAndCopy says "Share and copy link"
+// in the language the app shows.
+func AccessShareAndCopy() string { return In(i18n.Locale()).AccessShareAndCopy() }
+
+// AccessShareAndCopy says "Share and copy link"
+// in the language of msgs.
+func (msgs Messages) AccessShareAndCopy() string {
+	return Catalog.Format(msgs.locale, "accessShareAndCopy", nil)
+}
+
+// AccessShareProject says "Share project with team…"
+// in the language the app shows.
+func AccessShareProject() string { return In(i18n.Locale()).AccessShareProject() }
+
+// AccessShareProject says "Share project with team…"
+// in the language of msgs.
+func (msgs Messages) AccessShareProject() string {
+	return Catalog.Format(msgs.locale, "accessShareProject", nil)
+}
+
+// AccessShareBoth says "Share project and device…"
+// in the language the app shows.
+func AccessShareBoth() string { return In(i18n.Locale()).AccessShareBoth() }
+
+// AccessShareBoth says "Share project and device…"
+// in the language of msgs.
+func (msgs Messages) AccessShareBoth() string {
+	return Catalog.Format(msgs.locale, "accessShareBoth", nil)
+}
+
+// AccessShareDevice says "Share device with team…"
+// in the language the app shows.
+func AccessShareDevice() string { return In(i18n.Locale()).AccessShareDevice() }
+
+// AccessShareDevice says "Share device with team…"
+// in the language of msgs.
+func (msgs Messages) AccessShareDevice() string {
+	return Catalog.Format(msgs.locale, "accessShareDevice", nil)
+}
+
+// AccessShareWithTeam says "Share with team…"
+// in the language the app shows.
+func AccessShareWithTeam() string { return In(i18n.Locale()).AccessShareWithTeam() }
+
+// AccessShareWithTeam says "Share with team…"
+// in the language of msgs.
+func (msgs Messages) AccessShareWithTeam() string {
+	return Catalog.Format(msgs.locale, "accessShareWithTeam", nil)
+}
+
+// AccessURLCopied says "Session URL copied to clipboard"
+// in the language the app shows.
+func AccessURLCopied() string { return In(i18n.Locale()).AccessURLCopied() }
+
+// AccessURLCopied says "Session URL copied to clipboard"
+// in the language of msgs.
+func (msgs Messages) AccessURLCopied() string {
+	return Catalog.Format(msgs.locale, "accessURLCopied", nil)
+}
+
+// AccessHistoryEmpty says "No conversation history to copy"
+// in the language the app shows.
+func AccessHistoryEmpty() string { return In(i18n.Locale()).AccessHistoryEmpty() }
+
+// AccessHistoryEmpty says "No conversation history to copy"
+// in the language of msgs.
+func (msgs Messages) AccessHistoryEmpty() string {
+	return Catalog.Format(msgs.locale, "accessHistoryEmpty", nil)
+}
+
+// AccessHistoryCopied says "Conversation copied as Markdown"
+// in the language the app shows.
+func AccessHistoryCopied() string { return In(i18n.Locale()).AccessHistoryCopied() }
+
+// AccessHistoryCopied says "Conversation copied as Markdown"
+// in the language of msgs.
+func (msgs Messages) AccessHistoryCopied() string {
+	return Catalog.Format(msgs.locale, "accessHistoryCopied", nil)
+}
+
+// AccessIncomplete says "The last response was still generating when copied."
+// in the language the app shows.
+func AccessIncomplete() string { return In(i18n.Locale()).AccessIncomplete() }
+
+// AccessIncomplete says "The last response was still generating when copied."
+// in the language of msgs.
+func (msgs Messages) AccessIncomplete() string {
+	return Catalog.Format(msgs.locale, "accessIncomplete", nil)
+}
+
+// AccessArchived says "Archived"
+// in the language the app shows.
+func AccessArchived() string { return In(i18n.Locale()).AccessArchived() }
+
+// AccessArchived says "Archived"
+// in the language of msgs.
+func (msgs Messages) AccessArchived() string {
+	return Catalog.Format(msgs.locale, "accessArchived", nil)
+}
+
+// AccessArchivedDescription says "This conversation is archived. Restore it to continue chatting."
+// in the language the app shows.
+func AccessArchivedDescription() string { return In(i18n.Locale()).AccessArchivedDescription() }
+
+// AccessArchivedDescription says "This conversation is archived. Restore it to continue chatting."
+// in the language of msgs.
+func (msgs Messages) AccessArchivedDescription() string {
+	return Catalog.Format(msgs.locale, "accessArchivedDescription", nil)
+}
+
+// FileUploadingFrom says "Uploading from {machine}…"
+// in the language the app shows.
+func FileUploadingFrom(machine string) string { return In(i18n.Locale()).FileUploadingFrom(machine) }
+
+// FileUploadingFrom says "Uploading from {machine}…"
+// in the language of msgs.
+func (msgs Messages) FileUploadingFrom(machine string) string {
+	return Catalog.Format(msgs.locale, "fileUploadingFrom", map[string]any{"machine": machine})
+}
+
+// FileUploading says "Uploading…"
+// in the language the app shows.
+func FileUploading() string { return In(i18n.Locale()).FileUploading() }
+
+// FileUploading says "Uploading…"
+// in the language of msgs.
+func (msgs Messages) FileUploading() string {
+	return Catalog.Format(msgs.locale, "fileUploading", nil)
+}
+
+// FileExpired says "File expired · {size}"
+// in the language the app shows.
+func FileExpired(size string) string { return In(i18n.Locale()).FileExpired(size) }
+
+// FileExpired says "File expired · {size}"
+// in the language of msgs.
+func (msgs Messages) FileExpired(size string) string {
+	return Catalog.Format(msgs.locale, "fileExpired", map[string]any{"size": size})
+}
+
+// FileDownloadAction says "Download file"
+// in the language the app shows.
+func FileDownloadAction() string { return In(i18n.Locale()).FileDownloadAction() }
+
+// FileDownloadAction says "Download file"
+// in the language of msgs.
+func (msgs Messages) FileDownloadAction() string {
+	return Catalog.Format(msgs.locale, "fileDownloadAction", nil)
+}
+
+// FileCopyFailed says "Failed to copy file content"
+// in the language the app shows.
+func FileCopyFailed() string { return In(i18n.Locale()).FileCopyFailed() }
+
+// FileCopyFailed says "Failed to copy file content"
+// in the language of msgs.
+func (msgs Messages) FileCopyFailed() string {
+	return Catalog.Format(msgs.locale, "fileCopyFailed", nil)
+}
+
+// FilePreviewRendered says "Rendered"
+// in the language the app shows.
+func FilePreviewRendered() string { return In(i18n.Locale()).FilePreviewRendered() }
+
+// FilePreviewRendered says "Rendered"
+// in the language of msgs.
+func (msgs Messages) FilePreviewRendered() string {
+	return Catalog.Format(msgs.locale, "filePreviewRendered", nil)
+}
+
+// FilePreviewRaw says "Raw"
+// in the language the app shows.
+func FilePreviewRaw() string { return In(i18n.Locale()).FilePreviewRaw() }
+
+// FilePreviewRaw says "Raw"
+// in the language of msgs.
+func (msgs Messages) FilePreviewRaw() string {
+	return Catalog.Format(msgs.locale, "filePreviewRaw", nil)
+}
+
+// FileDownload says "Download"
+// in the language the app shows.
+func FileDownload() string { return In(i18n.Locale()).FileDownload() }
+
+// FileDownload says "Download"
+// in the language of msgs.
+func (msgs Messages) FileDownload() string {
+	return Catalog.Format(msgs.locale, "fileDownload", nil)
+}
+
+// FilePreviewTruncated says "Preview shows only the start of this file. Download the full file to see everything."
+// in the language the app shows.
+func FilePreviewTruncated() string { return In(i18n.Locale()).FilePreviewTruncated() }
+
+// FilePreviewTruncated says "Preview shows only the start of this file. Download the full file to see everything."
+// in the language of msgs.
+func (msgs Messages) FilePreviewTruncated() string {
+	return Catalog.Format(msgs.locale, "filePreviewTruncated", nil)
+}
+
+// FileDownloadFull says "Download full file"
+// in the language the app shows.
+func FileDownloadFull() string { return In(i18n.Locale()).FileDownloadFull() }
+
+// FileDownloadFull says "Download full file"
+// in the language of msgs.
+func (msgs Messages) FileDownloadFull() string {
+	return Catalog.Format(msgs.locale, "fileDownloadFull", nil)
+}
+
+// FilePreviewLoading says "Loading preview…"
+// in the language the app shows.
+func FilePreviewLoading() string { return In(i18n.Locale()).FilePreviewLoading() }
+
+// FilePreviewLoading says "Loading preview…"
+// in the language of msgs.
+func (msgs Messages) FilePreviewLoading() string {
+	return Catalog.Format(msgs.locale, "filePreviewLoading", nil)
+}
+
+// FileDownloadFailed says "Failed to download {name}"
+// in the language the app shows.
+func FileDownloadFailed(name string) string { return In(i18n.Locale()).FileDownloadFailed(name) }
+
+// FileDownloadFailed says "Failed to download {name}"
+// in the language of msgs.
+func (msgs Messages) FileDownloadFailed(name string) string {
+	return Catalog.Format(msgs.locale, "fileDownloadFailed", map[string]any{"name": name})
+}
+
+// FilePreviewFailed says "Could not load preview"
+// in the language the app shows.
+func FilePreviewFailed() string { return In(i18n.Locale()).FilePreviewFailed() }
+
+// FilePreviewFailed says "Could not load preview"
+// in the language of msgs.
+func (msgs Messages) FilePreviewFailed() string {
+	return Catalog.Format(msgs.locale, "filePreviewFailed", nil)
+}
+
+// FileDownloaded says "Saved {name} to Downloads"
+// in the language the app shows.
+func FileDownloaded(name string) string { return In(i18n.Locale()).FileDownloaded(name) }
+
+// FileDownloaded says "Saved {name} to Downloads"
+// in the language of msgs.
+func (msgs Messages) FileDownloaded(name string) string {
+	return Catalog.Format(msgs.locale, "fileDownloaded", map[string]any{"name": name})
+}
