@@ -18,6 +18,9 @@ const (
 )
 
 func (a *App) mainView(c *ui.Context, p *palette) {
+	c.OnShortcut(ui.Cmd, ui.KeyN, func() { a.open("") })
+	c.OnShortcut(ui.Cmd, ui.KeyL, func() { a.composerFocus.Focus(c) })
+	c.OnShortcut(ui.Cmd, ui.KeyBackslash, func() { a.sidebarHidden = !a.sidebarHidden })
 	ui.Row(c).Fill().AlignItems(ui.Stretch).Background(p.Ground).Children(func() {
 		if !a.sidebarHidden {
 			a.sidebar(c, p)
@@ -69,6 +72,9 @@ func (a *App) sessionView(c *ui.Context, p *palette) {
 			return
 		}
 		ui.Text(c, a.machineName(sess.MachineID)).FontSize(sizeFoot).TextColor(p.Tertiary).SingleLine().Shrink(0)
+		if !a.presence.IsOnline(sess.MachineID) {
+			offlinePill(c, p)
+		}
 		if sess.BranchName != "" {
 			ui.Row(c).Gap(4).AlignItems(ui.Center).Shrink(0).Children(func() {
 				ui.Icon(c, iconBranch).Size(12, 12).TextColor(p.Tertiary)
@@ -108,6 +114,11 @@ func (a *App) sessionView(c *ui.Context, p *palette) {
 		ui.Text(c, "Send a message to start.").FontSize(sizeSub).TextColor(p.Secondary).Margin(ui.Auto)
 	})
 	a.composer(c, p, sess, v)
+}
+
+// offlinePill marks a machine that isn't connected.
+func offlinePill(c *ui.Context, p *palette) {
+	ui.Text(c, "Offline").FontSize(10).FontWeight(500).TextColor(p.Danger).Padding(1, 5).Radius(5).Background(p.Danger.Alpha(0.14)).Shrink(0)
 }
 
 // column centers the conversation column.
@@ -166,10 +177,11 @@ func (a *App) userMessage(c *ui.Context, p *palette, e session.Entry) {
 	})
 }
 
-// block is a run of items shown together: text, or an activity group of
-// tool calls and thinking.
+// block is a run of items shown together: text, a thinking block, or an
+// activity group of tool calls.
 type block struct {
 	text     bool
+	thought  bool
 	items    []session.Item
 	key      string
 	question *session.Item
@@ -181,11 +193,13 @@ func blocks(items []session.Item) []block {
 		switch {
 		case it.Type == "text":
 			out = append(out, block{text: true, items: []session.Item{it}, key: it.ID})
+		case it.Type == "thought":
+			out = append(out, block{thought: true, items: []session.Item{it}, key: it.ID})
 		case it.Permission != nil && it.Permission.Pending:
 			item := it
 			out = append(out, block{question: &item, key: it.ID})
 		default:
-			if n := len(out); n > 0 && !out[n-1].text && out[n-1].question == nil {
+			if n := len(out); n > 0 && !out[n-1].text && !out[n-1].thought && out[n-1].question == nil {
 				out[n-1].items = append(out[n-1].items, it)
 			} else {
 				out = append(out, block{items: []session.Item{it}, key: it.ID})
@@ -203,6 +217,8 @@ func (a *App) assistantMessage(c *ui.Context, p *palette, e session.Entry, last 
 			switch {
 			case b.question != nil:
 				a.permissionPanel(c, p, e, *b.question)
+			case b.thought:
+				a.thinking(c, p, e, b, !e.Finished && lastBlock)
 			case b.text:
 				it := b.items[0]
 				if !e.Finished && lastBlock {
@@ -225,6 +241,44 @@ func (a *App) assistantMessage(c *ui.Context, p *palette, e session.Entry, last 
 			}
 			ui.Text(c, label).FontSize(sizeCaption).TextColor(p.Tertiary)
 		}
+	})
+}
+
+// thinking is a thinking block: one collapsed row, its text shown only
+// once clicked.
+func (a *App) thinking(c *ui.Context, p *palette, e session.Entry, b block, live bool) {
+	key := e.ID + "/" + b.key
+	open := a.expanded[key]
+	ui.Column(c).FillWidth().Gap(2).Children(func() {
+		head := ui.Row(c.Key(key)).MinHeight(24).Gap(6).AlignItems(ui.Center).Cursor(ui.CursorPointer).Label("Show thinking").
+			OnClick(func() { a.expanded[key] = !a.expanded[key] })
+		hovered := head.Hovered()
+		head.Children(func() {
+			ink := p.Secondary
+			if hovered {
+				ink = p.Text
+			}
+			label := "Thought"
+			if live {
+				label = "Thinking…"
+			}
+			ui.Text(c, label).FontSize(sizeSub).TextColor(ink)
+			if hovered || open {
+				icon := iconChevronRight
+				if open {
+					icon = iconChevronDown
+				}
+				ui.Icon(c, icon).Size(13, 13).TextColor(ink)
+			}
+		})
+		if !open {
+			return
+		}
+		ui.Column(c).Padding(2, 0, 4, 12).BorderWidth(0, 0, 0, 1).BorderColor(p.Border).Children(func() {
+			for _, it := range b.items {
+				markdown.View(c.Key(it.ID), it.Text, &a.mdMuted)
+			}
+		})
 	})
 }
 
@@ -258,13 +312,13 @@ func (a *App) activity(c *ui.Context, p *palette, e session.Entry, b block, live
 		}
 		ui.Column(c).Gap(2).Padding(2, 0, 4, 2).BorderWidth(0, 0, 0, 1).BorderColor(p.Border).Children(func() {
 			for _, it := range b.items {
-				a.step(c.Key(it.ID), p, it)
+				a.step(c.Key(it.ID), p, key+"/"+it.ID, it)
 			}
 		})
 	})
 }
 
-func (a *App) step(c *ui.Context, p *palette, it session.Item) {
+func (a *App) step(c *ui.Context, p *palette, key string, it session.Item) {
 	switch it.Type {
 	case "thought":
 		ui.Column(c).Padding(2, 10).Children(func() {
@@ -302,9 +356,20 @@ func (a *App) step(c *ui.Context, p *palette, it session.Item) {
 	case "system_notice":
 		ui.Text(c, firstNonEmpty(it.Text, it.Title)).FontSize(sizeSub).TextColor(p.Warning).Padding(2, 10)
 	case "tool_call":
-		ui.Row(c).MinHeight(24).Padding(2, 10).Gap(8).AlignItems(ui.Center).Children(func() {
+		open := a.expanded[key]
+		row := ui.Row(c).MinHeight(24).Padding(2, 10).Gap(8).AlignItems(ui.Center).Radius(5)
+		hovered := false
+		if it.HasDetail {
+			row.Cursor(ui.CursorPointer).Label("Show details").OnClick(func() { a.expanded[key] = !a.expanded[key] })
+			hovered = row.Hovered()
+		}
+		row.Children(func() {
 			title := firstNonEmpty(it.Title, it.Path, it.Kind)
-			ui.Text(c, toolVerb(it)+" "+title).FontSize(sizeSub).TextColor(p.Secondary).SingleLine().MinWidth(0).Shrink(1)
+			ink := p.Secondary
+			if hovered {
+				ink = p.Text
+			}
+			ui.Text(c, strings.TrimSpace(toolVerb(it)+" "+title)).FontSize(sizeSub).TextColor(ink).SingleLine().MinWidth(0).Shrink(1)
 			if it.Added > 0 || it.Removed > 0 {
 				ui.Text(c, fmt.Sprintf("+%d", it.Added)).FontSize(sizeFoot).Font(fontMono).TextColor(p.DiffAdd).Shrink(0)
 				ui.Text(c, fmt.Sprintf("−%d", it.Removed)).FontSize(sizeFoot).Font(fontMono).TextColor(p.DiffDel).Shrink(0)
@@ -315,7 +380,17 @@ func (a *App) step(c *ui.Context, p *palette, it session.Item) {
 			case "failed":
 				ui.Icon(c, iconCircleAlert).Size(12, 12).TextColor(p.Danger)
 			}
+			if hovered || open {
+				icon := iconChevronRight
+				if open {
+					icon = iconChevronDown
+				}
+				ui.Icon(c, icon).Size(13, 13).TextColor(ink)
+			}
 		})
+		if open {
+			a.toolDetail(c, p, key, it)
+		}
 	default:
 		ui.Text(c, it.Type).FontSize(sizeSub).TextColor(p.Tertiary).Padding(2, 10)
 	}
@@ -467,7 +542,12 @@ func (a *App) liveStatus(c *ui.Context, p *palette, v *session.View) {
 func (a *App) composer(c *ui.Context, p *palette, sess *catalog.Session, v *session.View) {
 	working := v != nil && v.Working
 	ready := v != nil && v.Status == "live" && sess != nil
+	hint := ""
+	if sess != nil && !a.presence.IsOnline(sess.MachineID) {
+		hint = a.machineName(sess.MachineID) + " is offline. Messages wait until it reconnects."
+	}
 	a.composerBox(c, p, composerOptions{
+		hint:        hint,
 		placeholder: "Ask for follow-up changes",
 		canSend:     ready && !a.sending,
 		working:     working,
@@ -477,23 +557,59 @@ func (a *App) composer(c *ui.Context, p *palette, sess *catalog.Session, v *sess
 			if sess == nil {
 				return
 			}
-			agent := firstNonEmpty(sess.AgentType, sess.CLIType)
+			agent := firstNonEmpty(a.agentName(sess.MachineID, sess.AgentConfigID), sess.AgentType, sess.CLIType)
 			chip(c, p, iconBot, agent)
-			model := ""
-			if v != nil {
-				model = v.ModelID
+			current := a.models[sess.ID]
+			if current == "" && v != nil {
+				current = v.ModelID
 			}
-			if model == "" && sess.LastModel != nil {
-				model = firstNonEmpty(sess.LastModel.Name, sess.LastModel.ModelID)
+			if current == "" && sess.LastModel != nil {
+				current = sess.LastModel.ModelID
 			}
-			if model != "" {
-				chip(c, p, nil, model)
-			}
+			a.modelPicker(c, p, "model/"+sess.ID, sess.AgentConfigID, current, sess.LastModel, func(id string) { a.models[sess.ID] = id })
 		},
 	})
 }
 
+// modelPicker chooses among the models the agent reports; without its
+// capabilities it shows the current model.
+func (a *App) modelPicker(c *ui.Context, p *palette, key, agentConfig, current string, last *catalog.Model, pick func(string)) {
+	models := a.catalog.Capabilities[agentConfig].Models
+	label := current
+	for _, m := range models {
+		if m.ModelID == current && m.Name != "" {
+			label = m.Name
+		}
+	}
+	if label == current && last != nil && last.ModelID == current && last.Name != "" {
+		label = last.Name
+	}
+	if len(models) == 0 {
+		if label != "" {
+			chip(c, p, nil, label)
+		}
+		return
+	}
+	if label == "" {
+		label = "Default model"
+	}
+	var options []option
+	for _, m := range models {
+		options = append(options, option{m.ModelID, firstNonEmpty(m.Name, m.ModelID)})
+	}
+	a.picker(c, p, key, nil, label, options, pick)
+}
+
+// agentName is an agent config's display name.
+func (a *App) agentName(machine, id string) string {
+	if ag := a.agent(machine, id); ag != nil {
+		return ag.Name
+	}
+	return ""
+}
+
 type composerOptions struct {
+	hint        string
 	placeholder string
 	canSend     bool
 	working     bool
@@ -505,13 +621,16 @@ type composerOptions struct {
 func (a *App) composerBox(c *ui.Context, p *palette, o composerOptions) {
 	ui.Row(c).Shrink(0).FillWidth().Justify(ui.Center).Padding(0, 0, 10, 0).Children(func() {
 		ui.Column(c).Grow(1).MinWidth(0).MaxWidth(columnWidth).Padding(0, columnPad).Gap(6).Children(func() {
+			if o.hint != "" {
+				ui.Text(c, o.hint).FontSize(sizeFoot).TextColor(p.Secondary).Padding(0, 6)
+			}
 			box := ui.Column(c).FillWidth().Radius(16).Border(1, p.ComposerBorder).Background(p.Composer).Padding(8, 10).Gap(4)
 			if !p.Dark {
 				box.Shadow(0, 10, 28, -14, ui.RGBA(0, 0, 0, 0.16))
 			}
 			box.Children(func() {
 				ui.TextAreaBase(c, &a.draft).Lines(2, 10).Placeholder(o.placeholder).FontSize(sizeBody).LineHeight(24.0/14).
-					TextColor(p.Reading).Padding(2, 4).FillWidth().AutoFocus().Label("Message").
+					TextColor(p.Reading).Padding(2, 4).FillWidth().AutoFocus().Label("Message").Bind(&a.composerFocus).
 					OnTextKey(func(k ui.TextKey) bool {
 						if k.Key == ui.KeyEnter && k.Mods&ui.Shift == 0 {
 							if o.canSend && strings.TrimSpace(k.Text()) != "" {
@@ -667,7 +786,9 @@ func (a *App) picker(c *ui.Context, p *palette, key string, icon *ui.SVG, label 
 	}
 	b.OnClick(func() { *open = !*open })
 	b.Children(func() {
-		ui.Icon(c, icon).Size(14, 14).TextColor(p.Secondary)
+		if icon != nil {
+			ui.Icon(c, icon).Size(14, 14).TextColor(p.Secondary)
+		}
 		ui.Text(c, label).FontSize(sizeSub).FontWeight(550).TextColor(p.Secondary).SingleLine().MaxWidth(200)
 		ui.Icon(c, iconChevronDown).Size(12, 12).TextColor(p.Tertiary)
 	})

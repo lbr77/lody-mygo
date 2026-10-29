@@ -27,17 +27,14 @@ func (a *App) render(c *ui.Context) {
 // signInView follows Lody's login page: a visual panel beside a form
 // column whose content sits at the bottom.
 func (a *App) signInView(c *ui.Context, p *palette) {
-	ui.Row(c).Fill().Padding(12).Gap(12).Background(p.Canvas).Children(func() {
-		ui.Column(c).Grow(1).MinWidth(0).FillHeight().Radius(14).Background(p.Text.Alpha(0.05)).Center().DragWindow().Children(func() {
-			ui.Icon(c, iconLody).Size(150, 168).TextColor(p.Text.Alpha(0.16))
-		})
-		ui.Column(c).Width(420).Shrink(0).FillHeight().Padding(28, 40, 36, 40).Children(func() {
+	ui.Row(c).Fill().Padding(12).Gap(12).AlignItems(ui.Stretch).Background(p.Canvas).Children(func() {
+		a.dither.view(c, p).DragWindow()
+		ui.Column(c).Width(440).Shrink(0).Padding(28, 40, 36, 52).Children(func() {
 			ui.Spacer(c).DragWindow()
 			ui.Column(c).MaxWidth(360).Gap(24).Children(func() {
 				ui.Column(c).Gap(10).Children(func() {
-					ui.Icon(c, iconLody).Size(30, 34).TextColor(p.Text)
-					ui.Text(c, "Welcome to Lody").FontSize(28).FontWeight(600).LineHeight(1.2).TextColor(p.Strong).Margin(8, 0, 0, 0)
-					ui.Text(c, "Sign in from your browser to continue in Lody for this Mac.").FontSize(sizeBody).LineHeight(1.5).TextColor(p.Secondary)
+					ui.Text(c, "Welcome to Lody AI").FontSize(28).FontWeight(600).LineHeight(1.2).LetterSpacing(-0.7).TextColor(p.Strong)
+					ui.Text(c, "Sign in from your browser to continue in Lody.").FontSize(sizeBody).LineHeight(1.5).TextColor(p.Secondary)
 				})
 				ui.Column(c).Gap(12).Children(func() {
 					if a.signIn.busy {

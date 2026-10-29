@@ -16,11 +16,13 @@ import (
 
 	"github.com/egoist/mygo"
 	"github.com/egoist/mygo/ui"
+	"github.com/egoist/mygo/ui/editor"
 	"github.com/egoist/mygo/ui/markdown"
 	"github.com/google/uuid"
 
 	"github.com/lbr77/lody-mygo/internal/catalog"
 	"github.com/lbr77/lody-mygo/internal/cloud"
+	"github.com/lbr77/lody-mygo/internal/presence"
 	"github.com/lbr77/lody-mygo/internal/session"
 )
 
@@ -52,12 +54,14 @@ type App struct {
 		cancel context.CancelFunc
 	}
 
-	workspaceID string
-	conn        *cloud.Conn
-	sync        *catalog.Sync
-	catalog     catalog.Catalog
-	syncState   catalog.State
-	synced      bool
+	workspaceID  string
+	conn         *cloud.Conn
+	sync         *catalog.Sync
+	catalog      catalog.Catalog
+	syncState    catalog.State
+	synced       bool
+	presence     presence.State
+	stopPresence context.CancelFunc
 
 	selected string // session id; empty shows New chat
 	replica  *session.Replica
@@ -79,6 +83,14 @@ type App struct {
 	sessionList    ui.ListState
 	chatList       ui.ListState
 	pickers        map[string]*bool
+	dither         dither
+	renaming       string // session whose title is being edited
+	renameText     string
+	notice         string // a failed background action, shown in the sidebar
+	showArchived   bool
+	models         map[string]string // model chosen per session
+	composerFocus  ui.Handle
+	diffs          map[string]*editor.DiffState // tool diffs of the open session
 	md             markdown.Options
 	mdMuted        markdown.Options
 	mdDark         bool
@@ -89,6 +101,8 @@ func New() *App {
 	return &App{
 		api:       &cloud.API{},
 		drafts:    map[string]string{},
+		models:    map[string]string{},
+		diffs:     map[string]*editor.DiffState{},
 		collapsed: map[string]bool{},
 		expanded:  map[string]bool{},
 	}
@@ -282,6 +296,15 @@ func (a *App) connect(id string) {
 	}
 	a.sync = sync
 	sync.Start()
+	ctx, cancel := context.WithCancel(context.Background())
+	a.stopPresence = cancel
+	go presence.Watch(ctx, a.conn, func(st presence.State) {
+		a.update(func() {
+			if ctx.Err() == nil {
+				a.presence = st
+			}
+		})
+	})
 	a.pickNewChatDefaults()
 }
 
@@ -291,6 +314,11 @@ func (a *App) disconnect() {
 		a.sync.Stop()
 		a.sync = nil
 	}
+	if a.stopPresence != nil {
+		a.stopPresence()
+		a.stopPresence = nil
+	}
+	a.presence = presence.State{}
 	a.selected = ""
 	a.catalog = catalog.Catalog{}
 	a.syncState = catalog.State{}
@@ -331,6 +359,7 @@ func (a *App) open(id string) {
 	a.draft = a.drafts[id]
 	a.sendError = ""
 	a.expanded = map[string]bool{}
+	a.diffs = map[string]*editor.DiffState{}
 	a.chatList = ui.ListState{}
 	if id == "" || a.conn == nil {
 		return
@@ -381,6 +410,7 @@ func (a *App) send() {
 		AgentType:    sess.AgentType,
 		CLIType:      sess.CLIType,
 		Resume:       sess.Resume,
+		ModelID:      a.models[a.selected],
 		Queue:        sess.Working(),
 		MarkDispatch: sync.MarkDispatch,
 	}
@@ -482,6 +512,7 @@ func (a *App) startChat() {
 	}
 	id := uuid.NewString()
 	sync, userID := a.sync, a.account.User.ID
+	model := a.models[""]
 	localProject := ""
 	if p := a.catalog.Project(nc.project); p != nil {
 		_, localProject, _ = strings.Cut(p.ID, ":local:")
@@ -511,7 +542,7 @@ func (a *App) startChat() {
 		state := session.NotSent
 		if err = r.WaitReady(ctx); err == nil {
 			state, err = r.Send(ctx, session.Turn{
-				Text: text, UserID: userID, MachineID: nc.machine,
+				Text: text, UserID: userID, MachineID: nc.machine, ModelID: model,
 				AgentType: agent.AgentType, CLIType: agent.CLIType, MarkDispatch: sync.MarkDispatch,
 			})
 		}

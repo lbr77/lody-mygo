@@ -90,6 +90,18 @@ func (a *App) sideRows() []sideRow {
 		add("project:"+p.ID, label, p.ID, p.MachineID, byProject[p.ID])
 	}
 	add("chats", "Chats", "", "", chats)
+	if a.showArchived {
+		var archived []*catalog.Session
+		for i := range sessions {
+			if sessions[i].Archived && sessions[i].ParentSessionID == "" {
+				archived = append(archived, &sessions[i])
+			}
+		}
+		if len(archived) == 0 {
+			rows = append(rows, sideRow{header: true, group: "archived", label: "No archived chats"})
+		}
+		add("archived", "Archived", "", "", archived)
+	}
 	return rows
 }
 
@@ -129,6 +141,13 @@ func (a *App) sidebar(c *ui.Context, p *palette) {
 				ui.Text(c, msg).FontSize(sizeSub).TextColor(p.SideMuted).Margin(24, 10)
 			}
 		})
+		if a.notice != "" {
+			ui.Row(c).Shrink(0).Margin(0, 10).Padding(6, 8).Gap(6).Radius(8).Background(p.Danger.Alpha(0.1)).AlignItems(ui.Center).Cursor(ui.CursorPointer).
+				Label("Dismiss").OnClick(func() { a.notice = "" }).Children(func() {
+				ui.Icon(c, iconCircleAlert).Size(12, 12).TextColor(p.Danger)
+				ui.Text(c, a.notice).FontSize(sizeFoot).TextColor(p.Danger).MaxLines(3).Grow(1).MinWidth(0)
+			})
+		}
 		a.footer(c, p)
 	})
 }
@@ -200,9 +219,11 @@ func (a *App) sessionRow(c *ui.Context, p *palette, r sideRow) {
 	case row.Hovered():
 		row.Background(p.SideHover)
 	}
-	if row.Clicked() {
+	if row.Clicked() && a.renaming != s.ID {
 		a.open(s.ID)
 	}
+	sess := *s
+	row.ContextMenu(func(m *ui.Menu) { a.sessionMenu(m, sess) })
 	ink := p.SideRow
 	if selected {
 		ink = p.SideRowSel
@@ -210,6 +231,10 @@ func (a *App) sessionRow(c *ui.Context, p *palette, r sideRow) {
 	row.Children(func() {
 		if s.Pinned && r.group != "pinned" {
 			ui.Icon(c, iconPin).Size(12, 12).TextColor(p.SideMuted)
+		}
+		if a.renaming == s.ID {
+			a.renameField(c, p, s)
+			return
 		}
 		ui.Text(c, s.Title).FontSize(sizeSub).TextColor(ink).SingleLine().Grow(1).MinWidth(0)
 		a.statusMark(c, p, s)
@@ -297,6 +322,10 @@ func (a *App) footer(c *ui.Context, p *palette) {
 		ui.Popover(c, switcher, &a.workspacesOpen, func() {
 			a.workspaceMenu(c, p)
 		})
+		archive := iconButton(c, p, iconArchive, "Archived chats", p.SideHover).OnClick(func() { a.showArchived = !a.showArchived })
+		if a.showArchived {
+			archive.Background(p.SideSelect)
+		}
 	})
 }
 

@@ -24,28 +24,30 @@ type Model struct {
 }
 
 type Session struct {
-	ID                string  `json:"id"`
-	MachineID         string  `json:"machineId"`
-	Title             string  `json:"title"`
-	Status            string  `json:"status"`
-	Archived          bool    `json:"archived"`
-	Pinned            bool    `json:"pinned"`
-	ProjectID         string  `json:"projectId"`
-	CreatedAt         string  `json:"createdAt"`
-	CLIType           string  `json:"cliType,omitempty"`
-	AgentType         string  `json:"agentType,omitempty"`
-	Resume            string  `json:"resume,omitempty"`
-	LastModel         *Model  `json:"lastModel,omitempty"`
-	ParentSessionID   string  `json:"parentSessionId,omitempty"`
-	OpenedBySessionID string  `json:"openedBySessionId,omitempty"`
-	LatestUserMsgID   string  `json:"latestUserMsgId,omitempty"`
-	LastMessageAt     float64 `json:"lastMessageAt,omitempty"`
-	LastReadAt        float64 `json:"lastReadAt,omitempty"`
-	LastRunningSeen   float64 `json:"lastRunningSeen,omitempty"`
-	AwaitingUserSince float64 `json:"awaitingUserSince,omitempty"`
-	BranchName        string  `json:"branchName,omitempty"`
-	DiffAdd           float64 `json:"diffAdd,omitempty"`
-	DiffDel           float64 `json:"diffDel,omitempty"`
+	ID                    string  `json:"id"`
+	MachineID             string  `json:"machineId"`
+	Title                 string  `json:"title"`
+	Status                string  `json:"status"`
+	Archived              bool    `json:"archived"`
+	Pinned                bool    `json:"pinned"`
+	ProjectID             string  `json:"projectId"`
+	CreatedAt             string  `json:"createdAt"`
+	CLIType               string  `json:"cliType,omitempty"`
+	AgentType             string  `json:"agentType,omitempty"`
+	Resume                string  `json:"resume,omitempty"`
+	LastModel             *Model  `json:"lastModel,omitempty"`
+	ParentSessionID       string  `json:"parentSessionId,omitempty"`
+	OpenedBySessionID     string  `json:"openedBySessionId,omitempty"`
+	OpenedByRootSessionID string  `json:"openedByRootSessionId,omitempty"`
+	AgentConfigID         string  `json:"agentConfigId,omitempty"`
+	LatestUserMsgID       string  `json:"latestUserMsgId,omitempty"`
+	LastMessageAt         float64 `json:"lastMessageAt,omitempty"`
+	LastReadAt            float64 `json:"lastReadAt,omitempty"`
+	LastRunningSeen       float64 `json:"lastRunningSeen,omitempty"`
+	AwaitingUserSince     float64 `json:"awaitingUserSince,omitempty"`
+	BranchName            string  `json:"branchName,omitempty"`
+	DiffAdd               float64 `json:"diffAdd,omitempty"`
+	DiffDel               float64 `json:"diffDel,omitempty"`
 }
 
 // Working reports whether the session's agent is busy, by the statuses the
@@ -279,26 +281,28 @@ func projectMeta(rows []flock.Row) Catalog {
 			status = "unknown"
 		}
 		s := Session{
-			ID:                text(value["id"]),
-			MachineID:         machineID,
-			Title:             text(value["title"]),
-			Status:            status,
-			Archived:          value["isArchived"] == true,
-			Pinned:            value["isPinned"] == true,
-			ProjectID:         projectID,
-			CreatedAt:         text(value["createdAt"]),
-			CLIType:           text(value["cliType"]),
-			AgentType:         text(value["agentType"]),
-			Resume:            text(value["acpSessionId"]),
-			LastModel:         modelOf(value["lastModel"]),
-			ParentSessionID:   strings.TrimSpace(text(value["parentSessionId"])),
-			OpenedBySessionID: strings.TrimSpace(text(value["openedBySessionId"])),
-			LatestUserMsgID:   text(value["latestUserMsgId"]),
-			LastMessageAt:     stamp(value["lastMessageAt"]),
-			LastReadAt:        stamp(value["lastReadAt"]),
-			LastRunningSeen:   stamp(value["lastRunningSeen"]),
-			AwaitingUserSince: stamp(value["awaitingUserSince"]),
-			BranchName:        text(value["branchName"]),
+			ID:                    text(value["id"]),
+			MachineID:             machineID,
+			Title:                 text(value["title"]),
+			Status:                status,
+			Archived:              value["isArchived"] == true,
+			Pinned:                value["isPinned"] == true,
+			ProjectID:             projectID,
+			CreatedAt:             text(value["createdAt"]),
+			CLIType:               text(value["cliType"]),
+			AgentType:             text(value["agentType"]),
+			Resume:                text(value["acpSessionId"]),
+			LastModel:             modelOf(value["lastModel"]),
+			ParentSessionID:       strings.TrimSpace(text(value["parentSessionId"])),
+			OpenedBySessionID:     strings.TrimSpace(text(value["openedBySessionId"])),
+			OpenedByRootSessionID: strings.TrimSpace(text(value["openedByRootSessionId"])),
+			AgentConfigID:         text(value["agentConfigId"]),
+			LatestUserMsgID:       text(value["latestUserMsgId"]),
+			LastMessageAt:         stamp(value["lastMessageAt"]),
+			LastReadAt:            stamp(value["lastReadAt"]),
+			LastRunningSeen:       stamp(value["lastRunningSeen"]),
+			AwaitingUserSince:     stamp(value["awaitingUserSince"]),
+			BranchName:            text(value["branchName"]),
 		}
 		if s.ID == "" {
 			s.ID = strings.TrimPrefix(id, "session-")

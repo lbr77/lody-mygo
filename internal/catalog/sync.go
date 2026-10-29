@@ -36,6 +36,7 @@ type Sync struct {
 
 	mu        sync.Mutex
 	meta      *replica
+	machines  map[string]*replica
 	partial   map[string]Catalog // by stream: "meta" or a machine id
 	watchers  map[string]context.CancelFunc
 	unhealthy map[string]string
@@ -52,6 +53,7 @@ type replica struct {
 func (s *Sync) Start() {
 	s.ctx, s.cancel = context.WithCancel(context.Background())
 	s.partial = map[string]Catalog{}
+	s.machines = map[string]*replica{}
 	s.watchers = map[string]context.CancelFunc{}
 	s.unhealthy = map[string]string{}
 	s.watch("meta")
@@ -102,6 +104,8 @@ func (s *Sync) run(ctx context.Context, mode string) {
 		s.mu.Lock()
 		if mode == "meta" {
 			s.meta = nil
+		} else {
+			delete(s.machines, mode)
 		}
 		s.unhealthy[mode] = reason
 		s.mu.Unlock()
@@ -237,6 +241,7 @@ func (s *Sync) settle(mode string, rep *replica) error {
 		s.meta = rep
 		s.partial[mode] = projectMeta(rows)
 	} else {
+		s.machines[mode] = rep
 		s.partial[mode] = projectMachine(rows, mode)
 	}
 	delete(s.unhealthy, mode)
@@ -264,6 +269,7 @@ func (s *Sync) publish() {
 			cancel()
 			delete(s.watchers, id)
 			delete(s.partial, id)
+			delete(s.machines, id)
 			delete(s.unhealthy, id)
 		}
 	}
@@ -302,6 +308,11 @@ func (s *Sync) Write(ctx context.Context, edit func(f *flock.Flock) error) error
 	if rep == nil {
 		return ErrNotReady
 	}
+	return s.writeTo(ctx, rep, "meta", edit)
+}
+
+// writeTo applies edits to a replica and appends them to its stream.
+func (s *Sync) writeTo(ctx context.Context, rep *replica, mode string, edit func(f *flock.Flock) error) error {
 	rep.mu.Lock()
 	before, err := rep.flock.Version()
 	if err == nil {
@@ -327,11 +338,130 @@ func (s *Sync) Write(ctx context.Context, edit func(f *flock.Flock) error) error
 	rep.mu.Unlock()
 	if err == nil {
 		s.mu.Lock()
-		s.partial["meta"] = projectMeta(rows)
+		if mode == "meta" {
+			s.partial[mode] = projectMeta(rows)
+		} else {
+			s.partial[mode] = projectMachine(rows, mode)
+		}
 		s.mu.Unlock()
 		s.publish()
 	}
 	return nil
+}
+
+// Pin pins or unpins a session.
+func (s *Sync) Pin(ctx context.Context, sessionID string, pinned bool) error {
+	return s.SetField(ctx, sessionID, "isPinned", pinned)
+}
+
+// Archive archives or restores a session with the sessions it opened, as
+// the desktop app does: the session flag is the archive, and the machine's
+// cleanup command is best effort.
+func (s *Sync) Archive(ctx context.Context, sessionID string, archived bool) error {
+	s.mu.Lock()
+	sessions := s.partial["meta"].Sessions
+	s.mu.Unlock()
+	ids := lifecycle(sessions, sessionID)
+	byID := map[string]Session{}
+	for _, sess := range sessions {
+		byID[sess.ID] = sess
+	}
+	roots := map[string][]string{} // machine to session ids
+	err := s.Write(ctx, func(f *flock.Flock) error {
+		for _, id := range ids {
+			if err := f.Put([]any{"m", room(id), "isArchived"}, archived); err != nil {
+				return err
+			}
+			if archived {
+				if err := f.Put([]any{"m", room(id), "status"}, map[string]any{"type": "idle"}); err != nil {
+					return err
+				}
+			}
+			sess := byID[id]
+			if sess.ParentSessionID != "" || sess.MachineID == "" {
+				continue
+			}
+			roots[sess.MachineID] = append(roots[sess.MachineID], id)
+			if err := patchNeedToArchive(f, sess.MachineID, id, archived); err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+	for machine, list := range roots {
+		s.mu.Lock()
+		rep := s.machines[machine]
+		s.mu.Unlock()
+		if rep == nil {
+			continue
+		}
+		s.writeTo(ctx, rep, machine, func(f *flock.Flock) error {
+			for _, id := range list {
+				key := []any{"cmd", "archiveSession", id}
+				if !archived {
+					if err := f.Delete(key); err != nil {
+						return err
+					}
+					continue
+				}
+				if err := f.Put(key, map[string]any{"v": 1.0, "requestedAt": float64(time.Now().UnixMilli())}); err != nil {
+					return err
+				}
+			}
+			return nil
+		})
+	}
+	return nil
+}
+
+// lifecycle is the session and every session it opened, transitively.
+func lifecycle(sessions []Session, id string) []string {
+	children := map[string][]string{}
+	for _, sess := range sessions {
+		for _, owner := range []string{sess.ParentSessionID, sess.OpenedBySessionID, sess.OpenedByRootSessionID} {
+			if owner != "" && owner != sess.ID {
+				children[owner] = append(children[owner], sess.ID)
+			}
+		}
+	}
+	var out []string
+	seen := map[string]bool{}
+	for pending := []string{id}; len(pending) > 0; pending = pending[1:] {
+		current := pending[0]
+		if seen[current] {
+			continue
+		}
+		seen[current] = true
+		out = append(out, current)
+		pending = append(pending, children[current]...)
+	}
+	return out
+}
+
+// patchNeedToArchive updates a machine's list of sessions to archive.
+func patchNeedToArchive(f *flock.Flock, machineID, sessionID string, archived bool) error {
+	machineRoom := "machine-" + machineID
+	need := map[string]any{}
+	if v, ok, err := f.Get([]any{"m", machineRoom, "needToArchiveSessions"}); err != nil {
+		return err
+	} else if ok {
+		for k, x := range object(v) {
+			need[k] = x
+		}
+	} else if whole, ok, err := f.Get([]any{"m", machineRoom}); err == nil && ok {
+		for k, x := range object(object(whole)["needToArchiveSessions"]) {
+			need[k] = x
+		}
+	}
+	if archived {
+		need[sessionID] = true
+	} else {
+		delete(need, sessionID)
+	}
+	return f.Put([]any{"m", machineRoom, "needToArchiveSessions"}, need)
 }
 
 func room(sessionID string) string { return "session-" + sessionID }

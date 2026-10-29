@@ -20,6 +20,8 @@ type Item struct {
 	Added, Removed            int
 	HasDetail                 bool
 	Permission                *Permission
+	Content                   []any // tool output blocks: diff, terminal, content
+	RawInput, RawOutput       any
 
 	Plan     []PlanEntry // plan
 	Subagent *Subagent   // subagent_task
@@ -189,7 +191,8 @@ func summarizeItem(raw map[string]any, identity string) Item {
 			it.Status = "pending"
 		}
 		it.Path, it.Added, it.Removed = countDiff(raw["content"])
-		it.HasDetail = len(list(raw["content"])) > 0 || raw["rawInput"] != nil || raw["rawOutput"] != nil
+		it.Content, it.RawInput, it.RawOutput = list(raw["content"]), raw["rawInput"], raw["rawOutput"]
+		it.HasDetail = len(it.Content) > 0 || it.RawInput != nil || it.RawOutput != nil
 		if req := obj(raw["permissionRequest"]); req != nil {
 			p := &Permission{
 				RequestID: fmt.Sprint(orEmpty(req["requestId"])),

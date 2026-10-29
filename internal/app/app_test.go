@@ -131,6 +131,23 @@ func TestExpandActivity(t *testing.T) {
 	}
 }
 
+func TestThinkingCollapsed(t *testing.T) {
+	a := fixture()
+	a.view.Entries = a.view.Entries[:2]
+	a.view.Working = false
+	tt := snap(t, a, "thinking-collapsed", false, nil)
+	if tt.HasText("The snapshot format is only in the wasm build.") {
+		t.Fatal("thinking shows before it is clicked")
+	}
+	if err := tt.Click("Thought"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if !tt.HasText("The snapshot format is only in the wasm build.") {
+		t.Fatalf("thinking not shown after the click: %q", tt.Texts())
+	}
+}
+
 func TestNewChat(t *testing.T) {
 	a := fixture()
 	a.selected, a.view = "", nil
@@ -140,5 +157,55 @@ func TestNewChat(t *testing.T) {
 		if !tt.HasText(want) {
 			t.Errorf("missing %q in %q", want, tt.Texts())
 		}
+	}
+}
+
+func TestSessionMenuRename(t *testing.T) {
+	a := fixture()
+	tt := ui.NewTester(a.render, 1100, 720)
+	tt.Frame()
+	if err := tt.RightClick("Sidebar status marks"); err != nil {
+		t.Fatal(err)
+	}
+	if got := tt.Menu(); len(got) == 0 {
+		t.Fatal("no context menu")
+	}
+	if err := tt.ChooseMenuItem("Rename"); err != nil {
+		t.Fatalf("%v; menu: %q", err, tt.Menu())
+	}
+	tt.Frame()
+	if a.renaming != "s2" {
+		t.Fatalf("renaming = %q", a.renaming)
+	}
+	tt.Type(" v2")
+	tt.Key(0, ui.KeyEnter)
+	tt.Frame()
+	if a.renaming != "" {
+		t.Fatalf("still renaming after Enter: %q", a.renameText)
+	}
+}
+
+func TestToolDetail(t *testing.T) {
+	a := fixture()
+	a.view.Entries = a.view.Entries[:2]
+	a.view.Working = false
+	items := a.view.Entries[1].Items
+	items[4].HasDetail = true
+	items[4].Content = []any{map[string]any{"type": "diff", "path": "internal/catalog/sync.go", "oldText": "package catalog\n", "newText": "package catalog\n\nconst maxReplica = 8 << 20\n"}}
+	items[2].HasDetail = true
+	items[2].Content = []any{map[string]any{"type": "terminal", "command": "go", "args": []any{"test", "./internal/flock"}, "output": "ok  github.com/lbr77/lody-mygo/internal/flock 0.04s"}}
+	tt := snap(t, a, "tool-detail", false, func(tt *ui.Tester) {
+		tt.Frame()
+		if err := tt.Click("Edited 1 file"); err != nil {
+			t.Fatal(err)
+		}
+		tt.Frame()
+		if err := tt.Click("Edited internal/catalog/sync.go"); err != nil {
+			t.Fatalf("%v: %q", err, tt.Texts())
+		}
+	})
+	// The diff viewer paints its lines itself; its editor is labeled.
+	if !tt.HasText("New text") {
+		t.Fatalf("diff not shown: %q", tt.Texts())
 	}
 }

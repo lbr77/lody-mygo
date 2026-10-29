@@ -90,6 +90,14 @@ func (w *Conn) Grant(ctx context.Context) (*Grant, error) {
 	}
 }
 
+// SetGrant caches a grant, as a fetched one is cached.
+func (w *Conn) SetGrant(g *Grant) {
+	w.mu.Lock()
+	w.grant = g
+	w.expires = time.Now().Add(time.Duration(max(1, g.ExpiresIn-30) * float64(time.Second)))
+	w.mu.Unlock()
+}
+
 // Invalidate drops the cached grant, after the gateway rejected it.
 func (w *Conn) Invalidate() {
 	w.mu.Lock()
