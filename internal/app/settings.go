@@ -127,34 +127,9 @@ func (a *App) settingsPage(c *ui.Context, p *palette) {
 	case "account":
 		a.accountPage(c, p)
 	case "preferences":
-		settingsTitle(c, p, locales.SettingsPreferences())
-		settingRow(c, p, locales.SettingsBusy(), locales.SettingsBusyHelp(), func() {
-			picked := 0
-			if a.busyBehavior == "steer" {
-				picked = 1
-			}
-			was := picked
-			ui.Segmented(c, &picked, locales.Queue(), locales.Steer()).Label(locales.SettingsBusy())
-			if picked != was {
-				a.busyBehavior = []string{"queue", "steer"}[picked]
-				a.savePrefs()
-			}
-		})
+		a.preferencesPage(c, p)
 	case "appearance":
-		settingsTitle(c, p, locales.SettingsAppearance())
-		settingRow(c, p, locales.SettingsTheme(), locales.SettingsThemeHelp(), func() {
-			picked := 0
-			for i, choice := range appearanceChoices {
-				if a.appearance == choice {
-					picked = i
-				}
-			}
-			was := picked
-			ui.Segmented(c, &picked, appearanceLabels()...).Label(locales.SettingsTheme())
-			if picked != was {
-				a.setAppearance(appearanceChoices[picked])
-			}
-		})
+		a.appearancePage(c, p)
 	case "keyboard":
 		a.keyboardPage(c, p)
 	case "general":

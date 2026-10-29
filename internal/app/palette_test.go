@@ -399,3 +399,34 @@ func TestSidebarOpenedTree(t *testing.T) {
 		t.Fatal("folded opener still lists its sessions")
 	}
 }
+
+func TestPreferencePages(t *testing.T) {
+	i18n.SetLocaleFunc(func() string { return "zh-Hans" })
+	defer i18n.SetLocaleFunc(func() string { return "en" })
+	a := fixture()
+	a.view.Working = false
+	a.settingsOpen, a.settingsTab = true, "preferences"
+	tt := snap(t, a, "settings-preferences", true, nil)
+	for _, want := range []string{"会话", "排队消息行为", "排队", "引导", "仅展示代码行变更", "启用桌面通知", "高级", "启用实验功能", "清空本地缓存", "清空缓存"} {
+		if !tt.HasText(want) {
+			t.Errorf("preferences: missing %q", want)
+		}
+	}
+	if err := tt.Click("引导"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if a.busyBehavior != "steer" {
+		t.Fatalf("busy = %q", a.busyBehavior)
+	}
+	a.settingsTab = "appearance"
+	tt = snap(t, a, "settings-appearance", true, nil)
+	for _, want := range []string{"主题", "跟随系统", "语言", "文字", "字号", "默认", "全宽显示", "渲染行内公式", "扩展代码语言", "字体连字"} {
+		if !tt.HasText(want) {
+			t.Errorf("appearance: missing %q", want)
+		}
+	}
+	if !a.ligatures {
+		t.Error("ligatures default off")
+	}
+}

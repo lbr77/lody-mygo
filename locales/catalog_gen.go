@@ -2001,11 +2001,11 @@ func (msgs Messages) SettingsBusy() string {
 	return Catalog.Format(msgs.locale, "settingsBusy", nil)
 }
 
-// SettingsBusyHelp says "For messages you send while the agent is working. Steer gives them to the running turn, when its agent takes steering."
+// SettingsBusyHelp says "For messages you send while the agent is working."
 // in the language the app shows.
 func SettingsBusyHelp() string { return In(i18n.Locale()).SettingsBusyHelp() }
 
-// SettingsBusyHelp says "For messages you send while the agent is working. Steer gives them to the running turn, when its agent takes steering."
+// SettingsBusyHelp says "For messages you send while the agent is working."
 // in the language of msgs.
 func (msgs Messages) SettingsBusyHelp() string {
 	return Catalog.Format(msgs.locale, "settingsBusyHelp", nil)
@@ -13017,4 +13017,314 @@ func OpenedShow(count int) string { return In(i18n.Locale()).OpenedShow(count) }
 // in the language of msgs.
 func (msgs Messages) OpenedShow(count int) string {
 	return Catalog.Format(msgs.locale, "openedShow", map[string]any{"count": count})
+}
+
+// FontSizeSmaller says "Smaller"
+// in the language the app shows.
+func FontSizeSmaller() string { return In(i18n.Locale()).FontSizeSmaller() }
+
+// FontSizeSmaller says "Smaller"
+// in the language of msgs.
+func (msgs Messages) FontSizeSmaller() string {
+	return Catalog.Format(msgs.locale, "fontSizeSmaller", nil)
+}
+
+// FontSizeSmall says "Small"
+// in the language the app shows.
+func FontSizeSmall() string { return In(i18n.Locale()).FontSizeSmall() }
+
+// FontSizeSmall says "Small"
+// in the language of msgs.
+func (msgs Messages) FontSizeSmall() string {
+	return Catalog.Format(msgs.locale, "fontSizeSmall", nil)
+}
+
+// FontSizeDefault says "Default"
+// in the language the app shows.
+func FontSizeDefault() string { return In(i18n.Locale()).FontSizeDefault() }
+
+// FontSizeDefault says "Default"
+// in the language of msgs.
+func (msgs Messages) FontSizeDefault() string {
+	return Catalog.Format(msgs.locale, "fontSizeDefault", nil)
+}
+
+// FontSizeLarge says "Large"
+// in the language the app shows.
+func FontSizeLarge() string { return In(i18n.Locale()).FontSizeLarge() }
+
+// FontSizeLarge says "Large"
+// in the language of msgs.
+func (msgs Messages) FontSizeLarge() string {
+	return Catalog.Format(msgs.locale, "fontSizeLarge", nil)
+}
+
+// FontSizeLarger says "Larger"
+// in the language the app shows.
+func FontSizeLarger() string { return In(i18n.Locale()).FontSizeLarger() }
+
+// FontSizeLarger says "Larger"
+// in the language of msgs.
+func (msgs Messages) FontSizeLarger() string {
+	return Catalog.Format(msgs.locale, "fontSizeLarger", nil)
+}
+
+// PrefConversations says "Conversations"
+// in the language the app shows.
+func PrefConversations() string { return In(i18n.Locale()).PrefConversations() }
+
+// PrefConversations says "Conversations"
+// in the language of msgs.
+func (msgs Messages) PrefConversations() string {
+	return Catalog.Format(msgs.locale, "prefConversations", nil)
+}
+
+// PrefCodeOnly says "Show code-only line changes"
+// in the language the app shows.
+func PrefCodeOnly() string { return In(i18n.Locale()).PrefCodeOnly() }
+
+// PrefCodeOnly says "Show code-only line changes"
+// in the language of msgs.
+func (msgs Messages) PrefCodeOnly() string {
+	return Catalog.Format(msgs.locale, "prefCodeOnly", nil)
+}
+
+// PrefCodeOnlyHelp says "Sidebar line counts skip docs, tests, and dev config."
+// in the language the app shows.
+func PrefCodeOnlyHelp() string { return In(i18n.Locale()).PrefCodeOnlyHelp() }
+
+// PrefCodeOnlyHelp says "Sidebar line counts skip docs, tests, and dev config."
+// in the language of msgs.
+func (msgs Messages) PrefCodeOnlyHelp() string {
+	return Catalog.Format(msgs.locale, "prefCodeOnlyHelp", nil)
+}
+
+// PrefNotifications says "Enable desktop notifications"
+// in the language the app shows.
+func PrefNotifications() string { return In(i18n.Locale()).PrefNotifications() }
+
+// PrefNotifications says "Enable desktop notifications"
+// in the language of msgs.
+func (msgs Messages) PrefNotifications() string {
+	return Catalog.Format(msgs.locale, "prefNotifications", nil)
+}
+
+// PrefAdvanced says "Advanced"
+// in the language the app shows.
+func PrefAdvanced() string { return In(i18n.Locale()).PrefAdvanced() }
+
+// PrefAdvanced says "Advanced"
+// in the language of msgs.
+func (msgs Messages) PrefAdvanced() string {
+	return Catalog.Format(msgs.locale, "prefAdvanced", nil)
+}
+
+// PrefExperimental says "Enable experimental features"
+// in the language the app shows.
+func PrefExperimental() string { return In(i18n.Locale()).PrefExperimental() }
+
+// PrefExperimental says "Enable experimental features"
+// in the language of msgs.
+func (msgs Messages) PrefExperimental() string {
+	return Catalog.Format(msgs.locale, "prefExperimental", nil)
+}
+
+// PrefExperimentalHelp says "Show features that are still being built. They can change or break."
+// in the language the app shows.
+func PrefExperimentalHelp() string { return In(i18n.Locale()).PrefExperimentalHelp() }
+
+// PrefExperimentalHelp says "Show features that are still being built. They can change or break."
+// in the language of msgs.
+func (msgs Messages) PrefExperimentalHelp() string {
+	return Catalog.Format(msgs.locale, "prefExperimentalHelp", nil)
+}
+
+// PrefClearCache says "Clear local cache"
+// in the language the app shows.
+func PrefClearCache() string { return In(i18n.Locale()).PrefClearCache() }
+
+// PrefClearCache says "Clear local cache"
+// in the language of msgs.
+func (msgs Messages) PrefClearCache() string {
+	return Catalog.Format(msgs.locale, "prefClearCache", nil)
+}
+
+// PrefClearCacheHelp says "Fixes some loading or sync issues. Synced data downloads again; you stay signed in."
+// in the language the app shows.
+func PrefClearCacheHelp() string { return In(i18n.Locale()).PrefClearCacheHelp() }
+
+// PrefClearCacheHelp says "Fixes some loading or sync issues. Synced data downloads again; you stay signed in."
+// in the language of msgs.
+func (msgs Messages) PrefClearCacheHelp() string {
+	return Catalog.Format(msgs.locale, "prefClearCacheHelp", nil)
+}
+
+// PrefClearCacheButton says "Clear cache"
+// in the language the app shows.
+func PrefClearCacheButton() string { return In(i18n.Locale()).PrefClearCacheButton() }
+
+// PrefClearCacheButton says "Clear cache"
+// in the language of msgs.
+func (msgs Messages) PrefClearCacheButton() string {
+	return Catalog.Format(msgs.locale, "prefClearCacheButton", nil)
+}
+
+// PrefClearCacheTitle says "Clear local cache?"
+// in the language the app shows.
+func PrefClearCacheTitle() string { return In(i18n.Locale()).PrefClearCacheTitle() }
+
+// PrefClearCacheTitle says "Clear local cache?"
+// in the language of msgs.
+func (msgs Messages) PrefClearCacheTitle() string {
+	return Catalog.Format(msgs.locale, "prefClearCacheTitle", nil)
+}
+
+// PrefClearCacheBody says "This deletes Lody's local cache for all workspaces (offline copies, synced-data caches, and image caches) and syncs a…"
+// in the language the app shows.
+func PrefClearCacheBody() string { return In(i18n.Locale()).PrefClearCacheBody() }
+
+// PrefClearCacheBody says "This deletes Lody's local cache for all workspaces (offline copies, synced-data caches, and image caches) and syncs a…"
+// in the language of msgs.
+func (msgs Messages) PrefClearCacheBody() string {
+	return Catalog.Format(msgs.locale, "prefClearCacheBody", nil)
+}
+
+// PrefCacheCleared says "Local cache cleared"
+// in the language the app shows.
+func PrefCacheCleared() string { return In(i18n.Locale()).PrefCacheCleared() }
+
+// PrefCacheCleared says "Local cache cleared"
+// in the language of msgs.
+func (msgs Messages) PrefCacheCleared() string {
+	return Catalog.Format(msgs.locale, "prefCacheCleared", nil)
+}
+
+// PrefLanguage says "Language"
+// in the language the app shows.
+func PrefLanguage() string { return In(i18n.Locale()).PrefLanguage() }
+
+// PrefLanguage says "Language"
+// in the language of msgs.
+func (msgs Messages) PrefLanguage() string {
+	return Catalog.Format(msgs.locale, "prefLanguage", nil)
+}
+
+// PrefText says "Text"
+// in the language the app shows.
+func PrefText() string { return In(i18n.Locale()).PrefText() }
+
+// PrefText says "Text"
+// in the language of msgs.
+func (msgs Messages) PrefText() string {
+	return Catalog.Format(msgs.locale, "prefText", nil)
+}
+
+// PrefFontSize says "Font size"
+// in the language the app shows.
+func PrefFontSize() string { return In(i18n.Locale()).PrefFontSize() }
+
+// PrefFontSize says "Font size"
+// in the language of msgs.
+func (msgs Messages) PrefFontSize() string {
+	return Catalog.Format(msgs.locale, "prefFontSize", nil)
+}
+
+// PrefWide says "Full width"
+// in the language the app shows.
+func PrefWide() string { return In(i18n.Locale()).PrefWide() }
+
+// PrefWide says "Full width"
+// in the language of msgs.
+func (msgs Messages) PrefWide() string {
+	return Catalog.Format(msgs.locale, "prefWide", nil)
+}
+
+// PrefWideHelp says "Let the conversation column span the window instead of capping it."
+// in the language the app shows.
+func PrefWideHelp() string { return In(i18n.Locale()).PrefWideHelp() }
+
+// PrefWideHelp says "Let the conversation column span the window instead of capping it."
+// in the language of msgs.
+func (msgs Messages) PrefWideHelp() string {
+	return Catalog.Format(msgs.locale, "prefWideHelp", nil)
+}
+
+// PrefInlineMath says "Render inline math"
+// in the language the app shows.
+func PrefInlineMath() string { return In(i18n.Locale()).PrefInlineMath() }
+
+// PrefInlineMath says "Render inline math"
+// in the language of msgs.
+func (msgs Messages) PrefInlineMath() string {
+	return Catalog.Format(msgs.locale, "prefInlineMath", nil)
+}
+
+// PrefInlineMathHelp says "Typeset $...$ and \\(...\\) in Markdown."
+// in the language the app shows.
+func PrefInlineMathHelp() string { return In(i18n.Locale()).PrefInlineMathHelp() }
+
+// PrefInlineMathHelp says "Typeset $...$ and \\(...\\) in Markdown."
+// in the language of msgs.
+func (msgs Messages) PrefInlineMathHelp() string {
+	return Catalog.Format(msgs.locale, "prefInlineMathHelp", nil)
+}
+
+// PrefExtendedCode says "Extended code languages"
+// in the language the app shows.
+func PrefExtendedCode() string { return In(i18n.Locale()).PrefExtendedCode() }
+
+// PrefExtendedCode says "Extended code languages"
+// in the language of msgs.
+func (msgs Messages) PrefExtendedCode() string {
+	return Catalog.Format(msgs.locale, "prefExtendedCode", nil)
+}
+
+// PrefExtendedCodeHelp says "Adds syntax grammars for more code languages. Each grammar loads when first used and can slow that render."
+// in the language the app shows.
+func PrefExtendedCodeHelp() string { return In(i18n.Locale()).PrefExtendedCodeHelp() }
+
+// PrefExtendedCodeHelp says "Adds syntax grammars for more code languages. Each grammar loads when first used and can slow that render."
+// in the language of msgs.
+func (msgs Messages) PrefExtendedCodeHelp() string {
+	return Catalog.Format(msgs.locale, "prefExtendedCodeHelp", nil)
+}
+
+// PrefLigatures says "Font ligatures"
+// in the language the app shows.
+func PrefLigatures() string { return In(i18n.Locale()).PrefLigatures() }
+
+// PrefLigatures says "Font ligatures"
+// in the language of msgs.
+func (msgs Messages) PrefLigatures() string {
+	return Catalog.Format(msgs.locale, "prefLigatures", nil)
+}
+
+// PrefLigaturesHelp says "Applies to conversation, code, and tool output."
+// in the language the app shows.
+func PrefLigaturesHelp() string { return In(i18n.Locale()).PrefLigaturesHelp() }
+
+// PrefLigaturesHelp says "Applies to conversation, code, and tool output."
+// in the language of msgs.
+func (msgs Messages) PrefLigaturesHelp() string {
+	return Catalog.Format(msgs.locale, "prefLigaturesHelp", nil)
+}
+
+// NotifyNeedsYou says "Needs your approval"
+// in the language the app shows.
+func NotifyNeedsYou() string { return In(i18n.Locale()).NotifyNeedsYou() }
+
+// NotifyNeedsYou says "Needs your approval"
+// in the language of msgs.
+func (msgs Messages) NotifyNeedsYou() string {
+	return Catalog.Format(msgs.locale, "notifyNeedsYou", nil)
+}
+
+// NotifyFinished says "Finished"
+// in the language the app shows.
+func NotifyFinished() string { return In(i18n.Locale()).NotifyFinished() }
+
+// NotifyFinished says "Finished"
+// in the language of msgs.
+func (msgs Messages) NotifyFinished() string {
+	return Catalog.Format(msgs.locale, "notifyFinished", nil)
 }

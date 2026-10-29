@@ -111,6 +111,16 @@ type App struct {
 	history          []string // sessions shown, for Back and Forward
 	histPos          int
 	palette          paletteState
+	mdSize           float32 // the text size the Markdown themes were made for
+	language         string  // the app's language; "" follows the system
+	fontSize         float32 // the conversation's text size; 0 is the default
+	wideMode         bool    // the conversation spans the window
+	inlineMath       bool
+	extendedCode     bool
+	ligatures        bool
+	codeOnly         bool // sidebar line counts of code alone
+	notifications    bool // desktop notifications
+	experimental     bool
 	keyOverrides     map[string][]string       // chords rebound, by command
 	recording        keyRecording              // the command whose chord is being recorded
 	runValues        map[string]map[string]any // agent settings chosen in the composer, by session; "" for New chat
@@ -234,6 +244,7 @@ func New() *App {
 		attachDrafts: map[string][]pendingFile{},
 		collapsed:    map[string]bool{},
 		expanded:     map[string]bool{},
+		ligatures:    true,
 	}
 	a.convex = &cloud.Convex{API: a.api, Token: a.tokenNow}
 	return a
@@ -256,6 +267,11 @@ func (a *App) Start(win *mygo.Window) {
 	a.sidebarWidth = prefs.Sidebar
 	a.homeBoard = prefs.HomeBoard
 	a.keyOverrides = prefs.Keys
+	a.language, a.fontSize, a.wideMode, a.inlineMath, a.extendedCode = prefs.Language, prefs.FontSize, prefs.Wide, prefs.InlineMath, prefs.ExtendedCode
+	a.ligatures, a.codeOnly, a.notifications, a.experimental = !prefs.NoLigatures, prefs.CodeOnly, prefs.Notifications, prefs.Experimental
+	if a.language != "" {
+		mygo.App.SetLocale(a.language)
+	}
 	if a.appearance != "" {
 		applyAppearance(a.appearance)
 	}
@@ -429,7 +445,9 @@ func (a *App) connect(id string) {
 			if a.sync != sync {
 				return
 			}
+			before := a.catalog
 			a.catalog, a.synced = c, true
+			a.notifyTransitions(before, c)
 			a.pickNewChatDefaults()
 		})
 	}
@@ -904,6 +922,16 @@ type prefs struct {
 	// Keys are the chords rebound in keyboard settings, by command: none
 	// unbinds it.
 	Keys map[string][]string `json:"keys,omitempty"`
+
+	Language      string  `json:"language,omitempty"`
+	FontSize      float32 `json:"fontSize,omitempty"`
+	Wide          bool    `json:"wide,omitempty"`
+	InlineMath    bool    `json:"inlineMath,omitempty"`
+	ExtendedCode  bool    `json:"extendedCode,omitempty"`
+	NoLigatures   bool    `json:"noLigatures,omitempty"`
+	CodeOnly      bool    `json:"codeOnly,omitempty"`
+	Notifications bool    `json:"notifications,omitempty"`
+	Experimental  bool    `json:"experimental,omitempty"`
 }
 
 func dataDir() string {
@@ -943,7 +971,9 @@ func loadPrefs() prefs {
 }
 
 func (a *App) savePrefs() {
-	writeJSON("prefs.json", prefs{Workspace: a.workspaceID, Collapsed: a.collapsed, Appearance: a.appearance, Busy: a.busyBehavior, Sidebar: a.sidebarWidth, HomeBoard: a.homeBoard, Keys: a.keyOverrides})
+	writeJSON("prefs.json", prefs{Workspace: a.workspaceID, Collapsed: a.collapsed, Appearance: a.appearance, Busy: a.busyBehavior, Sidebar: a.sidebarWidth, HomeBoard: a.homeBoard, Keys: a.keyOverrides,
+		Language: a.language, FontSize: a.fontSize, Wide: a.wideMode, InlineMath: a.inlineMath, ExtendedCode: a.extendedCode,
+		NoLigatures: !a.ligatures, CodeOnly: a.codeOnly, Notifications: a.notifications, Experimental: a.experimental})
 }
 
 func loadAccount() *cloud.Account {

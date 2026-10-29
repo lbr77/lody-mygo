@@ -245,7 +245,7 @@ func (a *App) conversation(c *ui.Context, p *palette, sess *catalog.Session) {
 			return
 		}
 		a.entry(c, p, entries, i)
-	}).Grow(1).MinHeight(0).Padding(16, 0, 24, 0).Transition(pageIn).Children(func() {
+	}).Grow(1).MinHeight(0).Padding(16, 0, 24, 0).FontFeatures(a.ligatureFeatures()...).Transition(pageIn).Children(func() {
 		ui.Text(c, locales.SendToStart()).FontSize(sizeSub).TextColor(p.Secondary).Margin(ui.Auto)
 	})
 	a.bottom(c, p, sess, v)
@@ -258,10 +258,14 @@ func offlinePill(c *ui.Context, p *palette) {
 }
 
 // column centers the conversation column: 768 DIPs of content between
-// 18-DIP gutters.
-func column(c *ui.Context, key any, fn func()) ui.Element {
+// 18-DIP gutters, or the window's width in full-width mode.
+func (a *App) column(c *ui.Context, key any, fn func()) ui.Element {
 	return ui.Row(c.Key(key)).FillWidth().Justify(ui.Center).Children(func() {
-		ui.Column(c).Grow(1).MinWidth(0).MaxWidth(columnWidth+2*columnGutter).Padding(0, columnGutter).Children(fn)
+		col := ui.Column(c).Grow(1).MinWidth(0).Padding(0, columnGutter)
+		if !a.wideMode {
+			col.MaxWidth(columnWidth + 2*columnGutter)
+		}
+		col.Children(fn)
 	})
 }
 
@@ -284,7 +288,7 @@ func (a *App) entry(c *ui.Context, p *palette, entries []session.Entry, i int) {
 	if e.Queued && i > 0 && entries[i-1].Queued {
 		top = 12
 	}
-	column(c, e.ID, func() {
+	a.column(c, e.ID, func() {
 		if e.Role == "user" {
 			a.userMessage(c, p, e, firstQueued)
 		} else {
@@ -381,7 +385,7 @@ func (a *App) userMessage(c *ui.Context, p *palette, e session.Entry, firstQueue
 					if spans, ok := a.findSpans(p, e.ID+"/user", text); ok {
 						body = ui.RichText(c, spans...)
 					}
-					body.Selectable().FontSize(sizeBody).LineHeight(24.0 / 14).TextColor(p.Reading)
+					body.Selectable().FontSize(a.convFontSize()).LineHeight(24.0 / 14).TextColor(p.Reading)
 					if long && !open {
 						body.MaxLines(8)
 					}
@@ -486,17 +490,18 @@ func formatDuration(d time.Duration) string {
 
 // syncMarkdown keeps the Markdown themes in step with the palette.
 func (a *App) syncMarkdown(p *palette) {
-	if a.md.Theme != nil && a.mdDark == p.Dark {
+	// The theme follows the palette and the text size chosen.
+	if a.md.Theme != nil && a.mdDark == p.Dark && a.mdSize == a.convFontSize() {
 		return
 	}
-	a.mdDark = p.Dark
+	a.mdDark, a.mdSize = p.Dark, a.convFontSize()
 	base := ui.LightTheme()
 	if p.Dark {
 		base = ui.DarkTheme()
 	}
 	base.Font, base.FontSize = fontUI, sizeBody
 	t := markdown.DefaultTheme(base)
-	t.FontSize = sizeBody
+	t.FontSize = a.convFontSize()
 	t.Font = fontUI
 	t.CodeFont = fontMono
 	t.LineHeight = 1.55
