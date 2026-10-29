@@ -387,25 +387,6 @@ func (a *App) statusMark(c *ui.Context, p *palette, s *catalog.Session, age bool
 	}
 }
 
-// workingGrid is Lody's working mark: a 3×3 grid of tiles pulsing in a
-// wave.
-func workingGrid(c *ui.Context, p *palette, size float32) {
-	tile := size / 3.36
-	gap := tile * 0.18
-	phase := float64(time.Now().UnixMilli()%1400) / 1400
-	ui.Column(c).Size(size, size).Shrink(0).Gap(gap).Center().Label(locales.StatusWorking()).Children(func() {
-		for row := 0; row < 3; row++ {
-			ui.Row(c).Gap(gap).Children(func() {
-				for col := 0; col < 3; col++ {
-					wave := math.Sin(2*math.Pi*(phase-float64(row+col)/6))*0.5 + 0.5
-					ui.Box(c).Size(tile, tile).Radius(tile * 0.4).Background(p.Primary).Opacity(float32(0.3 + 0.7*wave))
-				}
-			})
-		}
-	})
-	c.After(80 * time.Millisecond)
-}
-
 // searchPanel finds a chat by title.
 func (a *App) searchPanel(c *ui.Context, p *palette) {
 	var matches []catalog.Session

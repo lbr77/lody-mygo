@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"slices"
 	"sort"
 	"strings"
 	"time"
@@ -14,7 +15,7 @@ import (
 
 	"github.com/lbr77/lody-mygo/internal/catalog"
 	"github.com/lbr77/lody-mygo/internal/flock"
-	"github.com/lbr77/lody-mygo/internal/mcp"
+	"github.com/lbr77/lody-mygo/internal/localterm"
 	"github.com/lbr77/lody-mygo/locales"
 )
 
@@ -57,12 +58,18 @@ func (a *App) mcpPage(c *ui.Context, p *palette) {
 	a.mcpDialog(c, p)
 }
 
-// mcpTools is a server's tool list, as this computer last loaded it.
+// mcpTools is a server's tool list, as this computer's daemon last
+// loaded it.
 type mcpTools struct {
 	conn    string // the connection it was loaded for
 	loading bool
-	tools   []mcp.Tool
+	tools   []mcpTool
 	err     string
+}
+
+type mcpTool struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
 }
 
 func connKey(conn map[string]any) string {
@@ -70,10 +77,21 @@ func connKey(conn map[string]any) string {
 	return string(b)
 }
 
-// loadTools lists a server's tools from this computer: its command runs
-// here, or its URL is reached from here, as Lody's settings do.
+// toolsMachine is this computer's machine, when its daemon serves the
+// workspace, which lists servers' tools.
+func (a *App) toolsMachine() string {
+	if id := a.localMachine(); id != "" && slices.Contains(a.catalog.MachineIDs, id) {
+		return id
+	}
+	return ""
+}
+
+// loadTools asks the daemon on this computer for a server's tools, as
+// Lody's desktop app does: the daemon runs the command, or reaches the
+// URL, with its own environment and the user's MCP sign-ins.
 func (a *App) loadTools(m catalog.MCPServer) {
-	if m.Connection == nil {
+	machine := a.toolsMachine()
+	if m.Connection == nil || machine == "" {
 		return
 	}
 	if a.mcpTools == nil {
@@ -81,28 +99,45 @@ func (a *App) loadTools(m catalog.MCPServer) {
 	}
 	state := &mcpTools{conn: connKey(m.Connection), loading: true}
 	a.mcpTools[m.ID] = state
-	server, err := mcp.FromConnection(m.Connection)
-	if err != nil {
-		state.loading, state.err = false, locales.McpToolsFailed()
+	if a.machineCap(machine, "mcpToolDiscovery") < 1 {
+		state.loading, state.err = false, locales.McpToolsUpgrade()
 		return
 	}
+	params := map[string]any{"server": m.Row(m.CreatedAt, "")}
+	if a.machineCap(machine, "mcpLocalAuthentication") >= 1 && a.account != nil {
+		params["requesterUserId"] = a.account.User.ID
+	}
+	ws := a.workspaceID
 	go func() {
-		ctx, cancel := context.WithTimeout(context.Background(), 40*time.Second)
-		defer cancel()
-		tools, err := mcp.ListTools(ctx, server, mcp.Environ())
+		ctx := context.Background()
+		raw, err := localterm.MachineRPC(ctx, ws, "mcp/list-tools", params, 35*time.Second)
+		var res struct {
+			Tools []mcpTool `json:"tools"`
+		}
+		if err == nil {
+			err = json.Unmarshal(raw, &res)
+		}
+		// A server that wants an OAuth sign-in fails the same way; Lody
+		// asks the daemon which it was.
+		oauth := false
+		if err != nil && params["requesterUserId"] != nil {
+			status, serr := localterm.MachineRPC(ctx, ws, "mcp/authentication", map[string]any{
+				"server": params["server"], "requesterUserId": params["requesterUserId"], "action": "status"}, 35*time.Second)
+			var st struct {
+				Reason string `json:"reason"`
+			}
+			oauth = serr == nil && json.Unmarshal(status, &st) == nil && st.Reason == "oauth_required"
+		}
 		a.update(func() {
-			state.loading, state.tools = false, tools
-			var missing *mcp.MissingError
-			var notFound *mcp.NotFoundError
+			state.loading, state.tools = false, res.Tools
+			var daemonErr *localterm.Error
 			switch {
 			case err == nil:
-			case errors.As(err, &missing):
-				state.err = locales.McpToolsMissing(missing.Variable)
-			case errors.As(err, &notFound):
-				state.err = locales.McpToolsNotFound(notFound.Command)
+			case oauth:
+				state.err = locales.McpToolsAuthRequired()
+			case errors.As(err, &daemonErr) && daemonErr.Code == "daemon_unavailable":
+				state.err = locales.McpToolsNoDaemon()
 			default:
-				// Lody shows no detail: errors may carry a token or the
-				// server's output.
 				state.err = locales.McpToolsFailed()
 			}
 		})
@@ -168,7 +203,7 @@ func (a *App) mcpServerRow(c *ui.Context, p *palette, server catalog.MCPServer, 
 			}
 		})
 		load := ui.Row(c).Gap(4).AlignItems(ui.Center).Padding(4, 8).Radius(6).Tooltip(locales.McpToolsLocal()).Transition(colorFade)
-		if m.Connection == nil || (tools != nil && tools.loading) {
+		if m.Connection == nil || (tools != nil && tools.loading) || a.toolsMachine() == "" {
 			load.Opacity(0.45)
 		} else {
 			load.Cursor(ui.CursorPointer).Label(locales.McpLoadTools()).OnClick(func() { a.loadTools(server) })

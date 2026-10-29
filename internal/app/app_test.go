@@ -18,7 +18,6 @@ import (
 	"github.com/lbr77/lody-mygo/internal/catalog"
 	"github.com/lbr77/lody-mygo/internal/cloud"
 	"github.com/lbr77/lody-mygo/internal/collab"
-	"github.com/lbr77/lody-mygo/internal/mcp"
 	"github.com/lbr77/lody-mygo/internal/mention"
 	"github.com/lbr77/lody-mygo/internal/presence"
 	"github.com/lbr77/lody-mygo/internal/session"
@@ -824,7 +823,7 @@ func TestCloudSettings(t *testing.T) {
 		t.Fatal("still signed out")
 	}
 	a.provider.open = false
-	a.mcpTools = map[string]*mcpTools{"x1": {conn: connKey(a.catalog.MCPServers[0].Connection), tools: []mcp.Tool{{Name: "decompile", Description: "Decompiles"}}},
+	a.mcpTools = map[string]*mcpTools{"x1": {conn: connKey(a.catalog.MCPServers[0].Connection), tools: []mcpTool{{Name: "decompile", Description: "Decompiles"}}},
 		"x2": {conn: connKey(a.catalog.MCPServers[1].Connection), err: "Couldn't connect. Check the configuration and try again."}}
 	check("mcp", "decompile", "Couldn't connect. Check the configuration and try again.")
 	a.catalog.Memories = map[string][]catalog.Memory{"m1": {{ProviderID: "nowledge-mem", MemoryID: "ada", MachineID: "m1", Name: "Ada's memory"}}}

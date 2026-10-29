@@ -865,7 +865,7 @@
   "mcpLead": "The MCP servers this workspace shares; each session chooses which to load.",
   "mcpAdd": "Add server",
   "mcpNone": "No MCP servers yet. Add one to share it with every session.",
-  "mcpToolsLocal": "Tools load on this computer: the command runs here, or the URL is reached from here.",
+  "mcpToolsLocal": "Tools load through the Lody daemon on this computer, which runs the command or reaches the URL.",
   "mcpLoadTools": "Load tools",
   "mcpDefault": "Default",
   "mcpDelete": "Delete {name}",
@@ -1503,22 +1503,9 @@
   "mcpToolsLoading": "Loading tools…",
   "mcpToolsEmpty": "No tools found",
   "mcpToolsFailed": "Couldn't connect. Check the configuration and try again.",
-  "mcpToolsMissing": "{ref} isn't set on this computer.",
-  "@mcpToolsMissing": {
-    "placeholders": {
-      "ref": {
-        "type": "String"
-      }
-    }
-  },
-  "mcpToolsNotFound": "{command} isn't on this computer's PATH.",
-  "@mcpToolsNotFound": {
-    "placeholders": {
-      "command": {
-        "type": "String"
-      }
-    }
-  },
+  "mcpToolsNoDaemon": "The Lody daemon isn't running on this computer.",
+  "mcpToolsUpgrade": "Update the Lody daemon on this computer to load tools.",
+  "mcpToolsAuthRequired": "This server needs authorization.",
   "providerRegistry": "ACP Providers",
   "providerRegistryNote": "Experimental — uses ACP Providers.",
   "providerProbing": "Probing…",

@@ -4185,11 +4185,11 @@ func (msgs Messages) McpNone() string {
 	return Catalog.Format(msgs.locale, "mcpNone", nil)
 }
 
-// McpToolsLocal says "Tools load on this computer: the command runs here, or the URL is reached from here."
+// McpToolsLocal says "Tools load through the Lody daemon on this computer, which runs the command or reaches the URL."
 // in the language the app shows.
 func McpToolsLocal() string { return In(i18n.Locale()).McpToolsLocal() }
 
-// McpToolsLocal says "Tools load on this computer: the command runs here, or the URL is reached from here."
+// McpToolsLocal says "Tools load through the Lody daemon on this computer, which runs the command or reaches the URL."
 // in the language of msgs.
 func (msgs Messages) McpToolsLocal() string {
 	return Catalog.Format(msgs.locale, "mcpToolsLocal", nil)
@@ -7009,24 +7009,34 @@ func (msgs Messages) McpToolsFailed() string {
 	return Catalog.Format(msgs.locale, "mcpToolsFailed", nil)
 }
 
-// McpToolsMissing says "{ref} isn't set on this computer."
+// McpToolsNoDaemon says "The Lody daemon isn't running on this computer."
 // in the language the app shows.
-func McpToolsMissing(ref string) string { return In(i18n.Locale()).McpToolsMissing(ref) }
+func McpToolsNoDaemon() string { return In(i18n.Locale()).McpToolsNoDaemon() }
 
-// McpToolsMissing says "{ref} isn't set on this computer."
+// McpToolsNoDaemon says "The Lody daemon isn't running on this computer."
 // in the language of msgs.
-func (msgs Messages) McpToolsMissing(ref string) string {
-	return Catalog.Format(msgs.locale, "mcpToolsMissing", map[string]any{"ref": ref})
+func (msgs Messages) McpToolsNoDaemon() string {
+	return Catalog.Format(msgs.locale, "mcpToolsNoDaemon", nil)
 }
 
-// McpToolsNotFound says "{command} isn't on this computer's PATH."
+// McpToolsUpgrade says "Update the Lody daemon on this computer to load tools."
 // in the language the app shows.
-func McpToolsNotFound(command string) string { return In(i18n.Locale()).McpToolsNotFound(command) }
+func McpToolsUpgrade() string { return In(i18n.Locale()).McpToolsUpgrade() }
 
-// McpToolsNotFound says "{command} isn't on this computer's PATH."
+// McpToolsUpgrade says "Update the Lody daemon on this computer to load tools."
 // in the language of msgs.
-func (msgs Messages) McpToolsNotFound(command string) string {
-	return Catalog.Format(msgs.locale, "mcpToolsNotFound", map[string]any{"command": command})
+func (msgs Messages) McpToolsUpgrade() string {
+	return Catalog.Format(msgs.locale, "mcpToolsUpgrade", nil)
+}
+
+// McpToolsAuthRequired says "This server needs authorization."
+// in the language the app shows.
+func McpToolsAuthRequired() string { return In(i18n.Locale()).McpToolsAuthRequired() }
+
+// McpToolsAuthRequired says "This server needs authorization."
+// in the language of msgs.
+func (msgs Messages) McpToolsAuthRequired() string {
+	return Catalog.Format(msgs.locale, "mcpToolsAuthRequired", nil)
 }
 
 // ProviderRegistry says "ACP Providers"
