@@ -3155,6 +3155,46 @@
   "smSaveError": "Could not confirm the scheduled message. Your draft is kept. Retry to check the same reservation.",
   "smEditTime": "Edit scheduled time",
   "smNotSent": "Not sent",
+  "mqUpNext": "Up next",
+  "mqScheduledTitle": "Scheduled",
+  "mqQueuedCount": "{count} queued",
+  "@mqQueuedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mqScheduledCount": "{count} scheduled",
+  "@mqScheduledCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mqScheduledFailedCount": "{count} scheduled not sent",
+  "@mqScheduledFailedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mqDragToReorder": "Drag to reorder",
+  "mqEditMessage": "Edit queued message",
+  "mqSteerHint": "Steer the active response with this message",
+  "mqImageOnly": "[Image message]",
+  "mqRemove": "Remove from queue",
+  "mqSaveEdit": "Save changes (Enter)",
+  "mqMoveToTop": "Move to top",
+  "mqEdit": "Edit",
+  "mqDelete": "Delete",
+  "mqMore": "More",
+  "mqUploadedImage": "Uploaded image",
+  "mqReorderError": "Failed to reorder messages",
+  "mqEditError": "Failed to edit message",
+  "mqRemoveError": "Failed to remove message from queue",
   "noticeAgentWarning": "Agent warning",
   "noticeAcpAuthRequired": "Authentication required",
   "noticeAcpInternalError": "Agent internal error",

@@ -74,6 +74,7 @@ type App struct {
 	// schedSendDlg the picker.
 	schedSends    map[string]*schedSendDraft
 	schedSendDlg  schedSendDialog
+	mqViews       map[string]*queueView     // chats' message queue sheets, while they show
 	capRetries    map[string]*capRetry      // capacity retries, by chat
 	stuck         stuckState                // a connection that has been connecting too long
 	card          hoverCard                 // the sidebar's info card

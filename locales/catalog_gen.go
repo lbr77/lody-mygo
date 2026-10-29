@@ -15757,6 +15757,196 @@ func (msgs Messages) SmNotSent() string {
 	return Catalog.Format(msgs.locale, "smNotSent", nil)
 }
 
+// MqUpNext says "Up next"
+// in the language the app shows.
+func MqUpNext() string { return In(i18n.Locale()).MqUpNext() }
+
+// MqUpNext says "Up next"
+// in the language of msgs.
+func (msgs Messages) MqUpNext() string {
+	return Catalog.Format(msgs.locale, "mqUpNext", nil)
+}
+
+// MqScheduledTitle says "Scheduled"
+// in the language the app shows.
+func MqScheduledTitle() string { return In(i18n.Locale()).MqScheduledTitle() }
+
+// MqScheduledTitle says "Scheduled"
+// in the language of msgs.
+func (msgs Messages) MqScheduledTitle() string {
+	return Catalog.Format(msgs.locale, "mqScheduledTitle", nil)
+}
+
+// MqQueuedCount says "{count} queued"
+// in the language the app shows.
+func MqQueuedCount(count int) string { return In(i18n.Locale()).MqQueuedCount(count) }
+
+// MqQueuedCount says "{count} queued"
+// in the language of msgs.
+func (msgs Messages) MqQueuedCount(count int) string {
+	return Catalog.Format(msgs.locale, "mqQueuedCount", map[string]any{"count": count})
+}
+
+// MqScheduledCount says "{count} scheduled"
+// in the language the app shows.
+func MqScheduledCount(count int) string { return In(i18n.Locale()).MqScheduledCount(count) }
+
+// MqScheduledCount says "{count} scheduled"
+// in the language of msgs.
+func (msgs Messages) MqScheduledCount(count int) string {
+	return Catalog.Format(msgs.locale, "mqScheduledCount", map[string]any{"count": count})
+}
+
+// MqScheduledFailedCount says "{count} scheduled not sent"
+// in the language the app shows.
+func MqScheduledFailedCount(count int) string { return In(i18n.Locale()).MqScheduledFailedCount(count) }
+
+// MqScheduledFailedCount says "{count} scheduled not sent"
+// in the language of msgs.
+func (msgs Messages) MqScheduledFailedCount(count int) string {
+	return Catalog.Format(msgs.locale, "mqScheduledFailedCount", map[string]any{"count": count})
+}
+
+// MqDragToReorder says "Drag to reorder"
+// in the language the app shows.
+func MqDragToReorder() string { return In(i18n.Locale()).MqDragToReorder() }
+
+// MqDragToReorder says "Drag to reorder"
+// in the language of msgs.
+func (msgs Messages) MqDragToReorder() string {
+	return Catalog.Format(msgs.locale, "mqDragToReorder", nil)
+}
+
+// MqEditMessage says "Edit queued message"
+// in the language the app shows.
+func MqEditMessage() string { return In(i18n.Locale()).MqEditMessage() }
+
+// MqEditMessage says "Edit queued message"
+// in the language of msgs.
+func (msgs Messages) MqEditMessage() string {
+	return Catalog.Format(msgs.locale, "mqEditMessage", nil)
+}
+
+// MqSteerHint says "Steer the active response with this message"
+// in the language the app shows.
+func MqSteerHint() string { return In(i18n.Locale()).MqSteerHint() }
+
+// MqSteerHint says "Steer the active response with this message"
+// in the language of msgs.
+func (msgs Messages) MqSteerHint() string {
+	return Catalog.Format(msgs.locale, "mqSteerHint", nil)
+}
+
+// MqImageOnly says "[Image message]"
+// in the language the app shows.
+func MqImageOnly() string { return In(i18n.Locale()).MqImageOnly() }
+
+// MqImageOnly says "[Image message]"
+// in the language of msgs.
+func (msgs Messages) MqImageOnly() string {
+	return Catalog.Format(msgs.locale, "mqImageOnly", nil)
+}
+
+// MqRemove says "Remove from queue"
+// in the language the app shows.
+func MqRemove() string { return In(i18n.Locale()).MqRemove() }
+
+// MqRemove says "Remove from queue"
+// in the language of msgs.
+func (msgs Messages) MqRemove() string {
+	return Catalog.Format(msgs.locale, "mqRemove", nil)
+}
+
+// MqSaveEdit says "Save changes (Enter)"
+// in the language the app shows.
+func MqSaveEdit() string { return In(i18n.Locale()).MqSaveEdit() }
+
+// MqSaveEdit says "Save changes (Enter)"
+// in the language of msgs.
+func (msgs Messages) MqSaveEdit() string {
+	return Catalog.Format(msgs.locale, "mqSaveEdit", nil)
+}
+
+// MqMoveToTop says "Move to top"
+// in the language the app shows.
+func MqMoveToTop() string { return In(i18n.Locale()).MqMoveToTop() }
+
+// MqMoveToTop says "Move to top"
+// in the language of msgs.
+func (msgs Messages) MqMoveToTop() string {
+	return Catalog.Format(msgs.locale, "mqMoveToTop", nil)
+}
+
+// MqEdit says "Edit"
+// in the language the app shows.
+func MqEdit() string { return In(i18n.Locale()).MqEdit() }
+
+// MqEdit says "Edit"
+// in the language of msgs.
+func (msgs Messages) MqEdit() string {
+	return Catalog.Format(msgs.locale, "mqEdit", nil)
+}
+
+// MqDelete says "Delete"
+// in the language the app shows.
+func MqDelete() string { return In(i18n.Locale()).MqDelete() }
+
+// MqDelete says "Delete"
+// in the language of msgs.
+func (msgs Messages) MqDelete() string {
+	return Catalog.Format(msgs.locale, "mqDelete", nil)
+}
+
+// MqMore says "More"
+// in the language the app shows.
+func MqMore() string { return In(i18n.Locale()).MqMore() }
+
+// MqMore says "More"
+// in the language of msgs.
+func (msgs Messages) MqMore() string {
+	return Catalog.Format(msgs.locale, "mqMore", nil)
+}
+
+// MqUploadedImage says "Uploaded image"
+// in the language the app shows.
+func MqUploadedImage() string { return In(i18n.Locale()).MqUploadedImage() }
+
+// MqUploadedImage says "Uploaded image"
+// in the language of msgs.
+func (msgs Messages) MqUploadedImage() string {
+	return Catalog.Format(msgs.locale, "mqUploadedImage", nil)
+}
+
+// MqReorderError says "Failed to reorder messages"
+// in the language the app shows.
+func MqReorderError() string { return In(i18n.Locale()).MqReorderError() }
+
+// MqReorderError says "Failed to reorder messages"
+// in the language of msgs.
+func (msgs Messages) MqReorderError() string {
+	return Catalog.Format(msgs.locale, "mqReorderError", nil)
+}
+
+// MqEditError says "Failed to edit message"
+// in the language the app shows.
+func MqEditError() string { return In(i18n.Locale()).MqEditError() }
+
+// MqEditError says "Failed to edit message"
+// in the language of msgs.
+func (msgs Messages) MqEditError() string {
+	return Catalog.Format(msgs.locale, "mqEditError", nil)
+}
+
+// MqRemoveError says "Failed to remove message from queue"
+// in the language the app shows.
+func MqRemoveError() string { return In(i18n.Locale()).MqRemoveError() }
+
+// MqRemoveError says "Failed to remove message from queue"
+// in the language of msgs.
+func (msgs Messages) MqRemoveError() string {
+	return Catalog.Format(msgs.locale, "mqRemoveError", nil)
+}
+
 // NoticeAgentWarning says "Agent warning"
 // in the language the app shows.
 func NoticeAgentWarning() string { return In(i18n.Locale()).NoticeAgentWarning() }

@@ -62,11 +62,11 @@ func (a *App) showQuickReplies(v *session.View) bool {
 	if v == nil || v.Status != "live" || v.Working || a.sending || a.sendError != "" || len(a.attachments) > 0 || strings.TrimSpace(a.draft) != "" {
 		return false
 	}
+	if len(v.Queue) > 0 {
+		return false
+	}
 	talked := false
 	for _, e := range v.Entries {
-		if e.Queued {
-			return false
-		}
 		talked = talked || e.Role == "user" || e.Role == "assistant"
 	}
 	return talked && len(a.quickReplyList()) > 0

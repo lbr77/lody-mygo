@@ -95,8 +95,8 @@ func TestFollowLocal(t *testing.T) {
 	if _, err := daemon.Import(data); err != nil {
 		t.Fatal(err)
 	}
-	if v := project(daemon, "live", ""); !v.Entries[len(v.Entries)-1].Queued {
-		t.Fatalf("the daemon's view %+v", v.Entries)
+	if v := project(daemon, "live", ""); len(v.Queue) != 1 || !v.Queue[0].Queued {
+		t.Fatalf("the daemon's view %+v", v.Queue)
 	}
 
 	// The daemon going away puts the replica back to syncing.
