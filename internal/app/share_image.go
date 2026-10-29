@@ -30,6 +30,7 @@ type shareImage struct {
 	ids        map[string]bool
 	anchor     string
 	drag       *shareDrag
+	press      *sharePress // the last press a row saw, until it begins a gesture
 	// What the conversation's rows reported this frame: their boxes,
 	// for the gesture to find the row under the pointer, and the
 	// viewport they show in.
@@ -77,6 +78,13 @@ type shareDrag struct {
 	ox, oy float32
 	origin ui.Point
 	moved  bool
+}
+
+// sharePress is a press a row saw pass: its keys and where it fell.
+type sharePress struct {
+	row           string
+	shift, invert bool
+	x, y          float32
 }
 
 type shareRowBox struct {
@@ -447,37 +455,53 @@ func (a *App) shareRow(c *ui.Context, p *palette, entries []session.Entry, i int
 	}
 	wrap.Children(func() {
 		ui.Row(c.Key("content")).FillWidth().Padding(0, 0, 0, 28).Children(func() { row() })
-		// The box sits in the unmoved column's gutter, 12 below the top.
-		ui.Box(c.Key("mark")).Absolute().Left(0).Right(0).Top(12).PassThrough().Children(func() {
-			a.column(c, "mark-column", func() {
-				shareCheckbox(c, p, picked).Margin(0, 0, 0, -columnGutter)
-			})
-		})
+		// The box sits in the unmoved column's gutter, 12 below the top:
+		// at the left of the centred column, alone, so nothing around it
+		// lies over the message's controls.
+		colW := box.W
+		if !a.wideMode {
+			colW = min(colW, columnWidth+2*columnGutter)
+		}
+		shareCheckbox(c, p, picked).Absolute().Top(12).Left(max(0, (box.W-colW)/2))
 		edge()
-		cover := ui.Box(c.Key("cover")).Absolute().Left(0).Top(0).Right(0).Bottom(0).Focusable().
-			Role(ui.RoleCheckBox).Checked(picked).Label(locales.ShareImgSelectMessage())
-		cover.HandleInput(func(ev ui.InputEvent) bool {
-			switch ev.Kind {
-			case ui.InputPointerDown:
-				if ev.Button != 0 {
-					return false
-				}
-				st.begin(id, ev.Mods&ui.Shift != 0, ev.Mods&(ui.Cmd|ui.Ctrl) != 0, ev.X, ev.Y)
-				return true
-			case ui.InputPointerMove:
-				return st.drag != nil
-			case ui.InputPointerUp:
-				st.drag = nil
-				return true
-			case ui.InputKeyDown:
-				if ev.Key == ui.KeySpace && ev.Mods == 0 {
-					st.toggle(id)
-					return true
-				}
-			}
-			return false
-		})
 	})
+	// The row takes a press itself only where nothing in it does: a button
+	// or a link in a message works as itself, as Lody lets them through.
+	// The press is only watched as it passes, for its keys and its point.
+	// A click too quick to have shown as a press picks as a press would.
+	wrap.Focusable().Role(ui.RoleCheckBox).Checked(picked).Label(locales.ShareImgSelectMessage()).OnClick(func() {
+		if st.drag == nil && st.press != nil && st.press.row == id {
+			pr := st.press
+			st.press = nil
+			st.begin(id, pr.shift, pr.invert, pr.x, pr.y)
+			st.drag = nil
+		}
+	})
+	wrap.HandleInput(func(ev ui.InputEvent) bool {
+		switch ev.Kind {
+		case ui.InputPointerDown:
+			if ev.Button == 0 {
+				st.press = &sharePress{row: id, shift: ev.Mods&ui.Shift != 0, invert: ev.Mods&(ui.Cmd|ui.Ctrl) != 0, x: ev.X, y: ev.Y}
+			}
+		case ui.InputPointerUp:
+			// The press it began, which followed the pointer, lets go.
+			if st.drag != nil && st.drag.row == id {
+				st.drag = nil
+			}
+		case ui.InputKeyDown:
+			if ev.Key == ui.KeySpace && ev.Mods == 0 {
+				st.toggle(id)
+				return true
+			}
+		}
+		return false
+	})
+	// The row itself pressed, not a control in it: the gesture begins.
+	if wrap.Pressed() && st.drag == nil && st.press != nil && st.press.row == id {
+		pr := st.press
+		st.press = nil
+		st.begin(id, pr.shift, pr.invert, pr.x, pr.y)
+	}
 	return wrap
 }
 

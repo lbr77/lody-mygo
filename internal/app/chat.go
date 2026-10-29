@@ -229,6 +229,9 @@ func (a *App) conversation(c *ui.Context, p *palette, sess *catalog.Session) {
 	}
 	entries := foldNotices(v.Entries)
 	a.outline.prepare(a.selected)
+	// While messages are picked to share, their text is not selected: a
+	// press on it picks the message, as Lody's rows are select-none.
+	a.md.ShareSelection = a.shareImg.picking(a.selected)
 	a.indexFind(entries)
 	a.revealFind()
 	defer func() {
@@ -456,7 +459,10 @@ func (a *App) userMessage(c *ui.Context, p *palette, e session.Entry, firstQueue
 				a.findRing(p, e.ID+"/user", bubble)
 				bubble.Children(func() {
 					body := a.userBody(c, p, e, text)
-					body.Selectable().FontSize(a.convFontSize()).LineHeight(24.0 / 14).TextColor(p.Reading)
+					if !a.shareImg.picking(a.selected) {
+						body.Selectable()
+					}
+					body.FontSize(a.convFontSize()).LineHeight(24.0 / 14).TextColor(p.Reading)
 					if long && !open {
 						body.MaxLines(8)
 					}

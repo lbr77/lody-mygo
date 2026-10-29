@@ -443,3 +443,33 @@ func TestShareImageEdgeScroll(t *testing.T) {
 		t.Fatalf("picked %d: %q", n, picks(a))
 	}
 }
+
+// While picking, a control inside a message works as itself, as Lody lets
+// buttons and links through; a press on the words picks the message.
+func TestShareImageControls(t *testing.T) {
+	a := shareFixture()
+	tt := snap(t, a, "share-controls-before", false, nil)
+	a.startShareImage("s1")
+	tt.Frame()
+	tt.Advance(300 * time.Millisecond)
+	tt.Frame()
+	text, _ := tt.Find("Port the Flock catalog runtime from the iOS client to Go, without a web view.")
+	tt.ClickAt(text.X+text.W/2, text.Y+text.H/2)
+	tt.Frame()
+	if picks(a) != "u1" {
+		t.Fatalf("a press on the words picked %q", picks(a))
+	}
+	r, ok := tt.Find("Worked for 1m 12s")
+	if !ok {
+		t.Fatalf("no disclosure in %q", tt.Texts())
+	}
+	// On the words: the disclosure is as wide as they are.
+	tt.ClickAt(r.X+20, r.Y+r.H/2)
+	tt.Frame()
+	if !a.expanded["r1/work"] {
+		t.Errorf("the disclosure did not open: %v", a.expanded)
+	}
+	if picks(a) != "u1" {
+		t.Errorf("pressing a control picked its message: %q", picks(a))
+	}
+}
