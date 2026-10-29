@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestParsePR(t *testing.T) {
@@ -29,7 +30,12 @@ func TestClient(t *testing.T) {
 		case strings.HasSuffix(r.URL.Path, "/pulls/12") && r.Method == http.MethodGet:
 			json.NewEncoder(w).Encode(map[string]any{"number": 12, "title": "Port", "state": "open", "draft": true, "head": map[string]any{"ref": "feat", "sha": "abc"}, "base": map[string]any{"ref": "main"}})
 		case strings.Contains(r.URL.Path, "/check-runs"):
-			json.NewEncoder(w).Encode(map[string]any{"check_runs": []any{map[string]any{"name": "test", "status": "completed", "conclusion": "failure"}}})
+			json.NewEncoder(w).Encode(map[string]any{"check_runs": []any{
+				map[string]any{"id": 7, "name": "test", "status": "completed", "conclusion": "failure", "app": map[string]any{"name": "GitHub Actions"},
+					"started_at": "2026-10-01T10:00:00Z", "completed_at": "2026-10-01T10:01:05Z"},
+				map[string]any{"id": 5, "name": "test", "status": "completed", "conclusion": "success", "app": map[string]any{"name": "GitHub Actions"}},
+				map[string]any{"id": 6, "name": "lint", "status": "in_progress", "app": nil},
+			}})
 		case strings.HasSuffix(r.URL.Path, "/merge"):
 			w.WriteHeader(405)
 			json.NewEncoder(w).Encode(map[string]any{"message": "Pull Request is not mergeable"})
@@ -44,16 +50,40 @@ func TestClient(t *testing.T) {
 	if err != nil || pr.Status() != "draft" || pr.Head.SHA != "abc" {
 		t.Fatalf("%+v %v", pr, err)
 	}
+	// The latest attempt of each check, by name.
 	runs, err := c.CheckRuns(context.Background(), "o/r", "abc")
-	if err != nil || len(runs) != 1 || !runs[0].Failed() {
+	if err != nil || len(runs) != 2 || runs[0].Name != "lint" || runs[1].ID != 7 || !runs[1].Failed() || runs[1].App.Name != "GitHub Actions" ||
+		runs[1].CompletedAt.Sub(*runs[1].StartedAt) != 65*time.Second || runs[0].StartedAt != nil {
 		t.Fatalf("%+v %v", runs, err)
 	}
-	err = c.Merge(context.Background(), "o/r", 12, "squash")
+	err = c.Merge(context.Background(), "o/r", 12, "squash", "abc")
 	if !IsStatus(err, 405) || !strings.Contains(err.Error(), "not mergeable") {
 		t.Fatalf("merge: %v", err)
 	}
-	if calls[2] != `PUT /repos/o/r/pulls/12/merge Bearer tok {"merge_method":"squash"}` {
+	if calls[2] != `PUT /repos/o/r/pulls/12/merge Bearer tok {"merge_method":"squash","sha":"abc"}` {
 		t.Fatalf("call %q", calls[2])
+	}
+}
+
+// A pull request is a draft while GitHub reports its mergeability as a
+// draft's, and stays pending ready for review until GitHub has worked
+// its mergeability out.
+func TestPullRequestStatus(t *testing.T) {
+	yes := true
+	for _, c := range []struct {
+		pr      PullRequest
+		status  string
+		pending bool
+	}{
+		{PullRequest{State: "open", MergeableState: "draft"}, "draft", true},
+		{PullRequest{State: "open", Mergeable: &yes, MergeableState: "clean"}, "open", false},
+		{PullRequest{State: "open", MergeableState: "unknown", Mergeable: &yes}, "open", true},
+		{PullRequest{State: "open"}, "open", true},
+		{PullRequest{State: "closed", Merged: true, Draft: true}, "merged", false},
+	} {
+		if c.pr.Status() != c.status || c.pr.ReadyForReviewPending() != c.pending {
+			t.Errorf("%+v: %s %v", c.pr, c.pr.Status(), c.pr.ReadyForReviewPending())
+		}
 	}
 }
 

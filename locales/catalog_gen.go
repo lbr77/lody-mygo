@@ -20482,3 +20482,159 @@ func MqPreviewImage(name string) string { return In(i18n.Locale()).MqPreviewImag
 func (msgs Messages) MqPreviewImage(name string) string {
 	return Catalog.Format(msgs.locale, "mqPreviewImage", map[string]any{"name": name})
 }
+
+// InfoFixCiErrors says "Fix CI Errors"
+// in the language the app shows.
+func InfoFixCiErrors() string { return In(i18n.Locale()).InfoFixCiErrors() }
+
+// InfoFixCiErrors says "Fix CI Errors"
+// in the language of msgs.
+func (msgs Messages) InfoFixCiErrors() string {
+	return Catalog.Format(msgs.locale, "infoFixCiErrors", nil)
+}
+
+// InfoResolveConflicts says "Resolve Conflicts"
+// in the language the app shows.
+func InfoResolveConflicts() string { return In(i18n.Locale()).InfoResolveConflicts() }
+
+// InfoResolveConflicts says "Resolve Conflicts"
+// in the language of msgs.
+func (msgs Messages) InfoResolveConflicts() string {
+	return Catalog.Format(msgs.locale, "infoResolveConflicts", nil)
+}
+
+// InfoMarkingReady says "Marking…"
+// in the language the app shows.
+func InfoMarkingReady() string { return In(i18n.Locale()).InfoMarkingReady() }
+
+// InfoMarkingReady says "Marking…"
+// in the language of msgs.
+func (msgs Messages) InfoMarkingReady() string {
+	return Catalog.Format(msgs.locale, "infoMarkingReady", nil)
+}
+
+// InfoChooseMergeMethod says "Choose merge method"
+// in the language the app shows.
+func InfoChooseMergeMethod() string { return In(i18n.Locale()).InfoChooseMergeMethod() }
+
+// InfoChooseMergeMethod says "Choose merge method"
+// in the language of msgs.
+func (msgs Messages) InfoChooseMergeMethod() string {
+	return Catalog.Format(msgs.locale, "infoChooseMergeMethod", nil)
+}
+
+// InfoMergeCommit says "Create a merge commit"
+// in the language the app shows.
+func InfoMergeCommit() string { return In(i18n.Locale()).InfoMergeCommit() }
+
+// InfoMergeCommit says "Create a merge commit"
+// in the language of msgs.
+func (msgs Messages) InfoMergeCommit() string {
+	return Catalog.Format(msgs.locale, "infoMergeCommit", nil)
+}
+
+// InfoMergeSquash says "Squash and merge"
+// in the language the app shows.
+func InfoMergeSquash() string { return In(i18n.Locale()).InfoMergeSquash() }
+
+// InfoMergeSquash says "Squash and merge"
+// in the language of msgs.
+func (msgs Messages) InfoMergeSquash() string {
+	return Catalog.Format(msgs.locale, "infoMergeSquash", nil)
+}
+
+// InfoMergeRebase says "Rebase and merge"
+// in the language the app shows.
+func InfoMergeRebase() string { return In(i18n.Locale()).InfoMergeRebase() }
+
+// InfoMergeRebase says "Rebase and merge"
+// in the language of msgs.
+func (msgs Messages) InfoMergeRebase() string {
+	return Catalog.Format(msgs.locale, "infoMergeRebase", nil)
+}
+
+// InfoCiChecks says "CI checks"
+// in the language the app shows.
+func InfoCiChecks() string { return In(i18n.Locale()).InfoCiChecks() }
+
+// InfoCiChecks says "CI checks"
+// in the language of msgs.
+func (msgs Messages) InfoCiChecks() string {
+	return Catalog.Format(msgs.locale, "infoCiChecks", nil)
+}
+
+// InfoFixCiFetchError says "Failed to load the failed CI checks"
+// in the language the app shows.
+func InfoFixCiFetchError() string { return In(i18n.Locale()).InfoFixCiFetchError() }
+
+// InfoFixCiFetchError says "Failed to load the failed CI checks"
+// in the language of msgs.
+func (msgs Messages) InfoFixCiFetchError() string {
+	return Catalog.Format(msgs.locale, "infoFixCiFetchError", nil)
+}
+
+// InfoFixCiNoFailures says "No failing CI checks were found"
+// in the language the app shows.
+func InfoFixCiNoFailures() string { return In(i18n.Locale()).InfoFixCiNoFailures() }
+
+// InfoFixCiNoFailures says "No failing CI checks were found"
+// in the language of msgs.
+func (msgs Messages) InfoFixCiNoFailures() string {
+	return Catalog.Format(msgs.locale, "infoFixCiNoFailures", nil)
+}
+
+// InfoFixCiSendError says "Failed to send the CI fix request"
+// in the language the app shows.
+func InfoFixCiSendError() string { return In(i18n.Locale()).InfoFixCiSendError() }
+
+// InfoFixCiSendError says "Failed to send the CI fix request"
+// in the language of msgs.
+func (msgs Messages) InfoFixCiSendError() string {
+	return Catalog.Format(msgs.locale, "infoFixCiSendError", nil)
+}
+
+// InfoReadyStillDraft says "GitHub is still reporting this pull request as a draft. Try again in a moment."
+// in the language the app shows.
+func InfoReadyStillDraft() string { return In(i18n.Locale()).InfoReadyStillDraft() }
+
+// InfoReadyStillDraft says "GitHub is still reporting this pull request as a draft. Try again in a moment."
+// in the language of msgs.
+func (msgs Messages) InfoReadyStillDraft() string {
+	return Catalog.Format(msgs.locale, "infoReadyStillDraft", nil)
+}
+
+// PromptFixCiErrors says "Fix the failing CI checks for {repoFullName} pull request #{prNumber}.\n\nInspect the complete GitHub Actions/check log…"
+// in the language the app shows.
+func PromptFixCiErrors(repoFullName string, prNumber string, prUrl string, baseRef string, headRef string, headSha string, failedChecks string) string {
+	return In(i18n.Locale()).PromptFixCiErrors(repoFullName, prNumber, prUrl, baseRef, headRef, headSha, failedChecks)
+}
+
+// PromptFixCiErrors says "Fix the failing CI checks for {repoFullName} pull request #{prNumber}.\n\nInspect the complete GitHub Actions/check log…"
+// in the language of msgs.
+func (msgs Messages) PromptFixCiErrors(repoFullName string, prNumber string, prUrl string, baseRef string, headRef string, headSha string, failedChecks string) string {
+	return Catalog.Format(msgs.locale, "promptFixCiErrors", map[string]any{"repoFullName": repoFullName, "prNumber": prNumber, "prUrl": prUrl, "baseRef": baseRef, "headRef": headRef, "headSha": headSha, "failedChecks": failedChecks})
+}
+
+// PromptFixCiMoreFailures says "- …and {count} more failed checks; fetch the full list from GitHub."
+// in the language the app shows.
+func PromptFixCiMoreFailures(count int) string {
+	return In(i18n.Locale()).PromptFixCiMoreFailures(count)
+}
+
+// PromptFixCiMoreFailures says "- …and {count} more failed checks; fetch the full list from GitHub."
+// in the language of msgs.
+func (msgs Messages) PromptFixCiMoreFailures(count int) string {
+	return Catalog.Format(msgs.locale, "promptFixCiMoreFailures", map[string]any{"count": count})
+}
+
+// PromptResolveConflicts says "Resolve the merge conflicts for {repoFullName} pull request {prLabel} against its base branch.\nPR: {prUrl}\n\nInspect t…"
+// in the language the app shows.
+func PromptResolveConflicts(repoFullName string, prLabel string, prUrl string) string {
+	return In(i18n.Locale()).PromptResolveConflicts(repoFullName, prLabel, prUrl)
+}
+
+// PromptResolveConflicts says "Resolve the merge conflicts for {repoFullName} pull request {prLabel} against its base branch.\nPR: {prUrl}\n\nInspect t…"
+// in the language of msgs.
+func (msgs Messages) PromptResolveConflicts(repoFullName string, prLabel string, prUrl string) string {
+	return Catalog.Format(msgs.locale, "promptResolveConflicts", map[string]any{"repoFullName": repoFullName, "prLabel": prLabel, "prUrl": prUrl})
+}

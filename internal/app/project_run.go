@@ -202,14 +202,34 @@ func (a *App) pickMember(owner, id string) {
 
 // githubState is what a conversation's GitHub actions go by, as Lody's
 // getSessionGitHubState: the session whose pull requests they are, the
-// repository, its latest pull request, and the work not yet published.
+// repository, its latest pull request and the CI and merge state the
+// machine reports for it, and the work not yet published.
 type githubState struct {
 	source     *catalog.Session
 	repo       string
 	pr         *catalog.PullRequest
+	state      catalog.PRState
 	dirty      bool
 	unpushed   bool
 	hasChanges bool // uncommitted, or committed changes to base a PR on
+	// status is the pull request's state as its live details have it,
+	// over the one recorded; "" until they are read.
+	status string
+	// canMutate is whether GitHub can be acted on directly, Lody's
+	// githubIntegration capability: Ready for review and Merge need it.
+	canMutate bool
+}
+
+// prStatus is the pull request's state: its live details', else the one
+// recorded.
+func (st githubState) prStatus() string {
+	if st.status != "" {
+		return st.status
+	}
+	if st.pr == nil {
+		return ""
+	}
+	return st.pr.Status
 }
 
 // latestPRFor is a session's latest pull request of one repository: a
@@ -227,20 +247,27 @@ func latestPRFor(s *catalog.Session, repo string) *catalog.PullRequest {
 // sessionGitHub is s's GitHub state. In a project of several it is the
 // owner's, for the member chosen: that one's repository and pull request,
 // none for a member without a GitHub remote, so it never borrows the
-// first member's; otherwise s's own.
+// first member's; otherwise s's own. This client always works through
+// Lody Cloud, whose GitHub integration acts on pull requests.
 func (a *App) sessionGitHub(s *catalog.Session) githubState {
 	owner, _, picked := a.projectMembers(s)
 	if owner == nil {
-		st := githubState{source: s, repo: legacyRepo(s), pr: s.LatestPR(), dirty: s.WorkspaceDirty, unpushed: s.WorkspaceUnpushed}
+		st := githubState{source: s, repo: legacyRepo(s), pr: s.LatestPR(), dirty: s.WorkspaceDirty, unpushed: s.WorkspaceUnpushed, canMutate: true}
 		st.hasChanges = st.dirty || s.DiffAdd+s.DiffDel > 0
+		if st.pr != nil {
+			st.state = s.PRState[st.pr.URL]
+		}
 		return st
 	}
-	st := githubState{source: owner, dirty: owner.WorkspaceDirty, unpushed: owner.WorkspaceUnpushed}
+	st := githubState{source: owner, dirty: owner.WorkspaceDirty, unpushed: owner.WorkspaceUnpushed, canMutate: true}
 	if picked != nil {
 		st.repo = strings.TrimSpace(picked.repo)
 	}
 	if st.repo != "" {
 		st.pr = latestPRFor(owner, st.repo)
+	}
+	if st.pr != nil {
+		st.state = owner.PRState[st.pr.URL]
 	}
 	// The totals come only when every member reports its own; a member's
 	// committed changes still count.
@@ -538,23 +565,49 @@ func withProjectGroupPrScope(prompt string) string { return prompt + "\n\n" + pr
 type infoAction struct {
 	id, label string
 	disabled  bool
+	merging   bool // Merge, while it merges
 }
 
 // infoActionIDs are the actions the bar offers, as Lody's
-// resolveSessionInfoBarGitHubActionIds, for those the agent carries out:
-// none without a repository or while the agent works. With no pull
-// request yet, Create PR and, behind it, Create Draft PR once there are
-// changes, and Commit & Push for uncommitted ones; with an open one,
-// Commit & Push while work is unpublished.
+// resolveSessionInfoBarGitHubActionIds, highest first: none without a
+// repository or while the agent works. With no pull request yet, Create
+// PR and, behind it, Create Draft PR once there are changes, and Commit &
+// Push for uncommitted ones. With an open one, Commit & Push first while
+// work is unpublished, uncommitted or unpushed, as it alone keeps the
+// pull request's head the author's latest; then for a draft, Ready for
+// review; otherwise Resolve Conflicts while it conflicts with its base,
+// Fix CI Errors while CI fails, and Merge once it merges cleanly with
+// green, or no, CI. None once it is merged or closed.
 func infoActionIDs(st githubState, busy bool) []string {
 	if st.repo == "" || busy {
 		return nil
 	}
 	if st.pr != nil {
-		if st.pr.Status == "merged" || st.pr.Status == "closed" || !st.dirty && !st.unpushed {
+		status := st.prStatus()
+		if status == "merged" || status == "closed" {
 			return nil
 		}
-		return []string{"commit-and-push"}
+		var ids []string
+		if st.dirty || st.unpushed {
+			ids = append(ids, "commit-and-push")
+		}
+		if status == "draft" {
+			// A draft has no merge to clear; readiness is the user's call.
+			if st.canMutate {
+				ids = append(ids, "ready-for-review")
+			}
+			return ids
+		}
+		if st.state.Merge == "d" {
+			ids = append(ids, "resolve-conflicts")
+		}
+		if st.state.CI == "f" || st.state.CI == "e" {
+			ids = append(ids, "fix-ci-errors")
+		}
+		if st.canMutate && st.state.Ready() {
+			ids = append(ids, "merge")
+		}
+		return ids
 	}
 	var ids []string
 	if st.hasChanges {
@@ -584,44 +637,79 @@ func (a *App) infoPrompt(s *catalog.Session, id string) string {
 	return scope(locales.PromptCommitAndPush())
 }
 
-// infoActions are the bar's actions for s, labeled; disabled until the
-// conversation has loaded.
-func (a *App) infoActions(s *catalog.Session) []infoAction {
+// infoActions are the bar's actions for s, labeled, as gs and the pull
+// request's live details offer them. Those that send the agent a turn
+// wait, disabled, until the conversation has loaded, and Fix CI Errors
+// while it reads the checks; Ready for review and Merge wait on the
+// pull request's details, Ready for review saying Marking… while it
+// marks.
+func (a *App) infoActions(s *catalog.Session, gs githubState, live *prPanel) []infoAction {
 	v := a.view
 	if a.selected != s.ID {
 		v = nil
 	}
 	busy := a.sending || s.Working() || v != nil && v.Working
 	ready := v != nil && v.Status == "live"
+	detailed := live != nil && live.pr != nil && !live.blocked
 	var out []infoAction
-	for _, id := range infoActionIDs(a.sessionGitHub(s), busy) {
-		label := locales.InfoCommitAndPush()
+	for _, id := range infoActionIDs(gs, busy) {
+		act := infoAction{id: id, disabled: !ready && sessionTurnAction(id)}
 		switch id {
 		case "create-pr":
-			label = locales.InfoCreatePr()
+			act.label = locales.InfoCreatePr()
 		case "create-draft-pr":
-			label = locales.InfoCreateDraftPr()
+			act.label = locales.InfoCreateDraftPr()
+		case "commit-and-push":
+			act.label = locales.InfoCommitAndPush()
+		case "resolve-conflicts":
+			act.label = locales.InfoResolveConflicts()
+		case "fix-ci-errors":
+			act.label = locales.InfoFixCiErrors()
+			act.disabled = act.disabled || live != nil && live.fixing
+		case "ready-for-review":
+			marking := live != nil && live.busy == "ready"
+			act.label = locales.PrTabReadyForReview()
+			if marking {
+				act.label = locales.InfoMarkingReady()
+			}
+			act.disabled = !detailed || marking
+		case "merge":
+			act.merging = live != nil && live.busy == "merge"
+			act.label = mergeMethodLabel(a.mergeMethod())
+			if act.merging {
+				act.label = locales.PrTabMerging()
+			}
+			act.disabled = !detailed
 		}
-		out = append(out, infoAction{id: id, label: label, disabled: !ready})
+		out = append(out, act)
 	}
 	return out
 }
 
 // dispatchPrompt sends text to the open conversation as a turn of its
-// own, leaving what the composer holds as it was.
-func (a *App) dispatchPrompt(text string) {
+// own, leaving what the composer holds as it was; it reports whether the
+// turn went out.
+func (a *App) dispatchPrompt(text string) bool {
 	draft, files := a.draft, a.attachments
 	a.draft, a.attachments = text, nil
+	was := a.sending
 	a.send()
 	a.draft, a.attachments = draft, files
+	return !was && a.sending
 }
 
 // infoActionsView ends the bar's context with its actions, as Lody's
 // ContextChipActions: the first a text button on a tinted pill, the rest
 // behind a chevron on its end that opens a menu above it, aligned to its
-// end. The pill yields first when the bar is squeezed.
+// end, Merge there a plain row merging the way chosen. The pill yields
+// first when the bar is squeezed. Merge leading is its split button.
 func (a *App) infoActionsView(c *ui.Context, p *palette, s *catalog.Session, actions []infoAction) {
 	if len(actions) == 0 {
+		return
+	}
+	sessionID := s.ID
+	if actions[0].id == "merge" {
+		a.mergeButton(c, p, sessionID, actions[0])
 		return
 	}
 	tint := p.Text.Alpha(0.05)
@@ -629,12 +717,7 @@ func (a *App) infoActionsView(c *ui.Context, p *palette, s *catalog.Session, act
 		tint = p.Secondary.Alpha(0.08)
 	}
 	hoverTint := tint
-	sessionID := s.ID
-	run := func(id string) {
-		if sess := a.catalog.Session(sessionID); sess != nil && a.selected == sessionID {
-			a.dispatchPrompt(a.infoPrompt(sess, id))
-		}
-	}
+	run := func(id string) { a.runInfoAction(sessionID, id) }
 	first := actions[0]
 	ui.Row(c.Key("info-actions")).Height(20).MinWidth(48).Shrink(8).Radius(6).Clip().Background(tint).AlignItems(ui.Stretch).Children(func() {
 		b := ui.ButtonBase(c.Key("primary")).Padding(0, 6).MinWidth(0).Shrink(1).Cursor(ui.CursorPointer).Label(first.label).Disabled(first.disabled).Transition(twFade)
@@ -682,7 +765,7 @@ func (a *App) infoActionsView(c *ui.Context, p *palette, s *catalog.Session, act
 			m := &lodyMenu{c: c, p: p, open: &st.open, sub: &st.sub, rowH: 28}
 			panel.Children(func() {
 				for _, act := range actions[1:] {
-					if m.item(act.id, nil, act.label, menuItem{disabled: act.disabled, bare: true}) {
+					if m.item(act.id, nil, act.label, menuItem{disabled: act.disabled || act.merging, bare: true}) {
 						run(act.id)
 					}
 				}

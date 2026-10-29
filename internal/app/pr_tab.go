@@ -38,14 +38,18 @@ type prPanel struct {
 	files       []github.File
 	filesErr    string
 	view        string // conversation or changes
-	method      string // merge, squash or rebase
-	busy        string // the operation under way
+	busy        string // the operation under way: merge, ready, close, …
 	opErr       string
 	draft       string // the comment being written
 	open        map[string]bool
 	blocked     bool // the repository's identity can't be verified: operations pause
 	loadedAt    time.Time
 	identityRun bool
+	// checksAt is when the checks were last read on their own, as the
+	// info bar polls them; polling while they are read.
+	checksAt time.Time
+	polling  bool
+	fixing   bool // Fix CI Errors reading the checks before it asks
 }
 
 // prPanelFor is the panel of the pull request s describes: in a project
@@ -66,7 +70,7 @@ func (a *App) prPanelFor(s *catalog.Session) *prPanel {
 	key := s.ID + "|" + pr.URL
 	st := a.prPanels[key]
 	if st == nil {
-		st = &prPanel{repo: repo, number: n, view: "conversation", method: "merge", open: map[string]bool{}}
+		st = &prPanel{repo: repo, number: n, view: "conversation", open: map[string]bool{}}
 		a.prPanels[key] = st
 	}
 	return st
@@ -532,24 +536,42 @@ func (a *App) prMergeBox(c *ui.Context, p *palette, s *catalog.Session, st *prPa
 				if st.busy == "ready" {
 					loader(c, p).Size(13, 13)
 				}
+				// Marked as the info bar's Ready for review marks it.
 				primaryButton(c, p, locales.PrTabReadyForReview(), st.busy == "" && !st.blocked).OnClick(func() {
-					a.prAct(s, st, "ready", func(ctx context.Context, gh *github.Client) error { return gh.ReadyForReview(ctx, pr.NodeID) }, locales.PrTabReadyForReviewError())
+					st.opErr = ""
+					a.markPRReady(st, func(err error) { st.opErr = locales.PrTabReadyForReviewError() + ": " + prErrorText(err) })
 				})
 				return
 			}
 			if pr.MergeableState == "dirty" {
+				// While the conversation offers the agent's Resolve
+				// Conflicts, this sends the same prompt, as Lody's PR tab
+				// shares it with the info bar, waiting while the bar's
+				// would; otherwise GitHub's conflict editor.
+				if sel := a.catalog.Session(a.selected); sel != nil {
+					if offered, usable := a.offersInfoAction(sel, "resolve-conflicts"); offered {
+						id := sel.ID
+						b := outlineButton(c, p, nil, locales.PrTabResolveConflicts()).Disabled(!usable).OnClick(func() { a.runInfoAction(id, "resolve-conflicts") })
+						if !usable {
+							b.Opacity(0.5)
+						}
+						return
+					}
+				}
 				outlineButton(c, p, iconExternal, locales.PrTabResolveConflicts()).OnClick(func() { openExternal(pr.HTMLURL + "/conflicts") })
 				return
 			}
+			// The method is the one the info bar's Merge makes too.
 			methods := []option{{"merge", locales.PrTabMergeShortMerge()}, {"squash", locales.PrTabMergeShortSquash()}, {"rebase", locales.PrTabMergeShortRebase()}}
-			segmented(c, p, "merge-method", methods, st.method, func(m string) { st.method = m })
-			label := map[string]string{"merge": locales.PrTabMergeAction(), "squash": locales.PrTabMergeSquashAction(), "rebase": locales.PrTabMergeRebaseAction()}[st.method]
+			segmented(c, p, "merge-method", methods, a.mergeMethod(), a.setMergeMethod)
+			label := mergeMethodLabel(a.mergeMethod())
 			if st.busy == "merge" {
 				label = locales.PrTabMerging()
 			}
-			method := st.method
+			method := a.mergeMethod()
 			primaryButton(c, p, label, st.busy == "" && !st.blocked && pr.MergeableState != "blocked").FillWidth().OnClick(func() {
-				a.prAct(s, st, "merge", func(ctx context.Context, gh *github.Client) error { return gh.Merge(ctx, st.repo, st.number, method) }, locales.PrTabMergeError())
+				st.opErr = ""
+				a.mergePullRequest(st, method, func(err error) { st.opErr = locales.PrTabMergeError() + ": " + err.Error() })
 			})
 		})
 	})

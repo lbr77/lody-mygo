@@ -50,11 +50,6 @@ func prMark(c *ui.Context, p *palette, s *catalog.Session, compact bool) bool {
 	if pr == nil {
 		return false
 	}
-	icon, hue := prTone(p, pr.Status)
-	if compact {
-		hue = hue.Mix(p.Secondary, 0.35)
-	}
-	ci := s.PRState[pr.URL].CI
 	label := prStatusLabel(pr.Status)
 	if n := pr.PRNumber(); n > 0 {
 		label = locales.PrNumbered(label, n)
@@ -63,30 +58,6 @@ func prMark(c *ui.Context, p *palette, s *catalog.Session, compact bool) bool {
 	if compact {
 		size = 12
 	}
-	ui.Box(c.Key("pr")).Size(size+2, size+2).Shrink(0).Label(label).Children(func() {
-		ui.Icon(c, icon).Size(size, size).TextColor(hue)
-		var verdict *ui.SVG
-		var ink ui.Color
-		switch ci {
-		case "s":
-			verdict, ink = iconCheck, p.Success
-		case "f", "e":
-			verdict, ink = iconX, p.Danger
-		case "x":
-			verdict, ink = iconDot, p.Warning
-		case "p":
-			ink = p.Warning
-		default:
-			return
-		}
-		// The badge sits on a disc of the ground, as Lody masks the glyph.
-		ui.Row(c).Absolute().Right(-1).Bottom(-1).Size(9, 9).Radius(5).Background(p.Ground).Justify(ui.Center).AlignItems(ui.Center).Children(func() {
-			if verdict == nil {
-				ui.Box(c).Size(5, 5).Radius(3).Background(ink)
-				return
-			}
-			ui.Icon(c, verdict).Size(8, 8).TextColor(ink)
-		})
-	})
+	prGlyph(c, p, "pr", pr.Status, s.PRState[pr.URL].CI, label, size, compact, p.Ground)
 	return true
 }
