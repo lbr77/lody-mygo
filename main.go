@@ -13,7 +13,13 @@ import (
 func main() {
 	// Not "Lody": the official desktop app owns that data directory.
 	mygo.App.SetName("Lody Native")
+	// One instance, as Lody's: a lody:// link that starts another
+	// (Windows, Linux) reaches this one's OnOpenURL instead.
+	if !mygo.App.RequestSingleInstanceLock() {
+		return
+	}
 	a := app.New()
+	mygo.App.OnOpenURL(a.OpenURL)
 	mygo.App.WhenReady(func() {
 		win := mygo.NewWindow(mygo.WindowOptions{
 			Title:                "Lody",

@@ -86,6 +86,8 @@ func (a *App) mainView(c *ui.Context, p *palette) {
 	a.shareImageDialog(c, p)
 	a.filePreviewDialog(c, p)
 	a.scheduleSendDialog(c, p)
+	// Deleting a session for good asks here, whichever menu asked.
+	a.deleteDialog(c, p)
 	a.stuckBanner(c, p)
 	a.paletteView(c, p)
 	if !a.settingsOpen {

@@ -62,6 +62,14 @@ func parseSessionLink(raw string) (sessionLink, bool) {
 	return link, true
 }
 
+// ParseSessionLink reads raw, the whole of it, as a link to a session, as
+// Lody's parseSessionLink: the session it names, its workspace where it
+// says, and a legacy link's child tab, which new links name directly.
+func ParseSessionLink(raw string) (session, workspace, tab string, ok bool) {
+	l, ok := parseSessionLink(raw)
+	return l.session, l.workspace, l.tab, ok
+}
+
 // String is the link in Lody's portable form, or "" when it cannot be one.
 func (l sessionLink) String() string {
 	for _, id := range []string{l.session, l.workspace, l.tab} {

@@ -227,12 +227,16 @@ func saveShareSecret(key string, version float64, secret string) error {
 	return nil
 }
 
+// linkSecret reads the secret a share's link is built with; tests swap
+// it for the keychain.
+var linkSecret = readShareSecret
+
 // shareLink is the share's link, when this device holds its secret.
 func (a *App) shareLink(e *shareEntry) string {
 	if e == nil || e.Status != "active" || a.account == nil || e.PublisherUserID != a.account.User.ID {
 		return ""
 	}
-	secret := readShareSecret(a.shareSecretKey(e.ShareID), e.CredentialVersion)
+	secret := linkSecret(a.shareSecretKey(e.ShareID), e.CredentialVersion)
 	if secret == "" {
 		return ""
 	}
@@ -387,7 +391,7 @@ func (a *App) publishShare(job *shareJob) {
 			job.result = &shareResult{url, copied}
 			job.pending, job.selected, job.progress = nil, nil, 0
 			job.entry = &updated
-			a.refetchKey("shares")
+			a.refetchShares()
 			if job.confirm != nil {
 				a.refetchKey("share-requests/" + job.root)
 			}
@@ -441,7 +445,7 @@ func (a *App) resetShareLink(job *shareJob) {
 			}
 			updated.SourceIDs, updated.SelectedSourceIDs, updated.CanManage, updated.CanRevoke = e.SourceIDs, e.SelectedSourceIDs, e.CanManage, e.CanRevoke
 			job.entry, job.result = &updated, nil
-			a.refetchKey("shares")
+			a.refetchShares()
 		})
 	}()
 }
@@ -469,7 +473,7 @@ func (a *App) revokeShare(job *shareJob) {
 				return
 			}
 			job.entry, job.result, job.pending = &updated, nil, nil
-			a.refetchKey("shares")
+			a.refetchShares()
 		})
 	}()
 }

@@ -4,6 +4,7 @@
   "version": "0.1.0",
   "icon": "icon.png",
   "out": "build",
+  "urlSchemes": ["lody"],
   "i18n": {
     "dir": "locales",
     "source": "en"

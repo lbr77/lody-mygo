@@ -16,7 +16,8 @@ import (
 // and where the chat is (its repository, branch or folder, each copied on
 // a click; its machine and reach), then Full width, what opened it and
 // what it opened, Share, Find, the forks, Rename, the owner, sharing with
-// the team, the copies, and archiving.
+// the team, the copies, and archiving; then, as Lody's iOS app offers,
+// deleting it without archiving it first.
 
 // headerMenu builds the menu of the open chat s, drawn as Lody's: 290
 // wide at most, its rows 32 high.
@@ -253,6 +254,7 @@ func (a *App) headerMenuRows(m *lodyMenu, s catalog.Session) {
 	if m.item("archive", iconArchive, locales.HmArchive(), menuItem{}) {
 		a.archiveSession(s.ID)
 	}
+	a.deleteItem(m, s)
 }
 
 // menuSwitch is the small switch at a menu row's end.
@@ -332,7 +334,8 @@ func (a *App) rowMenu(key string) *contextMenu {
 
 // sessionRowMenu is a sidebar chat's menu, as Lody's row context menu: what
 // opened it, pinning, unread, renaming; its link, branch and sharing; its
-// pull request; archiving. An archived chat restores, or goes for good.
+// pull request; archiving. An archived chat restores, or goes for good;
+// one that isn't goes for good too, as Lody's iOS app lets it.
 func (a *App) sessionRowMenu(m *lodyMenu, s catalog.Session) {
 	id := s.ID
 	if s.OpenedBySessionID != "" {
@@ -405,4 +408,5 @@ func (a *App) sessionRowMenu(m *lodyMenu, s catalog.Session) {
 	if m.item("archive", iconArchive, locales.CtxArchive(), menuItem{}) {
 		a.archiveSession(id)
 	}
+	a.deleteItem(m, s)
 }

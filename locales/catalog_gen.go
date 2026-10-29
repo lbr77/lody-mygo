@@ -1711,6 +1711,26 @@ func (msgs Messages) ArchiveDeleteCode() string {
 	return Catalog.Format(msgs.locale, "archiveDeleteCode", nil)
 }
 
+// SessionsDeleteSession says "Delete session"
+// in the language the app shows.
+func SessionsDeleteSession() string { return In(i18n.Locale()).SessionsDeleteSession() }
+
+// SessionsDeleteSession says "Delete session"
+// in the language of msgs.
+func (msgs Messages) SessionsDeleteSession() string {
+	return Catalog.Format(msgs.locale, "sessionsDeleteSession", nil)
+}
+
+// SessionDeleteBusy says "Stop this session and any running child tabs before deleting them."
+// in the language the app shows.
+func SessionDeleteBusy() string { return In(i18n.Locale()).SessionDeleteBusy() }
+
+// SessionDeleteBusy says "Stop this session and any running child tabs before deleting them."
+// in the language of msgs.
+func (msgs Messages) SessionDeleteBusy() string {
+	return Catalog.Format(msgs.locale, "sessionDeleteBusy", nil)
+}
+
 // SettingsPersonal says "Personal"
 // in the language the app shows.
 func SettingsPersonal() string { return In(i18n.Locale()).SettingsPersonal() }
@@ -3341,6 +3361,36 @@ func SharesConfirmRevoke() string { return In(i18n.Locale()).SharesConfirmRevoke
 // in the language of msgs.
 func (msgs Messages) SharesConfirmRevoke() string {
 	return Catalog.Format(msgs.locale, "sharesConfirmRevoke", nil)
+}
+
+// SharesOpenPublished says "Open published page"
+// in the language the app shows.
+func SharesOpenPublished() string { return In(i18n.Locale()).SharesOpenPublished() }
+
+// SharesOpenPublished says "Open published page"
+// in the language of msgs.
+func (msgs Messages) SharesOpenPublished() string {
+	return Catalog.Format(msgs.locale, "sharesOpenPublished", nil)
+}
+
+// SharesPrevious says "Previous"
+// in the language the app shows.
+func SharesPrevious() string { return In(i18n.Locale()).SharesPrevious() }
+
+// SharesPrevious says "Previous"
+// in the language of msgs.
+func (msgs Messages) SharesPrevious() string {
+	return Catalog.Format(msgs.locale, "sharesPrevious", nil)
+}
+
+// SharesNext says "Next"
+// in the language the app shows.
+func SharesNext() string { return In(i18n.Locale()).SharesNext() }
+
+// SharesNext says "Next"
+// in the language of msgs.
+func (msgs Messages) SharesNext() string {
+	return Catalog.Format(msgs.locale, "sharesNext", nil)
 }
 
 // Usage24h says "24 hours"
@@ -10509,6 +10559,26 @@ func (msgs Messages) UsageReasoning() string {
 	return Catalog.Format(msgs.locale, "usageReasoning", nil)
 }
 
+// UsageBreakdownTitle says "Token breakdown"
+// in the language the app shows.
+func UsageBreakdownTitle() string { return In(i18n.Locale()).UsageBreakdownTitle() }
+
+// UsageBreakdownTitle says "Token breakdown"
+// in the language of msgs.
+func (msgs Messages) UsageBreakdownTitle() string {
+	return Catalog.Format(msgs.locale, "usageBreakdownTitle", nil)
+}
+
+// UsageOther says "Other"
+// in the language the app shows.
+func UsageOther() string { return In(i18n.Locale()).UsageOther() }
+
+// UsageOther says "Other"
+// in the language of msgs.
+func (msgs Messages) UsageOther() string {
+	return Catalog.Format(msgs.locale, "usageOther", nil)
+}
+
 // ShareTitle says "Share"
 // in the language the app shows.
 func ShareTitle() string { return In(i18n.Locale()).ShareTitle() }
@@ -12623,6 +12693,86 @@ func CmdURLCopied() string { return In(i18n.Locale()).CmdURLCopied() }
 // in the language of msgs.
 func (msgs Messages) CmdURLCopied() string {
 	return Catalog.Format(msgs.locale, "cmdURLCopied", nil)
+}
+
+// DeepLinkOpenFailed says "Unable to open this conversation."
+// in the language the app shows.
+func DeepLinkOpenFailed() string { return In(i18n.Locale()).DeepLinkOpenFailed() }
+
+// DeepLinkOpenFailed says "Unable to open this conversation."
+// in the language of msgs.
+func (msgs Messages) DeepLinkOpenFailed() string {
+	return Catalog.Format(msgs.locale, "deepLinkOpenFailed", nil)
+}
+
+// DeepLinkWorkspaceUnavailable says "This workspace is unavailable in this version of Lody. Open the link in the installation that owns it."
+// in the language the app shows.
+func DeepLinkWorkspaceUnavailable() string { return In(i18n.Locale()).DeepLinkWorkspaceUnavailable() }
+
+// DeepLinkWorkspaceUnavailable says "This workspace is unavailable in this version of Lody. Open the link in the installation that owns it."
+// in the language of msgs.
+func (msgs Messages) DeepLinkWorkspaceUnavailable() string {
+	return Catalog.Format(msgs.locale, "deepLinkWorkspaceUnavailable", nil)
+}
+
+// DeepLinkDefaultHandler says "Open Lody links with this app"
+// in the language the app shows.
+func DeepLinkDefaultHandler() string { return In(i18n.Locale()).DeepLinkDefaultHandler() }
+
+// DeepLinkDefaultHandler says "Open Lody links with this app"
+// in the language of msgs.
+func (msgs Messages) DeepLinkDefaultHandler() string {
+	return Catalog.Format(msgs.locale, "deepLinkDefaultHandler", nil)
+}
+
+// DeepLinkDefaultHandlerHelp says "Choose which installed version opens links from other apps."
+// in the language the app shows.
+func DeepLinkDefaultHandlerHelp() string { return In(i18n.Locale()).DeepLinkDefaultHandlerHelp() }
+
+// DeepLinkDefaultHandlerHelp says "Choose which installed version opens links from other apps."
+// in the language of msgs.
+func (msgs Messages) DeepLinkDefaultHandlerHelp() string {
+	return Catalog.Format(msgs.locale, "deepLinkDefaultHandlerHelp", nil)
+}
+
+// DeepLinkDefaultHandlerPending says "If prompted, confirm your choice in system settings."
+// in the language the app shows.
+func DeepLinkDefaultHandlerPending() string { return In(i18n.Locale()).DeepLinkDefaultHandlerPending() }
+
+// DeepLinkDefaultHandlerPending says "If prompted, confirm your choice in system settings."
+// in the language of msgs.
+func (msgs Messages) DeepLinkDefaultHandlerPending() string {
+	return Catalog.Format(msgs.locale, "deepLinkDefaultHandlerPending", nil)
+}
+
+// DeepLinkDefaultHandlerFailed says "Unable to change the default app. Choose it in system settings."
+// in the language the app shows.
+func DeepLinkDefaultHandlerFailed() string { return In(i18n.Locale()).DeepLinkDefaultHandlerFailed() }
+
+// DeepLinkDefaultHandlerFailed says "Unable to change the default app. Choose it in system settings."
+// in the language of msgs.
+func (msgs Messages) DeepLinkDefaultHandlerFailed() string {
+	return Catalog.Format(msgs.locale, "deepLinkDefaultHandlerFailed", nil)
+}
+
+// DeepLinkDefaultHandlerActive says "Default app"
+// in the language the app shows.
+func DeepLinkDefaultHandlerActive() string { return In(i18n.Locale()).DeepLinkDefaultHandlerActive() }
+
+// DeepLinkDefaultHandlerActive says "Default app"
+// in the language of msgs.
+func (msgs Messages) DeepLinkDefaultHandlerActive() string {
+	return Catalog.Format(msgs.locale, "deepLinkDefaultHandlerActive", nil)
+}
+
+// DeepLinkMakeDefault says "Set as default"
+// in the language the app shows.
+func DeepLinkMakeDefault() string { return In(i18n.Locale()).DeepLinkMakeDefault() }
+
+// DeepLinkMakeDefault says "Set as default"
+// in the language of msgs.
+func (msgs Messages) DeepLinkMakeDefault() string {
+	return Catalog.Format(msgs.locale, "deepLinkMakeDefault", nil)
 }
 
 // CmdBranchCopied says "Current branch name copied to clipboard"

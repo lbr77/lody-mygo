@@ -350,24 +350,102 @@ type publishedShare struct {
 	CanRevoke         bool    `json:"canRevoke"`
 }
 
+// sharesPerPage is how many shares sessionSharing:list returns at a time,
+// as Lody's apps ask.
+const sharesPerPage = 20
+
+// sharesPage is a page of the published shares, and where the next one
+// starts.
+type sharesPage struct {
+	Page           []publishedShare `json:"page"`
+	IsDone         bool             `json:"isDone"`
+	ContinueCursor string           `json:"continueCursor"`
+}
+
+// sharePaging is how far the published shares were paged: the cursors of
+// the pages before the one shown, as Lody's list keeps them. No page
+// outlives a switch of workspace.
+type sharePaging struct {
+	workspace string
+	cursors   []string
+}
+
+// cursor is where the page shown starts: "" for the first.
+func (s *sharePaging) cursor() string {
+	if len(s.cursors) == 0 {
+		return ""
+	}
+	return s.cursors[len(s.cursors)-1]
+}
+
+// sharesKey is what the page of the shares from cursor is fetched as.
+func sharesKey(cursor string) string {
+	if cursor == "" {
+		return "shares"
+	}
+	return "shares/" + cursor
+}
+
+// sharesFetch is the page of the shares from cursor.
+func (a *App) sharesFetch(cursor string) *fetched {
+	convex, ws := a.convex, a.workspaceID
+	return a.fetch(sharesKey(cursor), func(ctx context.Context) (any, error) {
+		var at any
+		if cursor != "" {
+			at = cursor
+		}
+		var out sharesPage
+		err := convex.Query(ctx, "sessionSharing:list", map[string]any{"workspaceId": ws, "paginationOpts": map[string]any{"numItems": sharesPerPage, "cursor": at}}, &out)
+		return &out, err
+	})
+}
+
+// refetchShares loads the shares' pages again after one of them changed.
+func (a *App) refetchShares() {
+	prefix := a.workspaceID + "|shares"
+	for key, f := range a.fetches {
+		if (key == prefix || strings.HasPrefix(key, prefix+"/")) && f.load != nil {
+			a.reload(f, nil)
+		}
+	}
+}
+
+// pageShares moves to the page before or after the one shown, which
+// loads again if it was shown before.
+func (a *App) pageShares(next string) {
+	sp := &a.sharePages
+	if next == "" {
+		sp.cursors = sp.cursors[:max(0, len(sp.cursors)-1)]
+	} else {
+		sp.cursors = append(sp.cursors, next)
+	}
+	a.revoking, a.resetting = "", ""
+	if f := a.fetches[a.workspaceID+"|"+sharesKey(sp.cursor())]; f != nil && f.load != nil && !a.offline {
+		a.reload(f, nil)
+	}
+}
+
 // sharesPage lists the static copies of sessions published from the
-// workspace, and revokes them.
+// workspace, 20 at a time, and opens, copies, resets and revokes them.
+// As Lody's, Previous and Next show only once there is a page to go to.
 func (a *App) sharesPage(c *ui.Context, p *palette) {
 	settingsTitle(c, p, locales.SettingsShares())
 	ui.Text(c, locales.SharesHelp()).FontSize(sizeFoot).TextColor(p.Secondary)
-	convex, ws := a.convex, a.workspaceID
-	f := a.fetch("shares", func(ctx context.Context) (any, error) {
-		var out struct {
-			Page []publishedShare `json:"page"`
-		}
-		err := convex.Query(ctx, "sessionSharing:list", map[string]any{"workspaceId": ws, "paginationOpts": map[string]any{"numItems": 50, "cursor": nil}}, &out)
-		return out.Page, err
-	})
+	sp := &a.sharePages
+	if sp.workspace != a.workspaceID {
+		*sp = sharePaging{workspace: a.workspaceID}
+	}
+	f := a.sharesFetch(sp.cursor())
 	a.settingsErrorLine(c, p)
 	if !pending(c, p, f) {
 		return
 	}
-	shares, _ := f.value.([]publishedShare)
+	page, _ := f.value.(*sharesPage)
+	if page == nil {
+		page = &sharesPage{IsDone: true}
+	}
+	defer a.sharesPager(c, p, page)
+	shares := page.Page
 	if len(shares) == 0 {
 		ui.Text(c, locales.SharesNone()).FontSize(sizeFoot).TextColor(p.Tertiary)
 		return
@@ -390,9 +468,15 @@ func (a *App) sharesPage(c *ui.Context, p *palette) {
 			if a.revoking != share.ShareID && a.resetting != share.ShareID {
 				switch link := a.shareLink(entry); {
 				case link != "":
-					ghostButton(c, p, locales.ShareCopy()).Border(1, p.Border).OnClick(func() {
-						mygo.Clipboard.WriteText(link)
-						a.toast("success", locales.ShareCopied())
+					// The published page, in the browser, as Lody's
+					// management opens it; then its link.
+					ui.Row(c).Gap(6).Margin(0, 6, 0, 0).Children(func() {
+						iconButton(c, p, iconExternal, locales.SharesOpenPublished(), p.Text.Alpha(0.06)).Border(1, p.Border).
+							OnClick(func() { openExternal(link) })
+						ghostButton(c, p, locales.ShareCopy()).Border(1, p.Border).OnClick(func() {
+							writeClipboard(link)
+							a.toast("success", locales.ShareCopied())
+						})
 					})
 				case mine && share.CanManage:
 					tip(c, p, ghostButton(c, p, locales.ShareReset()).Border(1, p.Border), locales.SharesLinkOtherDevice()).OnClick(func() { a.resetting = share.ShareID })
@@ -420,11 +504,32 @@ func (a *App) sharesPage(c *ui.Context, p *palette) {
 				b := ghostButton(c, p, locales.SharesConfirmRevoke()).Border(1, p.Danger)
 				b.OnClick(func() {
 					a.revoking = ""
-					a.cloudCall("mutation", "sessionSharing:revoke", map[string]any{"shareId": share.ShareID, "expectedRevision": share.Revision}, nil, "shares", "", nil)
+					a.cloudCall("mutation", "sessionSharing:revoke", map[string]any{"shareId": share.ShareID, "expectedRevision": share.Revision}, nil, sharesKey(sp.cursor()), "", nil)
 				})
 			})
 		})
 	}
+}
+
+// sharesPager is Previous and Next under the shares, at the end: shown
+// once there is a page before or after this one, each disabled where
+// there is none, as Lody's.
+func (a *App) sharesPager(c *ui.Context, p *palette, page *sharesPage) {
+	sp := &a.sharePages
+	first := len(sp.cursors) == 0
+	if first && page.IsDone {
+		return
+	}
+	button := func(label string, disabled bool, move func()) {
+		if b := secondaryButton(c, p, label, disabled); !disabled {
+			b.OnClick(move)
+		}
+	}
+	ui.Row(c.Key("shares-pager")).FillWidth().Gap(8).Justify(ui.End).Margin(4, 0, 0, 0).Children(func() {
+		button(locales.SharesPrevious(), first, func() { a.pageShares("") })
+		next := page.ContinueCursor
+		button(locales.SharesNext(), page.IsDone || next == "" || next == sp.cursor(), func() { a.pageShares(next) })
+	})
 }
 
 func formatBytes(n float64) string {

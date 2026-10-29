@@ -74,6 +74,23 @@ func outlineButton(c *ui.Context, p *palette, icon *ui.SVG, label string) ui.Ele
 	return b
 }
 
+// secondaryButton is Lody's small secondary button: the ghost button's
+// label, bordered. Disabled, it dims and neither fills nor points; its
+// caller leaves its click unset.
+func secondaryButton(c *ui.Context, p *palette, label string, disabled bool) ui.Element {
+	b := ui.ButtonBase(c.Key(label)).Height(28).Radius(8).Padding(0, 10).Border(1, p.Border).Label(label).Disabled(disabled).Transition(colorFade)
+	if disabled {
+		b.Opacity(0.5)
+	} else {
+		b.Cursor(ui.CursorPointer)
+		if b.Hovered() {
+			b.Background(p.Text.Alpha(0.06))
+		}
+	}
+	b.Children(func() { ui.Text(c, label).FontSize(sizeSub).FontWeight(500).TextColor(p.Secondary) })
+	return b
+}
+
 // card is a bordered list whose rows are divided.
 func card(c *ui.Context, p *palette, fn func()) {
 	ui.Column(c).FillWidth().Radius(10).Border(1, p.Border).Background(p.Canvas).Clip().Dividers(1, p.Border).Children(fn)
