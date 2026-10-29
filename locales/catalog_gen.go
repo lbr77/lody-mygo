@@ -20362,3 +20362,123 @@ func SidebarGroupReorder() string { return In(i18n.Locale()).SidebarGroupReorder
 func (msgs Messages) SidebarGroupReorder() string {
 	return Catalog.Format(msgs.locale, "sidebarGroupReorder", nil)
 }
+
+// ImagePreview says "Image preview"
+// in the language the app shows.
+func ImagePreview() string { return In(i18n.Locale()).ImagePreview() }
+
+// ImagePreview says "Image preview"
+// in the language of msgs.
+func (msgs Messages) ImagePreview() string {
+	return Catalog.Format(msgs.locale, "imagePreview", nil)
+}
+
+// ImagePreviewClose says "Close image preview"
+// in the language the app shows.
+func ImagePreviewClose() string { return In(i18n.Locale()).ImagePreviewClose() }
+
+// ImagePreviewClose says "Close image preview"
+// in the language of msgs.
+func (msgs Messages) ImagePreviewClose() string {
+	return Catalog.Format(msgs.locale, "imagePreviewClose", nil)
+}
+
+// ImagePreviewPrevious says "Previous image"
+// in the language the app shows.
+func ImagePreviewPrevious() string { return In(i18n.Locale()).ImagePreviewPrevious() }
+
+// ImagePreviewPrevious says "Previous image"
+// in the language of msgs.
+func (msgs Messages) ImagePreviewPrevious() string {
+	return Catalog.Format(msgs.locale, "imagePreviewPrevious", nil)
+}
+
+// ImagePreviewNext says "Next image"
+// in the language the app shows.
+func ImagePreviewNext() string { return In(i18n.Locale()).ImagePreviewNext() }
+
+// ImagePreviewNext says "Next image"
+// in the language of msgs.
+func (msgs Messages) ImagePreviewNext() string {
+	return Catalog.Format(msgs.locale, "imagePreviewNext", nil)
+}
+
+// ImagePreviewZoom says "Open image in full screen"
+// in the language the app shows.
+func ImagePreviewZoom() string { return In(i18n.Locale()).ImagePreviewZoom() }
+
+// ImagePreviewZoom says "Open image in full screen"
+// in the language of msgs.
+func (msgs Messages) ImagePreviewZoom() string {
+	return Catalog.Format(msgs.locale, "imagePreviewZoom", nil)
+}
+
+// ImagePreviewCopy says "Copy Image"
+// in the language the app shows.
+func ImagePreviewCopy() string { return In(i18n.Locale()).ImagePreviewCopy() }
+
+// ImagePreviewCopy says "Copy Image"
+// in the language of msgs.
+func (msgs Messages) ImagePreviewCopy() string {
+	return Catalog.Format(msgs.locale, "imagePreviewCopy", nil)
+}
+
+// ImagePreviewSave says "Save Image As…"
+// in the language the app shows.
+func ImagePreviewSave() string { return In(i18n.Locale()).ImagePreviewSave() }
+
+// ImagePreviewSave says "Save Image As…"
+// in the language of msgs.
+func (msgs Messages) ImagePreviewSave() string {
+	return Catalog.Format(msgs.locale, "imagePreviewSave", nil)
+}
+
+// ImagePreviewCopied says "Image copied"
+// in the language the app shows.
+func ImagePreviewCopied() string { return In(i18n.Locale()).ImagePreviewCopied() }
+
+// ImagePreviewCopied says "Image copied"
+// in the language of msgs.
+func (msgs Messages) ImagePreviewCopied() string {
+	return Catalog.Format(msgs.locale, "imagePreviewCopied", nil)
+}
+
+// ImagePreviewSaved says "Image saved"
+// in the language the app shows.
+func ImagePreviewSaved() string { return In(i18n.Locale()).ImagePreviewSaved() }
+
+// ImagePreviewSaved says "Image saved"
+// in the language of msgs.
+func (msgs Messages) ImagePreviewSaved() string {
+	return Catalog.Format(msgs.locale, "imagePreviewSaved", nil)
+}
+
+// ImagePreviewCopyFailed says "Could not copy the image"
+// in the language the app shows.
+func ImagePreviewCopyFailed() string { return In(i18n.Locale()).ImagePreviewCopyFailed() }
+
+// ImagePreviewCopyFailed says "Could not copy the image"
+// in the language of msgs.
+func (msgs Messages) ImagePreviewCopyFailed() string {
+	return Catalog.Format(msgs.locale, "imagePreviewCopyFailed", nil)
+}
+
+// ImagePreviewSaveFailed says "Could not save the image"
+// in the language the app shows.
+func ImagePreviewSaveFailed() string { return In(i18n.Locale()).ImagePreviewSaveFailed() }
+
+// ImagePreviewSaveFailed says "Could not save the image"
+// in the language of msgs.
+func (msgs Messages) ImagePreviewSaveFailed() string {
+	return Catalog.Format(msgs.locale, "imagePreviewSaveFailed", nil)
+}
+
+// MqPreviewImage says "Preview {name}"
+// in the language the app shows.
+func MqPreviewImage(name string) string { return In(i18n.Locale()).MqPreviewImage(name) }
+
+// MqPreviewImage says "Preview {name}"
+// in the language of msgs.
+func (msgs Messages) MqPreviewImage(name string) string {
+	return Catalog.Format(msgs.locale, "mqPreviewImage", map[string]any{"name": name})
+}

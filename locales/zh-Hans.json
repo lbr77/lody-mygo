@@ -2019,5 +2019,17 @@
   "promptPrUpkeep": "PR 创建后请保持它是最新的：在本对话的每一轮结束前，提交所有未提交的改动并推送到 PR 分支，让 PR head 始终对应你最新的工作。把这当作默认行为，不必每次都先询问。只有在用户打断你，或要求做别的事情从而覆盖了这一点时才跳过——这种情况下请说明原因，而不是默默推送。",
   "promptCreatePrOrigin": "（此消息由 Lody 的「**创建 PR**」按钮发送）",
   "promptCreateDraftPrOrigin": "（此消息由 Lody 的「**创建草稿 PR**」按钮发送）",
-  "sidebarGroupReorder": "调整项目顺序"
+  "sidebarGroupReorder": "调整项目顺序",
+  "imagePreview": "图片预览",
+  "imagePreviewClose": "关闭图片预览",
+  "imagePreviewPrevious": "上一张图片",
+  "imagePreviewNext": "下一张图片",
+  "imagePreviewZoom": "全屏查看图片",
+  "imagePreviewCopy": "复制图片",
+  "imagePreviewSave": "图片另存为…",
+  "imagePreviewCopied": "已复制图片",
+  "imagePreviewSaved": "图片已保存",
+  "imagePreviewCopyFailed": "复制图片失败",
+  "imagePreviewSaveFailed": "保存图片失败",
+  "mqPreviewImage": "预览 {name}"
 }

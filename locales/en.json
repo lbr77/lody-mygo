@@ -4064,5 +4064,24 @@
   "promptPrUpkeep": "After the PR exists, keep it current: at the end of every turn in this conversation, commit any outstanding changes and push them to the PR branch before you finish, so the PR head always matches your latest work. Treat this as the default rather than something to ask about each time. Skip it only when the user interrupts you or asks for something that overrides it — in that case say so instead of pushing silently.",
   "promptCreatePrOrigin": "(Sent by the **Create PR** button in Lody.)",
   "promptCreateDraftPrOrigin": "(Sent by the **Create Draft PR** button in Lody.)",
-  "sidebarGroupReorder": "Reorder project"
+  "sidebarGroupReorder": "Reorder project",
+  "imagePreview": "Image preview",
+  "imagePreviewClose": "Close image preview",
+  "imagePreviewPrevious": "Previous image",
+  "imagePreviewNext": "Next image",
+  "imagePreviewZoom": "Open image in full screen",
+  "imagePreviewCopy": "Copy Image",
+  "imagePreviewSave": "Save Image As…",
+  "imagePreviewCopied": "Image copied",
+  "imagePreviewSaved": "Image saved",
+  "imagePreviewCopyFailed": "Could not copy the image",
+  "imagePreviewSaveFailed": "Could not save the image",
+  "mqPreviewImage": "Preview {name}",
+  "@mqPreviewImage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  }
 }

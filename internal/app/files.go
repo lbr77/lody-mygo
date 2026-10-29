@@ -64,6 +64,7 @@ type filePreview struct {
 	mime    string
 	size    int
 	image   *ui.Bitmap
+	picture *remoteImage // the image, with its bytes, for the viewer
 	code    *editor.State
 	asText  bool // a Markdown file shown as its source
 
@@ -434,6 +435,9 @@ func (a *App) openFile(in *inspectState, s collab.Session, file string) {
 				return
 			}
 			fp.size, fp.mime, fp.image = res.SizeBytes, res.MimeType, bm
+			if bm != nil {
+				fp.picture = &remoteImage{bitmap: bm, data: data, mime: res.MimeType}
+			}
 			fp.binary = res.Kind == "binary" || !utf8.Valid(data)
 			if !fp.binary {
 				fp.text = string(data)
@@ -507,8 +511,25 @@ func (a *App) fileView(c *ui.Context, p *palette, in *inspectState, s collab.Ses
 	case fp.err != "":
 		panelStatus(c, p, false, locales.PanelCantOpen(), fp.err)
 	case fp.image != nil:
-		ui.Column(c).Grow(1).MinHeight(0).Padding(16).Center().Children(func() {
-			ui.Image(c, fp.image).Fill().Fit(ui.Contain)
+		// Lody's SessionFileImagePreview: the image at its size, or as large
+		// as fits, which opens the full-screen viewer, its gestures those of
+		// the conversation's pictures.
+		owner := "file/" + fp.path
+		a.holdViewer(owner)
+		ui.Column(c).Grow(1).MinHeight(0).Padding(12).Center().Children(func() {
+			zoom := ui.ButtonBase(c.Key("zoom")).Fill().Center().Label(locales.ImagePreviewZoom()).Cursor(ui.CursorPointer) // Lody's zoom-in
+			zoom.OnClick(func() {
+				a.openViewer(fp.path, owner, func(string) []viewerItem {
+					if in.preview != fp || fp.picture == nil {
+						return nil
+					}
+					return []viewerItem{{key: fp.path, fileName: fp.path, picture: func() *remoteImage { return fp.picture }}}
+				})
+			})
+			zoom.Children(func() {
+				w, h := fp.image.Size()
+				ui.Image(c, fp.image).Fill().MaxWidth(float32(w)).MaxHeight(float32(h)).Fit(ui.Contain)
+			})
 		})
 	case fp.binary:
 		panelStatus(c, p, false, locales.PanelBinary(), firstNonEmpty(fp.mime, ""))
