@@ -1260,5 +1260,10 @@
   "cmdCycleModel": "循环切换模型",
   "cmdURLCopied": "会话链接已复制到剪贴板",
   "cmdBranchCopied": "当前分支名已复制到剪贴板",
-  "keyUnbound": "未绑定"
+  "keyUnbound": "未绑定",
+  "cmdSearchCurrent": "在当前对话中查找",
+  "findInSession": "在会话中查找",
+  "findPosition": "{current} / {total}",
+  "findPrevious": "上一个结果",
+  "findNext": "下一个结果"
 }

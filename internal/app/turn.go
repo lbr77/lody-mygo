@@ -124,11 +124,15 @@ func (a *App) block(c *ui.Context, p *palette, e session.Entry, b block, last bo
 	switch {
 	case b.text:
 		it := b.items[0]
+		id := e.ID + "/" + it.ID
+		src := a.findMarkdown(id, it.Text)
+		var md ui.Element
 		if live {
-			markdown.Stream(c.Key(it.ID), it.Text, &a.md)
+			md = markdown.Stream(c.Key(it.ID), src, &a.md)
 		} else {
-			markdown.View(c.Key(it.ID), it.Text, &a.md)
+			md = markdown.View(c.Key(it.ID), src, &a.md)
 		}
+		a.findRing(p, id, md)
 	default:
 		a.activity(c, p, e, b, live)
 	}
@@ -198,7 +202,8 @@ func (a *App) thought(c *ui.Context, p *palette, key string, it session.Item, li
 		shown := disclosure(c.Key(key), p, label, open, live, func() { a.expanded[key] = !a.expanded[key] })
 		unfold(c, shown, open, func() {
 			ui.Column(c).Padding(0, 0, 4, 0).Children(func() {
-				markdown.View(c.Key(it.ID), it.Text, &a.mdMuted)
+				id := strings.SplitN(key, "/", 2)[0] + "/" + it.ID
+				a.findRing(p, id, markdown.View(c.Key(it.ID), a.findMarkdown(id, it.Text), &a.mdMuted))
 			})
 		})
 	})

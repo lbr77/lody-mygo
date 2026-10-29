@@ -109,7 +109,8 @@ type App struct {
 	history          []string // sessions shown, for Back and Forward
 	histPos          int
 	palette          paletteState
-	surf, surfNext   surface // what the view offers the commands: the last frame's, and this one's
+	find             findState // find in the conversation
+	surf, surfNext   surface   // what the view offers the commands: the last frame's, and this one's
 	zen              zenState
 	focusComposer    bool              // the composer takes the focus as it builds
 	showAll          map[string]bool   // projects listing every session
@@ -538,6 +539,9 @@ func applyAppearance(choice string) {
 
 // show switches to a session and follows its stream.
 func (a *App) show(id string) {
+	if id != a.selected {
+		a.closeFind()
+	}
 	a.page = ""
 	a.msgEdit = messageEdit{}
 	a.stashDraft()

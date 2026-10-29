@@ -2612,5 +2612,20 @@
   "cmdCycleModel": "Cycle Model",
   "cmdURLCopied": "Session URL copied to clipboard",
   "cmdBranchCopied": "Current branch name copied to clipboard",
-  "keyUnbound": "Unbound"
+  "keyUnbound": "Unbound",
+  "cmdSearchCurrent": "Find in Current Chat",
+  "findInSession": "Find in session",
+  "findPosition": "{current} / {total}",
+  "@findPosition": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "findPrevious": "Previous result",
+  "findNext": "Next result"
 }

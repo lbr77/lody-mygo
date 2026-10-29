@@ -219,13 +219,22 @@ func (a *App) conversation(c *ui.Context, p *palette, sess *catalog.Session) {
 	}
 	a.syncMarkdown(p)
 	entries := v.Entries
+	a.indexFind(entries)
+	a.revealFind()
+	defer func() {
+		if a.find.reveal > 0 {
+			a.find.reveal--
+			a.redraw()
+		}
+	}()
 	a.chatList.Key = func(i int) any {
 		if i < len(entries) {
 			return entries[i].ID
 		}
 		return i
 	}
-	a.chatList.FollowEnd = true
+	// Following the end would carry a search away from its result.
+	a.chatList.FollowEnd = !a.find.open
 	// What arrives glides up from below over 360ms, easing out as a cubic,
 	// as Lody scrolls to a message sent.
 	a.chatList.FollowAnimation = &chatGlide
@@ -240,6 +249,7 @@ func (a *App) conversation(c *ui.Context, p *palette, sess *catalog.Session) {
 		ui.Text(c, locales.SendToStart()).FontSize(sizeSub).TextColor(p.Secondary).Margin(ui.Auto)
 	})
 	a.bottom(c, p, sess, v)
+	a.findBar(c, p)
 }
 
 // offlinePill marks a machine that isn't connected.
@@ -365,8 +375,13 @@ func (a *App) userMessage(c *ui.Context, p *palette, e session.Entry, firstQueue
 				if e.Queued {
 					bubble.Opacity(0.7)
 				}
+				a.findRing(p, e.ID+"/user", bubble)
 				bubble.Children(func() {
-					body := ui.Text(c, text).Selectable().FontSize(sizeBody).LineHeight(24.0 / 14).TextColor(p.Reading)
+					body := ui.Text(c, text)
+					if spans, ok := a.findSpans(p, e.ID+"/user", text); ok {
+						body = ui.RichText(c, spans...)
+					}
+					body.Selectable().FontSize(sizeBody).LineHeight(24.0 / 14).TextColor(p.Reading)
 					if long && !open {
 						body.MaxLines(8)
 					}
@@ -497,6 +512,7 @@ func (a *App) syncMarkdown(p *palette) {
 	t.Rule = p.Border
 	t.QuoteBar = p.Border
 	t.QuoteText = p.Secondary
+	t.Mark = findMark(p, false)
 	a.md.Theme = t
 	// A reply streams in as Lody's Streamdown reveals it: a character at a
 	// time, nothing waiting longer than 160ms, each fading in.

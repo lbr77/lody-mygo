@@ -13,6 +13,7 @@ func lucide(body string) *ui.SVG {
 }
 
 var (
+	iconTextSearch     = lucide(`<path d="M21 6H3"/><path d="M10 12H3"/><path d="M10 18H3"/><circle cx="17" cy="15" r="3"/><path d="m21 19-1.9-1.9"/>`)
 	iconArrowLeft      = lucide(`<path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>`)
 	iconArrowDown      = lucide(`<path d="M12 5v14"/><path d="m19 12-7 7-7-7"/>`)
 	iconArrowToLine    = lucide(`<path d="M17 12H3"/><path d="m11 18 6-6-6-6"/><path d="M21 5v14"/>`)

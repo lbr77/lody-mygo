@@ -228,6 +228,8 @@ func (a *App) commands() []command {
 			run: func() { a.archiveSession(id) }},
 		command{id: "session.toggleCurrentPinned", title: locales.CmdTogglePinned(), category: catSession, keys: keyChords("Mod+Alt+p"), icon: iconPin, when: live,
 			run: func() { a.togglePinned(id) }},
+		command{id: "session.searchCurrent", title: locales.CmdSearchCurrent(), category: catSession, keys: keyChords("Mod+f"), icon: iconTextSearch, when: open,
+			run: a.openFind},
 		command{id: "session.toggleExplorerSidebar", title: locales.CmdToggleExplorer(), category: catView, keys: keyChords("Mod+Alt+b"), icon: iconPanelRight, when: open,
 			run: a.togglePanel},
 		command{id: "session.newTabOrTerminal", title: locales.CmdNewTabOrTerminal(), category: catSession, keys: keyChords("Alt+n", "Mod+t"), icon: iconPlus, when: open,

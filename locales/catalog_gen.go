@@ -12714,3 +12714,55 @@ func KeyUnbound() string { return In(i18n.Locale()).KeyUnbound() }
 func (msgs Messages) KeyUnbound() string {
 	return Catalog.Format(msgs.locale, "keyUnbound", nil)
 }
+
+// CmdSearchCurrent says "Find in Current Chat"
+// in the language the app shows.
+func CmdSearchCurrent() string { return In(i18n.Locale()).CmdSearchCurrent() }
+
+// CmdSearchCurrent says "Find in Current Chat"
+// in the language of msgs.
+func (msgs Messages) CmdSearchCurrent() string {
+	return Catalog.Format(msgs.locale, "cmdSearchCurrent", nil)
+}
+
+// FindInSession says "Find in session"
+// in the language the app shows.
+func FindInSession() string { return In(i18n.Locale()).FindInSession() }
+
+// FindInSession says "Find in session"
+// in the language of msgs.
+func (msgs Messages) FindInSession() string {
+	return Catalog.Format(msgs.locale, "findInSession", nil)
+}
+
+// FindPosition says "{current} / {total}"
+// in the language the app shows.
+func FindPosition(current int, total int) string {
+	return In(i18n.Locale()).FindPosition(current, total)
+}
+
+// FindPosition says "{current} / {total}"
+// in the language of msgs.
+func (msgs Messages) FindPosition(current int, total int) string {
+	return Catalog.Format(msgs.locale, "findPosition", map[string]any{"current": current, "total": total})
+}
+
+// FindPrevious says "Previous result"
+// in the language the app shows.
+func FindPrevious() string { return In(i18n.Locale()).FindPrevious() }
+
+// FindPrevious says "Previous result"
+// in the language of msgs.
+func (msgs Messages) FindPrevious() string {
+	return Catalog.Format(msgs.locale, "findPrevious", nil)
+}
+
+// FindNext says "Next result"
+// in the language the app shows.
+func FindNext() string { return In(i18n.Locale()).FindNext() }
+
+// FindNext says "Next result"
+// in the language of msgs.
+func (msgs Messages) FindNext() string {
+	return Catalog.Format(msgs.locale, "findNext", nil)
+}
