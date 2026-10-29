@@ -147,7 +147,9 @@ func bottomColumnFull(c *ui.Context, full bool, fn func()) {
 // infoBar shows where the session runs: its machine, project, branch and
 // changes. In a project of several, its Repositories follow the machine,
 // as Lody's cluster has them, and the project, branch and changes are
-// the member chosen there's. Its GitHub actions end it.
+// the member chosen there's. Its pull request and the checks' verdict
+// lead the context, as Lody's stage has them, and its GitHub actions end
+// it.
 func (a *App) infoBar(c *ui.Context, p *palette, s *catalog.Session) {
 	bar := ui.Row(c).Height(32).Radius(8).Border(0.5, p.Text.Alpha(0.1)).Background(p.Composer).Padding(0, 8, 0, 4).Gap(6).AlignItems(ui.Center)
 	if !p.Dark {
@@ -155,7 +157,18 @@ func (a *App) infoBar(c *ui.Context, p *palette, s *catalog.Session) {
 	}
 	ctx := a.infoContext(s)
 	owner, members, picked := a.projectMembers(s)
-	actions := a.infoActions(s)
+	gs, live := a.infoGitHub(s)
+	if live != nil && live.pr == nil && live.err == "" && !live.loading {
+		a.loadPR(gs.source, live)
+	}
+	a.pollPRChecks(c, live)
+	actions := a.infoActions(s, gs, live)
+	hasPR := gs.pr != nil && gs.repo != ""
+	var runs []ciRun
+	if live != nil {
+		runs = ciRuns(live.checks)
+	}
+	wide := bar.Bounds().W >= 420
 	bar.Children(func() {
 		ui.Row(c).Height(24).Padding(0, 6).Radius(6).Gap(4).AlignItems(ui.Center).Shrink(0).Children(func() {
 			ui.Icon(c, iconMonitor).Size(14, 14).TextColor(p.Secondary)
@@ -167,8 +180,14 @@ func (a *App) infoBar(c *ui.Context, p *palette, s *catalog.Session) {
 		if len(members) > 0 {
 			a.membersChip(c, p, bar, owner, members, picked)
 		}
-		if ctx.name != "" || ctx.branch != "" {
+		if ctx.name != "" || ctx.branch != "" || hasPR {
 			ui.Box(c).Size(1, 14).Background(p.SideMuted.Alpha(0.25)).Shrink(0)
+		}
+		if hasPR {
+			a.infoPRPill(c, p, gs.prStatus(), ciCompact(runs, gs.state.CI), gs.pr.URL, gs.pr.PRNumber(), wide)
+			if wide {
+				a.infoCIPill(c, p, s.ID, runs)
+			}
 		}
 		if ctx.name != "" {
 			ui.Icon(c, ctx.icon).Size(14, 14).TextColor(p.Secondary)

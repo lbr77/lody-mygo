@@ -146,17 +146,32 @@ type PullRequest struct {
 }
 
 // Status is the pull request's state as Lody names it: open, draft,
-// merged or closed.
+// merged or closed. A draft is one GitHub marks as such, or whose
+// mergeability it reports as a draft's, as Lody's isDraftPr.
 func (pr *PullRequest) Status() string {
 	switch {
 	case pr.Merged:
 		return "merged"
 	case pr.State == "closed":
 		return "closed"
-	case pr.Draft:
+	case pr.Draft || pr.MergeableState == "draft":
 		return "draft"
 	}
 	return "open"
+}
+
+// ReadyForReviewPending is whether GitHub has yet to settle the pull
+// request out of draft, as Lody's
+// isPullRequestReadyForReviewTransitionPending: still a draft, or open
+// while its mergeability is still being worked out.
+func (pr *PullRequest) ReadyForReviewPending() bool {
+	switch pr.Status() {
+	case "merged", "closed":
+		return false
+	case "draft":
+		return true
+	}
+	return pr.Mergeable == nil || pr.MergeableState == "unknown"
 }
 
 func (c *Client) PullRequest(ctx context.Context, repo string, n int) (*PullRequest, error) {
@@ -169,11 +184,16 @@ func (c *Client) PullRequest(ctx context.Context, repo string, n int) (*PullRequ
 
 // CheckRun is a CI check on a commit.
 type CheckRun struct {
-	ID         int64  `json:"id"`
-	Name       string `json:"name"`
-	Status     string `json:"status"`     // queued, in_progress, completed
-	Conclusion string `json:"conclusion"` // success, failure, neutral, cancelled, skipped, timed_out, action_required
-	HTMLURL    string `json:"html_url"`
+	ID          int64      `json:"id"`
+	Name        string     `json:"name"`
+	Status      string     `json:"status"`     // queued, in_progress, completed
+	Conclusion  string     `json:"conclusion"` // success, failure, neutral, cancelled, skipped, timed_out, action_required, stale
+	HTMLURL     string     `json:"html_url"`
+	StartedAt   *time.Time `json:"started_at"`
+	CompletedAt *time.Time `json:"completed_at"`
+	App         struct {
+		Name string `json:"name"`
+	} `json:"app"`
 }
 
 // Failed is whether the check failed.
@@ -188,12 +208,38 @@ func (r CheckRun) Failed() bool {
 // Running is whether the check is still going.
 func (r CheckRun) Running() bool { return r.Status != "completed" }
 
+// CheckRuns are the checks on a commit as Lody's githubFetchCheckRuns
+// reads them: the latest attempt of each, in the order of their names.
 func (c *Client) CheckRuns(ctx context.Context, repo, sha string) ([]CheckRun, error) {
 	var out struct {
 		CheckRuns []CheckRun `json:"check_runs"`
 	}
 	err := c.do(ctx, http.MethodGet, fmt.Sprintf("%s/commits/%s/check-runs?per_page=100", repoPath(repo), url.PathEscape(sha)), nil, &out)
-	return out.CheckRuns, err
+	return LatestCheckRuns(out.CheckRuns), err
+}
+
+// LatestCheckRuns keeps the latest attempt of each check, by its app and
+// name, as Lody's selectLatestCheckRuns: a re-run supersedes the run it
+// repeats. They come in the order of their names.
+func LatestCheckRuns(runs []CheckRun) []CheckRun {
+	if len(runs) == 0 {
+		return runs
+	}
+	at := map[string]int{}
+	var out []CheckRun
+	for _, r := range runs {
+		key := r.App.Name + "\x00" + r.Name
+		if i, ok := at[key]; ok {
+			if r.ID > out[i].ID {
+				out[i] = r
+			}
+			continue
+		}
+		at[key] = len(out)
+		out = append(out, r)
+	}
+	sort.SliceStable(out, func(i, j int) bool { return out[i].Name < out[j].Name })
+	return out
 }
 
 // Review is a review of the pull request.
@@ -251,9 +297,15 @@ func (c *Client) Files(ctx context.Context, repo string, n int) ([]File, error) 
 	return all, nil
 }
 
-// Merge merges the pull request: merge, squash or rebase.
-func (c *Client) Merge(ctx context.Context, repo string, n int, method string) error {
-	return c.do(ctx, http.MethodPut, fmt.Sprintf("%s/pulls/%d/merge", repoPath(repo), n), map[string]any{"merge_method": method}, nil)
+// Merge merges the pull request: merge, squash or rebase. With sha, the
+// head Lody read just before, GitHub refuses if the head has moved since,
+// as Lody's githubMergePullRequest asks.
+func (c *Client) Merge(ctx context.Context, repo string, n int, method, sha string) error {
+	body := map[string]any{"merge_method": method}
+	if sha != "" {
+		body["sha"] = sha
+	}
+	return c.do(ctx, http.MethodPut, fmt.Sprintf("%s/pulls/%d/merge", repoPath(repo), n), body, nil)
 }
 
 // Comment posts to the pull request's conversation.

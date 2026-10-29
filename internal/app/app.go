@@ -132,6 +132,7 @@ type App struct {
 	homeNowFocus   string               // the now list over its column, while it opens, is open or lands back
 	homeNowFx      nowFocusFx           // where its fades resume from when it reopens
 	prPanels       map[string]*prPanel  // pull request panels, by session and PR
+	prMergeMethod  string               // the merge method last chosen, the info bar's and the PR tab's; "" until read
 	plusLevel      string               // the "+" menu's level: "" or "mcp"
 	gitStates      map[string]*gitState // projects' Git, by project
 	quotaAsked     map[string]time.Time // when each provider's quota was last asked for
