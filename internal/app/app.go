@@ -111,6 +111,8 @@ type App struct {
 	history          []string // sessions shown, for Back and Forward
 	histPos          int
 	palette          paletteState
+	tier             planTier     // the workspace's plan, for the Free quota
+	quotaAnnounced   string       // the session whose closed composer was explained
 	quickReplies     []quickReply // as edited; nil for the defaults
 	quickForm        quickReplyForm
 	composerFocused  bool      // the composer had the focus last frame
@@ -684,6 +686,9 @@ func (a *App) send() {
 					a.draft, a.attachments = text, files
 				}
 				a.sendError = err.Error()
+				if strings.Contains(err.Error(), "free_session_turn_limit_reached") {
+					a.sendError = locales.SendFreeTurnLimit()
+				}
 			} else if err != nil {
 				a.sendError = locales.SentUnconfirmed()
 			}

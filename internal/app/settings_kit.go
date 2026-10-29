@@ -169,6 +169,7 @@ type confirmation struct {
 	title, body string
 	action      string
 	run         func()
+	notice      bool // only tells: one button, in ink, no cancel
 }
 
 func (a *App) confirm(title, body, action string, run func()) {
@@ -189,8 +190,14 @@ func (a *App) confirmDialog(c *ui.Context, p *palette) {
 			ui.Text(c, cf.body).FontSize(sizeSub).LineHeight(1.45).TextColor(p.Secondary)
 		}
 		ui.Row(c).Gap(8).Justify(ui.End).Padding(8, 0, 0, 0).Children(func() {
-			ghostButton(c, p, locales.Cancel()).Border(1, p.Border).OnClick(func() { cf.open = false })
-			b := ui.ButtonBase(c).Height(28).Padding(0, 12).Radius(8).Background(p.Danger).Cursor(ui.CursorPointer).Label(cf.action)
+			if !cf.notice {
+				ghostButton(c, p, locales.Cancel()).Border(1, p.Border).OnClick(func() { cf.open = false })
+			}
+			fill := p.Danger
+			if cf.notice {
+				fill = p.Text
+			}
+			b := ui.ButtonBase(c).Height(28).Padding(0, 12).Radius(8).Background(fill).Cursor(ui.CursorPointer).Label(cf.action)
 			pressable(b, 0.97)
 			run := cf.run
 			b.OnClick(func() {
@@ -198,7 +205,11 @@ func (a *App) confirmDialog(c *ui.Context, p *palette) {
 				run()
 			})
 			b.Children(func() {
-				ui.Text(c, cf.action).FontSize(sizeSub).FontWeight(500).TextColor(ui.RGB(255, 255, 255))
+				ink := ui.RGB(255, 255, 255)
+				if cf.notice {
+					ink = p.Canvas
+				}
+				ui.Text(c, cf.action).FontSize(sizeSub).FontWeight(500).TextColor(ink)
 			})
 		})
 	})

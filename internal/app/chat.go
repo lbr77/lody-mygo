@@ -72,6 +72,10 @@ func (a *App) mainView(c *ui.Context, p *palette) {
 	a.shareDialogView(c, p)
 	a.deviceAuthDialog(c, p)
 	a.paletteView(c, p)
+	if !a.settingsOpen {
+		// Settings shows its own; outside it, what the conversation asks.
+		a.confirmDialog(c, p)
+	}
 	a.toastViewport(c, p)
 }
 

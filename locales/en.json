@@ -2755,5 +2755,18 @@
   "quickReviewLabel": "Review Changes",
   "quickReviewMessage": "Review the changes from this task and check for any issues.",
   "quickCommitLabel": "Commit & Push",
-  "quickCommitMessage": "Commit and push the changes from this task."
+  "quickCommitMessage": "Commit and push the changes from this task.",
+  "freeTurnsRemaining": "{n, plural, =1{Free session · 1 message left.} other{Free session · # messages left.}}",
+  "@freeTurnsRemaining": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "freeTurnLimit": "Free session · 30-message limit reached.",
+  "freeTurnLimitTitle": "Free session limit",
+  "freeTurnLimitBody": "This Free session has reached 30 messages, so the message field is closed.",
+  "freeTurnOK": "OK",
+  "sendFreeTurnLimit": "This Free session has reached 30 user turns. The message was not sent; your draft is saved."
 }

@@ -1362,5 +1362,11 @@
   "quickReviewLabel": "检查一下",
   "quickReviewMessage": "检查一下本轮改动，看看有没有遗漏或问题。",
   "quickCommitLabel": "Commit & Push",
-  "quickCommitMessage": "提交并推送本轮修改。"
+  "quickCommitMessage": "提交并推送本轮修改。",
+  "freeTurnsRemaining": "{n, plural, other{免费会话 · 还可发送 # 条消息}}",
+  "freeTurnLimit": "免费会话 · 已达到 30 条消息上限",
+  "freeTurnLimitTitle": "免费会话已到上限",
+  "freeTurnLimitBody": "这个免费会话已达到 30 条消息上限，输入栏已关闭。",
+  "freeTurnOK": "好",
+  "sendFreeTurnLimit": "此免费会话已达到 30 轮用户对话上限。消息未发送，草稿已保存。"
 }

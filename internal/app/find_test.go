@@ -1,6 +1,7 @@
 package app
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -187,5 +188,36 @@ func TestQuickReplies(t *testing.T) {
 	}
 	if validQuickReply(quickReply{Label: strings.Repeat("x", 41), Message: "m"}) || validQuickReply(quickReply{Label: "x", Message: "  "}) {
 		t.Error("invalid quick reply accepted")
+	}
+}
+
+func TestFreeQuota(t *testing.T) {
+	a := fixture()
+	a.view.Working = false
+	a.view.Entries = a.view.Entries[:2]
+	a.tier = planTier{workspace: "w1", tier: "free", at: time.Now()}
+	for i := 0; i < 26; i++ {
+		a.view.Entries = append(a.view.Entries, session.Entry{ID: fmt.Sprint("u", i+10), Role: "user", Status: "handled", Items: []session.Item{{ID: "t", Type: "text", Text: "again"}}})
+	}
+	tt := snap(t, a, "free-quota", false, nil)
+	// 27 turns: three left.
+	if !tt.HasText("Free session · 3 messages left.") {
+		t.Fatalf("%q", tt.Texts())
+	}
+	for i := 0; i < 3; i++ {
+		a.view.Entries = append(a.view.Entries, session.Entry{ID: fmt.Sprint("v", i), Role: "user", Status: "handled"})
+	}
+	tt.Frame()
+	tt.Advance(400 * time.Millisecond)
+	tt.Frame()
+	if !tt.HasText("Free session · 30-message limit reached.") || !tt.HasText("Free session limit") || tt.HasText("Add attachment") {
+		t.Fatalf("locked: %q", tt.Texts())
+	}
+	// Plus has no quota.
+	a.tier.tier = "plus"
+	a.confirming.open = false
+	tt.Frame()
+	if tt.HasText("Free session · 30-message limit reached.") {
+		t.Fatal("quota on Plus")
 	}
 }

@@ -29,6 +29,17 @@ func (a *App) bottom(c *ui.Context, p *palette, sess *catalog.Session, v *sessio
 	}
 	working := v != nil && v.Working
 	ready := v != nil && v.Status == "live" && sess != nil
+	quota, locked := a.quota(v)
+	if locked && sess != nil {
+		// The Free quota closed the composer: say so in its place, and
+		// once in a dialog.
+		a.quotaLockedNotice(sess.ID)
+		bottomColumn(c, func() {
+			a.infoBar(c, p, sess)
+			ui.Text(c, quota).FontSize(13).TextColor(p.Secondary).Padding(10, 16)
+		})
+		return
+	}
 	hint := ""
 	if sess != nil && !a.presence.IsOnline(sess.MachineID) {
 		hint = a.machineName(sess.MachineID) + " is offline. Messages wait until it reconnects."
@@ -39,6 +50,7 @@ func (a *App) bottom(c *ui.Context, p *palette, sess *catalog.Session, v *sessio
 	}
 	a.composerBox(c, p, composerOptions{
 		sessionID: a.selected,
+		quota:     quota,
 		hint:      hint,
 		busyLabel: busyLabel,
 		canSend:   ready && !a.sending,
@@ -159,6 +171,7 @@ type composerOptions struct {
 	above       func() // between the hint and the box
 	footer      func()
 	sessionID   string // the chat the composer writes to; "" for a new one
+	quota       string // the Free quota's count-down, over the input
 }
 
 // composerBox is Lody's message box: a 16-DIP-round card with the text
@@ -188,6 +201,9 @@ func (a *App) composerBox(c *ui.Context, p *palette, o composerOptions) {
 		a.surfNext.composer = true
 		var input ui.Element
 		box.Children(func() {
+			if o.quota != "" {
+				ui.Text(c, o.quota).FontSize(13).TextColor(p.Secondary).Padding(2, 6, 0, 6)
+			}
 			a.attachmentChips(c, p)
 			ui.Box(c).FillWidth().Children(func() {
 				empty := strings.TrimSpace(a.draft) == "" && !hasFiles

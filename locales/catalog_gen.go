@@ -13738,3 +13738,63 @@ func QuickCommitMessage() string { return In(i18n.Locale()).QuickCommitMessage()
 func (msgs Messages) QuickCommitMessage() string {
 	return Catalog.Format(msgs.locale, "quickCommitMessage", nil)
 }
+
+// FreeTurnsRemaining says "{n, plural, =1{Free session · 1 message left.} other{Free session · # messages left.}}"
+// in the language the app shows.
+func FreeTurnsRemaining(n int) string { return In(i18n.Locale()).FreeTurnsRemaining(n) }
+
+// FreeTurnsRemaining says "{n, plural, =1{Free session · 1 message left.} other{Free session · # messages left.}}"
+// in the language of msgs.
+func (msgs Messages) FreeTurnsRemaining(n int) string {
+	return Catalog.Format(msgs.locale, "freeTurnsRemaining", map[string]any{"n": n})
+}
+
+// FreeTurnLimit says "Free session · 30-message limit reached."
+// in the language the app shows.
+func FreeTurnLimit() string { return In(i18n.Locale()).FreeTurnLimit() }
+
+// FreeTurnLimit says "Free session · 30-message limit reached."
+// in the language of msgs.
+func (msgs Messages) FreeTurnLimit() string {
+	return Catalog.Format(msgs.locale, "freeTurnLimit", nil)
+}
+
+// FreeTurnLimitTitle says "Free session limit"
+// in the language the app shows.
+func FreeTurnLimitTitle() string { return In(i18n.Locale()).FreeTurnLimitTitle() }
+
+// FreeTurnLimitTitle says "Free session limit"
+// in the language of msgs.
+func (msgs Messages) FreeTurnLimitTitle() string {
+	return Catalog.Format(msgs.locale, "freeTurnLimitTitle", nil)
+}
+
+// FreeTurnLimitBody says "This Free session has reached 30 messages, so the message field is closed."
+// in the language the app shows.
+func FreeTurnLimitBody() string { return In(i18n.Locale()).FreeTurnLimitBody() }
+
+// FreeTurnLimitBody says "This Free session has reached 30 messages, so the message field is closed."
+// in the language of msgs.
+func (msgs Messages) FreeTurnLimitBody() string {
+	return Catalog.Format(msgs.locale, "freeTurnLimitBody", nil)
+}
+
+// FreeTurnOK says "OK"
+// in the language the app shows.
+func FreeTurnOK() string { return In(i18n.Locale()).FreeTurnOK() }
+
+// FreeTurnOK says "OK"
+// in the language of msgs.
+func (msgs Messages) FreeTurnOK() string {
+	return Catalog.Format(msgs.locale, "freeTurnOK", nil)
+}
+
+// SendFreeTurnLimit says "This Free session has reached 30 user turns. The message was not sent; your draft is saved."
+// in the language the app shows.
+func SendFreeTurnLimit() string { return In(i18n.Locale()).SendFreeTurnLimit() }
+
+// SendFreeTurnLimit says "This Free session has reached 30 user turns. The message was not sent; your draft is saved."
+// in the language of msgs.
+func (msgs Messages) SendFreeTurnLimit() string {
+	return Catalog.Format(msgs.locale, "sendFreeTurnLimit", nil)
+}
