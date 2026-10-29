@@ -19,6 +19,10 @@ type Project struct {
 	// History is what the machine last listed of the agents' own
 	// conversations in the project, by provider.
 	History map[string]any `json:"-"`
+	// OpenedAt is when the project was last opened on its machine, or
+	// else added: of a machine's copies of one repository, a project of
+	// several repositories uses the one opened last.
+	OpenedAt float64 `json:"-"`
 }
 
 type Model struct {
@@ -290,6 +294,7 @@ type Catalog struct {
 	Capabilities map[string]Capability         `json:"capabilities,omitempty"`
 	MCPServers   []MCPServer                   `json:"-"`
 	Roles        []AgentRole                   `json:"-"`
+	Groups       []ProjectGroup                `json:"-"` // projects of several repositories or folders
 	ProjectMCP   map[string][]string           `json:"-"` // default MCP servers by project key
 	Memories     map[string][]Memory           `json:"-"` // by machine
 	RateLimits   map[string][]RateLimit        `json:"-"` // providers' quotas, by agent config
@@ -422,7 +427,14 @@ func projectMachine(rows []flock.Row, machineID string) Catalog {
 			if name == "" {
 				name = id
 			}
-			c.Projects = append(c.Projects, Project{ID: machineID + ":local:" + id, MachineID: machineID, Name: name, RootPath: text(value["rootPath"]), History: object(value["history"])})
+			// The GitHub remote the machine published for it files it under
+			// that repository, as Lody's project editor does.
+			opened := stamp(value["lastOpenedAtMs"])
+			if opened == 0 {
+				opened = stamp(value["createdAtMs"])
+			}
+			c.Projects = append(c.Projects, Project{ID: machineID + ":local:" + id, MachineID: machineID, Name: name, RootPath: text(value["rootPath"]),
+				RepoFullName: text(value["githubRepoFullName"]), History: object(value["history"]), OpenedAt: opened})
 		case "agentConfig":
 			cfg := AgentConfig{ID: text(value["id"]), Name: text(value["name"]), MachineID: text(value["machineId"]), AgentType: text(value["agentType"]), CLIType: text(value["cliType"]), Row: value}
 			if cfg.ID == "" {
@@ -779,7 +791,7 @@ func merge(meta Catalog, machines map[string]Catalog) Catalog {
 		out.Projects = append(out.Projects, projects[id])
 	}
 	ws := machines[workspaceMode]
-	out.MCPServers, out.Roles, out.ProjectMCP = ws.MCPServers, ws.Roles, ws.ProjectMCP
+	out.MCPServers, out.Roles, out.ProjectMCP, out.Groups = ws.MCPServers, ws.Roles, ws.ProjectMCP, ws.Groups
 	for _, id := range meta.MachineIDs {
 		m := machines[id]
 		for _, mem := range m.Memories[id] {

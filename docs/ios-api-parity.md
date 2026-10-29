@@ -22,7 +22,7 @@ Every cloud function (Convex) and machine RPC method the iOS app (lody-ios: `pac
 | Machine RPC | `local-project/list-files` | `packages/cloud-runtime/src/runtime/mentions.ts` | `internal/app/mentions.go`, `internal/cloud/machine.go` |
 | Machine RPC | `local-project/list-global-skills` | `packages/cloud-runtime/src/runtime/mentions.ts` | `internal/app/mentions.go` |
 | Machine RPC | `local-project/list-skills` | `packages/cloud-runtime/src/runtime/mentions.ts` | `internal/app/mentions.go`, `internal/app/settings_project.go` |
-| Machine RPC | `local-project/prepare-add` | `packages/cloud-runtime/src/runtime/handlers/projects.ts` | `internal/app/settings_projects.go` |
+| Machine RPC | `local-project/prepare-add` | `packages/cloud-runtime/src/runtime/handlers/projects.ts` | `internal/app/settings_projects.go`, `internal/app/project_wizard.go` |
 | Machine RPC | `local-project/resolve-history-conflict` | `packages/cloud-runtime/src/runtime/project-history.ts` | `internal/app/settings_history.go` |
 | Machine RPC | `local-project/sync-history` | `packages/cloud-runtime/src/runtime/project-history.ts` | `internal/app/settings_history.go` |
 | Machine RPC | `machine/memory` | `packages/cloud-runtime/src/protocol/memory.ts` | `internal/app/settings_memory.go` |

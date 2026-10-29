@@ -237,6 +237,7 @@ type App struct {
 	memoryMachine    string
 	memoryForm       memoryForm
 	addProject       addProjectForm
+	projectWizard    projectWizard // Lody's new-project wizard
 	shortcut         shortcutForm
 	monitors         map[string]*machineMonitor // machines observed for their resource use
 	role             roleForm

@@ -47,13 +47,30 @@ type addProjectForm struct {
 	// A folder being named, to make in the one shown.
 	naming     bool
 	folderName string
+	// selectOnly picks a folder for the new-project wizard, on its machine
+	// only, rather than adding it as a project.
+	selectOnly bool
 }
 
 // projectsPage lists each machine's folders, as Lody's: the folder, the
-// end of its path, and how many chats it has.
+// end of its path, and how many chats it has; then the projects of
+// several repositories that run anywhere. Its add menu, as Lody's
+// ProjectAddMenu, adds a folder, a GitHub repository, or a project of
+// several through the new-project wizard.
 func (a *App) projectsPage(c *ui.Context, p *palette) {
 	pageHeader(c, p, locales.SettingsProjects(), "", func() {
-		outlineButton(c, p, iconPlus, locales.ProjectAdd()).OnClick(func() { a.openAddProject("") })
+		add := outlineButton(c, p, iconPlus, locales.ProjectAdd())
+		lodyMenuButton(c, p, add, &a.rowMenu("projects/add").menuState, 260, 320, 32, func(m *lodyMenu) {
+			if m.item("folder", iconFolderPlus, locales.ProjectAddFolder(), menuItem{detail: locales.ProjectAddFolderHint()}) {
+				a.openAddProject("")
+			}
+			if m.item("github", iconGithub, locales.ProjectAddGitHub(), menuItem{detail: locales.ProjectAddGitHubHint()}) {
+				a.settingsTab = "github"
+			}
+			if m.item("multi", iconFolders, locales.ProjectCreateMulti(), menuItem{detail: locales.ProjectCreateMultiHint()}) {
+				a.openProjectWizard()
+			}
+		})
 	})
 	a.settingsErrorLine(c, p)
 	chats := map[string]int{}
@@ -65,8 +82,26 @@ func (a *App) projectsPage(c *ui.Context, p *palette) {
 		return strings.ToLower(a.machineName(machines[i])) < strings.ToLower(a.machineName(machines[j]))
 	})
 	visible := a.visibleMachines()
+	// A project of several bound to a machine listed here sits with its
+	// folders; one bound to a machine not listed runs nowhere here, and
+	// stays with those that run anywhere.
+	listed := map[string]bool{}
 	for _, machine := range machines {
-		if m, known := visible[machine]; known && a.account != nil && m.OwnerUserID != a.account.User.ID {
+		if m, known := visible[machine]; !known || a.account == nil || m.OwnerUserID == a.account.User.ID {
+			listed[machine] = true
+		}
+	}
+	bound := map[string][]catalog.ProjectGroup{}
+	var anywhere []catalog.ProjectGroup
+	for _, g := range a.catalog.Groups {
+		if machine := g.BoundMachine(); listed[machine] {
+			bound[machine] = append(bound[machine], g)
+		} else {
+			anywhere = append(anywhere, g)
+		}
+	}
+	for _, machine := range machines {
+		if !listed[machine] {
 			continue // only the user's own machines' projects, as Lody lists
 		}
 		projects := a.machineProjects(machine)
@@ -78,7 +113,7 @@ func (a *App) projectsPage(c *ui.Context, p *palette) {
 			}
 			ui.Text(c, status).FontSize(sizeFoot).TextColor(p.Secondary)
 		})
-		if len(projects) == 0 {
+		if len(projects) == 0 && len(bound[machine]) == 0 {
 			emptyCard(c.Key(machine+"/empty"), p, locales.SettingsNoProjects())
 			continue
 		}
@@ -86,12 +121,42 @@ func (a *App) projectsPage(c *ui.Context, p *palette) {
 			for _, pr := range projects {
 				a.projectSettingsRow(c.Key(pr.ID), p, pr, chats[pr.ID])
 			}
+			for _, g := range bound[machine] {
+				groupSettingsRow(c, p, g)
+			}
+		})
+	}
+	if len(anywhere) > 0 {
+		ui.Column(c.Key("anywhere")).FillWidth().Gap(2).Margin(8, 0, 4, 0).Children(func() {
+			ui.Text(c, locales.ProjectAnyMachine()).FontSize(sizeBody).FontWeight(500).TextColor(p.Strong)
+			ui.Text(c, locales.ProjectAnyMachineHint()).FontSize(sizeFoot).TextColor(p.Secondary)
+		})
+		ui.Column(c.Key("anywhere/list")).FillWidth().Radius(10).Border(1, p.Border).Clip().Dividers(1, p.Border).Children(func() {
+			for _, g := range anywhere {
+				groupSettingsRow(c, p, g)
+			}
 		})
 	}
 	a.githubProjectSections(c, p)
+	// The folder browser opens over the wizard that asked for a folder.
+	a.projectWizardDialog(c, p)
 	a.addProjectDialog(c, p)
 	a.projectWindow(c, p)
 	a.githubProjectWindow(c, p)
+}
+
+// groupSettingsRow is a project of several repositories or folders, as
+// Lody's line for one: its name, and how many it holds.
+func groupSettingsRow(c *ui.Context, p *palette, g catalog.ProjectGroup) {
+	ui.Row(c.Key("group/"+g.ID)).FillWidth().MinHeight(54).Padding(8, 16).Gap(10).AlignItems(ui.Center).Children(func() {
+		ui.Column(c).Grow(1).MinWidth(0).Gap(2).Children(func() {
+			ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
+				ui.Icon(c, iconFolders).Size(16, 16).TextColor(p.Secondary)
+				ui.Text(c, g.Name).FontSize(sizeBody).TextColor(p.Text).SingleLine()
+			})
+			ui.Text(c, locales.ProjectRepositoryCount(len(g.Members))).FontSize(sizeCaption).TextColor(p.Secondary).SingleLine()
+		})
+	})
 }
 
 func (a *App) projectSettingsRow(c *ui.Context, p *palette, pr catalog.Project, chats int) {
@@ -235,10 +300,14 @@ func (a *App) addProjectDialog(c *ui.Context, p *palette) {
 		return
 	}
 	_, h := c.Size()
+	title, add, pick := locales.ProjectAdd(), locales.ProjectAddThis(), a.registerFolder
+	if f.selectOnly {
+		title, add, pick = locales.WizardSelectFolders(), locales.WizardSelectFolder(), a.pickGroupFolder
+	}
 	sheet(c, p, &f.open, 620, func() {
-		sheetHeader(c, p, locales.ProjectAdd(), locales.ProjectAddLead(), func() { f.open = false })
+		sheetHeader(c, p, title, locales.ProjectAddLead(), func() { f.open = false })
 		ui.Column(c).FillWidth().Padding(4, 20).Gap(10).Children(func() {
-			if len(a.catalog.MachineIDs) > 1 {
+			if len(a.catalog.MachineIDs) > 1 && !f.selectOnly {
 				var options []option
 				for _, id := range a.catalog.MachineIDs {
 					options = append(options, option{id, a.machineName(id)})
@@ -317,7 +386,7 @@ func (a *App) addProjectDialog(c *ui.Context, p *palette) {
 			if f.busy {
 				loader(c, p).Size(14, 14)
 			}
-			primaryButton(c, p, locales.ProjectAddThis(), f.path != "" && !f.busy && !f.loading).OnClick(a.registerFolder)
+			primaryButton(c, p, add, f.path != "" && !f.busy && !f.loading).OnClick(pick)
 		})
 	})
 }
