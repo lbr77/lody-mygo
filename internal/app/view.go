@@ -137,7 +137,6 @@ func ghostButton(c *ui.Context, p *palette, label string) ui.Element {
 	if b.Hovered() {
 		b.Background(p.Text.Alpha(0.06))
 	}
-	pressable(b, 0.97)
 	b.Children(func() {
 		ui.Text(c, label).FontSize(sizeSub).FontWeight(500).TextColor(p.Secondary)
 	})
@@ -150,7 +149,6 @@ func dangerGhostButton(c *ui.Context, p *palette, label string) ui.Element {
 	if b.Hovered() {
 		b.Background(p.Danger.Alpha(0.08))
 	}
-	pressable(b, 0.97)
 	b.Children(func() {
 		ui.Text(c, label).FontSize(sizeSub).FontWeight(500).TextColor(p.Danger)
 	})
@@ -158,17 +156,29 @@ func dangerGhostButton(c *ui.Context, p *palette, label string) ui.Element {
 }
 
 // lodyTooltip is Lody's tooltip on anchor: a raised chip in the footnote
-// type, rising 4px into place as it fades in over 120ms.
+// type, coming 4px toward its anchor as it fades in over 120ms, from the
+// side it landed on: above it, from above; below, from below.
 func lodyTooltip(c *ui.Context, p *palette, anchor ui.Element, label string) {
 	if label == "" {
 		return
 	}
 	ui.TooltipBase(c, anchor, func(tip ui.Element) {
+		away := float32(-4)
+		if tb, ab := tip.Bounds(), anchor.Bounds(); tb.H > 0 && tb.Y >= ab.Y+ab.H-1 {
+			away = 4 // it landed below its anchor
+		}
 		tip.Padding(4, 8).Radius(8).MaxWidth(260).Background(p.Popover).Border(0.5, p.CardRim).
 			Shadow(0, 6, 16, -4, ui.RGBA(0, 0, 0, 0.18)).
-			Transition(ui.ElementTransition{Duration: durFast, Ease: easeStandard, Enter: &ui.Motion{Y: 4}, Exit: &ui.Motion{Y: 4}})
+			Transition(ui.ElementTransition{Duration: durFast, Ease: easeStandard, Enter: &ui.Motion{Y: away}, Exit: &ui.Motion{Y: away}})
 		tip.Children(func() { ui.Text(c, label).FontSize(sizeFoot).LineHeight(16.0 / 12).TextColor(p.Text) })
 	})
+}
+
+// tip gives e Lody's tooltip, as Element.Tooltip gives the theme's: for
+// the elements whose tips Lody draws.
+func tip(c *ui.Context, p *palette, e ui.Element, label string) ui.Element {
+	lodyTooltip(c, p, e, label)
+	return e.Description(label)
 }
 
 // iconButton is a 28px square icon button, muted at rest.
@@ -180,7 +190,6 @@ func iconButton(c *ui.Context, p *palette, icon *ui.SVG, label string, hover ui.
 		b.Background(hover)
 		color = p.Text
 	}
-	pressable(b, 0.92)
 	b.Children(func() { ui.Icon(c, icon).Size(16, 16).TextColor(color) })
 	return b
 }

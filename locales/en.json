@@ -3614,5 +3614,12 @@
   "setupVerifyingRuntime": "Verifying the agent runtime…",
   "setupExtractingRuntime": "Extracting the agent runtime…",
   "setupInstallingRuntime": "Installing the agent runtime…",
-  "setupRuntimeReady": "Agent runtime ready; checking provider access…"
+  "setupRuntimeReady": "Agent runtime ready; checking provider access…",
+  "ctxRename": "Rename",
+  "ctxPin": "Pin Session",
+  "ctxUnpin": "Unpin Session",
+  "ctxArchive": "Archive Session",
+  "ctxMarkUnread": "Mark as unread",
+  "ctxCopyURL": "Copy Session URL",
+  "ctxGoToOpener": "Go to Opener Session"
 }

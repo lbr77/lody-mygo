@@ -43,6 +43,25 @@ var (
 	slideSpring = ui.Animation{Duration: 220 * time.Millisecond, Ease: easeSheet}
 )
 
+// The curves Lody's CSS names, which MyGo's own EaseOut and EaseInOut
+// (cubic) are not.
+var (
+	// cssEase is CSS's ease, and framer-motion's default.
+	cssEase = ui.CubicBezier(0.25, 0.1, 0.25, 1)
+	// cssEaseOut is CSS's and framer-motion's easeOut.
+	cssEaseOut = ui.CubicBezier(0, 0, 0.58, 1)
+	// cssEaseInOut is CSS's ease-in-out and framer-motion's easeInOut.
+	cssEaseInOut = ui.CubicBezier(0.42, 0, 0.58, 1)
+	// twEaseOut is Tailwind's ease-out.
+	twEaseOut = ui.CubicBezier(0, 0, 0.2, 1)
+	// twEase is Tailwind's default timing, for transition-colors and the
+	// like without an ease of their own.
+	twEase = ui.CubicBezier(0.4, 0, 0.2, 1)
+	// twFade is Tailwind's transition-colors: 150ms on its default curve,
+	// where Lody's components, not its @lody/ui primitives, fade a fill.
+	twFade = ui.ElementTransition{Colors: true, Duration: 150 * time.Millisecond, Ease: twEase}
+)
+
 var (
 	// tabFade fades a tab's colors over 150ms, as Lody's tab bars'
 	// Tailwind transition-colors.

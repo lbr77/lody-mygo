@@ -210,7 +210,6 @@ func (a *App) panelChooser(c *ui.Context, p *palette, in *inspectState) {
 							o := options[j]
 							b := ui.ButtonBase(c).FillWidth().Height(40).Padding(0, 12).Radius(8).Gap(8).Justify(ui.Start).AlignItems(ui.Center).
 								Border(1, p.Border).Cursor(ui.CursorPointer).Label(o.label).OnClick(func() { in.openPanel(o.id) }).Transition(colorFade)
-							pressable(b, 0.98)
 							if b.Hovered() {
 								b.Background(p.Hover)
 							}

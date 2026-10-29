@@ -312,7 +312,6 @@ func (a *App) composerBox(c *ui.Context, p *palette, o composerOptions) {
 				if o.scheduled != "" {
 					chip := ui.ButtonBase(c.Key("scheduled")).Height(26).Padding(0, 10).Radius(13).Gap(5).Border(1, p.Border).Cursor(ui.CursorPointer).
 						Label(o.scheduled).OnClick(o.onScheduled).Transition(colorFade)
-					pressable(chip, 0.97)
 					if chip.Hovered() {
 						chip.Background(p.Hover)
 					}
@@ -405,7 +404,6 @@ type option struct{ id, label string }
 func (a *App) picker(c *ui.Context, p *palette, key string, icon *ui.SVG, label string, options []option, pick func(string)) {
 	open := a.popover(key)
 	b := ui.ButtonBase(c.Key(key)).Height(28).Padding(0, 8).Radius(8).Gap(6).Label(label).Transition(colorFade)
-	pressable(b, 0.96)
 	if len(options) > 0 {
 		b.Cursor(ui.CursorPointer).OnClick(func() { *open = !*open })
 		if b.Hovered() || *open {
@@ -461,7 +459,6 @@ func (a *App) modeButton(c *ui.Context, p *palette, key string, modes []catalog.
 	open := a.popover(key)
 	b := ui.ButtonBase(c.Key(key)).Height(28).MinWidth(28).Padding(0, 6).Radius(8).Cursor(ui.CursorPointer).
 		Label(locales.PermissionMode(name)).Tooltip(name).OnClick(func() { *open = !*open }).Transition(colorFade)
-	pressable(b, 0.94)
 	if b.Hovered() || *open {
 		b.Background(p.Text.Alpha(0.06))
 	}

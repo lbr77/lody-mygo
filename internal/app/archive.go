@@ -175,7 +175,7 @@ func (a *App) archivedRow(c *ui.Context, p *palette, s catalog.Session) {
 	if row.Clicked() {
 		a.open(s.ID)
 	}
-	row.ContextMenu(func(m *ui.Menu) { a.sessionMenu(m, s) })
+	lodyContextMenu(c, p, row, a.rowMenu("archived/"+s.ID), 28, func(m *lodyMenu) { a.sessionRowMenu(m, s) })
 	row.Children(func() {
 		ui.Box(c).Size(20, 20).Center().Shrink(0).Children(func() {
 			ui.Icon(c, a.sessionMark(&s)).Size(14, 14).TextColor(p.Secondary)
@@ -251,7 +251,6 @@ func (a *App) toolbarPicker(c *ui.Context, p *palette, key string, icon *ui.SVG,
 	open := a.popover(key)
 	b := ui.ButtonBase(c.Key(key)).Height(28).Padding(0, 8).Radius(8).Gap(6).Cursor(ui.CursorPointer).Label(label).
 		OnClick(func() { *open = !*open }).Transition(colorFade)
-	pressable(b, 0.96)
 	if b.Hovered() || *open {
 		b.Background(p.Text.Alpha(0.06))
 	}

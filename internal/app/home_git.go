@@ -126,7 +126,6 @@ func (a *App) workdirControls(c *ui.Context, p *palette) {
 	mode := ui.ButtonBase(c).Height(24).Padding(0, 8).Radius(12).Gap(4).Cursor(ui.CursorPointer).Label(locales.WorkdirMode()).
 		Tooltip(map[bool]string{false: locales.WorkdirLocalHint(), true: locales.WorkdirWorktreeHint()}[worktree]).
 		OnClick(func() { a.newChat.worktree = !a.newChat.worktree }).Transition(colorFade)
-	pressable(mode, 0.97)
 	switch {
 	case worktree:
 		mode.Background(p.Primary.Alpha(0.12))

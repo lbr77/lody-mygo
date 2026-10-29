@@ -207,11 +207,16 @@ func TestSessionMenuRename(t *testing.T) {
 	if err := tt.RightClick("Sidebar status marks"); err != nil {
 		t.Fatal(err)
 	}
-	if got := tt.Menu(); len(got) == 0 {
-		t.Fatal("no context menu")
+	tt.Frame()
+	tt.Advance(300 * time.Millisecond)
+	tt.Frame()
+	for _, want := range []string{"Pin Session", "Rename", "Copy Session URL", "Archive Session"} {
+		if !tt.HasText(want) {
+			t.Fatalf("context menu misses %q in %q", want, tt.Texts())
+		}
 	}
-	if err := tt.ChooseMenuItem("Rename"); err != nil {
-		t.Fatalf("%v; menu: %q", err, tt.Menu())
+	if err := tt.Click("Rename"); err != nil {
+		t.Fatal(err)
 	}
 	tt.Frame()
 	if a.renaming != "s2" {

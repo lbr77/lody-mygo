@@ -187,6 +187,15 @@ func segmented(c *ui.Context, p *palette, key string, options []option, selected
 // Lody's take currentColor, mostly a label's.
 var spinnerInk = ui.RGBA(0, 0, 0, 0.5)
 
+// loader is the spinner of Lody's components: Lucide's Loader2 turning
+// once a second, linearly, in the text's ink. Lody's @lody/ui primitives
+// turn the ring of spinner instead.
+func loader(c *ui.Context, p *palette) ui.Element {
+	l := ui.Icon(c.Key("loader"), iconLoader).Size(16, 16).Shrink(0).TextColor(p.Secondary).Label(locales.Loading())
+	k := l.Keyframes("turn", []ui.Keyframe{{Value: 0}, {At: time.Second, Value: 1}}, ui.KeyframeOptions{Repeat: ui.RepeatForever})
+	return l.Rotate(360 * k)
+}
+
 // spinner is Lody's: a faint ring, and a quarter of it turning once every
 // 900ms. Size it as any element; it is 16 across unless told.
 func spinner(c *ui.Context) ui.Element {

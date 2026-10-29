@@ -492,7 +492,6 @@ func (a *App) boardSegment(c *ui.Context, p *palette, key, label string, summary
 			a.setHomeBoard(key)
 		}
 	})
-	pressable(seg, 0.97)
 	switch {
 	case open:
 		seg.Background(p.Text.Alpha(0.07))

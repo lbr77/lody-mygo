@@ -315,3 +315,92 @@ func sortedMemberIDs[T any](members map[string]T) []string {
 	sort.Strings(ids)
 	return ids
 }
+
+// rowMenu is the state of a drawn menu kept by key: a row's context menu,
+// its ⋯.
+func (a *App) rowMenu(key string) *contextMenu {
+	if a.menus == nil {
+		a.menus = map[string]*contextMenu{}
+	}
+	m := a.menus[key]
+	if m == nil {
+		m = &contextMenu{}
+		a.menus[key] = m
+	}
+	return m
+}
+
+// sessionRowMenu is a sidebar chat's menu, as Lody's row context menu: what
+// opened it, pinning, unread, renaming; its link, branch and sharing; its
+// pull request; archiving. An archived chat restores, or goes for good.
+func (a *App) sessionRowMenu(m *lodyMenu, s catalog.Session) {
+	id := s.ID
+	if s.OpenedBySessionID != "" {
+		if opener := a.catalog.Session(s.OpenedBySessionID); opener != nil && m.item("opener", iconCornerLeftUp, locales.CtxGoToOpener(), menuItem{}) {
+			a.open(opener.ID)
+		}
+	}
+	if !s.Archived {
+		icon, label := iconPin, locales.CtxPin()
+		if s.Pinned {
+			icon, label = iconPinOff, locales.CtxUnpin()
+		}
+		if m.item("pin", icon, label, menuItem{}) {
+			pinned := !s.Pinned
+			a.catalogAction(locales.FailPin(), func(ctx context.Context, sync *catalog.Sync) error { return sync.Pin(ctx, id, pinned) })
+		}
+		if !s.Unread() && s.LastMessageAt > 0 && m.item("unread", iconMail, locales.CtxMarkUnread(), menuItem{}) {
+			// Unread is lastMessageAt past lastReadAt: the receipt moves just
+			// behind the latest message, the activity left as it is.
+			at := s.LastMessageAt - 1
+			a.catalogAction(locales.FailMarkRead(), func(ctx context.Context, sync *catalog.Sync) error { return sync.SetField(ctx, id, "lastReadAt", at) })
+		}
+		if m.item("rename", iconPencil, locales.CtxRename(), menuItem{}) {
+			a.renaming, a.renameText = s.ID, s.Title
+		}
+		m.sep()
+	}
+	if m.item("copy-url", iconLink, locales.CtxCopyURL(), menuItem{}) {
+		a.copySessionLink(id)
+	}
+	if branch := strings.TrimSpace(s.BranchName); branch != "" && m.item("copy-branch", iconBranch, locales.CmdCopyBranch(), menuItem{}) {
+		writeClipboard(branch)
+		a.toast("success", locales.CmdBranchCopied())
+	}
+	if access := a.sessionAccess(&s); access != nil && access.visibility != "team" && !s.Archived {
+		label, icon := locales.AccessShareWithTeam(), iconUsers
+		ready := access.visibility == "private" && access.canManage && access.reason != "machine-not-registered"
+		switch {
+		case access.visibility == "unknown":
+			label, icon = locales.HmCheckingSharing(), iconLoader
+		case access.reason == "machine-not-registered":
+			label, icon = locales.AccessRegisterDevice(), iconLockKeyhole
+		case !access.canManage:
+			label, icon = locales.AccessOnlyOwner(), iconLockKeyhole
+		}
+		if m.item("share-team", icon, label, menuItem{disabled: !ready}) {
+			a.shareWithTeam(&s, access)
+		}
+	}
+	if pr := s.LatestPR(); pr != nil {
+		m.sep()
+		url := pr.URL
+		if m.item("open-pr", iconGitPR, locales.OpenPullRequest(), menuItem{}) {
+			openExternal(url)
+		}
+	}
+	m.sep()
+	if s.Archived {
+		if m.item("restore", iconArchiveRestore, locales.HmRestore(), menuItem{}) {
+			a.catalogAction(locales.FailRestore(), func(ctx context.Context, sync *catalog.Sync) error { return sync.Archive(ctx, id, false) })
+		}
+		if m.item("delete", iconTrash, locales.ArchiveDelete(), menuItem{destructive: true}) {
+			sess := s
+			a.deleting, a.deleteOpen = &sess, true
+		}
+		return
+	}
+	if m.item("archive", iconArchive, locales.CtxArchive(), menuItem{}) {
+		a.archiveSession(id)
+	}
+}

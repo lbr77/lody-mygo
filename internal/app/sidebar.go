@@ -333,7 +333,6 @@ func (a *App) projectRow(c *ui.Context, p *palette, r sideRow) {
 		ui.Text(c, r.label).FontSize(sizeSub).TextColor(p.SideRow).SingleLine().Grow(1).MinWidth(0)
 		if hovered {
 			b := ui.ButtonBase(c).Size(20, 20).Radius(4).Cursor(ui.CursorPointer).Label(locales.NewChatIn(r.label)).Tooltip(locales.NewChat()).Transition(colorFade)
-			pressable(b, 0.9)
 			if b.Hovered() {
 				b.Background(p.Text.Alpha(0.08))
 			}
@@ -379,7 +378,7 @@ func (a *App) sessionRow(c *ui.Context, p *palette, r sideRow) {
 		a.open(s.ID)
 	}
 	sess := *s
-	row.ContextMenu(func(m *ui.Menu) { a.sessionMenu(m, sess) })
+	lodyContextMenu(c, p, row, a.rowMenu("row/"+s.ID), 28, func(m *lodyMenu) { a.sessionRowMenu(m, sess) })
 	a.sessionHover(c, p, row, s, hovered, row.Pressed() || clicked)
 	ink := p.SideRow
 	if selected {
@@ -862,7 +861,8 @@ func (a *App) rowLeadingSlot(c *ui.Context, p *palette, r sideRow, sess catalog.
 				ui.Icon(c, iconChevronDown).Size(14, 14).TextColor(p.SideMuted).Rotate(-90 * (1 - turn))
 			})
 		case hovered:
-			more := ui.ButtonBase(c.Key("more")).Size(14, 14).Radius(4).Label(locales.MoreActions()).Menu(func(m *ui.Menu) { a.sessionMenu(m, sess) })
+			more := ui.ButtonBase(c.Key("more")).Size(14, 14).Radius(4).Label(locales.MoreActions())
+			lodyMenuButton(c, p, more, &a.rowMenu("more/"+sess.ID).menuState, 180, 290, 28, func(m *lodyMenu) { a.sessionRowMenu(m, sess) })
 			if r.depth > 0 {
 				more.Absolute().Left(0)
 			}

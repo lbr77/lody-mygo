@@ -18372,3 +18372,73 @@ func SetupRuntimeReady() string { return In(i18n.Locale()).SetupRuntimeReady() }
 func (msgs Messages) SetupRuntimeReady() string {
 	return Catalog.Format(msgs.locale, "setupRuntimeReady", nil)
 }
+
+// CtxRename says "Rename"
+// in the language the app shows.
+func CtxRename() string { return In(i18n.Locale()).CtxRename() }
+
+// CtxRename says "Rename"
+// in the language of msgs.
+func (msgs Messages) CtxRename() string {
+	return Catalog.Format(msgs.locale, "ctxRename", nil)
+}
+
+// CtxPin says "Pin Session"
+// in the language the app shows.
+func CtxPin() string { return In(i18n.Locale()).CtxPin() }
+
+// CtxPin says "Pin Session"
+// in the language of msgs.
+func (msgs Messages) CtxPin() string {
+	return Catalog.Format(msgs.locale, "ctxPin", nil)
+}
+
+// CtxUnpin says "Unpin Session"
+// in the language the app shows.
+func CtxUnpin() string { return In(i18n.Locale()).CtxUnpin() }
+
+// CtxUnpin says "Unpin Session"
+// in the language of msgs.
+func (msgs Messages) CtxUnpin() string {
+	return Catalog.Format(msgs.locale, "ctxUnpin", nil)
+}
+
+// CtxArchive says "Archive Session"
+// in the language the app shows.
+func CtxArchive() string { return In(i18n.Locale()).CtxArchive() }
+
+// CtxArchive says "Archive Session"
+// in the language of msgs.
+func (msgs Messages) CtxArchive() string {
+	return Catalog.Format(msgs.locale, "ctxArchive", nil)
+}
+
+// CtxMarkUnread says "Mark as unread"
+// in the language the app shows.
+func CtxMarkUnread() string { return In(i18n.Locale()).CtxMarkUnread() }
+
+// CtxMarkUnread says "Mark as unread"
+// in the language of msgs.
+func (msgs Messages) CtxMarkUnread() string {
+	return Catalog.Format(msgs.locale, "ctxMarkUnread", nil)
+}
+
+// CtxCopyURL says "Copy Session URL"
+// in the language the app shows.
+func CtxCopyURL() string { return In(i18n.Locale()).CtxCopyURL() }
+
+// CtxCopyURL says "Copy Session URL"
+// in the language of msgs.
+func (msgs Messages) CtxCopyURL() string {
+	return Catalog.Format(msgs.locale, "ctxCopyURL", nil)
+}
+
+// CtxGoToOpener says "Go to Opener Session"
+// in the language the app shows.
+func CtxGoToOpener() string { return In(i18n.Locale()).CtxGoToOpener() }
+
+// CtxGoToOpener says "Go to Opener Session"
+// in the language of msgs.
+func (msgs Messages) CtxGoToOpener() string {
+	return Catalog.Format(msgs.locale, "ctxGoToOpener", nil)
+}

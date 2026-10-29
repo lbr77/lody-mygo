@@ -80,6 +80,7 @@ type App struct {
 	outline      outlineRail               // the conversation's outline rail
 	access       accessPanel               // the header's access panel
 	hmenu        menuState                 // the header's session menu
+	menus        map[string]*contextMenu   // drawn menus by key: rows' context menus and ⋯
 	shareImg     shareImage                // "Share as image…": the messages picked, then their preview
 	binaries     map[string]binaryProgress // what machines said of runtime downloads, by machine/agent
 	attachPrev   attachPreview             // a text file's preview

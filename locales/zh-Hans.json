@@ -1822,5 +1822,12 @@
   "setupVerifyingRuntime": "正在校验 Agent 运行时…",
   "setupExtractingRuntime": "正在解压 Agent 运行时…",
   "setupInstallingRuntime": "正在安装 Agent 运行时…",
-  "setupRuntimeReady": "Agent 运行时已就绪，正在检查 Provider 访问权限…"
+  "setupRuntimeReady": "Agent 运行时已就绪，正在检查 Provider 访问权限…",
+  "ctxRename": "重命名",
+  "ctxPin": "置顶",
+  "ctxUnpin": "取消置顶",
+  "ctxArchive": "归档会话",
+  "ctxMarkUnread": "标记为未读",
+  "ctxCopyURL": "复制会话链接",
+  "ctxGoToOpener": "跳转到发起会话"
 }

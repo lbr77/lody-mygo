@@ -27,42 +27,6 @@ func (a *App) catalogAction(what string, fn func(ctx context.Context, sync *cata
 	}()
 }
 
-// sessionMenu is a session row's context menu.
-func (a *App) sessionMenu(m *ui.Menu, s catalog.Session) {
-	if m.Item(locales.ActionRename()).Chosen() {
-		a.renaming, a.renameText = s.ID, s.Title
-	}
-	if m.Item(locales.ActionPinned()).Checked(s.Pinned).Chosen() {
-		a.catalogAction(locales.FailPin(), func(ctx context.Context, sync *catalog.Sync) error {
-			return sync.Pin(ctx, s.ID, !s.Pinned)
-		})
-	}
-	if m.Item(locales.ActionMarkRead()).Disabled(!s.Unread()).Chosen() {
-		a.catalogAction(locales.FailMarkRead(), func(ctx context.Context, sync *catalog.Sync) error {
-			return sync.MarkRead(ctx, s)
-		})
-	}
-	if pr := s.LatestPR(); pr != nil && m.Item(locales.OpenPullRequest()).Chosen() {
-		openExternal(pr.URL)
-	}
-	if !s.Archived && m.Item(locales.ShareTitle()).Chosen() {
-		a.openShare(s.ID)
-	}
-	m.Separator()
-	label, what := locales.ActionArchive(), locales.FailArchive()
-	if s.Archived {
-		label, what = locales.ActionRestore(), locales.FailRestore()
-	}
-	if m.Item(label).Chosen() {
-		if !s.Archived && a.selected == s.ID {
-			a.open("")
-		}
-		a.catalogAction(what, func(ctx context.Context, sync *catalog.Sync) error {
-			return sync.Archive(ctx, s.ID, !s.Archived)
-		})
-	}
-}
-
 // renameField edits a session's title in place of its row's text.
 func (a *App) renameField(c *ui.Context, p *palette, s *catalog.Session) {
 	in := ui.TextInputBase(c.Key("rename/"+s.ID), &a.renameText).FontSize(sizeSub).TextColor(p.SideRowSel).

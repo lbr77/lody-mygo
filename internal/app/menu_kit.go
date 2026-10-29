@@ -151,8 +151,14 @@ func (m *lodyMenu) submenu(key string, icon *ui.SVG, label string, o menuItem, m
 	}
 	sm := &lodyMenu{c: c, p: p, open: m.open, sub: m.sub, nested: true, rowH: 28}
 	ui.Overlay(c, func() {
-		panel := lodyMenuPanel(c, p, "sub/"+key, minW, 290).AttachTo(r, ui.AnchorTopEnd, ui.AnchorTopStart).Margin(-4, 0, 0, 4).
-			Transition(ui.ElementTransition{Colors: true, Duration: popTime, Ease: easeStandard, Enter: &ui.Motion{X: -4}})
+		panel := lodyMenuPanel(c, p, "sub/"+key, minW, 290).AttachTo(r, ui.AnchorTopEnd, ui.AnchorTopStart).Margin(-4, 0, 0, 4)
+		// It comes from 4px further out on the side it opened to, and goes
+		// back there as it fades.
+		away := float32(4)
+		if pb, rb := panel.Bounds(), r.Bounds(); pb.W > 0 && pb.X+pb.W <= rb.X+1 {
+			away = -4 // it opened to the left of its row
+		}
+		panel.Transition(ui.ElementTransition{Colors: true, Duration: popTime, Ease: easeStandard, Enter: &ui.Motion{X: away}, Exit: &ui.Motion{X: away}})
 		panel.Children(func() { fn(sm) })
 	})
 }
@@ -178,4 +184,44 @@ func lodyMenuButton(c *ui.Context, p *palette, button ui.Element, st *menuState,
 	if !st.open {
 		st.sub = ""
 	}
+}
+
+// contextMenu is a drawn context menu's state: whether it shows, its open
+// submenu, and where it was asked for, in its element.
+type contextMenu struct {
+	menuState
+	at ui.Point
+}
+
+// lodyContextMenu opens fn as a drawn menu at the pointer when el is
+// right-clicked (or Control-clicked), rising 4px into place as Lody's
+// context menus do.
+func lodyContextMenu(c *ui.Context, p *palette, el ui.Element, st *contextMenu, rowH float32, fn func(m *lodyMenu)) {
+	el.HandleInput(func(ev ui.InputEvent) bool {
+		if ev.Kind == ui.InputPointerDown && (ev.Button == 1 || ev.Button == 0 && ev.Mods&ui.Ctrl != 0) {
+			st.open, st.sub, st.at = true, "", ui.Point{X: ev.X, Y: ev.Y}
+			return true
+		}
+		return false
+	})
+	if !st.open {
+		st.sub = ""
+		return
+	}
+	b := el.Bounds()
+	var anchor ui.Element
+	ui.Overlay(c, func() {
+		anchor = ui.Box(c.Key("ctx-anchor")).Absolute().Left(b.X+st.at.X).Top(b.Y+st.at.Y).Size(1, 1).PassThrough()
+	})
+	ui.PopoverBase(c, anchor, &st.open, func(panel ui.Element) {
+		panel.Padding(4).MinWidth(200).MaxWidth(290).Radius(14).Background(raisedGround(p)).
+			Border(0.5, p.CardRim).Shadow(0, 12, 32, -6, ui.RGBA(28, 28, 28, 0.16)).
+			AttachTo(anchor, ui.AnchorTopStart, ui.AnchorTopStart).
+			Transition(ui.ElementTransition{Colors: true, Duration: popTime, Ease: easeStandard, Exit: &ui.Motion{Y: 4}})
+		if k := panel.Keyframes("in", []ui.Keyframe{{Value: 0}, {At: popTime, Value: 1, Ease: easeStandard}}); k < 1 {
+			panel.Translate(0, 4*(1-k)).Opacity(k)
+		}
+		m := &lodyMenu{c: c, p: p, open: &st.open, sub: &st.sub, rowH: rowH}
+		panel.Children(func() { fn(m) })
+	})
 }
