@@ -222,6 +222,8 @@ func (a *App) systemNotice(c *ui.Context, p *palette, e session.Entry, it sessio
 		})
 	case "schedule_proposal":
 		a.scheduleProposal(c, p, e, it)
+	case "agent_role_proposal":
+		a.roleProposalCard(c, p, e, it)
 	}
 }
 

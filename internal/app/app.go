@@ -72,12 +72,13 @@ type App struct {
 	sched     schedState // the Schedules page
 	// schedSends are the times chosen for chats' next messages, and
 	// schedSendDlg the picker.
-	schedSends   map[string]*schedSendDraft
-	schedSendDlg schedSendDialog
-	capRetries   map[string]*capRetry     // capacity retries, by chat
-	proposals    map[string]*proposalEdit // schedule proposals being edited, by notice
-	local        *localplane.Conn
-	stopLocal    context.CancelFunc
+	schedSends    map[string]*schedSendDraft
+	schedSendDlg  schedSendDialog
+	capRetries    map[string]*capRetry          // capacity retries, by chat
+	proposals     map[string]*proposalEdit      // schedule proposals being edited, by notice
+	roleProposals map[string]*roleProposalState // Agent Role proposals being saved, by notice
+	local         *localplane.Conn
+	stopLocal     context.CancelFunc
 
 	selected string // session id; empty shows New chat
 	replica  *session.Replica

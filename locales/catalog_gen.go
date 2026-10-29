@@ -16350,3 +16350,203 @@ func PropTitle() string { return In(i18n.Locale()).PropTitle() }
 func (msgs Messages) PropTitle() string {
 	return Catalog.Format(msgs.locale, "propTitle", nil)
 }
+
+// ArpAfter says "After"
+// in the language the app shows.
+func ArpAfter() string { return In(i18n.Locale()).ArpAfter() }
+
+// ArpAfter says "After"
+// in the language of msgs.
+func (msgs Messages) ArpAfter() string {
+	return Catalog.Format(msgs.locale, "arpAfter", nil)
+}
+
+// ArpBefore says "Before"
+// in the language the app shows.
+func ArpBefore() string { return In(i18n.Locale()).ArpBefore() }
+
+// ArpBefore says "Before"
+// in the language of msgs.
+func (msgs Messages) ArpBefore() string {
+	return Catalog.Format(msgs.locale, "arpBefore", nil)
+}
+
+// ArpCreate says "Create Agent Role?"
+// in the language the app shows.
+func ArpCreate() string { return In(i18n.Locale()).ArpCreate() }
+
+// ArpCreate says "Create Agent Role?"
+// in the language of msgs.
+func (msgs Messages) ArpCreate() string {
+	return Catalog.Format(msgs.locale, "arpCreate", nil)
+}
+
+// ArpDefaults says "Private Role using this Agent’s default configuration."
+// in the language the app shows.
+func ArpDefaults() string { return In(i18n.Locale()).ArpDefaults() }
+
+// ArpDefaults says "Private Role using this Agent’s default configuration."
+// in the language of msgs.
+func (msgs Messages) ArpDefaults() string {
+	return Catalog.Format(msgs.locale, "arpDefaults", nil)
+}
+
+// ArpDescription says "Description"
+// in the language the app shows.
+func ArpDescription() string { return In(i18n.Locale()).ArpDescription() }
+
+// ArpDescription says "Description"
+// in the language of msgs.
+func (msgs Messages) ArpDescription() string {
+	return Catalog.Format(msgs.locale, "arpDescription", nil)
+}
+
+// ArpDismiss says "Dismiss"
+// in the language the app shows.
+func ArpDismiss() string { return In(i18n.Locale()).ArpDismiss() }
+
+// ArpDismiss says "Dismiss"
+// in the language of msgs.
+func (msgs Messages) ArpDismiss() string {
+	return Catalog.Format(msgs.locale, "arpDismiss", nil)
+}
+
+// ArpDismissed says "Proposal dismissed"
+// in the language the app shows.
+func ArpDismissed() string { return In(i18n.Locale()).ArpDismissed() }
+
+// ArpDismissed says "Proposal dismissed"
+// in the language of msgs.
+func (msgs Messages) ArpDismissed() string {
+	return Catalog.Format(msgs.locale, "arpDismissed", nil)
+}
+
+// ArpEmpty says "(empty)"
+// in the language the app shows.
+func ArpEmpty() string { return In(i18n.Locale()).ArpEmpty() }
+
+// ArpEmpty says "(empty)"
+// in the language of msgs.
+func (msgs Messages) ArpEmpty() string {
+	return Catalog.Format(msgs.locale, "arpEmpty", nil)
+}
+
+// ArpFailed says "Could not save the proposal"
+// in the language the app shows.
+func ArpFailed() string { return In(i18n.Locale()).ArpFailed() }
+
+// ArpFailed says "Could not save the proposal"
+// in the language of msgs.
+func (msgs Messages) ArpFailed() string {
+	return Catalog.Format(msgs.locale, "arpFailed", nil)
+}
+
+// ArpName says "Name"
+// in the language the app shows.
+func ArpName() string { return In(i18n.Locale()).ArpName() }
+
+// ArpName says "Name"
+// in the language of msgs.
+func (msgs Messages) ArpName() string {
+	return Catalog.Format(msgs.locale, "arpName", nil)
+}
+
+// ArpOwnerOnly says "Only the requesting user can confirm this proposal"
+// in the language the app shows.
+func ArpOwnerOnly() string { return In(i18n.Locale()).ArpOwnerOnly() }
+
+// ArpOwnerOnly says "Only the requesting user can confirm this proposal"
+// in the language of msgs.
+func (msgs Messages) ArpOwnerOnly() string {
+	return Catalog.Format(msgs.locale, "arpOwnerOnly", nil)
+}
+
+// ArpPromptPrefix says "Default instruction"
+// in the language the app shows.
+func ArpPromptPrefix() string { return In(i18n.Locale()).ArpPromptPrefix() }
+
+// ArpPromptPrefix says "Default instruction"
+// in the language of msgs.
+func (msgs Messages) ArpPromptPrefix() string {
+	return Catalog.Format(msgs.locale, "arpPromptPrefix", nil)
+}
+
+// ArpSave says "Save"
+// in the language the app shows.
+func ArpSave() string { return In(i18n.Locale()).ArpSave() }
+
+// ArpSave says "Save"
+// in the language of msgs.
+func (msgs Messages) ArpSave() string {
+	return Catalog.Format(msgs.locale, "arpSave", nil)
+}
+
+// ArpSaved says "Agent Role saved"
+// in the language the app shows.
+func ArpSaved() string { return In(i18n.Locale()).ArpSaved() }
+
+// ArpSaved says "Agent Role saved"
+// in the language of msgs.
+func (msgs Messages) ArpSaved() string {
+	return Catalog.Format(msgs.locale, "arpSaved", nil)
+}
+
+// ArpScope says "Applies to future uses of this Role. Existing sessions keep their configuration."
+// in the language the app shows.
+func ArpScope() string { return In(i18n.Locale()).ArpScope() }
+
+// ArpScope says "Applies to future uses of this Role. Existing sessions keep their configuration."
+// in the language of msgs.
+func (msgs Messages) ArpScope() string {
+	return Catalog.Format(msgs.locale, "arpScope", nil)
+}
+
+// ArpTargetUnavailable says "The selected Agent configuration is unavailable"
+// in the language the app shows.
+func ArpTargetUnavailable() string { return In(i18n.Locale()).ArpTargetUnavailable() }
+
+// ArpTargetUnavailable says "The selected Agent configuration is unavailable"
+// in the language of msgs.
+func (msgs Messages) ArpTargetUnavailable() string {
+	return Catalog.Format(msgs.locale, "arpTargetUnavailable", nil)
+}
+
+// ArpUpdate says "Update Agent Role?"
+// in the language the app shows.
+func ArpUpdate() string { return In(i18n.Locale()).ArpUpdate() }
+
+// ArpUpdate says "Update Agent Role?"
+// in the language of msgs.
+func (msgs Messages) ArpUpdate() string {
+	return Catalog.Format(msgs.locale, "arpUpdate", nil)
+}
+
+// ArpNameInUse says "Agent Role name is already in use"
+// in the language the app shows.
+func ArpNameInUse() string { return In(i18n.Locale()).ArpNameInUse() }
+
+// ArpNameInUse says "Agent Role name is already in use"
+// in the language of msgs.
+func (msgs Messages) ArpNameInUse() string {
+	return Catalog.Format(msgs.locale, "arpNameInUse", nil)
+}
+
+// ArpRoleGone says "Agent Role no longer exists"
+// in the language the app shows.
+func ArpRoleGone() string { return In(i18n.Locale()).ArpRoleGone() }
+
+// ArpRoleGone says "Agent Role no longer exists"
+// in the language of msgs.
+func (msgs Messages) ArpRoleGone() string {
+	return Catalog.Format(msgs.locale, "arpRoleGone", nil)
+}
+
+// ArpNotEditable says "Agent Role is not editable"
+// in the language the app shows.
+func ArpNotEditable() string { return In(i18n.Locale()).ArpNotEditable() }
+
+// ArpNotEditable says "Agent Role is not editable"
+// in the language of msgs.
+func (msgs Messages) ArpNotEditable() string {
+	return Catalog.Format(msgs.locale, "arpNotEditable", nil)
+}

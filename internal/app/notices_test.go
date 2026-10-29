@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/lbr77/lody-mygo/internal/catalog"
 	"github.com/lbr77/lody-mygo/internal/session"
 )
 
@@ -134,5 +135,48 @@ func TestScheduleProposalCard(t *testing.T) {
 	tt.Frame()
 	if !tt.HasText("Scheduled task created") || tt.HasText("Create") {
 		t.Fatalf("receipt: %q", tt.Texts())
+	}
+}
+
+func TestRoleProposal(t *testing.T) {
+	roles := []catalog.AgentRole{
+		{ID: "r1", OwnerUserID: "u1", Name: "Reviewer", Revision: 2, Row: map[string]any{"id": "r1", "name": "Reviewer", "description": "old", "ownerUserId": "u1"}},
+		{ID: "r2", OwnerUserID: "u2", Visibility: "workspace", Name: "Release Bot", Row: map[string]any{}},
+	}
+	var create roleProposal
+	noticeMeta(map[string]any{"roleId": "r9", "requesterUserId": "u1", "command": map[string]any{
+		"action": "create", "requestId": "q", "name": "Triage", "machineId": "m1", "agentConfigId": "a1"}}, &create)
+	row, err := applyRoleProposal(&create, roles, "u1", 5)
+	if err != nil || row["name"] != "Triage" || row["visibility"] != "private" || row["agentConfigId"] != "a1" || row["description"] != "" {
+		t.Fatalf("create %+v %v", row, err)
+	}
+	if _, err := applyRoleProposal(&create, roles, "u2", 5); err == nil {
+		t.Fatal("someone else saved it")
+	}
+	// A name another visible Role answers to is refused.
+	create.Command.Name = "Release  Bot"
+	if _, err := applyRoleProposal(&create, roles, "u1", 5); err == nil {
+		t.Fatal("a taken name saved")
+	}
+	var update roleProposal
+	noticeMeta(map[string]any{"roleId": "r1", "requesterUserId": "u1", "before": map[string]any{"name": "Reviewer", "description": "old"},
+		"command": map[string]any{"action": "update", "requestId": "q", "roleId": "r1", "patch": map[string]any{"description": "new"}}}, &update)
+	row, err = applyRoleProposal(&update, roles, "u1", 9)
+	if err != nil || row["description"] != "new" || row["name"] != "Reviewer" || row["revision"] != 3.0 {
+		t.Fatalf("update %+v %v", row, err)
+	}
+
+	a := fixture()
+	a.view.Working = false
+	a.view.Entries = append(a.view.Entries[:2], session.Entry{ID: "a2", Role: "assistant", Finished: true,
+		Items: []session.Item{notice("rp", "agent_role_proposal", map[string]any{"roleId": "r1", "requesterUserId": "u1",
+			"before":  map[string]any{"name": "Reviewer", "description": "old"},
+			"command": map[string]any{"action": "update", "requestId": "q", "roleId": "r1", "patch": map[string]any{"description": "new"}}})}})
+	tt := snap(t, a, "role-proposal", false, nil)
+	for _, want := range []string{"Update Agent Role?", "Reviewer", "Description", "Before", "old", "After", "new", "Dismiss", "Save",
+		"Applies to future uses of this Role. Existing sessions keep their configuration."} {
+		if !tt.HasText(want) {
+			t.Errorf("missing %q in %q", want, tt.Texts())
+		}
 	}
 }
