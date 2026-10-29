@@ -103,6 +103,12 @@ type App struct {
 	images         map[string]*remoteImage
 	uploading      string // upload progress while sending
 	settingsOpen   bool
+	settingsTab    string
+	archiveGroup   string // "project" or "flat"
+	archiveSort    string // "newest", "oldest" or "title"
+	archiveFilter  string // "", "chats" or a project id
+	deleting       *catalog.Session
+	deleteOpen     bool
 	page           string // "archive", or "" for chats
 	archiveSearch  string
 	diffs          map[string]*editor.DiffState // tool diffs of the open session

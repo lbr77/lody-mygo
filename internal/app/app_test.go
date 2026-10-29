@@ -269,8 +269,20 @@ func TestArchivePage(t *testing.T) {
 			t.Fatal(err)
 		}
 	})
-	if a.page != "archive" || !tt.HasText("Old experiment") || !tt.HasText("Restore") {
-		t.Fatalf("archive page: %q", tt.Texts())
+	for _, want := range []string{"Old experiment", "website", "(1)", "Restore session", "Delete permanently", "By project", "Newest first"} {
+		if a.page != "archive" || !tt.HasText(want) {
+			t.Errorf("archive page: missing %q in %q", want, tt.Texts())
+		}
+	}
+	// Delete asks first.
+	tt.Move(700, 168)
+	tt.Frame()
+	if err := tt.Click("Delete permanently"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if !a.deleteOpen || !tt.HasText("Delete permanently?") {
+		t.Fatalf("no confirmation: %q", tt.Texts())
 	}
 }
 
@@ -282,10 +294,17 @@ func TestSettingsDialog(t *testing.T) {
 			t.Fatal(err)
 		}
 	})
-	for _, want := range []string{"Appearance", "When the agent is busy", "Steer", "ada@example.com"} {
+	for _, want := range []string{"Account", "Profile", "ada@example.com", "My machines", "Studio", "Preferences", "Agents", "Report bug"} {
 		if !tt.HasText(want) {
 			t.Errorf("missing %q in %q", want, tt.Texts())
 		}
+	}
+	if err := tt.Click("Preferences"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if !tt.HasText("When the agent is busy") {
+		t.Fatalf("preferences: %q", tt.Texts())
 	}
 	if err := tt.Click("Steer"); err != nil {
 		t.Fatal(err)
@@ -321,5 +340,14 @@ func TestQueuedActionsAndModes(t *testing.T) {
 	tt.Frame()
 	if a.modes["s1"] != "plan" {
 		t.Fatalf("mode = %q", a.modes["s1"])
+	}
+}
+
+func TestSettingsAgents(t *testing.T) {
+	a := fixture()
+	a.settingsOpen, a.settingsTab = true, "agents"
+	tt := snap(t, a, "settings-agents", true, nil)
+	if !tt.HasText("Claude Code") || !tt.HasText("claude · builtin · 6 modes") {
+		t.Fatalf("agents: %q", tt.Texts())
 	}
 }

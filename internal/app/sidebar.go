@@ -364,13 +364,13 @@ func (a *App) sessionRow(c *ui.Context, p *palette, r sideRow) {
 			return
 		}
 		ui.Text(c, s.Title).FontSize(sizeSub).TextColor(ink).SingleLine().Grow(1).MinWidth(0)
-		a.statusMark(c, p, s)
+		a.statusMark(c, p, s, !r.nested && r.depth == 0)
 	})
 }
 
-// statusMark is the one mark at a row's end: waiting, working or unread.
-// An idle row's end stays empty.
-func (a *App) statusMark(c *ui.Context, p *palette, s *catalog.Session) {
+// statusMark is the one mark at a row's end: waiting, working or unread;
+// an idle row outside a project shows its age, one inside nothing.
+func (a *App) statusMark(c *ui.Context, p *palette, s *catalog.Session, age bool) {
 	switch {
 	case s.Waiting():
 		ui.Icon(c, iconHand).Size(12, 12).TextColor(p.Primary).Tooltip("Waiting for you")
@@ -378,6 +378,10 @@ func (a *App) statusMark(c *ui.Context, p *palette, s *catalog.Session) {
 		workingGrid(c, p, 12)
 	case s.Unread() && a.selected != s.ID:
 		ui.Box(c).Size(8, 8).Radius(4).Background(p.Primary).Margin(0, 2)
+	case age:
+		if t := relativeTime(time.UnixMilli(int64(activity(*s)))); t != "" {
+			ui.Text(c, t).FontSize(sizeFoot).TextColor(p.SideMuted).Shrink(0)
+		}
 	}
 }
 

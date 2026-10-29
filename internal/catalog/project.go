@@ -26,6 +26,7 @@ type Model struct {
 type Session struct {
 	ID                    string  `json:"id"`
 	MachineID             string  `json:"machineId"`
+	UserID                string  `json:"userId,omitempty"` // who started it
 	Title                 string  `json:"title"`
 	Status                string  `json:"status"`
 	Archived              bool    `json:"archived"`
@@ -120,6 +121,7 @@ type Catalog struct {
 	Sessions     []Session                `json:"sessions"`
 	MachineIDs   []string                 `json:"machineIds"`
 	MachineNames map[string]string        `json:"machineNames,omitempty"`
+	MachineOS    map[string]string        `json:"machineOs,omitempty"`
 	Agents       map[string][]AgentConfig `json:"agents,omitempty"` // by machine
 	Capabilities map[string]Capability    `json:"capabilities,omitempty"`
 }
@@ -238,6 +240,7 @@ func anyList(v any) []any {
 func projectMeta(rows []flock.Row) Catalog {
 	var c Catalog
 	c.MachineNames = map[string]string{}
+	c.MachineOS = map[string]string{}
 	active := map[string]bool{}
 	metadata := map[string]map[string]any{}
 	var order []string
@@ -282,6 +285,9 @@ func projectMeta(rows []flock.Row) Catalog {
 			if name := text(value["name"]); name != "" {
 				c.MachineNames[machineID] = name
 			}
+			if os := text(value["os"]); os != "" {
+				c.MachineOS[machineID] = os
+			}
 			local := object(value["localProjects"])
 			keys := make([]string, 0, len(local))
 			for k := range local {
@@ -325,6 +331,7 @@ func projectMeta(rows []flock.Row) Catalog {
 		s := Session{
 			ID:                    text(value["id"]),
 			MachineID:             machineID,
+			UserID:                text(value["userId"]),
 			Title:                 text(value["title"]),
 			Status:                status,
 			Archived:              value["isArchived"] == true,
@@ -396,6 +403,7 @@ func merge(meta Catalog, machines map[string]Catalog) Catalog {
 	out := Catalog{
 		MachineIDs:   meta.MachineIDs,
 		MachineNames: meta.MachineNames,
+		MachineOS:    meta.MachineOS,
 		Agents:       map[string][]AgentConfig{},
 		Capabilities: map[string]Capability{},
 	}

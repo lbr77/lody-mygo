@@ -417,6 +417,30 @@ func (s *Sync) Archive(ctx context.Context, sessionID string, archived bool) err
 	return nil
 }
 
+// Delete removes a session, and the sessions it opened, for good. A
+// session still running can't be deleted.
+func (s *Sync) Delete(ctx context.Context, sessionID string) error {
+	s.mu.Lock()
+	sessions := s.partial["meta"].Sessions
+	s.mu.Unlock()
+	ids := lifecycle(sessions, sessionID)
+	for _, sess := range sessions {
+		for _, id := range ids {
+			if sess.ID == id && sess.Working() {
+				return errors.New("catalog: the session is still running")
+			}
+		}
+	}
+	return s.Write(ctx, func(f *flock.Flock) error {
+		for _, id := range ids {
+			if err := f.Put([]any{"e", room(id)}, false); err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}
+
 // lifecycle is the session and every session it opened, transitively.
 func lifecycle(sessions []Session, id string) []string {
 	children := map[string][]string{}

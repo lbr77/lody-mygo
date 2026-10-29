@@ -241,7 +241,13 @@ func (a *App) userMessage(c *ui.Context, p *palette, e session.Entry, firstQueue
 				a.queuedActions(c, p, e, firstQueued)
 			}
 		})
-		userAvatar(c, p).Margin(28, 0, 0, 0)
+		ui.Box(c).Margin(28, 0, 0, 0).Children(func() {
+			if a.account != nil && (e.UserID == "" || e.UserID == a.account.User.ID) {
+				a.accountAvatar(c, p, 32)
+			} else {
+				userAvatar(c, p)
+			}
+		})
 	})
 }
 

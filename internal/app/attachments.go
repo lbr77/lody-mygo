@@ -3,8 +3,11 @@ package app
 import (
 	"context"
 	"fmt"
+	"io"
+	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/egoist/mygo"
@@ -172,6 +175,40 @@ func (a *App) upload(ctx context.Context, workspace, sessionID string, files []p
 		blocks = append(blocks, block)
 	}
 	return blocks, nil
+}
+
+// urlImage fetches a picture by URL once and keeps it; Lody's own URLs get
+// the session token.
+func (a *App) urlImage(url string) *remoteImage {
+	key := "url:" + url
+	if img := a.images[key]; img != nil {
+		return img
+	}
+	img := &remoteImage{loading: true}
+	a.images[key] = img
+	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+		defer cancel()
+		var bm *ui.Bitmap
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+		if err == nil {
+			if strings.HasPrefix(url, cloud.CloudOrigin+"/") || strings.HasPrefix(url, cloud.AuthOrigin+"/") {
+				req.Header.Set("Authorization", "Bearer "+a.tokenNow())
+			}
+			var res *http.Response
+			if res, err = http.DefaultClient.Do(req); err == nil {
+				data, _ := io.ReadAll(io.LimitReader(res.Body, 10<<20))
+				res.Body.Close()
+				if res.StatusCode == http.StatusOK {
+					bm, err = ui.DecodeBitmap(data)
+				} else {
+					err = fmt.Errorf("status %d", res.StatusCode)
+				}
+			}
+		}
+		a.update(func() { a.images[key] = &remoteImage{bitmap: bm, failed: err != nil} })
+	}()
+	return img
 }
 
 // sessionImage shows a picture of a session, fetched once and kept.

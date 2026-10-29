@@ -70,6 +70,7 @@ type Entry struct {
 	Timestamp  string
 	UserTurnID string
 	Model      string
+	UserID     string // who wrote a user message
 	Items      []Item
 	// A steer is a message given to a running turn: SteerMode is native or
 	// interrupt, SteerState confirming, accepted or unknown.
@@ -339,6 +340,7 @@ func project(doc *loro.LoroDoc, status, reason string) *View {
 			Finished:   e["finished"] == true,
 			Timestamp:  str(e["timestamp"]),
 			UserTurnID: str(e["userTurnId"]),
+			UserID:     str(e["userId"]),
 			StartedAt:  num(e["startedAt"]),
 			EndedAt:    num(e["endedAt"]),
 		}
