@@ -1446,3 +1446,54 @@ func TestReferrals(t *testing.T) {
 		t.Fatalf("toast: %q", tt.Texts())
 	}
 }
+
+func TestPairingAndDevice(t *testing.T) {
+	a := fixture()
+	a.pairing = machinePairing{open: true, requestID: "r1", status: "pending", command: "npx lody@latest daemon start --auth lody_pair_x",
+		expiresAt: float64(time.Now().Add(29*time.Minute + 30*time.Second).UnixMilli())}
+	tt := snap(t, a, "pairing", false, nil)
+	for _, want := range []string{"Connect a machine", "Lody Desktop", "Download Lody Desktop", "or", "Command line", "npx lody@latest daemon start --auth lody_pair_x", "Cancel connection request"} {
+		if !tt.HasText(want) {
+			t.Fatalf("no %q in %q", want, tt.Texts())
+		}
+	}
+	if !strings.Contains(strings.Join(tt.Texts(), "|"), "expires in 29:") {
+		t.Fatalf("no countdown: %q", tt.Texts())
+	}
+	a.pairing.status = "claimed"
+	if tt = snap(t, a, "pairing-claimed", false, nil); !tt.HasText("Machine is signing in") {
+		t.Fatalf("claimed: %q", tt.Texts())
+	}
+	a.pairing.status, a.pairing.machineID, a.pairing.machine = "registered", "m1", "Studio"
+	if tt = snap(t, a, "pairing-done", false, nil); !tt.HasText("Machine connected") || !tt.HasText("Configure agents") {
+		t.Fatalf("registered: %q", tt.Texts())
+	}
+	a.closePairing()
+	if a.pairing.requestID != "" || a.pairing.open {
+		t.Fatal("a settled request is forgotten on close")
+	}
+	a.pairing = machinePairing{requestID: "r2", status: "registered", machineID: "m1", machine: "Studio"}
+	a.newChat.machine = ""
+	a.pairingSettled()
+	if a.newChat.machine != "m1" || len(a.toasts) != 1 {
+		t.Fatalf("settled: machine %q, toasts %d", a.newChat.machine, len(a.toasts))
+	}
+	if remaining(61_000) != "1:01" || remaining(-5) != "0:00" {
+		t.Fatal("remaining")
+	}
+	if normalizeDeviceCode("abcd-12ef-9") != "ABCD12EF" {
+		t.Fatal(normalizeDeviceCode("abcd-12ef-9"))
+	}
+	a.pairing = machinePairing{}
+	a.device = deviceAuth{open: true, code: "ABCD12", err: "cloud: invalid code"}
+	tt = snap(t, a, "device-auth", false, nil)
+	for _, want := range []string{"Device Authorization", "Verification Code", "A", "B", "D", "2", "-", "Code is case-insensitive", "cloud: invalid code", "Verify & Authorize"} {
+		if !tt.HasText(want) {
+			t.Fatalf("no %q in %q", want, tt.Texts())
+		}
+	}
+	a.device = deviceAuth{open: true, success: true}
+	if tt = snap(t, a, "device-done", false, nil); !tt.HasText("Authorization successful! You can now return to the CLI to continue.") {
+		t.Fatalf("device done: %q", tt.Texts())
+	}
+}

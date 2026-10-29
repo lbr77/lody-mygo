@@ -86,7 +86,11 @@ func (a *App) homeTargets(c *ui.Context, p *palette) {
 				offlinePill(c, p)
 			}
 		})
-		a.optionList(c, p, machine, open, a.machineOptions(), a.newChat.machine, func(id string) {
+		a.optionList(c, p, machine, open, append(a.machineOptions(), option{addMachineOption, "+ " + locales.PairingAddMachine()}), a.newChat.machine, func(id string) {
+			if id == addMachineOption {
+				a.addMachine()
+				return
+			}
 			a.newChat.machine, a.newChat.project = id, ""
 			a.pickNewChatDefaults()
 		})
@@ -112,6 +116,9 @@ func (a *App) homeTargets(c *ui.Context, p *palette) {
 		a.workdirControls(c, p)
 	})
 }
+
+// addMachineOption is the machine list's last row, which connects one.
+const addMachineOption = "\x00add-machine"
 
 func (a *App) machineOptions() []option {
 	var out []option

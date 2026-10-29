@@ -70,6 +70,15 @@ func (a *App) toastViewport(c *ui.Context, p *palette) {
 					if t.Description != "" {
 						ui.Text(c, t.Description).FontSize(sizeFoot).TextColor(p.Secondary)
 					}
+					if t.Action != "" {
+						act := tt.ActionButton().Label(t.Action).Height(28).Padding(0, 10).Radius(8).Margin(4, 0, 0, 0).AlignSelf(ui.Start).
+							AlignItems(ui.Center).Border(1, p.Border).Background(p.Canvas).Cursor(ui.CursorPointer).Transition(colorFade)
+						pressable(act, 0.97)
+						if act.Hovered() {
+							act.Background(p.Hover)
+						}
+						act.Children(func() { ui.Text(c, t.Action).FontSize(sizeFoot).FontWeight(500).TextColor(p.Text) })
+					}
 				})
 				tt.CloseButton().Label(locales.Close()).Size(28, 28).Margin(-5, -4, -5, 0).Radius(8).Justify(ui.Center).AlignItems(ui.Center).
 					Cursor(ui.CursorPointer).Children(func() {

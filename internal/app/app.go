@@ -163,6 +163,8 @@ type App struct {
 	wsCreate        workspaceCreate
 	wsJoin          workspaceJoin
 	referral        referrals
+	pairing         machinePairing
+	device          deviceAuth
 	toasts          []ui.Toast // to show with the next frame
 	reviewSent      string     // the sharing review last reconciled
 	reviewWriter    string

@@ -2084,5 +2084,64 @@
   "referralOlder": "Older",
   "referralDetails": "Details",
   "referralDetailsTitle": "Referral credit",
-  "referralRulesTitle": "How it works"
+  "referralRulesTitle": "How it works",
+  "pairingAddMachine": "Add machine",
+  "pairingCancelRequest": "Cancel connection request",
+  "pairingCancelFailed": "Could not cancel this request",
+  "pairingCancelled": "This connection request was cancelled.",
+  "pairingClaimed": "Machine is signing in",
+  "pairingCliDescription": "Run this command on the machine you want to connect.",
+  "pairingCliTitle": "Command line",
+  "pairingCommandCopied": "Command copied",
+  "pairingConfigureDescription": "Configure the coding agents available on {machine}.",
+  "@pairingConfigureDescription": {
+    "placeholders": {
+      "machine": {
+        "type": "String"
+      }
+    }
+  },
+  "pairingConfigureAgents": "Configure agents",
+  "pairingConnectedTitle": "Machine connected",
+  "pairingConnectedToast": "{machine} connected successfully.",
+  "@pairingConnectedToast": {
+    "placeholders": {
+      "machine": {
+        "type": "String"
+      }
+    }
+  },
+  "pairingCopyCommand": "Copy command",
+  "pairingCreateFailed": "Could not create a connection request.",
+  "pairingCreateNew": "Create a new request",
+  "pairingDescription": "Download the Lody desktop app, or run the command below on the machine you want to connect.",
+  "pairingDesktopDescription": "Install the desktop app to connect this machine.",
+  "pairingDesktopTitle": "Lody Desktop",
+  "pairingDownloadDesktop": "Download Lody Desktop",
+  "pairingExpired": "This connection request has expired.",
+  "pairingExpiresIn": "This command expires in {time} and can only be used to connect one machine.",
+  "@pairingExpiresIn": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "pairingPreparingAgents": "Preparing agent configuration…",
+  "pairingOpenMachineSettings": "Open machine settings",
+  "pairingPrivateByDefault": "This machine is private by default. Share it from machine settings when teammates should be able to use it.",
+  "pairingSkipAgentSetup": "Skip for now",
+  "pairingTitle": "Connect a machine",
+  "pairingOr": "or",
+  "pairingRetry": "Retry",
+  "deviceMenu": "Authorize CLI device",
+  "deviceCodeHint": "Code is case-insensitive",
+  "deviceCodePlaceholder": "Enter 8-digit code",
+  "deviceDescription": "Enter the verification code displayed in your CLI to authorize device access",
+  "deviceLoginAs": "Login as",
+  "deviceSuccess": "Authorization successful! You can now return to the CLI to continue.",
+  "deviceTitle": "Device Authorization",
+  "deviceVerificationCode": "Verification Code",
+  "deviceVerifyButton": "Verify & Authorize",
+  "deviceVerifying": "Verifying..."
 }

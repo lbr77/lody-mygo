@@ -482,6 +482,13 @@ func (a *App) footer(c *ui.Context, p *palette) {
 				}
 			}
 			m.Separator()
+			if m.Item(locales.PairingAddMachine()).Chosen() {
+				a.addMachine()
+			}
+			if m.Item(locales.DeviceMenu()).Chosen() {
+				a.device = deviceAuth{open: true}
+			}
+			m.Separator()
 			if m.Item(locales.ReportBug()).Chosen() {
 				a.openBugReport()
 			}

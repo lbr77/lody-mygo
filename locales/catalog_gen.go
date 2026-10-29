@@ -10084,3 +10084,387 @@ func ReferralRulesTitle() string { return In(i18n.Locale()).ReferralRulesTitle()
 func (msgs Messages) ReferralRulesTitle() string {
 	return Catalog.Format(msgs.locale, "referralRulesTitle", nil)
 }
+
+// PairingAddMachine says "Add machine"
+// in the language the app shows.
+func PairingAddMachine() string { return In(i18n.Locale()).PairingAddMachine() }
+
+// PairingAddMachine says "Add machine"
+// in the language of msgs.
+func (msgs Messages) PairingAddMachine() string {
+	return Catalog.Format(msgs.locale, "pairingAddMachine", nil)
+}
+
+// PairingCancelRequest says "Cancel connection request"
+// in the language the app shows.
+func PairingCancelRequest() string { return In(i18n.Locale()).PairingCancelRequest() }
+
+// PairingCancelRequest says "Cancel connection request"
+// in the language of msgs.
+func (msgs Messages) PairingCancelRequest() string {
+	return Catalog.Format(msgs.locale, "pairingCancelRequest", nil)
+}
+
+// PairingCancelFailed says "Could not cancel this request"
+// in the language the app shows.
+func PairingCancelFailed() string { return In(i18n.Locale()).PairingCancelFailed() }
+
+// PairingCancelFailed says "Could not cancel this request"
+// in the language of msgs.
+func (msgs Messages) PairingCancelFailed() string {
+	return Catalog.Format(msgs.locale, "pairingCancelFailed", nil)
+}
+
+// PairingCancelled says "This connection request was cancelled."
+// in the language the app shows.
+func PairingCancelled() string { return In(i18n.Locale()).PairingCancelled() }
+
+// PairingCancelled says "This connection request was cancelled."
+// in the language of msgs.
+func (msgs Messages) PairingCancelled() string {
+	return Catalog.Format(msgs.locale, "pairingCancelled", nil)
+}
+
+// PairingClaimed says "Machine is signing in"
+// in the language the app shows.
+func PairingClaimed() string { return In(i18n.Locale()).PairingClaimed() }
+
+// PairingClaimed says "Machine is signing in"
+// in the language of msgs.
+func (msgs Messages) PairingClaimed() string {
+	return Catalog.Format(msgs.locale, "pairingClaimed", nil)
+}
+
+// PairingCliDescription says "Run this command on the machine you want to connect."
+// in the language the app shows.
+func PairingCliDescription() string { return In(i18n.Locale()).PairingCliDescription() }
+
+// PairingCliDescription says "Run this command on the machine you want to connect."
+// in the language of msgs.
+func (msgs Messages) PairingCliDescription() string {
+	return Catalog.Format(msgs.locale, "pairingCliDescription", nil)
+}
+
+// PairingCliTitle says "Command line"
+// in the language the app shows.
+func PairingCliTitle() string { return In(i18n.Locale()).PairingCliTitle() }
+
+// PairingCliTitle says "Command line"
+// in the language of msgs.
+func (msgs Messages) PairingCliTitle() string {
+	return Catalog.Format(msgs.locale, "pairingCliTitle", nil)
+}
+
+// PairingCommandCopied says "Command copied"
+// in the language the app shows.
+func PairingCommandCopied() string { return In(i18n.Locale()).PairingCommandCopied() }
+
+// PairingCommandCopied says "Command copied"
+// in the language of msgs.
+func (msgs Messages) PairingCommandCopied() string {
+	return Catalog.Format(msgs.locale, "pairingCommandCopied", nil)
+}
+
+// PairingConfigureDescription says "Configure the coding agents available on {machine}."
+// in the language the app shows.
+func PairingConfigureDescription(machine string) string {
+	return In(i18n.Locale()).PairingConfigureDescription(machine)
+}
+
+// PairingConfigureDescription says "Configure the coding agents available on {machine}."
+// in the language of msgs.
+func (msgs Messages) PairingConfigureDescription(machine string) string {
+	return Catalog.Format(msgs.locale, "pairingConfigureDescription", map[string]any{"machine": machine})
+}
+
+// PairingConfigureAgents says "Configure agents"
+// in the language the app shows.
+func PairingConfigureAgents() string { return In(i18n.Locale()).PairingConfigureAgents() }
+
+// PairingConfigureAgents says "Configure agents"
+// in the language of msgs.
+func (msgs Messages) PairingConfigureAgents() string {
+	return Catalog.Format(msgs.locale, "pairingConfigureAgents", nil)
+}
+
+// PairingConnectedTitle says "Machine connected"
+// in the language the app shows.
+func PairingConnectedTitle() string { return In(i18n.Locale()).PairingConnectedTitle() }
+
+// PairingConnectedTitle says "Machine connected"
+// in the language of msgs.
+func (msgs Messages) PairingConnectedTitle() string {
+	return Catalog.Format(msgs.locale, "pairingConnectedTitle", nil)
+}
+
+// PairingConnectedToast says "{machine} connected successfully."
+// in the language the app shows.
+func PairingConnectedToast(machine string) string {
+	return In(i18n.Locale()).PairingConnectedToast(machine)
+}
+
+// PairingConnectedToast says "{machine} connected successfully."
+// in the language of msgs.
+func (msgs Messages) PairingConnectedToast(machine string) string {
+	return Catalog.Format(msgs.locale, "pairingConnectedToast", map[string]any{"machine": machine})
+}
+
+// PairingCopyCommand says "Copy command"
+// in the language the app shows.
+func PairingCopyCommand() string { return In(i18n.Locale()).PairingCopyCommand() }
+
+// PairingCopyCommand says "Copy command"
+// in the language of msgs.
+func (msgs Messages) PairingCopyCommand() string {
+	return Catalog.Format(msgs.locale, "pairingCopyCommand", nil)
+}
+
+// PairingCreateFailed says "Could not create a connection request."
+// in the language the app shows.
+func PairingCreateFailed() string { return In(i18n.Locale()).PairingCreateFailed() }
+
+// PairingCreateFailed says "Could not create a connection request."
+// in the language of msgs.
+func (msgs Messages) PairingCreateFailed() string {
+	return Catalog.Format(msgs.locale, "pairingCreateFailed", nil)
+}
+
+// PairingCreateNew says "Create a new request"
+// in the language the app shows.
+func PairingCreateNew() string { return In(i18n.Locale()).PairingCreateNew() }
+
+// PairingCreateNew says "Create a new request"
+// in the language of msgs.
+func (msgs Messages) PairingCreateNew() string {
+	return Catalog.Format(msgs.locale, "pairingCreateNew", nil)
+}
+
+// PairingDescription says "Download the Lody desktop app, or run the command below on the machine you want to connect."
+// in the language the app shows.
+func PairingDescription() string { return In(i18n.Locale()).PairingDescription() }
+
+// PairingDescription says "Download the Lody desktop app, or run the command below on the machine you want to connect."
+// in the language of msgs.
+func (msgs Messages) PairingDescription() string {
+	return Catalog.Format(msgs.locale, "pairingDescription", nil)
+}
+
+// PairingDesktopDescription says "Install the desktop app to connect this machine."
+// in the language the app shows.
+func PairingDesktopDescription() string { return In(i18n.Locale()).PairingDesktopDescription() }
+
+// PairingDesktopDescription says "Install the desktop app to connect this machine."
+// in the language of msgs.
+func (msgs Messages) PairingDesktopDescription() string {
+	return Catalog.Format(msgs.locale, "pairingDesktopDescription", nil)
+}
+
+// PairingDesktopTitle says "Lody Desktop"
+// in the language the app shows.
+func PairingDesktopTitle() string { return In(i18n.Locale()).PairingDesktopTitle() }
+
+// PairingDesktopTitle says "Lody Desktop"
+// in the language of msgs.
+func (msgs Messages) PairingDesktopTitle() string {
+	return Catalog.Format(msgs.locale, "pairingDesktopTitle", nil)
+}
+
+// PairingDownloadDesktop says "Download Lody Desktop"
+// in the language the app shows.
+func PairingDownloadDesktop() string { return In(i18n.Locale()).PairingDownloadDesktop() }
+
+// PairingDownloadDesktop says "Download Lody Desktop"
+// in the language of msgs.
+func (msgs Messages) PairingDownloadDesktop() string {
+	return Catalog.Format(msgs.locale, "pairingDownloadDesktop", nil)
+}
+
+// PairingExpired says "This connection request has expired."
+// in the language the app shows.
+func PairingExpired() string { return In(i18n.Locale()).PairingExpired() }
+
+// PairingExpired says "This connection request has expired."
+// in the language of msgs.
+func (msgs Messages) PairingExpired() string {
+	return Catalog.Format(msgs.locale, "pairingExpired", nil)
+}
+
+// PairingExpiresIn says "This command expires in {time} and can only be used to connect one machine."
+// in the language the app shows.
+func PairingExpiresIn(time_ string) string { return In(i18n.Locale()).PairingExpiresIn(time_) }
+
+// PairingExpiresIn says "This command expires in {time} and can only be used to connect one machine."
+// in the language of msgs.
+func (msgs Messages) PairingExpiresIn(time_ string) string {
+	return Catalog.Format(msgs.locale, "pairingExpiresIn", map[string]any{"time": time_})
+}
+
+// PairingPreparingAgents says "Preparing agent configuration…"
+// in the language the app shows.
+func PairingPreparingAgents() string { return In(i18n.Locale()).PairingPreparingAgents() }
+
+// PairingPreparingAgents says "Preparing agent configuration…"
+// in the language of msgs.
+func (msgs Messages) PairingPreparingAgents() string {
+	return Catalog.Format(msgs.locale, "pairingPreparingAgents", nil)
+}
+
+// PairingOpenMachineSettings says "Open machine settings"
+// in the language the app shows.
+func PairingOpenMachineSettings() string { return In(i18n.Locale()).PairingOpenMachineSettings() }
+
+// PairingOpenMachineSettings says "Open machine settings"
+// in the language of msgs.
+func (msgs Messages) PairingOpenMachineSettings() string {
+	return Catalog.Format(msgs.locale, "pairingOpenMachineSettings", nil)
+}
+
+// PairingPrivateByDefault says "This machine is private by default. Share it from machine settings when teammates should be able to use it."
+// in the language the app shows.
+func PairingPrivateByDefault() string { return In(i18n.Locale()).PairingPrivateByDefault() }
+
+// PairingPrivateByDefault says "This machine is private by default. Share it from machine settings when teammates should be able to use it."
+// in the language of msgs.
+func (msgs Messages) PairingPrivateByDefault() string {
+	return Catalog.Format(msgs.locale, "pairingPrivateByDefault", nil)
+}
+
+// PairingSkipAgentSetup says "Skip for now"
+// in the language the app shows.
+func PairingSkipAgentSetup() string { return In(i18n.Locale()).PairingSkipAgentSetup() }
+
+// PairingSkipAgentSetup says "Skip for now"
+// in the language of msgs.
+func (msgs Messages) PairingSkipAgentSetup() string {
+	return Catalog.Format(msgs.locale, "pairingSkipAgentSetup", nil)
+}
+
+// PairingTitle says "Connect a machine"
+// in the language the app shows.
+func PairingTitle() string { return In(i18n.Locale()).PairingTitle() }
+
+// PairingTitle says "Connect a machine"
+// in the language of msgs.
+func (msgs Messages) PairingTitle() string {
+	return Catalog.Format(msgs.locale, "pairingTitle", nil)
+}
+
+// PairingOr says "or"
+// in the language the app shows.
+func PairingOr() string { return In(i18n.Locale()).PairingOr() }
+
+// PairingOr says "or"
+// in the language of msgs.
+func (msgs Messages) PairingOr() string {
+	return Catalog.Format(msgs.locale, "pairingOr", nil)
+}
+
+// PairingRetry says "Retry"
+// in the language the app shows.
+func PairingRetry() string { return In(i18n.Locale()).PairingRetry() }
+
+// PairingRetry says "Retry"
+// in the language of msgs.
+func (msgs Messages) PairingRetry() string {
+	return Catalog.Format(msgs.locale, "pairingRetry", nil)
+}
+
+// DeviceMenu says "Authorize CLI device"
+// in the language the app shows.
+func DeviceMenu() string { return In(i18n.Locale()).DeviceMenu() }
+
+// DeviceMenu says "Authorize CLI device"
+// in the language of msgs.
+func (msgs Messages) DeviceMenu() string {
+	return Catalog.Format(msgs.locale, "deviceMenu", nil)
+}
+
+// DeviceCodeHint says "Code is case-insensitive"
+// in the language the app shows.
+func DeviceCodeHint() string { return In(i18n.Locale()).DeviceCodeHint() }
+
+// DeviceCodeHint says "Code is case-insensitive"
+// in the language of msgs.
+func (msgs Messages) DeviceCodeHint() string {
+	return Catalog.Format(msgs.locale, "deviceCodeHint", nil)
+}
+
+// DeviceCodePlaceholder says "Enter 8-digit code"
+// in the language the app shows.
+func DeviceCodePlaceholder() string { return In(i18n.Locale()).DeviceCodePlaceholder() }
+
+// DeviceCodePlaceholder says "Enter 8-digit code"
+// in the language of msgs.
+func (msgs Messages) DeviceCodePlaceholder() string {
+	return Catalog.Format(msgs.locale, "deviceCodePlaceholder", nil)
+}
+
+// DeviceDescription says "Enter the verification code displayed in your CLI to authorize device access"
+// in the language the app shows.
+func DeviceDescription() string { return In(i18n.Locale()).DeviceDescription() }
+
+// DeviceDescription says "Enter the verification code displayed in your CLI to authorize device access"
+// in the language of msgs.
+func (msgs Messages) DeviceDescription() string {
+	return Catalog.Format(msgs.locale, "deviceDescription", nil)
+}
+
+// DeviceLoginAs says "Login as"
+// in the language the app shows.
+func DeviceLoginAs() string { return In(i18n.Locale()).DeviceLoginAs() }
+
+// DeviceLoginAs says "Login as"
+// in the language of msgs.
+func (msgs Messages) DeviceLoginAs() string {
+	return Catalog.Format(msgs.locale, "deviceLoginAs", nil)
+}
+
+// DeviceSuccess says "Authorization successful! You can now return to the CLI to continue."
+// in the language the app shows.
+func DeviceSuccess() string { return In(i18n.Locale()).DeviceSuccess() }
+
+// DeviceSuccess says "Authorization successful! You can now return to the CLI to continue."
+// in the language of msgs.
+func (msgs Messages) DeviceSuccess() string {
+	return Catalog.Format(msgs.locale, "deviceSuccess", nil)
+}
+
+// DeviceTitle says "Device Authorization"
+// in the language the app shows.
+func DeviceTitle() string { return In(i18n.Locale()).DeviceTitle() }
+
+// DeviceTitle says "Device Authorization"
+// in the language of msgs.
+func (msgs Messages) DeviceTitle() string {
+	return Catalog.Format(msgs.locale, "deviceTitle", nil)
+}
+
+// DeviceVerificationCode says "Verification Code"
+// in the language the app shows.
+func DeviceVerificationCode() string { return In(i18n.Locale()).DeviceVerificationCode() }
+
+// DeviceVerificationCode says "Verification Code"
+// in the language of msgs.
+func (msgs Messages) DeviceVerificationCode() string {
+	return Catalog.Format(msgs.locale, "deviceVerificationCode", nil)
+}
+
+// DeviceVerifyButton says "Verify & Authorize"
+// in the language the app shows.
+func DeviceVerifyButton() string { return In(i18n.Locale()).DeviceVerifyButton() }
+
+// DeviceVerifyButton says "Verify & Authorize"
+// in the language of msgs.
+func (msgs Messages) DeviceVerifyButton() string {
+	return Catalog.Format(msgs.locale, "deviceVerifyButton", nil)
+}
+
+// DeviceVerifying says "Verifying..."
+// in the language the app shows.
+func DeviceVerifying() string { return In(i18n.Locale()).DeviceVerifying() }
+
+// DeviceVerifying says "Verifying..."
+// in the language of msgs.
+func (msgs Messages) DeviceVerifying() string {
+	return Catalog.Format(msgs.locale, "deviceVerifying", nil)
+}
