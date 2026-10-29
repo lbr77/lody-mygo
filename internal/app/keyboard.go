@@ -143,11 +143,14 @@ func (a *App) keyRow(c *ui.Context, p *palette, cmds []command, cmd command) {
 			if recording {
 				b.Label(locales.KeyRecordingCancel()).Tooltip(locales.KeyRecordingCancel()).Focus().HandleInput(a.recordKey).
 					OnClick(func() { a.recording = keyRecording{} })
+				b.Gap(6).Padding(3, 9).Border(1, p.Border).AlignItems(ui.Center)
 				b.Children(func() {
-					// The prompt breathes while it waits, as Lody's.
-					t := ui.Text(c, locales.KeyRecording()).FontSize(sizeFoot).TextColor(p.Secondary).Padding(2, 7)
-					k := t.Keyframes("pulse", []ui.Keyframe{{Value: 1}, {At: 600 * time.Millisecond, Value: 0.4}, {At: 1200 * time.Millisecond, Value: 1}}, ui.KeyframeOptions{Repeat: ui.RepeatForever})
-					t.Opacity(k)
+					// The capture is live: its accent dot breathes while it
+					// listens, over 2s, as Lody's.
+					dot := ui.Box(c.Key("dot")).Size(6, 6).Radius(3).Background(p.Primary).Shrink(0)
+					ease := ui.CubicBezier(0.4, 0, 0.6, 1)
+					dot.Opacity(dot.Keyframes("pulse", []ui.Keyframe{{Value: 1}, {At: time.Second, Value: 0.4, Ease: ease}, {At: 2 * time.Second, Value: 1, Ease: ease}}, ui.KeyframeOptions{Repeat: ui.RepeatForever}))
+					ui.Text(c, locales.KeyRecording()).FontSize(sizeFoot).TextColor(p.Text)
 				})
 				return
 			}

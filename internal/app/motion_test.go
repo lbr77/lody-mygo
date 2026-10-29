@@ -8,6 +8,7 @@ import (
 
 	"github.com/egoist/mygo/ui"
 
+	"github.com/lbr77/lody-mygo/internal/catalog"
 	"github.com/lbr77/lody-mygo/internal/session"
 )
 
@@ -137,5 +138,54 @@ func TestUploadProgress(t *testing.T) {
 	tt.Frame()
 	if tt.HasText("notes.txt") {
 		t.Fatal("chips stay after sending")
+	}
+}
+
+// "Show all" opens a now list over its column on Lody's spring, the rest
+// of the column stepping back, and "Show less" lands it back in its tile.
+func TestNowListFocus(t *testing.T) {
+	a := fixture()
+	a.selected = ""
+	a.homeBoard = "now"
+	now := time.Now()
+	created := now.Add(-48 * time.Hour).UTC().Format(time.RFC3339)
+	for i := 0; i < 14; i++ {
+		a.catalog.Sessions = append(a.catalog.Sessions, catalog.Session{ID: fmt.Sprint("wait", i), MachineID: "m1", UserID: "u1", CreatedAt: created,
+			Title: fmt.Sprint("Waiting chat ", i), Status: "requestPermission", ProjectID: "m1:local:p1", LastMessageAt: float64(now.Add(-time.Duration(i) * time.Minute).UnixMilli())})
+	}
+	for i := range a.catalog.Sessions {
+		a.catalog.Sessions[i].UserID, a.catalog.Sessions[i].CreatedAt = "u1", created
+	}
+	tt := snap(t, a, "now-focus-closed", false, nil)
+	var showAll string
+	for _, s := range tt.Texts() {
+		if strings.HasPrefix(s, "Show all") {
+			showAll = s
+		}
+	}
+	if showAll == "" {
+		t.Fatalf("no Show all in %q", tt.Texts())
+	}
+	if err := tt.Click(showAll); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	tt.Advance(120 * time.Millisecond)
+	tt.Frame()
+	snapFrame(t, tt, "now-focus-opening")
+	tt.Advance(900 * time.Millisecond)
+	tt.Frame()
+	snapFrame(t, tt, "now-focus-open")
+	if a.homeNowFocus == "" || !tt.HasText("Show less") {
+		t.Fatalf("not open: %q", tt.Texts())
+	}
+	// "Show less" sits at the foot of the rows, scrolled to; pressing it:
+	a.homeNowOpen = ""
+	tt.Frame()
+	tt.Advance(time.Second)
+	tt.Frame()
+	tt.Frame()
+	if a.homeNowFocus != "" || a.homeNowOpen != "" || tt.HasText("Show less") {
+		t.Fatalf("not landed back: focus %q open %q", a.homeNowFocus, a.homeNowOpen)
 	}
 }

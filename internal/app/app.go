@@ -106,6 +106,7 @@ type App struct {
 	homeBoard      string               // the home board open: now, week or none
 	homeBoardShown string               // the board shown, as it folds away too
 	homeNowOpen    string               // the now list shown whole
+	homeNowFocus   string               // the now list over its column, while it opens, is open or lands back
 	prPanels       map[string]*prPanel  // pull request panels, by session and PR
 	plusLevel      string               // the "+" menu's level: "" or "mcp"
 	gitStates      map[string]*gitState // projects' Git, by project

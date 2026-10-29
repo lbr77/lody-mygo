@@ -1,16 +1,34 @@
 package app
 
 import (
-	"github.com/lbr77/lody-mygo/locales"
+	_ "embed"
 	"strings"
 	"time"
 	"unicode/utf8"
 
 	"github.com/egoist/mygo"
 	"github.com/egoist/mygo/ui"
+
+	"github.com/lbr77/lody-mygo/locales"
 )
 
 const titleBarHeight = 44
+
+//go:embed assets/boot-mark.png
+var bootMarkPNG []byte
+
+var bootMarkBitmap, _ = ui.DecodeBitmap(bootMarkPNG)
+
+// bootMark is Lody's launch mark: its 48px jellyfish fades in over 240ms
+// after 120ms, easing out, and from 1.2s breathes down to half and back
+// every 2.4s while the app starts.
+func bootMark(c *ui.Context) {
+	mark := ui.Image(c.Key("boot-mark"), bootMarkBitmap).Size(48, 48).Label(locales.Loading())
+	in := mark.Keyframes("in", []ui.Keyframe{{Value: 0}, {At: 120 * time.Millisecond, Value: 0}, {At: 360 * time.Millisecond, Value: 1, Ease: ui.EaseOut}})
+	breathe := mark.Keyframes("breathe", []ui.Keyframe{{Value: 1}, {At: 1200 * time.Millisecond, Value: 0.5, Ease: ui.EaseInOut}, {At: 2400 * time.Millisecond, Value: 1, Ease: ui.EaseInOut}},
+		ui.KeyframeOptions{Repeat: ui.RepeatForever, Delay: 1200 * time.Millisecond})
+	mark.Opacity(in * breathe)
+}
 
 func (a *App) render(c *ui.Context) {
 	p := applyTheme(c)
@@ -20,8 +38,8 @@ func (a *App) render(c *ui.Context) {
 	ui.Overlay(c, func() {})
 	switch a.phase {
 	case phaseLoading:
-		ui.Column(c.Key("loading")).Fill().Center().Background(p.Ground).DragWindow().Children(func() {
-			spinner(c).Label(locales.Loading())
+		ui.Column(c.Key("loading")).Fill().Center().Background(p.Canvas).DragWindow().Children(func() {
+			bootMark(c)
 		})
 	case phaseSignedOut:
 		a.signInView(c, p)

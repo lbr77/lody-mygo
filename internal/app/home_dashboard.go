@@ -579,25 +579,48 @@ func (a *App) nowBoard(c *ui.Context, p *palette, lists map[string]*nowList, now
 	cols := layoutHomeNow(totals, usage)
 	ui.Row(c).FillWidth().Gap(6).AlignItems(ui.Start).Children(func() {
 		for i, col := range cols {
-			ui.Column(c.Key(i)).Grow(1).Basis(0).MinWidth(0).Gap(6).Children(func() {
-				for _, b := range col {
-					switch b.kind {
-					case "usage":
-						tile(c, p, "usage", func() {
-							tileLabel(c, p, locales.HomeWeekUsageNamed(ag.Name))
-							quotaMeters(c, p, limits, now)
-						})
-					case "quiet":
-						tile(c, p, "quiet", func() {
-							ui.Row(c).Gap(6).AlignItems(ui.Center).Children(func() {
-								ui.Icon(c, markSuccess).Size(16, 16).TextColor(p.Success)
-								ui.Text(c, locales.HomeNowQuiet()).FontSize(16).FontWeight(500).TextColor(p.Text)
+			// The list opened over this column, or still landing back.
+			var focus *nowList
+			focusShown := 0
+			for _, b := range col {
+				if b.key == a.homeNowFocus && lists[b.key] != nil {
+					focus, focusShown = lists[b.key], b.shown
+				}
+			}
+			column := ui.Column(c.Key(i)).Grow(1).Basis(0).MinWidth(0)
+			k := column.AnimateTo("focus", b2f(focus != nil && a.homeNowOpen == focus.key), focusSpring)
+			if focus != nil && a.homeNowOpen != focus.key && k < 0.002 {
+				a.homeNowFocus, focus = "", nil
+			}
+			var focusTile ui.Element
+			column.Children(func() {
+				board := ui.Column(c.Key("board")).FillWidth().Gap(6)
+				board.Children(func() {
+					for _, b := range col {
+						switch b.kind {
+						case "usage":
+							tile(c, p, "usage", func() {
+								tileLabel(c, p, locales.HomeWeekUsageNamed(ag.Name))
+								quotaMeters(c, p, limits, now)
 							})
-							ui.Text(c, locales.HomeNowQuietNote()).FontSize(sizeCaption).TextColor(p.Secondary)
-						})
-					default:
-						a.nowListTile(c, p, lists[b.key], b.shown, now)
+						case "quiet":
+							tile(c, p, "quiet", func() {
+								ui.Row(c).Gap(6).AlignItems(ui.Center).Children(func() {
+									ui.Icon(c, markSuccess).Size(16, 16).TextColor(p.Success)
+									ui.Text(c, locales.HomeNowQuiet()).FontSize(16).FontWeight(500).TextColor(p.Text)
+								})
+								ui.Text(c, locales.HomeNowQuietNote()).FontSize(sizeCaption).TextColor(p.Secondary)
+							})
+						default:
+							t := a.nowListTile(c, p, lists[b.key], b.shown, now)
+							if focus != nil && b.key == focus.key {
+								focusTile = t
+							}
+						}
 					}
+				})
+				if focus != nil && k > 0 {
+					a.nowFocus(c, p, column, board, focusTile, focus, focusShown, k, now)
 				}
 			})
 		}
@@ -616,65 +639,111 @@ func nowListTitle(key string) string {
 	return locales.HomeNowNext()
 }
 
-// nowListTile is a list: the rows its share of the board allows, and the
-// rest a press away, opened in place.
-func (a *App) nowListTile(c *ui.Context, p *palette, l *nowList, shown int, now time.Time) {
+// nowListTile is a list: the rows its share of the board allows, and
+// "Show all", which opens the whole list over its column.
+func (a *App) nowListTile(c *ui.Context, p *palette, l *nowList, shown int, now time.Time) ui.Element {
 	total := len(l.items)
-	expanded := a.homeNowOpen == l.key
-	if expanded {
-		shown = total
-	}
-	tile(c, p, l.key, func() {
-		ui.Row(c).FillWidth().Gap(8).AlignItems(ui.Center).Children(func() {
-			ui.Text(c, nowListTitle(l.key)).FontSize(sizeFoot).TextColor(p.Secondary).Grow(1).SingleLine()
-			ink := p.Text
-			if total == 0 {
-				ink = p.Tertiary
-			}
-			ui.Text(c, fmt.Sprint(total)).FontSize(sizeFoot).FontWeight(500).TextColor(ink).FontFeatures("tnum")
-		})
+	return tile(c, p, l.key, func() {
+		a.nowListHead(c, p, l)
 		if total == 0 {
 			return
 		}
 		ui.Column(c).FillWidth().Gap(1).Children(func() {
 			for _, it := range l.items[:min(shown, total)] {
-				item := it
-				row := ui.ButtonBase(c.Key(it.session.ID)).FillWidth().Height(26).Padding(0, 6).Radius(6).Gap(8).AlignItems(ui.Center).
-					Cursor(ui.CursorPointer).Label(it.session.Title).Transition(colorFade).OnClick(func() { a.open(item.session.ID) })
-				if row.Hovered() {
-					row.Background(p.Text.Alpha(0.05))
-				}
-				row.Children(func() {
-					reasonMark(c, p, item.reason)
-					ui.Text(c, firstNonEmpty(item.session.Title, locales.UntitledSession())).FontSize(sizeSub).TextColor(p.Text).SingleLine().Grow(1).MinWidth(0)
-					ui.Text(c, rowMeta(item, now)).FontSize(sizeCaption).TextColor(p.Secondary).SingleLine().Shrink(0)
-				})
+				a.nowRow(c, p, it, now)
 			}
 		})
-		if total > min(shown, total) || expanded {
-			label := locales.HomeNowShowAll(total)
-			icon := iconChevronDown
-			if expanded {
-				label, icon = locales.HomeNowShowLess(), iconChevronUp
-			}
+		if total > min(shown, total) {
 			key := l.key
-			more := ui.ButtonBase(c.Key("more")).Height(22).Padding(0, 6).Gap(4).Radius(6).AlignItems(ui.Center).Cursor(ui.CursorPointer).Label(label).
-				OnClick(func() {
-					if a.homeNowOpen == key {
-						a.homeNowOpen = ""
-					} else {
-						a.homeNowOpen = key
-					}
-				})
-			ink := p.Secondary
-			if more.Hovered() {
-				ink = p.Text
-			}
-			more.Children(func() {
-				ui.Icon(c, icon).Size(12, 12).TextColor(ink)
-				ui.Text(c, label).FontSize(sizeCaption).TextColor(ink)
-			})
+			a.nowMore(c, p, locales.HomeNowShowAll(total), iconChevronDown, func() { a.homeNowOpen, a.homeNowFocus = key, key })
 		}
+	})
+}
+
+func (a *App) nowListHead(c *ui.Context, p *palette, l *nowList) {
+	total := len(l.items)
+	ui.Row(c).FillWidth().Gap(8).AlignItems(ui.Center).Children(func() {
+		ui.Text(c, nowListTitle(l.key)).FontSize(sizeFoot).TextColor(p.Secondary).Grow(1).SingleLine()
+		ink := p.Text
+		if total == 0 {
+			ink = p.Tertiary
+		}
+		ui.Text(c, fmt.Sprint(total)).FontSize(sizeFoot).FontWeight(500).TextColor(ink).FontFeatures("tnum")
+	})
+}
+
+func (a *App) nowRow(c *ui.Context, p *palette, it nowItem, now time.Time) ui.Element {
+	item := it
+	row := ui.ButtonBase(c.Key(it.session.ID)).FillWidth().Height(26).Padding(0, 6).Radius(6).Gap(8).AlignItems(ui.Center).
+		Cursor(ui.CursorPointer).Label(it.session.Title).Transition(colorFade).OnClick(func() { a.open(item.session.ID) })
+	if row.Hovered() {
+		row.Background(p.Text.Alpha(0.05))
+	}
+	row.Children(func() {
+		reasonMark(c, p, item.reason)
+		ui.Text(c, firstNonEmpty(item.session.Title, locales.UntitledSession())).FontSize(sizeSub).TextColor(p.Text).SingleLine().Grow(1).MinWidth(0)
+		ui.Text(c, rowMeta(item, now)).FontSize(sizeCaption).TextColor(p.Secondary).SingleLine().Shrink(0)
+	})
+	return row
+}
+
+func (a *App) nowMore(c *ui.Context, p *palette, label string, icon *ui.SVG, press func()) ui.Element {
+	more := ui.ButtonBase(c.Key("more")).Height(22).Padding(0, 6).Gap(4).Radius(6).AlignItems(ui.Center).Cursor(ui.CursorPointer).Label(label).OnClick(press)
+	ink := p.Secondary
+	if more.Hovered() {
+		ink = p.Text
+	}
+	more.Children(func() {
+		ui.Icon(c, icon).Size(12, 12).TextColor(ink)
+		ui.Text(c, label).FontSize(sizeCaption).TextColor(ink)
+	})
+	return more
+}
+
+// focusSpring is the one spring a now list opens and closes on, as Lody's
+// focus motion: response 0.4s, damping 0.9 — about 95% there at 256ms,
+// settled by about 660ms.
+var focusSpring = ui.Animation{Spring: ui.SpringOptions{Mass: 1, Stiffness: 246.74, Damping: 28.27}}
+
+// nowFocus is a now list opened over its column, as Lody's: the frame
+// grows from the tile to the column on the spring while the rest of the
+// column steps back to 0.94 toward the tile and fades; the rows the tile
+// hid rise 4px in over 200ms, a few at a time; closing, the frame lands
+// back in its tile on the same spring as the rows it takes fade.
+func (a *App) nowFocus(c *ui.Context, p *palette, col, board, tileEl ui.Element, l *nowList, shown int, k float32, now time.Time) {
+	cb, tb := col.LayoutBounds(), tileEl.LayoutBounds()
+	if cb.W <= 0 || tb.W <= 0 {
+		return
+	}
+	tx, ty := tb.X-cb.X, tb.Y-cb.Y
+	board.TransformOrigin((tx+tb.W/2)/cb.W, (ty+tb.H/2)/max(cb.H, 1)).Scale(1-0.06*k, 1-0.06*k).Opacity(max(0, 1-k))
+	lerp := func(from, to float32) float32 { return from + (to-from)*k }
+	frame := ui.Column(c.Key("focus-frame")).Absolute().Left(lerp(tx, 0)).Top(lerp(ty, 0)).Width(lerp(tb.W, cb.W)).Height(lerp(tb.H, cb.H)).
+		Padding(10).Radius(12).Background(p.Canvas.Mix(p.Text, 0.04)).Gap(8).Clip()
+	opening := a.homeNowOpen == l.key
+	frame.Children(func() {
+		a.nowListHead(c, p, l)
+		ui.Scroll(c.Key("focus-rows")).FillWidth().Grow(1).MinHeight(0).Gap(1).Children(func() {
+			for i, it := range l.items {
+				row := a.nowRow(c, p, it, now)
+				if i < shown {
+					continue
+				}
+				// What the tile hid: rising in a few rows at a time as it
+				// opens, fading over the first third as it closes.
+				late := i - shown
+				if opening {
+					r := row.Keyframes("late", []ui.Keyframe{{Value: 0}, {At: 200 * time.Millisecond, Value: 1, Ease: ui.CubicBezier(0.2, 0, 0, 1)}},
+						ui.KeyframeOptions{Delay: time.Duration(30+14*min(late, 8)) * time.Millisecond})
+					row.Opacity(r).Translate(0, 4*(1-r))
+				} else {
+					row.Opacity(max(0, (k-0.65)/0.35))
+				}
+			}
+			if opening || k > 0.6 {
+				a.nowMore(c, p, locales.HomeNowShowLess(), iconChevronUp, func() { a.homeNowOpen = "" })
+			}
+		})
 	})
 }
 
