@@ -5,6 +5,7 @@ package session
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	loro "github.com/aholstenson/loro-go"
 )
@@ -22,6 +23,10 @@ type Item struct {
 	Permission                *Permission
 	Content                   []any // tool output blocks: diff, terminal, content
 	RawInput, RawOutput       any
+
+	// ThoughtFor is how long a thought streamed, when this client saw it
+	// stream; zero otherwise.
+	ThoughtFor time.Duration
 
 	Plan     []PlanEntry // plan
 	Subagent *Subagent   // subagent_task

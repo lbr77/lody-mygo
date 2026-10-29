@@ -122,7 +122,7 @@ func TestExpandActivity(t *testing.T) {
 	tt := snap(t, a, "session-expanded", false, func(tt *ui.Tester) {
 		tt.Frame()
 		// The visible group: the reply in progress.
-		if err := tt.Click("Ran 1 command"); err != nil {
+		if err := tt.Click("Ran 2 commands"); err != nil {
 			t.Fatal(err)
 		}
 	})
@@ -136,6 +136,18 @@ func TestThinkingCollapsed(t *testing.T) {
 	a.view.Entries = a.view.Entries[:2]
 	a.view.Working = false
 	tt := snap(t, a, "thinking-collapsed", false, nil)
+	if tt.HasText("Thought") {
+		t.Fatal("a finished turn's work shows before it is unfolded")
+	}
+	if err := tt.Click("Worked for 1m 12s"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	// Thinking and tool calls fold into one row.
+	if err := tt.Click("Thought · Ran 1 command · Read 1 file"); err != nil {
+		t.Fatalf("%v: %q", err, tt.Texts())
+	}
+	tt.Frame()
 	if tt.HasText("The snapshot format is only in the wasm build.") {
 		t.Fatal("thinking shows before it is clicked")
 	}
@@ -153,7 +165,10 @@ func TestNewChat(t *testing.T) {
 	a.selected, a.view = "", nil
 	a.pickNewChatDefaults()
 	tt := snap(t, a, "newchat-light", false, nil)
-	for _, want := range []string{"What should we work on?", "Studio", "Claude Code", "No project"} {
+	if !tt.HasText("What should we work on?") && !tt.HasText("Let's ship something") {
+		t.Errorf("no heading in %q", tt.Texts())
+	}
+	for _, want := range []string{"Studio", "Claude Code", "Select a project"} {
 		if !tt.HasText(want) {
 			t.Errorf("missing %q in %q", want, tt.Texts())
 		}
@@ -195,6 +210,10 @@ func TestToolDetail(t *testing.T) {
 	items[2].HasDetail = true
 	items[2].Content = []any{map[string]any{"type": "terminal", "command": "go", "args": []any{"test", "./internal/flock"}, "output": "ok  github.com/lbr77/lody-mygo/internal/flock 0.04s"}}
 	tt := snap(t, a, "tool-detail", false, func(tt *ui.Tester) {
+		tt.Frame()
+		if err := tt.Click("Worked for 1m 12s"); err != nil {
+			t.Fatal(err)
+		}
 		tt.Frame()
 		if err := tt.Click("Edited 1 file"); err != nil {
 			t.Fatal(err)

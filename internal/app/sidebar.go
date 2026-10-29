@@ -1,70 +1,107 @@
 package app
 
 import (
+	"fmt"
 	"math"
-	"strconv"
+	"sort"
 	"strings"
 	"time"
+	"unicode/utf16"
 
+	"github.com/egoist/mygo"
 	"github.com/egoist/mygo/ui"
 
 	"github.com/lbr77/lody-mygo/internal/catalog"
 )
 
-const sidebarWidth = 280
+const (
+	sidebarWidth    = 300
+	projectPreview  = 5 // sessions a project shows before "Show all"
+	sidebarListPadX = 6
+)
+
+type rowKind int
+
+const (
+	rowSection rowKind = iota
+	rowProject
+	rowSession
+	rowMore
+	rowNote
+)
 
 type sideRow struct {
-	header  bool
-	group   string
+	kind    rowKind
+	key     string
+	group   string // the section or project the row belongs to
 	label   string
-	project string // for New chat in this project
 	machine string
+	project string
 	count   int
 	session *catalog.Session
-	child   bool
+	nested  bool    // a session under a project
+	depth   int     // sessions opened by another sit under it
+	top     float32 // space above the row
 }
 
-// sideRows groups the sessions as Lody's Project mode does: pinned first,
-// then each project, then chats outside any project.
+// machineLabel is a machine's name without the ".local" of mDNS hosts.
+func (a *App) machineLabel(id string) string {
+	return strings.TrimSuffix(a.machineName(id), ".local")
+}
+
+// sideRows lays the sessions out as Lody's Project mode: Pinned, then each
+// machine with its projects and their sessions, then Chats outside any
+// project.
 func (a *App) sideRows() []sideRow {
 	var rows []sideRow
 	sessions := a.catalog.Sessions
-	byParent := map[string][]*catalog.Session{}
 	visible := map[string]bool{}
 	for i := range sessions {
 		if !sessions[i].Archived {
 			visible[sessions[i].ID] = true
 		}
 	}
+	children := map[string][]*catalog.Session{}
+	isChild := func(s *catalog.Session) bool { return s.ParentSessionID != "" && visible[s.ParentSessionID] }
 	for i := range sessions {
-		s := &sessions[i]
-		if s.Archived {
-			continue
-		}
-		if parent := s.ParentSessionID; parent != "" && visible[parent] {
-			byParent[parent] = append(byParent[parent], s)
+		if s := &sessions[i]; !s.Archived && isChild(s) {
+			children[s.ParentSessionID] = append(children[s.ParentSessionID], s)
 		}
 	}
-	isChild := func(s *catalog.Session) bool { return s.ParentSessionID != "" && visible[s.ParentSessionID] }
-	add := func(group, label, project, machine string, list []*catalog.Session) {
-		if len(list) == 0 {
-			return
-		}
-		rows = append(rows, sideRow{header: true, group: group, label: label, project: project, machine: machine, count: len(list)})
-		if a.collapsed[group] {
-			return
-		}
-		for _, s := range list {
-			rows = append(rows, sideRow{group: group, session: s})
-			for _, child := range byParent[s.ID] {
-				rows = append(rows, sideRow{group: group, session: child, child: true})
+	sectionOpen := false // whether the last section was expanded
+	section := func(key, label, machine string) bool {
+		top := float32(0)
+		if len(rows) > 0 {
+			top = 4
+			if sectionOpen {
+				top = 16
 			}
+		}
+		rows = append(rows, sideRow{kind: rowSection, key: "s:" + key, group: key, label: label, machine: machine, top: top})
+		sectionOpen = !a.collapsed[key]
+		return sectionOpen
+	}
+	addSessions := func(group string, list []*catalog.Session, nested bool, limit int) {
+		shown := 0
+		for _, s := range list {
+			if limit > 0 && shown == limit && !a.showAll[group] {
+				rows = append(rows, sideRow{kind: rowMore, key: "m:" + group, group: group, count: len(list), nested: nested})
+				return
+			}
+			top := float32(0)
+			if shown == 0 {
+				top = 2
+			}
+			rows = append(rows, sideRow{kind: rowSession, key: group + "/" + s.ID, group: group, session: s, nested: nested, top: top})
+			for _, child := range children[s.ID] {
+				rows = append(rows, sideRow{kind: rowSession, key: group + "/" + child.ID, group: group, session: child, nested: nested, depth: 1})
+			}
+			shown++
 		}
 	}
 
-	var pinned []*catalog.Session
+	var pinned, chats []*catalog.Session
 	byProject := map[string][]*catalog.Session{}
-	var chats []*catalog.Session
 	for i := range sessions {
 		s := &sessions[i]
 		if s.Archived || isChild(s) {
@@ -79,17 +116,34 @@ func (a *App) sideRows() []sideRow {
 			chats = append(chats, s)
 		}
 	}
-	add("pinned", "Pinned", "", "", pinned)
-	for _, p := range a.catalog.Projects {
-		label := p.Name
-		if len(a.catalog.MachineIDs) > 1 {
-			if m := a.catalog.MachineNames[p.MachineID]; m != "" {
-				label += " · " + m
+	if len(pinned) > 0 && section("pinned", "Pinned", "") {
+		addSessions("pinned", pinned, false, 0)
+	}
+	for _, machine := range a.catalog.MachineIDs {
+		var projects []catalog.Project
+		for _, p := range a.catalog.Projects {
+			if p.MachineID == machine {
+				projects = append(projects, p)
 			}
 		}
-		add("project:"+p.ID, label, p.ID, p.MachineID, byProject[p.ID])
+		if len(projects) == 0 {
+			continue
+		}
+		if !section("machine:"+machine, a.machineLabel(machine), machine) {
+			continue
+		}
+		for _, p := range projects {
+			group := "project:" + p.ID
+			list := byProject[p.ID]
+			rows = append(rows, sideRow{kind: rowProject, key: "p:" + p.ID, group: group, label: p.Name, machine: machine, project: p.ID, count: len(list)})
+			if !a.collapsed[group] {
+				addSessions(group, list, true, projectPreview)
+			}
+		}
 	}
-	add("chats", "Chats", "", "", chats)
+	if len(chats) > 0 && section("chats", "Chats", "") {
+		addSessions("chats", chats, false, 0)
+	}
 	if a.showArchived {
 		var archived []*catalog.Session
 		for i := range sessions {
@@ -97,42 +151,63 @@ func (a *App) sideRows() []sideRow {
 				archived = append(archived, &sessions[i])
 			}
 		}
-		if len(archived) == 0 {
-			rows = append(rows, sideRow{header: true, group: "archived", label: "No archived chats"})
+		if section("archived", "Archived", "") {
+			if len(archived) == 0 {
+				rows = append(rows, sideRow{kind: rowNote, key: "n:archived", label: "No archived chats"})
+			}
+			addSessions("archived", archived, false, 0)
 		}
-		add("archived", "Archived", "", "", archived)
 	}
 	return rows
 }
 
 func (a *App) sidebar(c *ui.Context, p *palette) {
-	ui.Column(c).Width(sidebarWidth).Shrink(0).FillHeight().Children(func() {
+	ui.Column(c).Width(sidebarWidth).Shrink(0).Children(func() {
 		// The traffic lights sit on the left of this row.
-		ui.Row(c).Height(titleBarHeight).Shrink(0).AlignItems(ui.Center).Justify(ui.End).Padding(0, 6).DragWindow().Children(func() {
-			iconButton(c, p, iconSidebar, "Hide sidebar", p.SideHover).OnClick(func() { a.sidebarHidden = true })
+		ui.Row(c).Height(titleBarHeight).Shrink(0).AlignItems(ui.Center).Justify(ui.End).Padding(0, 6).Gap(2).DragWindow().Children(func() {
+			iconButton(c, p, iconSidebar, "Toggle Sidebar", p.SideHover).OnClick(func() { a.sidebarHidden = true })
+			back := iconButton(c, p, iconChevronLeft, "Back", p.SideHover).Disabled(!a.canGoBack())
+			if !a.canGoBack() {
+				back.Opacity(0.6)
+			}
+			back.OnClick(a.goBack)
+			forward := iconButton(c, p, iconChevronRight, "Forward", p.SideHover).Disabled(!a.canGoForward())
+			if !a.canGoForward() {
+				forward.Opacity(0.6)
+			}
+			forward.OnClick(a.goForward)
 		})
 		ui.Column(c).Padding(0, 6).Gap(1).Shrink(0).Children(func() {
 			if navRow(c, p, iconNewChat, "New chat", a.selected == "").Clicked() {
 				a.open("")
 			}
+			search := navRow(c, p, iconSearch, "Search", a.searchOpen).OnClick(func() {
+				a.searchOpen, a.searchText = !a.searchOpen, ""
+			})
+			ui.Popover(c, search, &a.searchOpen, func() { a.searchPanel(c, p) })
 		})
 		rows := a.sideRows()
 		a.sessionList.Key = func(i int) any {
-			if i >= len(rows) {
-				return i
+			if i < len(rows) {
+				return rows[i].key
 			}
-			if rows[i].header {
-				return "h:" + rows[i].group
-			}
-			return rows[i].group + "/" + rows[i].session.ID
+			return i
 		}
 		ui.List(c, &a.sessionList, len(rows), func(i int) {
-			if rows[i].header {
-				a.groupHeader(c, p, rows[i])
-			} else {
-				a.sessionRow(c, p, rows[i])
+			r := rows[i]
+			switch r.kind {
+			case rowSection:
+				a.sectionHeader(c, p, r)
+			case rowProject:
+				a.projectRow(c, p, r)
+			case rowSession:
+				a.sessionRow(c, p, r)
+			case rowMore:
+				a.moreRow(c, p, r)
+			case rowNote:
+				ui.Text(c.Key(r.key), r.label).FontSize(sizeSub).TextColor(p.SideMuted).Padding(4, 9)
 			}
-		}).Grow(1).MinHeight(0).Padding(12, 6, 12, 6).Gap(1).Children(func() {
+		}).Grow(1).MinHeight(0).Padding(12, sidebarListPadX, 12, sidebarListPadX).Gap(1).Children(func() {
 			if len(rows) == 0 {
 				msg := "No chats yet"
 				if !a.synced {
@@ -165,58 +240,109 @@ func navRow(c *ui.Context, p *palette, icon *ui.SVG, label string, selected bool
 		iconInk = p.SideRow
 	}
 	row.Children(func() {
-		ui.Icon(c, icon).Size(16, 16).TextColor(iconInk)
+		ui.Box(c).Size(16, 20).Center().Children(func() { ui.Icon(c, icon).Size(16, 16).TextColor(iconInk) })
 		ui.Text(c, label).FontSize(sizeSub).TextColor(ink)
 	})
 	return row
 }
 
-func (a *App) groupHeader(c *ui.Context, p *palette, r sideRow) {
-	row := ui.Row(c.Key("h:"+r.group)).Height(28).Padding(0, 4, 0, 9).Gap(4).AlignItems(ui.Center).Radius(8).Cursor(ui.CursorPointer)
-	if !a.collapsed[r.group] {
-		row.Margin(0, 0, 4, 0)
-	}
+// sectionHeader is a machine's, Pinned's or Chats' header: muted label,
+// chevron on hover or while folded.
+func (a *App) sectionHeader(c *ui.Context, p *palette, r sideRow) {
+	row := ui.Row(c.Key(r.key)).Height(26).Padding(0, 8).Border(1, ui.Transparent).Radius(6).Gap(6).AlignItems(ui.Center).
+		Margin(r.top, 0, 0, 0).Cursor(ui.CursorPointer).Label(r.label).
+		OnClick(func() {
+			a.collapsed[r.group] = !a.collapsed[r.group]
+			a.savePrefs()
+		})
 	hovered := row.Hovered()
-	row.OnClick(func() {
-		a.collapsed[r.group] = !a.collapsed[r.group]
-		a.savePrefs()
-	})
+	collapsed := a.collapsed[r.group]
 	row.Children(func() {
-		ui.Text(c, r.label).FontSize(sizeFoot).FontWeight(500).TextColor(p.GroupLabel).SingleLine().MinWidth(0)
-		if hovered {
+		ui.Text(c, r.label).FontSize(sizeFoot).FontWeight(500).TextColor(p.SideMuted.Alpha(0.8)).SingleLine().MinWidth(0)
+		if r.machine != "" && !a.presence.IsOnline(r.machine) {
+			offlinePill(c, p)
+		}
+		if hovered || collapsed {
 			icon := iconChevronDown
-			if a.collapsed[r.group] {
+			if collapsed {
 				icon = iconChevronRight
 			}
-			ui.Icon(c, icon).Size(12, 12).TextColor(p.GroupLabel)
+			ui.Icon(c, icon).Size(14, 14).TextColor(p.SideMuted)
 		}
-		ui.Spacer(c)
-		if hovered && r.project != "" {
-			b := ui.ButtonBase(c).Size(24, 24).Radius(4).Cursor(ui.CursorPointer).Label("New chat in " + r.label).Tooltip("New chat")
-			if b.Hovered() {
-				b.Background(p.SideHover)
+	})
+}
+
+// projectRow is a project under its machine: folder icon, name, and New
+// chat on hover.
+func (a *App) projectRow(c *ui.Context, p *palette, r sideRow) {
+	collapsed := a.collapsed[r.group]
+	selected := a.newChat.project == r.project && a.selected == ""
+	row := ui.Row(c.Key(r.key)).Height(30).Padding(4, 8).Border(1, ui.Transparent).Radius(6).Gap(8).AlignItems(ui.Center).
+		Cursor(ui.CursorPointer).Label(r.label).
+		OnClick(func() {
+			a.collapsed[r.group] = !a.collapsed[r.group]
+			a.savePrefs()
+		})
+	hovered := row.Hovered()
+	switch {
+	case selected:
+		row.Background(p.SideSelect)
+	case hovered:
+		row.Background(p.SideHover)
+	}
+	row.Children(func() {
+		icon := iconFolderOpen
+		if collapsed {
+			icon = iconFolder
+		}
+		if hovered {
+			icon = iconChevronDown
+			if collapsed {
+				icon = iconChevronRight
 			}
-			if b.Clicked() {
+		}
+		ui.Box(c).Size(14, 16).Center().Shrink(0).Children(func() { ui.Icon(c, icon).Size(16, 16).TextColor(p.SideMuted) })
+		ui.Text(c, r.label).FontSize(sizeSub).TextColor(p.SideRow).SingleLine().Grow(1).MinWidth(0)
+		if hovered {
+			b := ui.ButtonBase(c).Size(20, 20).Radius(4).Cursor(ui.CursorPointer).Label("New chat in " + r.label).Tooltip("New chat")
+			if b.Hovered() {
+				b.Background(p.Text.Alpha(0.08))
+			}
+			b.OnClick(func() {
 				a.newChat.machine, a.newChat.project = r.machine, r.project
 				a.pickNewChatDefaults()
 				a.open("")
-			}
-			b.Children(func() { ui.Icon(c, iconPlus).Size(14, 14).TextColor(p.SideMuted) })
+			})
+			b.Children(func() { ui.Icon(c, iconSquarePen).Size(14, 14).TextColor(p.SideMuted) })
 		}
+	})
+}
+
+func (a *App) moreRow(c *ui.Context, p *palette, r sideRow) {
+	row := ui.Row(c.Key(r.key)).Height(28).Padding(4, 8, 4, 37).Radius(6).AlignItems(ui.Center).Cursor(ui.CursorPointer).
+		Label("Show all").OnClick(func() { a.showAll[r.group] = true })
+	if row.Hovered() {
+		row.Background(p.SideHover)
+	}
+	row.Children(func() {
+		ui.Text(c, fmt.Sprintf("Show all (%d)", r.count)).FontSize(sizeSub).TextColor(p.SideMuted)
 	})
 }
 
 func (a *App) sessionRow(c *ui.Context, p *palette, r sideRow) {
 	s := r.session
 	selected := a.selected == s.ID
-	row := ui.Row(c.Key(r.group+"/"+s.ID)).Height(28).Padding(3, 8).Radius(8).Gap(8).AlignItems(ui.Center).Cursor(ui.CursorPointer).Label(s.Title)
-	if r.child {
-		row.Padding(3, 8, 3, 22)
+	row := ui.Row(c.Key(r.key)).Border(1, ui.Transparent).Gap(8).AlignItems(ui.Center).Cursor(ui.CursorPointer).Label(s.Title).Margin(r.top, 0, 0, 0)
+	if r.nested {
+		row.Height(30).Padding(4, 8).Radius(6)
+	} else {
+		row.Height(26).Padding(3, 8).Radius(8)
 	}
+	hovered := row.Hovered()
 	switch {
 	case selected:
 		row.Background(p.SideSelect)
-	case row.Hovered():
+	case hovered:
 		row.Background(p.SideHover)
 	}
 	if row.Clicked() && a.renaming != s.ID {
@@ -229,6 +355,21 @@ func (a *App) sessionRow(c *ui.Context, p *palette, r sideRow) {
 		ink = p.SideRowSel
 	}
 	row.Children(func() {
+		if r.nested || r.depth > 0 {
+			// The leading slot: "⋯" on hover, the tree's indent below.
+			if r.depth > 0 {
+				ui.Box(c).Width(14).Shrink(0)
+			}
+			slot := ui.ButtonBase(c).Size(14, 18).Shrink(0).Radius(4).Label("More actions")
+			if hovered {
+				slot.Menu(func(m *ui.Menu) { a.sessionMenu(m, sess) })
+			}
+			slot.Children(func() {
+				if hovered {
+					ui.Icon(c, iconMore).Size(14, 14).TextColor(p.SideMuted)
+				}
+			})
+		}
 		if s.Pinned && r.group != "pinned" {
 			ui.Icon(c, iconPin).Size(12, 12).TextColor(p.SideMuted)
 		}
@@ -241,8 +382,8 @@ func (a *App) sessionRow(c *ui.Context, p *palette, r sideRow) {
 	})
 }
 
-// statusMark is the one mark at a row's end: waiting, working, unread, or
-// the time of the last message.
+// statusMark is the one mark at a row's end: waiting, working or unread.
+// An idle row's end stays empty.
 func (a *App) statusMark(c *ui.Context, p *palette, s *catalog.Session) {
 	switch {
 	case s.Waiting():
@@ -251,10 +392,6 @@ func (a *App) statusMark(c *ui.Context, p *palette, s *catalog.Session) {
 		workingGrid(c, p, 12)
 	case s.Unread() && a.selected != s.ID:
 		ui.Box(c).Size(8, 8).Radius(4).Background(p.Primary).Margin(0, 2)
-	default:
-		if at := s.LastMessageAt; at > 0 {
-			ui.Text(c, relativeTime(time.UnixMilli(int64(at)))).FontSize(sizeFoot).TextColor(p.SideMuted).Shrink(0)
-		}
 	}
 }
 
@@ -277,22 +414,54 @@ func workingGrid(c *ui.Context, p *palette, size float32) {
 	c.After(80 * time.Millisecond)
 }
 
-func relativeTime(t time.Time) string {
-	d := time.Since(t)
-	switch {
-	case d < time.Minute:
-		return "now"
-	case d < time.Hour:
-		return strconv.Itoa(int(d.Minutes())) + "m"
-	case d < 24*time.Hour:
-		return strconv.Itoa(int(d.Hours())) + "h"
-	case d < 7*24*time.Hour:
-		return strconv.Itoa(int(d.Hours()/24)) + "d"
+// searchPanel finds a chat by title.
+func (a *App) searchPanel(c *ui.Context, p *palette) {
+	var matches []catalog.Session
+	q := strings.ToLower(strings.TrimSpace(a.searchText))
+	for _, s := range a.catalog.Sessions {
+		if q == "" || strings.Contains(strings.ToLower(s.Title), q) {
+			matches = append(matches, s)
+		}
 	}
-	return t.Format("Jan 2")
+	sort.SliceStable(matches, func(i, j int) bool { return matches[i].LastMessageAt > matches[j].LastMessageAt })
+	if len(matches) > 12 {
+		matches = matches[:12]
+	}
+	ui.Column(c).Width(360).Gap(6).Children(func() {
+		in := ui.TextInput(c, &a.searchText).Placeholder("Search chats").AutoFocus().Label("Search chats")
+		if in.Submitted() && len(matches) > 0 {
+			a.searchOpen = false
+			a.open(matches[0].ID)
+		}
+		ui.Column(c).Gap(1).Children(func() {
+			if len(matches) == 0 {
+				ui.Text(c, "No matching chats").FontSize(sizeSub).TextColor(p.Secondary).Padding(6, 8)
+			}
+			for _, s := range matches {
+				row := menuRow(c.Key(s.ID), p, s.Title)
+				if row.Clicked() {
+					a.searchOpen = false
+					a.open(s.ID)
+				}
+				row.Children(func() {
+					ui.Text(c, s.Title).FontSize(sizeSub).TextColor(p.Text).SingleLine().Grow(1).MinWidth(0)
+					if name := a.projectName(s.ProjectID); name != "" {
+						ui.Text(c, name).FontSize(sizeFoot).TextColor(p.Tertiary).SingleLine().Shrink(0).MaxWidth(120)
+					}
+				})
+			}
+		})
+	})
 }
 
-// footer holds the workspace switcher.
+func (a *App) projectName(id string) string {
+	if pr := a.catalog.Project(id); pr != nil {
+		return pr.Name
+	}
+	return ""
+}
+
+// footer holds the workspace switcher, Help, Archive and Settings.
 func (a *App) footer(c *ui.Context, p *palette) {
 	ws := a.workspace()
 	name := "Workspace"
@@ -300,33 +469,109 @@ func (a *App) footer(c *ui.Context, p *palette) {
 		name = ws.Name
 	}
 	ui.Row(c).Shrink(0).Padding(6, 10).Gap(4).AlignItems(ui.Center).Children(func() {
-		switcher := ui.ButtonBase(c).Height(28).Padding(0, 6).Radius(8).Gap(8).Grow(1).MinWidth(0).Justify(ui.Start).Cursor(ui.CursorPointer).Label("Switch workspace")
+		switcher := ui.ButtonBase(c).Height(28).Padding(0, 6).Radius(8).Gap(6).Grow(1).MinWidth(0).Justify(ui.Start).Cursor(ui.CursorPointer).Label("Switch workspace")
 		if switcher.Hovered() || a.workspacesOpen {
 			switcher.Background(p.Text.Alpha(0.06))
 		}
 		switcher.OnClick(func() { a.workspacesOpen = !a.workspacesOpen })
 		switcher.Children(func() {
-			avatar(c, p, name, 16, 4)
-			ui.Text(c, name).FontSize(sizeSub).FontWeight(500).TextColor(p.SideRow).SingleLine().MinWidth(0)
+			workspaceTile(c, name, 16)
+			ui.Text(c, name).FontSize(sizeSub).TextColor(p.SideRow).SingleLine().MinWidth(0)
 			if !a.syncState.Live && a.sync != nil {
-				label := "Syncing"
-				color := p.SideMuted
+				label, color := "Syncing", p.SideMuted
 				if a.syncState.Reason != "" {
 					label, color = "Offline", p.Danger
 				}
 				ui.Text(c, label).FontSize(10).FontWeight(500).TextColor(color).Padding(1, 5).Radius(5).Background(color.Alpha(0.14)).Shrink(0)
 			}
-			ui.Spacer(c)
-			ui.Icon(c, iconChevronDown).Size(12, 12).TextColor(p.SideMuted)
 		})
-		ui.Popover(c, switcher, &a.workspacesOpen, func() {
-			a.workspaceMenu(c, p)
+		ui.Popover(c, switcher, &a.workspacesOpen, func() { a.workspaceMenu(c, p) })
+		iconButton(c, p, iconHelp, "Help", p.SideHover).Menu(func(m *ui.Menu) {
+			for _, link := range []struct{ label, url string }{
+				{"Docs", "https://lody.ai/docs"},
+				{"GitHub", "https://github.com/LodyAI/Lody"},
+				{"Join community", "https://discord.gg/E8mZtMu38s"},
+				{"Report bug", "https://github.com/lbr77/lody-mygo/issues"},
+			} {
+				if m.Item(link.label).Chosen() {
+					mygo.Shell.OpenExternal(link.url)
+				}
+			}
 		})
 		archive := iconButton(c, p, iconArchive, "Archived chats", p.SideHover).OnClick(func() { a.showArchived = !a.showArchived })
 		if a.showArchived {
 			archive.Background(p.SideSelect)
 		}
+		iconButton(c, p, iconSettings, "Settings", p.SideHover).Menu(func(m *ui.Menu) {
+			if a.account != nil {
+				m.Item(a.account.User.Email).Disabled(true)
+				m.Separator()
+			}
+			m.Submenu("Appearance", func(m *ui.Menu) {
+				for _, choice := range []string{"System", "Light", "Dark"} {
+					if m.Item(choice).Radio(a.appearance == choice || a.appearance == "" && choice == "System").Chosen() {
+						a.setAppearance(choice)
+					}
+				}
+			})
+			m.Separator()
+			if m.Item("Sign Out").Chosen() {
+				a.signOut()
+			}
+		})
 	})
+}
+
+// workspaceTile is a workspace's letter on its hashed hue, as Lody's
+// WorkspaceAvatar draws one without a logo.
+func workspaceTile(c *ui.Context, name string, size float32) ui.Element {
+	initial := "W"
+	if t := strings.TrimSpace(name); t != "" {
+		initial = strings.ToUpper(string([]rune(t)[:1]))
+	}
+	key := name
+	if key == "" {
+		key = "workspace"
+	}
+	return ui.Row(c).Size(size, size).Shrink(0).Radius(size / 4).Background(hsl(stringToHue(key), 0.62, 0.52)).Center().Children(func() {
+		ui.Text(c, initial).FontSize(size * 0.56).FontWeight(600).TextColor(ui.RGB(255, 255, 255))
+	})
+}
+
+// stringToHue is Lody's hash of a name to a hue, over UTF-16 code units.
+func stringToHue(s string) float64 {
+	var hash int32
+	for _, u := range utf16.Encode([]rune(s)) {
+		hash = (hash << 5) - hash + int32(u)
+	}
+	h := int64(hash)
+	if h < 0 {
+		h = -h
+	}
+	return float64(h % 360)
+}
+
+func hsl(h, s, l float64) ui.Color {
+	c := (1 - math.Abs(2*l-1)) * s
+	x := c * (1 - math.Abs(math.Mod(h/60, 2)-1))
+	m := l - c/2
+	var r, g, b float64
+	switch {
+	case h < 60:
+		r, g = c, x
+	case h < 120:
+		r, g = x, c
+	case h < 180:
+		g, b = c, x
+	case h < 240:
+		g, b = x, c
+	case h < 300:
+		r, b = x, c
+	default:
+		r, b = c, x
+	}
+	to := func(v float64) uint8 { return uint8(math.Round((v + m) * 255)) }
+	return ui.RGB(to(r), to(g), to(b))
 }
 
 func (a *App) workspaceMenu(c *ui.Context, p *palette) {
@@ -346,7 +591,7 @@ func (a *App) workspaceMenu(c *ui.Context, p *palette) {
 					}
 				}
 				item.Children(func() {
-					avatar(c, p, w.Name, 18, 5)
+					workspaceTile(c, w.Name, 18)
 					ui.Text(c, w.Name).FontSize(sizeSub).TextColor(p.Text).SingleLine().Grow(1).MinWidth(0)
 					if w.ID == a.workspaceID {
 						ui.Icon(c, iconCheck).Size(14, 14).TextColor(p.Text)

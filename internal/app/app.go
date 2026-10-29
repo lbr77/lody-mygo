@@ -90,6 +90,12 @@ type App struct {
 	showArchived   bool
 	models         map[string]string // model chosen per session
 	composerFocus  ui.Handle
+	history        []string // sessions shown, for Back and Forward
+	histPos        int
+	searchOpen     bool
+	searchText     string
+	showAll        map[string]bool              // projects listing every session
+	appearance     string                       // System, Light or Dark
 	diffs          map[string]*editor.DiffState // tool diffs of the open session
 	md             markdown.Options
 	mdMuted        markdown.Options
@@ -103,6 +109,7 @@ func New() *App {
 		drafts:    map[string]string{},
 		models:    map[string]string{},
 		diffs:     map[string]*editor.DiffState{},
+		showAll:   map[string]bool{},
 		collapsed: map[string]bool{},
 		expanded:  map[string]bool{},
 	}
@@ -119,6 +126,10 @@ func (a *App) Start(win *mygo.Window) {
 	a.collapsed = prefs.Collapsed
 	if a.collapsed == nil {
 		a.collapsed = map[string]bool{}
+	}
+	a.appearance = prefs.Appearance
+	if a.appearance != "" {
+		applyAppearance(a.appearance)
 	}
 	go func() {
 		token, _ := mygo.Secrets.Get(secretKey)
@@ -349,10 +360,56 @@ func (a *App) signOutLocal() {
 }
 
 // open shows a session and follows its stream.
+// open shows a session, or New chat for "", recording it for Back.
 func (a *App) open(id string) {
-	if a.selected == id && a.replica != nil {
+	if a.selected == id && (id == "" || a.replica != nil) {
 		return
 	}
+	if len(a.history) == 0 {
+		a.history = []string{a.selected}
+	}
+	a.history = append(a.history[:a.histPos+1], id)
+	a.histPos = len(a.history) - 1
+	a.show(id)
+}
+
+func (a *App) canGoBack() bool    { return a.histPos > 0 }
+func (a *App) canGoForward() bool { return a.histPos < len(a.history)-1 }
+
+func (a *App) goBack() {
+	if a.canGoBack() {
+		a.histPos--
+		a.show(a.history[a.histPos])
+	}
+}
+
+func (a *App) goForward() {
+	if a.canGoForward() {
+		a.histPos++
+		a.show(a.history[a.histPos])
+	}
+}
+
+// setAppearance follows the system, or keeps the app light or dark.
+func (a *App) setAppearance(choice string) {
+	a.appearance = choice
+	applyAppearance(choice)
+	a.savePrefs()
+}
+
+func applyAppearance(choice string) {
+	switch choice {
+	case "Light":
+		mygo.Theme.SetSource(mygo.ThemeLight)
+	case "Dark":
+		mygo.Theme.SetSource(mygo.ThemeDark)
+	default:
+		mygo.Theme.SetSource(mygo.ThemeSystem)
+	}
+}
+
+// show switches to a session and follows its stream.
+func (a *App) show(id string) {
 	a.stashDraft()
 	a.closeSession()
 	a.selected = id
@@ -572,8 +629,9 @@ func draftTitle(text string) string {
 // data directory; the session token in the keychain.
 
 type prefs struct {
-	Workspace string          `json:"workspace"`
-	Collapsed map[string]bool `json:"collapsed,omitempty"`
+	Workspace  string          `json:"workspace"`
+	Collapsed  map[string]bool `json:"collapsed,omitempty"`
+	Appearance string          `json:"appearance,omitempty"`
 }
 
 func dataDir() string {
@@ -609,7 +667,7 @@ func loadPrefs() prefs {
 }
 
 func (a *App) savePrefs() {
-	writeJSON("prefs.json", prefs{Workspace: a.workspaceID, Collapsed: a.collapsed})
+	writeJSON("prefs.json", prefs{Workspace: a.workspaceID, Collapsed: a.collapsed, Appearance: a.appearance})
 }
 
 func loadAccount() *cloud.Account {

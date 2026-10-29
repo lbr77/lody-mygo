@@ -40,6 +40,47 @@ type Replica struct {
 	firstReady chan struct{}
 	readyOnce  sync.Once
 	flushMu    sync.Mutex
+
+	thoughts map[string]*span // thoughts seen streaming, by entry/item
+}
+
+// span is when a thought streamed: from its first text to its last.
+type span struct {
+	start, end time.Time
+	length     int
+}
+
+// timeThoughts records how long thoughts stream while the replica is live,
+// and sets ThoughtFor on those it saw. Callers hold r.mu.
+func (r *Replica) timeThoughts(v *View, now time.Time) {
+	if r.thoughts == nil {
+		r.thoughts = map[string]*span{}
+	}
+	for ei := range v.Entries {
+		e := &v.Entries[ei]
+		if e.Role != "assistant" {
+			continue
+		}
+		for ii := range e.Items {
+			it := &e.Items[ii]
+			if it.Type != "thought" {
+				continue
+			}
+			key := e.ID + "/" + it.ID
+			sp := r.thoughts[key]
+			if sp == nil {
+				if e.Finished || !r.ready {
+					continue // already there when we came: its timing is unknown
+				}
+				sp = &span{start: now, end: now, length: len(it.Text)}
+				r.thoughts[key] = sp
+			}
+			if !e.Finished && len(it.Text) != sp.length {
+				sp.length, sp.end = len(it.Text), now
+			}
+			it.ThoughtFor = sp.end.Sub(sp.start)
+		}
+	}
 }
 
 // Open starts following the session.
@@ -76,7 +117,9 @@ func (r *Replica) Close() {
 func (r *Replica) View() *View {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	return project(r.doc, r.status, r.reason)
+	v := project(r.doc, r.status, r.reason)
+	r.timeThoughts(v, time.Now())
+	return v
 }
 
 func (r *Replica) setStatus(status, reason string) {
@@ -118,6 +161,7 @@ func (r *Replica) flush() {
 		return
 	}
 	v := project(r.doc, r.status, r.reason)
+	r.timeThoughts(v, time.Now())
 	r.mu.Unlock()
 	r.OnChange(v)
 }

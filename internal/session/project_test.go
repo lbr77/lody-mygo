@@ -2,6 +2,7 @@ package session
 
 import (
 	"testing"
+	"time"
 
 	loro "github.com/aholstenson/loro-go"
 )
@@ -92,5 +93,27 @@ func TestBusy(t *testing.T) {
 	h = append(h, map[string]any{"role": "assistant", "finished": true})
 	if busy(h) {
 		t.Fatal("answered turn should not be busy")
+	}
+}
+
+func TestThoughtTiming(t *testing.T) {
+	r := &Replica{ready: true}
+	view := func(text string, finished bool) *View {
+		return &View{Entries: []Entry{{ID: "a1", Role: "assistant", Finished: finished, Items: []Item{{ID: "t1", Type: "thought", Text: text}}}}}
+	}
+	t0 := time.Unix(1000, 0)
+	r.timeThoughts(view("Let", false), t0)
+	r.timeThoughts(view("Let me think", false), t0.Add(3*time.Second))
+	r.timeThoughts(view("Let me think", false), t0.Add(9*time.Second)) // no new text: still 3s
+	v := view("Let me think", true)
+	r.timeThoughts(v, t0.Add(20*time.Second))
+	if got := v.Entries[0].Items[0].ThoughtFor; got != 3*time.Second {
+		t.Fatalf("ThoughtFor = %v", got)
+	}
+	// A thought already finished when the replica caught up has no timing.
+	old := &View{Entries: []Entry{{ID: "a0", Role: "assistant", Finished: true, Items: []Item{{ID: "t0", Type: "thought", Text: "x"}}}}}
+	r.timeThoughts(old, t0)
+	if old.Entries[0].Items[0].ThoughtFor != 0 {
+		t.Fatal("timed a thought it never saw stream")
 	}
 }
