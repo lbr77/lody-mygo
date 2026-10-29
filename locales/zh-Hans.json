@@ -123,7 +123,6 @@
   "defaultModel": "默认模型",
   "permissionMode": "权限模式：{name}",
   "modeDefault": "默认",
-  "modeAuto": "自动",
   "permissionRunCommand": "运行这条命令？",
   "permissionEdit": "允许这次修改？",
   "permissionAction": "允许这个操作？",

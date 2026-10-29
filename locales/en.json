@@ -321,7 +321,6 @@
     }
   },
   "modeDefault": "Default",
-  "modeAuto": "Auto",
   "permissionRunCommand": "Run this command?",
   "permissionEdit": "Make this edit?",
   "permissionAction": "Allow this action?",

@@ -507,27 +507,6 @@ func (a *App) picker(c *ui.Context, p *palette, key string, icon *ui.SVG, label 
 	a.optionList(c, p, b, open, options, "", pick)
 }
 
-// modeFace is how a permission mode shows on its button, as Lody classifies
-// modes: an icon by what it allows, amber for those that skip approval,
-// locales.ModeAuto() for those a reviewing model approves.
-func modeFace(id string) (icon *ui.SVG, warning, auto bool) {
-	switch id {
-	case "read-only":
-		return iconEye, false, false
-	case "agent-auto-review", "auto":
-		return nil, false, true
-	case "agent-full-access", "danger-full-access", "bypassPermissions", "yolo", "always-approve":
-		return iconShieldAlert, true, false
-	case "acceptEdits":
-		return iconPenLine, false, false
-	case "plan":
-		return iconCompass, false, false
-	case "dontAsk":
-		return iconShieldOff, true, false
-	}
-	return iconShield, false, false
-}
-
 // modeMark is how Lody's permission list marks a mode: the amber shield
 // where it skips approval, else the mode's own icon.
 func modeMark(id string) (icon *ui.SVG, warning bool) {
@@ -560,7 +539,9 @@ func (a *App) modeButton(c *ui.Context, p *palette, key, control string, modes [
 	}
 	// Lody names the button "Permission: Ask Every Time", or "Mode: Auto".
 	face := control + ": " + name
-	icon, warning, auto := modeFace(current)
+	// Icon only, as Lody's desktop button: the mode's own mark, the amber
+	// shield where it skips approval; its name is the tooltip.
+	icon, warning := modeMark(current)
 	st := &a.rowMenu(key).menuState
 	b := ui.ButtonBase(c.Key(key)).Height(28).MinWidth(28).Padding(0, 6).Radius(8).Cursor(ui.CursorPointer).
 		Label(face).Transition(colorFade)
@@ -574,13 +555,7 @@ func (a *App) modeButton(c *ui.Context, p *palette, key, control string, modes [
 	if warning {
 		ink = p.Warning
 	}
-	b.Children(func() {
-		if auto {
-			ui.Text(c, locales.ModeAuto()).FontSize(sizeCaption).FontWeight(500).TextColor(ink)
-			return
-		}
-		ui.Icon(c, icon).Size(16, 16).TextColor(ink)
-	})
+	b.Children(func() { ui.Icon(c, icon).Size(16, 16).TextColor(ink) })
 	// Lody's list hugs its longest mode, from 176 to 256px wide.
 	lodyMenuAbove(c, p, b, st, false, 6, 176, 256, 28, func(m *lodyMenu) {
 		for _, md := range modes {

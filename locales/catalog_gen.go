@@ -1269,16 +1269,6 @@ func (msgs Messages) ModeDefault() string {
 	return Catalog.Format(msgs.locale, "modeDefault", nil)
 }
 
-// ModeAuto says "Auto"
-// in the language the app shows.
-func ModeAuto() string { return In(i18n.Locale()).ModeAuto() }
-
-// ModeAuto says "Auto"
-// in the language of msgs.
-func (msgs Messages) ModeAuto() string {
-	return Catalog.Format(msgs.locale, "modeAuto", nil)
-}
-
 // PermissionRunCommand says "Run this command?"
 // in the language the app shows.
 func PermissionRunCommand() string { return In(i18n.Locale()).PermissionRunCommand() }
