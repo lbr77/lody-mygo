@@ -750,3 +750,17 @@ func (r *Replica) locateItem(entryID, itemID string) *loro.LoroMap {
 	}
 	return nil
 }
+
+// ReadHistory reads a session's history as the server holds it, for a
+// share to copy: a fresh replica that catches up and goes, so no unsent
+// local edit is ever exported.
+func ReadHistory(ctx context.Context, conn *cloud.Conn, id string) ([]any, error) {
+	r := Open(conn, id, nil)
+	defer r.Close()
+	if err := r.WaitReady(ctx); err != nil {
+		return nil, err
+	}
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	return list(deepValue(r.doc.GetList(loro.AsContainerId("history")).GetDeepValue())), nil
+}

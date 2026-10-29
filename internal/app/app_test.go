@@ -1555,3 +1555,63 @@ func TestUsageDay(t *testing.T) {
 		}
 	}
 }
+
+func TestShareDialog(t *testing.T) {
+	a := fixture()
+	a.catalog.Sessions = append(a.catalog.Sessions,
+		catalog.Session{ID: "s5", MachineID: "m1", Title: "Sub-agent: tests", ParentSessionID: "s1"},
+		catalog.Session{ID: "s6", MachineID: "m1", Title: "Opened from tests", OpenedBySessionID: "s5"})
+	if c := shareCandidates("s1", a.catalog.Sessions); len(c) != 3 || c[0].ID != "s1" || c[1].ID != "s5" || c[2].ID != "s6" {
+		t.Fatalf("candidates %+v", c)
+	}
+	a.openShare("s1")
+	job := a.share.job
+	tt := snap(t, a, "share-loading", false, nil)
+	if !tt.HasText("Share") || !tt.HasText("Port the Flock runtime to Go") {
+		t.Fatalf("loading: %q", tt.Texts())
+	}
+	job.loaded = true
+	tt = snap(t, a, "share-setup", false, nil)
+	for _, want := range []string{"Anyone with the link can view this conversation.", "Also share 2 sub-conversations", "Images are also shared. File attachments are not included.", "Share conversation", "Cancel"} {
+		if !tt.HasText(want) {
+			t.Fatalf("no %q in %q", want, tt.Texts())
+		}
+	}
+	if !a.canCapture(job) {
+		t.Fatal("the conversation alone can be captured")
+	}
+	job.selected = []string{"s1", "s5"}
+	tt = snap(t, a, "share-partial", false, nil)
+	if !tt.HasText("Also share sub-conversations (1 of 2)") {
+		t.Fatalf("partial: %q", tt.Texts())
+	}
+	job.entry = &shareEntry{ShareID: "sh1", RootSessionID: "s1", PublisherUserID: "u1", Status: "active", Revision: 2, CredentialVersion: 1, CanManage: true, CanRevoke: true}
+	tt = snap(t, a, "share-active", false, nil)
+	for _, want := range []string{"Update share", "Revoke share", "The link credential is not saved on this device.", "Reset link"} {
+		if !tt.HasText(want) {
+			t.Fatalf("no %q in %q", want, tt.Texts())
+		}
+	}
+	job.phase, job.progress = "uploading", 42
+	if tt = snap(t, a, "share-uploading", false, nil); !tt.HasText("Uploading the copy… 42%") {
+		t.Fatalf("uploading: %q", tt.Texts())
+	}
+	job.phase, job.result = "", &shareResult{url: "https://share.lody.ai/s/sh1#access=v1." + strings.Repeat("ab", 32), copied: true}
+	if tt = snap(t, a, "share-published", false, nil); !tt.HasText("Shared. Link copied to your clipboard.") || !tt.HasText("Copy link") {
+		t.Fatalf("published: %q", tt.Texts())
+	}
+	a.share.confirming, a.share.confirmRev = "revoke", 2
+	if tt = snap(t, a, "share-confirm", false, nil); !tt.HasText("The previous link will stop working. Downloaded copies cannot be recalled.") || !tt.HasText("Confirm") {
+		t.Fatalf("confirm: %q", tt.Texts())
+	}
+	a.share = shareDialog{}
+	a.fetches["w1|share-requests/s1"] = &fetched{value: []shareRequest{{RequestID: "r1", SourceSessionID: "s1", SessionIDs: []string{"s1"}, Purpose: "Show the design review", Status: "pending"}}}
+	a.shareReqAt = map[string]time.Time{"s1": time.Now()}
+	a.view.Entries = a.view.Entries[:2]
+	tt = snap(t, a, "share-request", false, nil)
+	for _, want := range []string{"Share this conversation?", "Purpose: Show the design review", "Do not share", "Approve and share"} {
+		if !tt.HasText(want) {
+			t.Fatalf("no %q in %q", want, tt.Texts())
+		}
+	}
+}

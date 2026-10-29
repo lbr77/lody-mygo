@@ -64,6 +64,7 @@ func (a *App) mainView(c *ui.Context, p *palette) {
 	a.createWorkspaceDialog(c, p)
 	a.joinWorkspaceDialog(c, p)
 	a.pairingDialog(c, p)
+	a.shareDialogView(c, p)
 	a.deviceAuthDialog(c, p)
 	a.toastViewport(c, p)
 }

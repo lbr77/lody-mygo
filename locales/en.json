@@ -2160,5 +2160,82 @@
   "usageCache": "Cache",
   "usageInput": "Input",
   "usageOutput": "Output",
-  "usageReasoning": "Reasoning output"
+  "usageReasoning": "Reasoning output",
+  "shareTitle": "Share",
+  "shareConversation": "Share conversation",
+  "shareUpdate": "Update share",
+  "shareReset": "Reset link",
+  "shareRevoke": "Revoke share",
+  "shareConfirm": "Confirm",
+  "shareCopy": "Copy link",
+  "shareCopied": "Share link copied",
+  "shareLinkLabel": "Share link",
+  "shareInvalidateNotice": "The previous link will stop working. Downloaded copies cannot be recalled.",
+  "sharePublicNotice": "Anyone with the link can view this conversation.",
+  "shareUpdateNotice": "Updating replaces the published copy with the current history and its public title. The link stays the same.",
+  "shareRevokedNotice": "The previous link was revoked. Sharing again creates a new link.",
+  "shareOtherPublisher": "Published by another workspace member. Link credentials are private to the publisher.",
+  "shareSecretMissing": "The link credential is not saved on this device.",
+  "shareIncludeChildren": "{count, plural, one {Also share # sub-conversation} other {Also share # sub-conversations}}",
+  "@shareIncludeChildren": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "shareIncludeChildrenPartial": "Also share sub-conversations ({selected} of {count})",
+  "@shareIncludeChildrenPartial": {
+    "placeholders": {
+      "selected": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "shareLimit": "A share can contain at most {count} conversations.",
+  "@shareLimit": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "shareAttachmentNotice": "Images are also shared. File attachments are not included.",
+  "shareSourceUnavailable": "The selected source conversations are unavailable. The published copy is unchanged.",
+  "sharePhaseCapturing": "Freezing this conversation…",
+  "sharePhaseUploading": "Uploading the copy… {progress}%",
+  "@sharePhaseUploading": {
+    "placeholders": {
+      "progress": {
+        "type": "int"
+      }
+    }
+  },
+  "sharePhasePublishing": "Publishing…",
+  "sharePhaseHint": "Keep this dialog open until it finishes.",
+  "sharePublished": "Shared.",
+  "sharePublishedCopied": "Shared. Link copied to your clipboard.",
+  "shareCredentialStorageFailed": "Could not save the share link on this device. Allow keychain access and retry. This attempt did not publish.",
+  "shareFailed": "Could not update sharing. Check the current settings and try again.",
+  "shareFileOmitted": "File attachment not included in this share",
+  "shareRequestTitle": "Share this conversation?",
+  "shareRequestPurpose": "Purpose: {purpose}",
+  "@shareRequestPurpose": {
+    "placeholders": {
+      "purpose": {
+        "type": "String"
+      }
+    }
+  },
+  "shareRequestDisclosure": "Approval publishes the selected conversations, including thinking, tool output and images, but not file attachments. Anyone with the link can read them without signing in. The complete access link will be returned to the requesting agent, which can use or forward it. You can revoke the link in Share management; downloaded copies cannot be recalled.",
+  "shareRequestPublishing": "Publishing automatically…",
+  "shareRequestDeny": "Do not share",
+  "shareRequestApprove": "Approve and share",
+  "shareRequestAbandon": "Abandon deployment",
+  "shareRequestIncomplete": "This deployment is not published yet and cannot be resumed after the editor closes. Abandon it, then ask the agent for a new share request with a new requestId.",
+  "shareRequestFailed": "Could not dismiss the request. Try again.",
+  "sharesLinkOtherDevice": "The link was created on another device and is only stored there. Reset the link to create a new one you can copy here."
 }

@@ -309,9 +309,12 @@ type githubPersonal struct {
 
 type publishedShare struct {
 	ShareID           string  `json:"shareId"`
+	RootSessionID     string  `json:"rootSessionId"`
 	PublisherUserID   string  `json:"publisherUserId"`
 	Status            string  `json:"status"`
 	Revision          float64 `json:"revision"`
+	CredentialVersion float64 `json:"credentialVersion"`
+	CanManage         bool    `json:"canManage"`
 	Title             string  `json:"title"`
 	CreatedAt         float64 `json:"createdAt"`
 	TotalBytes        float64 `json:"totalBytes"`
@@ -350,7 +353,34 @@ func (a *App) sharesPage(c *ui.Context, p *palette) {
 			locales.SharesConversations(int(s.ConversationCount)), formatBytes(s.TotalBytes),
 		}
 		settingRow(c.Key(s.ShareID), p, firstNonEmpty(s.Title, locales.UntitledSession()), strings.Join(facts, " · "), func() {
-			if !share.CanRevoke || share.Status != "active" {
+			if share.Status != "active" {
+				return
+			}
+			entry := &shareEntry{ShareID: share.ShareID, RootSessionID: share.RootSessionID, PublisherUserID: share.PublisherUserID, Status: share.Status,
+				Revision: share.Revision, CredentialVersion: share.CredentialVersion, CanManage: share.CanManage, CanRevoke: share.CanRevoke}
+			mine := a.account != nil && share.PublisherUserID == a.account.User.ID
+			if a.revoking != share.ShareID && a.resetting != share.ShareID {
+				switch link := a.shareLink(entry); {
+				case link != "":
+					ghostButton(c, p, locales.ShareCopy()).Border(1, p.Border).OnClick(func() {
+						mygo.Clipboard.WriteText(link)
+						a.toast("success", locales.ShareCopied())
+					})
+				case mine && share.CanManage:
+					ghostButton(c, p, locales.ShareReset()).Border(1, p.Border).Tooltip(locales.SharesLinkOtherDevice()).OnClick(func() { a.resetting = share.ShareID })
+				}
+			}
+			if a.resetting == share.ShareID {
+				ui.Row(c).Gap(6).Children(func() {
+					ghostButton(c, p, locales.Cancel()).OnClick(func() { a.resetting = "" })
+					ghostButton(c, p, locales.ShareReset()).Border(1, p.Danger).Tooltip(locales.ShareInvalidateNotice()).OnClick(func() {
+						a.resetting = ""
+						a.resetShareLink(&shareJob{root: share.RootSessionID, entry: entry, loaded: true})
+					})
+				})
+				return
+			}
+			if !share.CanRevoke {
 				return
 			}
 			if a.revoking != share.ShareID {

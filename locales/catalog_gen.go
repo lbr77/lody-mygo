@@ -10568,3 +10568,397 @@ func UsageReasoning() string { return In(i18n.Locale()).UsageReasoning() }
 func (msgs Messages) UsageReasoning() string {
 	return Catalog.Format(msgs.locale, "usageReasoning", nil)
 }
+
+// ShareTitle says "Share"
+// in the language the app shows.
+func ShareTitle() string { return In(i18n.Locale()).ShareTitle() }
+
+// ShareTitle says "Share"
+// in the language of msgs.
+func (msgs Messages) ShareTitle() string {
+	return Catalog.Format(msgs.locale, "shareTitle", nil)
+}
+
+// ShareConversation says "Share conversation"
+// in the language the app shows.
+func ShareConversation() string { return In(i18n.Locale()).ShareConversation() }
+
+// ShareConversation says "Share conversation"
+// in the language of msgs.
+func (msgs Messages) ShareConversation() string {
+	return Catalog.Format(msgs.locale, "shareConversation", nil)
+}
+
+// ShareUpdate says "Update share"
+// in the language the app shows.
+func ShareUpdate() string { return In(i18n.Locale()).ShareUpdate() }
+
+// ShareUpdate says "Update share"
+// in the language of msgs.
+func (msgs Messages) ShareUpdate() string {
+	return Catalog.Format(msgs.locale, "shareUpdate", nil)
+}
+
+// ShareReset says "Reset link"
+// in the language the app shows.
+func ShareReset() string { return In(i18n.Locale()).ShareReset() }
+
+// ShareReset says "Reset link"
+// in the language of msgs.
+func (msgs Messages) ShareReset() string {
+	return Catalog.Format(msgs.locale, "shareReset", nil)
+}
+
+// ShareRevoke says "Revoke share"
+// in the language the app shows.
+func ShareRevoke() string { return In(i18n.Locale()).ShareRevoke() }
+
+// ShareRevoke says "Revoke share"
+// in the language of msgs.
+func (msgs Messages) ShareRevoke() string {
+	return Catalog.Format(msgs.locale, "shareRevoke", nil)
+}
+
+// ShareConfirm says "Confirm"
+// in the language the app shows.
+func ShareConfirm() string { return In(i18n.Locale()).ShareConfirm() }
+
+// ShareConfirm says "Confirm"
+// in the language of msgs.
+func (msgs Messages) ShareConfirm() string {
+	return Catalog.Format(msgs.locale, "shareConfirm", nil)
+}
+
+// ShareCopy says "Copy link"
+// in the language the app shows.
+func ShareCopy() string { return In(i18n.Locale()).ShareCopy() }
+
+// ShareCopy says "Copy link"
+// in the language of msgs.
+func (msgs Messages) ShareCopy() string {
+	return Catalog.Format(msgs.locale, "shareCopy", nil)
+}
+
+// ShareCopied says "Share link copied"
+// in the language the app shows.
+func ShareCopied() string { return In(i18n.Locale()).ShareCopied() }
+
+// ShareCopied says "Share link copied"
+// in the language of msgs.
+func (msgs Messages) ShareCopied() string {
+	return Catalog.Format(msgs.locale, "shareCopied", nil)
+}
+
+// ShareLinkLabel says "Share link"
+// in the language the app shows.
+func ShareLinkLabel() string { return In(i18n.Locale()).ShareLinkLabel() }
+
+// ShareLinkLabel says "Share link"
+// in the language of msgs.
+func (msgs Messages) ShareLinkLabel() string {
+	return Catalog.Format(msgs.locale, "shareLinkLabel", nil)
+}
+
+// ShareInvalidateNotice says "The previous link will stop working. Downloaded copies cannot be recalled."
+// in the language the app shows.
+func ShareInvalidateNotice() string { return In(i18n.Locale()).ShareInvalidateNotice() }
+
+// ShareInvalidateNotice says "The previous link will stop working. Downloaded copies cannot be recalled."
+// in the language of msgs.
+func (msgs Messages) ShareInvalidateNotice() string {
+	return Catalog.Format(msgs.locale, "shareInvalidateNotice", nil)
+}
+
+// SharePublicNotice says "Anyone with the link can view this conversation."
+// in the language the app shows.
+func SharePublicNotice() string { return In(i18n.Locale()).SharePublicNotice() }
+
+// SharePublicNotice says "Anyone with the link can view this conversation."
+// in the language of msgs.
+func (msgs Messages) SharePublicNotice() string {
+	return Catalog.Format(msgs.locale, "sharePublicNotice", nil)
+}
+
+// ShareUpdateNotice says "Updating replaces the published copy with the current history and its public title. The link stays the same."
+// in the language the app shows.
+func ShareUpdateNotice() string { return In(i18n.Locale()).ShareUpdateNotice() }
+
+// ShareUpdateNotice says "Updating replaces the published copy with the current history and its public title. The link stays the same."
+// in the language of msgs.
+func (msgs Messages) ShareUpdateNotice() string {
+	return Catalog.Format(msgs.locale, "shareUpdateNotice", nil)
+}
+
+// ShareRevokedNotice says "The previous link was revoked. Sharing again creates a new link."
+// in the language the app shows.
+func ShareRevokedNotice() string { return In(i18n.Locale()).ShareRevokedNotice() }
+
+// ShareRevokedNotice says "The previous link was revoked. Sharing again creates a new link."
+// in the language of msgs.
+func (msgs Messages) ShareRevokedNotice() string {
+	return Catalog.Format(msgs.locale, "shareRevokedNotice", nil)
+}
+
+// ShareOtherPublisher says "Published by another workspace member. Link credentials are private to the publisher."
+// in the language the app shows.
+func ShareOtherPublisher() string { return In(i18n.Locale()).ShareOtherPublisher() }
+
+// ShareOtherPublisher says "Published by another workspace member. Link credentials are private to the publisher."
+// in the language of msgs.
+func (msgs Messages) ShareOtherPublisher() string {
+	return Catalog.Format(msgs.locale, "shareOtherPublisher", nil)
+}
+
+// ShareSecretMissing says "The link credential is not saved on this device."
+// in the language the app shows.
+func ShareSecretMissing() string { return In(i18n.Locale()).ShareSecretMissing() }
+
+// ShareSecretMissing says "The link credential is not saved on this device."
+// in the language of msgs.
+func (msgs Messages) ShareSecretMissing() string {
+	return Catalog.Format(msgs.locale, "shareSecretMissing", nil)
+}
+
+// ShareIncludeChildren says "{count, plural, one {Also share # sub-conversation} other {Also share # sub-conversations}}"
+// in the language the app shows.
+func ShareIncludeChildren(count int) string { return In(i18n.Locale()).ShareIncludeChildren(count) }
+
+// ShareIncludeChildren says "{count, plural, one {Also share # sub-conversation} other {Also share # sub-conversations}}"
+// in the language of msgs.
+func (msgs Messages) ShareIncludeChildren(count int) string {
+	return Catalog.Format(msgs.locale, "shareIncludeChildren", map[string]any{"count": count})
+}
+
+// ShareIncludeChildrenPartial says "Also share sub-conversations ({selected} of {count})"
+// in the language the app shows.
+func ShareIncludeChildrenPartial(selected int, count int) string {
+	return In(i18n.Locale()).ShareIncludeChildrenPartial(selected, count)
+}
+
+// ShareIncludeChildrenPartial says "Also share sub-conversations ({selected} of {count})"
+// in the language of msgs.
+func (msgs Messages) ShareIncludeChildrenPartial(selected int, count int) string {
+	return Catalog.Format(msgs.locale, "shareIncludeChildrenPartial", map[string]any{"selected": selected, "count": count})
+}
+
+// ShareLimit says "A share can contain at most {count} conversations."
+// in the language the app shows.
+func ShareLimit(count int) string { return In(i18n.Locale()).ShareLimit(count) }
+
+// ShareLimit says "A share can contain at most {count} conversations."
+// in the language of msgs.
+func (msgs Messages) ShareLimit(count int) string {
+	return Catalog.Format(msgs.locale, "shareLimit", map[string]any{"count": count})
+}
+
+// ShareAttachmentNotice says "Images are also shared. File attachments are not included."
+// in the language the app shows.
+func ShareAttachmentNotice() string { return In(i18n.Locale()).ShareAttachmentNotice() }
+
+// ShareAttachmentNotice says "Images are also shared. File attachments are not included."
+// in the language of msgs.
+func (msgs Messages) ShareAttachmentNotice() string {
+	return Catalog.Format(msgs.locale, "shareAttachmentNotice", nil)
+}
+
+// ShareSourceUnavailable says "The selected source conversations are unavailable. The published copy is unchanged."
+// in the language the app shows.
+func ShareSourceUnavailable() string { return In(i18n.Locale()).ShareSourceUnavailable() }
+
+// ShareSourceUnavailable says "The selected source conversations are unavailable. The published copy is unchanged."
+// in the language of msgs.
+func (msgs Messages) ShareSourceUnavailable() string {
+	return Catalog.Format(msgs.locale, "shareSourceUnavailable", nil)
+}
+
+// SharePhaseCapturing says "Freezing this conversation…"
+// in the language the app shows.
+func SharePhaseCapturing() string { return In(i18n.Locale()).SharePhaseCapturing() }
+
+// SharePhaseCapturing says "Freezing this conversation…"
+// in the language of msgs.
+func (msgs Messages) SharePhaseCapturing() string {
+	return Catalog.Format(msgs.locale, "sharePhaseCapturing", nil)
+}
+
+// SharePhaseUploading says "Uploading the copy… {progress}%"
+// in the language the app shows.
+func SharePhaseUploading(progress int) string { return In(i18n.Locale()).SharePhaseUploading(progress) }
+
+// SharePhaseUploading says "Uploading the copy… {progress}%"
+// in the language of msgs.
+func (msgs Messages) SharePhaseUploading(progress int) string {
+	return Catalog.Format(msgs.locale, "sharePhaseUploading", map[string]any{"progress": progress})
+}
+
+// SharePhasePublishing says "Publishing…"
+// in the language the app shows.
+func SharePhasePublishing() string { return In(i18n.Locale()).SharePhasePublishing() }
+
+// SharePhasePublishing says "Publishing…"
+// in the language of msgs.
+func (msgs Messages) SharePhasePublishing() string {
+	return Catalog.Format(msgs.locale, "sharePhasePublishing", nil)
+}
+
+// SharePhaseHint says "Keep this dialog open until it finishes."
+// in the language the app shows.
+func SharePhaseHint() string { return In(i18n.Locale()).SharePhaseHint() }
+
+// SharePhaseHint says "Keep this dialog open until it finishes."
+// in the language of msgs.
+func (msgs Messages) SharePhaseHint() string {
+	return Catalog.Format(msgs.locale, "sharePhaseHint", nil)
+}
+
+// SharePublished says "Shared."
+// in the language the app shows.
+func SharePublished() string { return In(i18n.Locale()).SharePublished() }
+
+// SharePublished says "Shared."
+// in the language of msgs.
+func (msgs Messages) SharePublished() string {
+	return Catalog.Format(msgs.locale, "sharePublished", nil)
+}
+
+// SharePublishedCopied says "Shared. Link copied to your clipboard."
+// in the language the app shows.
+func SharePublishedCopied() string { return In(i18n.Locale()).SharePublishedCopied() }
+
+// SharePublishedCopied says "Shared. Link copied to your clipboard."
+// in the language of msgs.
+func (msgs Messages) SharePublishedCopied() string {
+	return Catalog.Format(msgs.locale, "sharePublishedCopied", nil)
+}
+
+// ShareCredentialStorageFailed says "Could not save the share link on this device. Allow keychain access and retry. This attempt did not publish."
+// in the language the app shows.
+func ShareCredentialStorageFailed() string { return In(i18n.Locale()).ShareCredentialStorageFailed() }
+
+// ShareCredentialStorageFailed says "Could not save the share link on this device. Allow keychain access and retry. This attempt did not publish."
+// in the language of msgs.
+func (msgs Messages) ShareCredentialStorageFailed() string {
+	return Catalog.Format(msgs.locale, "shareCredentialStorageFailed", nil)
+}
+
+// ShareFailed says "Could not update sharing. Check the current settings and try again."
+// in the language the app shows.
+func ShareFailed() string { return In(i18n.Locale()).ShareFailed() }
+
+// ShareFailed says "Could not update sharing. Check the current settings and try again."
+// in the language of msgs.
+func (msgs Messages) ShareFailed() string {
+	return Catalog.Format(msgs.locale, "shareFailed", nil)
+}
+
+// ShareFileOmitted says "File attachment not included in this share"
+// in the language the app shows.
+func ShareFileOmitted() string { return In(i18n.Locale()).ShareFileOmitted() }
+
+// ShareFileOmitted says "File attachment not included in this share"
+// in the language of msgs.
+func (msgs Messages) ShareFileOmitted() string {
+	return Catalog.Format(msgs.locale, "shareFileOmitted", nil)
+}
+
+// ShareRequestTitle says "Share this conversation?"
+// in the language the app shows.
+func ShareRequestTitle() string { return In(i18n.Locale()).ShareRequestTitle() }
+
+// ShareRequestTitle says "Share this conversation?"
+// in the language of msgs.
+func (msgs Messages) ShareRequestTitle() string {
+	return Catalog.Format(msgs.locale, "shareRequestTitle", nil)
+}
+
+// ShareRequestPurpose says "Purpose: {purpose}"
+// in the language the app shows.
+func ShareRequestPurpose(purpose string) string {
+	return In(i18n.Locale()).ShareRequestPurpose(purpose)
+}
+
+// ShareRequestPurpose says "Purpose: {purpose}"
+// in the language of msgs.
+func (msgs Messages) ShareRequestPurpose(purpose string) string {
+	return Catalog.Format(msgs.locale, "shareRequestPurpose", map[string]any{"purpose": purpose})
+}
+
+// ShareRequestDisclosure says "Approval publishes the selected conversations, including thinking, tool output and images, but not file attachments. …"
+// in the language the app shows.
+func ShareRequestDisclosure() string { return In(i18n.Locale()).ShareRequestDisclosure() }
+
+// ShareRequestDisclosure says "Approval publishes the selected conversations, including thinking, tool output and images, but not file attachments. …"
+// in the language of msgs.
+func (msgs Messages) ShareRequestDisclosure() string {
+	return Catalog.Format(msgs.locale, "shareRequestDisclosure", nil)
+}
+
+// ShareRequestPublishing says "Publishing automatically…"
+// in the language the app shows.
+func ShareRequestPublishing() string { return In(i18n.Locale()).ShareRequestPublishing() }
+
+// ShareRequestPublishing says "Publishing automatically…"
+// in the language of msgs.
+func (msgs Messages) ShareRequestPublishing() string {
+	return Catalog.Format(msgs.locale, "shareRequestPublishing", nil)
+}
+
+// ShareRequestDeny says "Do not share"
+// in the language the app shows.
+func ShareRequestDeny() string { return In(i18n.Locale()).ShareRequestDeny() }
+
+// ShareRequestDeny says "Do not share"
+// in the language of msgs.
+func (msgs Messages) ShareRequestDeny() string {
+	return Catalog.Format(msgs.locale, "shareRequestDeny", nil)
+}
+
+// ShareRequestApprove says "Approve and share"
+// in the language the app shows.
+func ShareRequestApprove() string { return In(i18n.Locale()).ShareRequestApprove() }
+
+// ShareRequestApprove says "Approve and share"
+// in the language of msgs.
+func (msgs Messages) ShareRequestApprove() string {
+	return Catalog.Format(msgs.locale, "shareRequestApprove", nil)
+}
+
+// ShareRequestAbandon says "Abandon deployment"
+// in the language the app shows.
+func ShareRequestAbandon() string { return In(i18n.Locale()).ShareRequestAbandon() }
+
+// ShareRequestAbandon says "Abandon deployment"
+// in the language of msgs.
+func (msgs Messages) ShareRequestAbandon() string {
+	return Catalog.Format(msgs.locale, "shareRequestAbandon", nil)
+}
+
+// ShareRequestIncomplete says "This deployment is not published yet and cannot be resumed after the editor closes. Abandon it, then ask the agent fo…"
+// in the language the app shows.
+func ShareRequestIncomplete() string { return In(i18n.Locale()).ShareRequestIncomplete() }
+
+// ShareRequestIncomplete says "This deployment is not published yet and cannot be resumed after the editor closes. Abandon it, then ask the agent fo…"
+// in the language of msgs.
+func (msgs Messages) ShareRequestIncomplete() string {
+	return Catalog.Format(msgs.locale, "shareRequestIncomplete", nil)
+}
+
+// ShareRequestFailed says "Could not dismiss the request. Try again."
+// in the language the app shows.
+func ShareRequestFailed() string { return In(i18n.Locale()).ShareRequestFailed() }
+
+// ShareRequestFailed says "Could not dismiss the request. Try again."
+// in the language of msgs.
+func (msgs Messages) ShareRequestFailed() string {
+	return Catalog.Format(msgs.locale, "shareRequestFailed", nil)
+}
+
+// SharesLinkOtherDevice says "The link was created on another device and is only stored there. Reset the link to create a new one you can copy here."
+// in the language the app shows.
+func SharesLinkOtherDevice() string { return In(i18n.Locale()).SharesLinkOtherDevice() }
+
+// SharesLinkOtherDevice says "The link was created on another device and is only stored there. Reset the link to create a new one you can copy here."
+// in the language of msgs.
+func (msgs Messages) SharesLinkOtherDevice() string {
+	return Catalog.Format(msgs.locale, "sharesLinkOtherDevice", nil)
+}

@@ -42,6 +42,9 @@ func (a *App) sessionMenu(m *ui.Menu, s catalog.Session) {
 			return sync.MarkRead(ctx, s)
 		})
 	}
+	if !s.Archived && m.Item(locales.ShareTitle()).Chosen() {
+		a.openShare(s.ID)
+	}
 	m.Separator()
 	label, what := locales.ActionArchive(), locales.FailArchive()
 	if s.Archived {

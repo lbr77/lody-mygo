@@ -22,6 +22,11 @@ func (a *App) bottom(c *ui.Context, p *palette, sess *catalog.Session, v *sessio
 		})
 		return
 	}
+	if sess != nil {
+		if reqs := a.pendingShareRequests(c, sess.ID); len(reqs) > 0 {
+			bottomColumn(c, func() { a.shareRequestCards(c, p, sess.ID, reqs) })
+		}
+	}
 	working := v != nil && v.Working
 	ready := v != nil && v.Status == "live" && sess != nil
 	hint := ""

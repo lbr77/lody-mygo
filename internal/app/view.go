@@ -112,6 +112,19 @@ func ghostButton(c *ui.Context, p *palette, label string) ui.Element {
 	return b
 }
 
+// dangerGhostButton is a ghost button in the destructive ink.
+func dangerGhostButton(c *ui.Context, p *palette, label string) ui.Element {
+	b := ui.ButtonBase(c).Height(28).Radius(8).Padding(0, 8).Cursor(ui.CursorPointer).Label(label).Transition(colorFade)
+	if b.Hovered() {
+		b.Background(p.Danger.Alpha(0.08))
+	}
+	pressable(b, 0.97)
+	b.Children(func() {
+		ui.Text(c, label).FontSize(sizeSub).FontWeight(500).TextColor(p.Danger)
+	})
+	return b
+}
+
 // iconButton is a 28px square icon button, muted at rest.
 func iconButton(c *ui.Context, p *palette, icon *ui.SVG, label string, hover ui.Color) ui.Element {
 	b := ui.ButtonBase(c).Size(28, 28).Radius(8).Cursor(ui.CursorPointer).Label(label).Tooltip(label).Transition(colorFade)

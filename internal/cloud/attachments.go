@@ -22,6 +22,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 	"unicode/utf8"
 
 	"golang.org/x/image/draw"
@@ -347,4 +348,38 @@ func (a *API) SessionImage(ctx context.Context, token, workspace, session, image
 		return nil, fmt.Errorf("image unavailable (%d)", res.StatusCode)
 	}
 	return io.ReadAll(io.LimitReader(res.Body, 20<<20))
+}
+
+// SessionImageOriginal downloads an image a session holds, at its size,
+// with its media type.
+func (a *API) SessionImageOriginal(ctx context.Context, token, workspace, session, imageID string, limit int64) ([]byte, string, error) {
+	target := fmt.Sprintf("%s/api/workspaces/%s/session-images/%s/%s", CloudOrigin, segment(workspace), segment(session), segment(imageID))
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, target, nil)
+	if err != nil {
+		return nil, "", err
+	}
+	req.Header.Set("Authorization", "Bearer "+token)
+	res, err := (&http.Client{Timeout: 120 * time.Second}).Do(req)
+	if err != nil {
+		return nil, "", err
+	}
+	defer res.Body.Close()
+	if res.StatusCode != http.StatusOK {
+		return nil, "", fmt.Errorf("image unavailable (%d)", res.StatusCode)
+	}
+	if res.ContentLength > limit {
+		return nil, "", fmt.Errorf("image exceeds size limit")
+	}
+	b, err := io.ReadAll(io.LimitReader(res.Body, limit+1))
+	if err != nil {
+		return nil, "", err
+	}
+	if int64(len(b)) > limit {
+		return nil, "", fmt.Errorf("image exceeds size limit")
+	}
+	mediaType, _, _ := strings.Cut(res.Header.Get("Content-Type"), ";")
+	if mediaType = strings.TrimSpace(mediaType); mediaType == "" {
+		mediaType = "application/octet-stream"
+	}
+	return b, mediaType, nil
 }

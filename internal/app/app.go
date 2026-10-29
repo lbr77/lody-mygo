@@ -165,10 +165,14 @@ type App struct {
 	referral        referrals
 	pairing         machinePairing
 	ghProject       githubProject
-	activeDay       string          // workspace|date the user was last counted active
-	usageDay        float64         // the usage day opened, its start in ms
-	usageDayShown   float64         // the day the panel shows, as it folds away too
-	ghProfileAsked  map[string]bool // workspaces whose GitHub profile was refreshed
+	activeDay       string  // workspace|date the user was last counted active
+	usageDay        float64 // the usage day opened, its start in ms
+	usageDayShown   float64 // the day the panel shows, as it folds away too
+	share           shareDialog
+	resetting       string               // the share whose link is being reset, in settings
+	shareJobs       map[string]*shareJob // an agent's share requests being answered, by request
+	shareReqAt      map[string]time.Time // when each conversation's requests were last read
+	ghProfileAsked  map[string]bool      // workspaces whose GitHub profile was refreshed
 	device          deviceAuth
 	toasts          []ui.Toast // to show with the next frame
 	reviewSent      string     // the sharing review last reconciled
