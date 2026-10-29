@@ -125,8 +125,11 @@ func (a *App) archiveGroupHeader(c *ui.Context, p *palette, g archiveGroup, fold
 	h.Children(func() {
 		ui.Box(c.Key("glyph")).Size(20, 20).Shrink(0).Children(func() {
 			icon := iconFolder
-			if g.id == "" {
+			switch {
+			case g.id == "":
 				icon = iconMessage
+			case strings.HasPrefix(g.id, "group:"):
+				icon = iconFolders
 			}
 			// While choosing, the check box has their place.
 			shown := 1 - b2f(a.archivePicking())
@@ -192,13 +195,21 @@ type archiveGroup struct {
 }
 
 // archiveGroups groups sessions by project, in the order their newest
-// session comes; chats outside projects form their own group.
+// session comes; chats outside projects form their own group. A
+// conversation of a project of several goes with that project, by the
+// name it has or had, never under a folder registered only for it.
 func (a *App) archiveGroups(sessions []catalog.Session) []archiveGroup {
 	var groups []archiveGroup
 	index := map[string]int{}
 	for _, s := range sessions {
 		id, name, path := "", locales.SidebarChats(), ""
-		if pr := a.catalog.Project(s.ProjectID); pr != nil {
+		switch pr := a.catalog.Project(s.ProjectID); {
+		case s.ProjectGroupID != "":
+			id, name = "group:"+s.ProjectGroupID, firstNonEmpty(s.ProjectGroupName, locales.PickerRemovedGroup())
+			if g := a.group(s.ProjectGroupID); g != nil {
+				name = g.Name
+			}
+		case pr != nil && !pr.MemberOnly:
 			id, name, path = pr.ID, pr.Name, pr.RootPath
 		}
 		i, ok := index[id]

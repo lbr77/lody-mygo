@@ -19676,3 +19676,307 @@ func WizardMoreMachines(machines string, count int) string {
 func (msgs Messages) WizardMoreMachines(machines string, count int) string {
 	return Catalog.Format(msgs.locale, "wizardMoreMachines", map[string]any{"machines": machines, "count": count})
 }
+
+// WizardPrevious says "Previously selected"
+// in the language the app shows.
+func WizardPrevious() string { return In(i18n.Locale()).WizardPrevious() }
+
+// WizardPrevious says "Previously selected"
+// in the language of msgs.
+func (msgs Messages) WizardPrevious() string {
+	return Catalog.Format(msgs.locale, "wizardPrevious", nil)
+}
+
+// GroupReadOnly says "Only the person who created this project can change it."
+// in the language the app shows.
+func GroupReadOnly() string { return In(i18n.Locale()).GroupReadOnly() }
+
+// GroupReadOnly says "Only the person who created this project can change it."
+// in the language of msgs.
+func (msgs Messages) GroupReadOnly() string {
+	return Catalog.Format(msgs.locale, "groupReadOnly", nil)
+}
+
+// GroupMembers says "Folders and repositories"
+// in the language the app shows.
+func GroupMembers() string { return In(i18n.Locale()).GroupMembers() }
+
+// GroupMembers says "Folders and repositories"
+// in the language of msgs.
+func (msgs Messages) GroupMembers() string {
+	return Catalog.Format(msgs.locale, "groupMembers", nil)
+}
+
+// GroupInstructions says "Instructions"
+// in the language the app shows.
+func GroupInstructions() string { return In(i18n.Locale()).GroupInstructions() }
+
+// GroupInstructions says "Instructions"
+// in the language of msgs.
+func (msgs Messages) GroupInstructions() string {
+	return Catalog.Format(msgs.locale, "groupInstructions", nil)
+}
+
+// GroupDeleteTitle says "Delete project?"
+// in the language the app shows.
+func GroupDeleteTitle() string { return In(i18n.Locale()).GroupDeleteTitle() }
+
+// GroupDeleteTitle says "Delete project?"
+// in the language of msgs.
+func (msgs Messages) GroupDeleteTitle() string {
+	return Catalog.Format(msgs.locale, "groupDeleteTitle", nil)
+}
+
+// GroupDeleteBody says "“{name}” will be deleted. Existing conversations keep their repositories and branches; the folders and repositori…"
+// in the language the app shows.
+func GroupDeleteBody(name string) string { return In(i18n.Locale()).GroupDeleteBody(name) }
+
+// GroupDeleteBody says "“{name}” will be deleted. Existing conversations keep their repositories and branches; the folders and repositori…"
+// in the language of msgs.
+func (msgs Messages) GroupDeleteBody(name string) string {
+	return Catalog.Format(msgs.locale, "groupDeleteBody", map[string]any{"name": name})
+}
+
+// GroupRemove says "Remove"
+// in the language the app shows.
+func GroupRemove() string { return In(i18n.Locale()).GroupRemove() }
+
+// GroupRemove says "Remove"
+// in the language of msgs.
+func (msgs Messages) GroupRemove() string {
+	return Catalog.Format(msgs.locale, "groupRemove", nil)
+}
+
+// GroupErrSubmodulePath says "the submodule path is not valid"
+// in the language the app shows.
+func GroupErrSubmodulePath() string { return In(i18n.Locale()).GroupErrSubmodulePath() }
+
+// GroupErrSubmodulePath says "the submodule path is not valid"
+// in the language of msgs.
+func (msgs Messages) GroupErrSubmodulePath() string {
+	return Catalog.Format(msgs.locale, "groupErrSubmodulePath", nil)
+}
+
+// GroupErrSubmoduleParent says "its parent repository is not in the project"
+// in the language the app shows.
+func GroupErrSubmoduleParent() string { return In(i18n.Locale()).GroupErrSubmoduleParent() }
+
+// GroupErrSubmoduleParent says "its parent repository is not in the project"
+// in the language of msgs.
+func (msgs Messages) GroupErrSubmoduleParent() string {
+	return Catalog.Format(msgs.locale, "groupErrSubmoduleParent", nil)
+}
+
+// GroupErrPathOverlap says "its directory overlaps another repository"
+// in the language the app shows.
+func GroupErrPathOverlap() string { return In(i18n.Locale()).GroupErrPathOverlap() }
+
+// GroupErrPathOverlap says "its directory overlaps another repository"
+// in the language of msgs.
+func (msgs Messages) GroupErrPathOverlap() string {
+	return Catalog.Format(msgs.locale, "groupErrPathOverlap", nil)
+}
+
+// SidebarEditProject says "Edit project…"
+// in the language the app shows.
+func SidebarEditProject() string { return In(i18n.Locale()).SidebarEditProject() }
+
+// SidebarEditProject says "Edit project…"
+// in the language of msgs.
+func (msgs Messages) SidebarEditProject() string {
+	return Catalog.Format(msgs.locale, "sidebarEditProject", nil)
+}
+
+// SidebarProjectSettings says "Project settings"
+// in the language the app shows.
+func SidebarProjectSettings() string { return In(i18n.Locale()).SidebarProjectSettings() }
+
+// SidebarProjectSettings says "Project settings"
+// in the language of msgs.
+func (msgs Messages) SidebarProjectSettings() string {
+	return Catalog.Format(msgs.locale, "sidebarProjectSettings", nil)
+}
+
+// SidebarRevealProject says "Reveal in file manager"
+// in the language the app shows.
+func SidebarRevealProject() string { return In(i18n.Locale()).SidebarRevealProject() }
+
+// SidebarRevealProject says "Reveal in file manager"
+// in the language of msgs.
+func (msgs Messages) SidebarRevealProject() string {
+	return Catalog.Format(msgs.locale, "sidebarRevealProject", nil)
+}
+
+// SidebarRevealMissing says "That folder no longer exists."
+// in the language the app shows.
+func SidebarRevealMissing() string { return In(i18n.Locale()).SidebarRevealMissing() }
+
+// SidebarRevealMissing says "That folder no longer exists."
+// in the language of msgs.
+func (msgs Messages) SidebarRevealMissing() string {
+	return Catalog.Format(msgs.locale, "sidebarRevealMissing", nil)
+}
+
+// SidebarRevealFailed says "Could not open that folder."
+// in the language the app shows.
+func SidebarRevealFailed() string { return In(i18n.Locale()).SidebarRevealFailed() }
+
+// SidebarRevealFailed says "Could not open that folder."
+// in the language of msgs.
+func (msgs Messages) SidebarRevealFailed() string {
+	return Catalog.Format(msgs.locale, "sidebarRevealFailed", nil)
+}
+
+// SidebarArchiveChats says "Archive chats"
+// in the language the app shows.
+func SidebarArchiveChats() string { return In(i18n.Locale()).SidebarArchiveChats() }
+
+// SidebarArchiveChats says "Archive chats"
+// in the language of msgs.
+func (msgs Messages) SidebarArchiveChats() string {
+	return Catalog.Format(msgs.locale, "sidebarArchiveChats", nil)
+}
+
+// SidebarRemoveProject says "Remove project"
+// in the language the app shows.
+func SidebarRemoveProject() string { return In(i18n.Locale()).SidebarRemoveProject() }
+
+// SidebarRemoveProject says "Remove project"
+// in the language of msgs.
+func (msgs Messages) SidebarRemoveProject() string {
+	return Catalog.Format(msgs.locale, "sidebarRemoveProject", nil)
+}
+
+// SidebarGroupNewChat says "New chat in this project"
+// in the language the app shows.
+func SidebarGroupNewChat() string { return In(i18n.Locale()).SidebarGroupNewChat() }
+
+// SidebarGroupNewChat says "New chat in this project"
+// in the language of msgs.
+func (msgs Messages) SidebarGroupNewChat() string {
+	return Catalog.Format(msgs.locale, "sidebarGroupNewChat", nil)
+}
+
+// PickerCreateProject says "Create project"
+// in the language the app shows.
+func PickerCreateProject() string { return In(i18n.Locale()).PickerCreateProject() }
+
+// PickerCreateProject says "Create project"
+// in the language of msgs.
+func (msgs Messages) PickerCreateProject() string {
+	return Catalog.Format(msgs.locale, "pickerCreateProject", nil)
+}
+
+// PickerGroupMembers says "{count} repositories"
+// in the language the app shows.
+func PickerGroupMembers(count int) string { return In(i18n.Locale()).PickerGroupMembers(count) }
+
+// PickerGroupMembers says "{count} repositories"
+// in the language of msgs.
+func (msgs Messages) PickerGroupMembers(count int) string {
+	return Catalog.Format(msgs.locale, "pickerGroupMembers", map[string]any{"count": count})
+}
+
+// PickerEditGroup says "Edit {name}"
+// in the language the app shows.
+func PickerEditGroup(name string) string { return In(i18n.Locale()).PickerEditGroup(name) }
+
+// PickerEditGroup says "Edit {name}"
+// in the language of msgs.
+func (msgs Messages) PickerEditGroup(name string) string {
+	return Catalog.Format(msgs.locale, "pickerEditGroup", map[string]any{"name": name})
+}
+
+// PickerRemovedGroup says "Removed project"
+// in the language the app shows.
+func PickerRemovedGroup() string { return In(i18n.Locale()).PickerRemovedGroup() }
+
+// PickerRemovedGroup says "Removed project"
+// in the language of msgs.
+func (msgs Messages) PickerRemovedGroup() string {
+	return Catalog.Format(msgs.locale, "pickerRemovedGroup", nil)
+}
+
+// GroupMissingClone says "{count} cloned on start"
+// in the language the app shows.
+func GroupMissingClone(count int) string { return In(i18n.Locale()).GroupMissingClone(count) }
+
+// GroupMissingClone says "{count} cloned on start"
+// in the language of msgs.
+func (msgs Messages) GroupMissingClone(count int) string {
+	return Catalog.Format(msgs.locale, "groupMissingClone", map[string]any{"count": count})
+}
+
+// GroupMachinesConflict says "Its local repositories are on different machines"
+// in the language the app shows.
+func GroupMachinesConflict() string { return In(i18n.Locale()).GroupMachinesConflict() }
+
+// GroupMachinesConflict says "Its local repositories are on different machines"
+// in the language of msgs.
+func (msgs Messages) GroupMachinesConflict() string {
+	return Catalog.Format(msgs.locale, "groupMachinesConflict", nil)
+}
+
+// GroupMissingLocal says "{count} not on this machine"
+// in the language the app shows.
+func GroupMissingLocal(count int) string { return In(i18n.Locale()).GroupMissingLocal(count) }
+
+// GroupMissingLocal says "{count} not on this machine"
+// in the language of msgs.
+func (msgs Messages) GroupMissingLocal(count int) string {
+	return Catalog.Format(msgs.locale, "groupMissingLocal", map[string]any{"count": count})
+}
+
+// GroupMissing says "This project no longer exists"
+// in the language the app shows.
+func GroupMissing() string { return In(i18n.Locale()).GroupMissing() }
+
+// GroupMissing says "This project no longer exists"
+// in the language of msgs.
+func (msgs Messages) GroupMissing() string {
+	return Catalog.Format(msgs.locale, "groupMissing", nil)
+}
+
+// GroupMachinesConflictStatus says "This project has local folders on different machines, so they cannot share one conversation."
+// in the language the app shows.
+func GroupMachinesConflictStatus() string { return In(i18n.Locale()).GroupMachinesConflictStatus() }
+
+// GroupMachinesConflictStatus says "This project has local folders on different machines, so they cannot share one conversation."
+// in the language of msgs.
+func (msgs Messages) GroupMachinesConflictStatus() string {
+	return Catalog.Format(msgs.locale, "groupMachinesConflictStatus", nil)
+}
+
+// GroupMissingLocalStatus says "This machine has no copy of {count} of this project’s repositories. Add them as local projects here, or start on an…"
+// in the language the app shows.
+func GroupMissingLocalStatus(count int) string {
+	return In(i18n.Locale()).GroupMissingLocalStatus(count)
+}
+
+// GroupMissingLocalStatus says "This machine has no copy of {count} of this project’s repositories. Add them as local projects here, or start on an…"
+// in the language of msgs.
+func (msgs Messages) GroupMissingLocalStatus(count int) string {
+	return Catalog.Format(msgs.locale, "groupMissingLocalStatus", map[string]any{"count": count})
+}
+
+// GroupUnsupportedMachine says "Update Lody on this machine to start conversations in multi-repository projects."
+// in the language the app shows.
+func GroupUnsupportedMachine() string { return In(i18n.Locale()).GroupUnsupportedMachine() }
+
+// GroupUnsupportedMachine says "Update Lody on this machine to start conversations in multi-repository projects."
+// in the language of msgs.
+func (msgs Messages) GroupUnsupportedMachine() string {
+	return Catalog.Format(msgs.locale, "groupUnsupportedMachine", nil)
+}
+
+// GroupUnsupportedRepositoryMembers says "Update Lody on this machine to use its copies of these repositories."
+// in the language the app shows.
+func GroupUnsupportedRepositoryMembers() string {
+	return In(i18n.Locale()).GroupUnsupportedRepositoryMembers()
+}
+
+// GroupUnsupportedRepositoryMembers says "Update Lody on this machine to use its copies of these repositories."
+// in the language of msgs.
+func (msgs Messages) GroupUnsupportedRepositoryMembers() string {
+	return Catalog.Format(msgs.locale, "groupUnsupportedRepositoryMembers", nil)
+}

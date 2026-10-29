@@ -241,7 +241,9 @@ type App struct {
 	memoryMachine    string
 	memoryForm       memoryForm
 	addProject       addProjectForm
-	projectWizard    projectWizard // Lody's new-project wizard
+	projectWizard    projectWizard    // Lody's new-project wizard
+	groupView        groupViewState   // a project of several shown read only
+	groupDelete      groupDeleteState // a project of several being deleted
 	shortcut         shortcutForm
 	monitors         map[string]*machineMonitor // machines observed for their resource use
 	role             roleForm

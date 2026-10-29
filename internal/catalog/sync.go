@@ -649,6 +649,13 @@ type NewSession struct {
 	Project         map[string]any
 	RepoFullName    string
 	BaseBranch      string
+	// Without a parent, Project starts the session in a project of several
+	// repositories, as its first member, so that older clients still show
+	// a repository and a branch, RepoFullName and BaseBranch going with
+	// it; ProjectRun, with two members or more, is the creation snapshot
+	// Lody writes as its projectRun, after which the owning machine is its
+	// only writer.
+	ProjectRun map[string]any
 }
 
 // CreateSession creates the session's stream and its catalog entry.
@@ -663,6 +670,18 @@ func (s *Sync) CreateSession(ctx context.Context, n NewSession) error {
 			return err
 		}
 	}
+	meta := n.Meta()
+	return s.Write(ctx, func(f *flock.Flock) error {
+		if err := f.Put([]any{"e", room(n.ID)}, true); err != nil {
+			return err
+		}
+		return f.Put([]any{"m", room(n.ID)}, meta)
+	})
+}
+
+// Meta is the new session's catalog entry, as Lody's session submission
+// writes it.
+func (n NewSession) Meta() map[string]any {
 	meta := map[string]any{
 		"id":            n.ID,
 		"machineId":     n.MachineID,
@@ -699,16 +718,27 @@ func (s *Sync) CreateSession(ctx context.Context, n NewSession) error {
 			project["githubRepoFullName"] = n.GitHubRepo
 		}
 		meta["project"] = project
+	} else if n.Project != nil {
+		// A project of several: its first member, and with two or more
+		// its run.
+		meta["project"] = n.Project
+		if n.ProjectRun != nil {
+			meta["projectRun"] = n.ProjectRun
+		}
+		if n.RepoFullName != "" {
+			meta["repoFullName"] = n.RepoFullName
+		}
+		if n.BaseBranch != "" {
+			meta["baseBranch"] = n.BaseBranch
+		}
+		// Its first member is a worktree, a GitHub checkout or a folder's
+		// own, so the session is.
+		meta["isWorktree"] = true
 	} else if n.GitHubProject != "" {
 		meta["project"] = map[string]any{"kind": "github", "repoFullName": n.GitHubProject, "branch": n.Branch}
 		meta["repoFullName"] = n.GitHubProject
 	}
-	return s.Write(ctx, func(f *flock.Flock) error {
-		if err := f.Put([]any{"e", room(n.ID)}, true); err != nil {
-			return err
-		}
-		return f.Put([]any{"m", room(n.ID)}, meta)
-	})
+	return meta
 }
 
 // RenameMachine names a machine.

@@ -23,6 +23,10 @@ type Project struct {
 	// else added: of a machine's copies of one repository, a project of
 	// several repositories uses the one opened last.
 	OpenedAt float64 `json:"-"`
+	// MemberOnly is a folder registered only for projects of several
+	// repositories (standaloneVisible false): kept for them and their
+	// conversations, but not listed as a project of its own.
+	MemberOnly bool `json:"memberOnly,omitempty"`
 }
 
 type Model struct {
@@ -63,6 +67,10 @@ type Session struct {
 	// IsWorktree is whether it works in a worktree of its own, as its meta
 	// says.
 	IsWorktree bool `json:"isWorktree,omitempty"`
+	// ProjectGroupID and ProjectGroupName are the project of several
+	// repositories it was started in, as its projectRun snapshot keeps them.
+	ProjectGroupID   string `json:"projectGroupId,omitempty"`
+	ProjectGroupName string `json:"projectGroupName,omitempty"`
 	// ChildPlacement is where a child conversation shows: "side-panel",
 	// or among its parent's tabs.
 	ChildPlacement string  `json:"childPlacement,omitempty"`
@@ -434,7 +442,7 @@ func projectMachine(rows []flock.Row, machineID string) Catalog {
 				opened = stamp(value["createdAtMs"])
 			}
 			c.Projects = append(c.Projects, Project{ID: machineID + ":local:" + id, MachineID: machineID, Name: name, RootPath: text(value["rootPath"]),
-				RepoFullName: text(value["githubRepoFullName"]), History: object(value["history"]), OpenedAt: opened})
+				RepoFullName: text(value["githubRepoFullName"]), History: object(value["history"]), OpenedAt: opened, MemberOnly: value["standaloneVisible"] == false})
 		case "agentConfig":
 			cfg := AgentConfig{ID: text(value["id"]), Name: text(value["name"]), MachineID: text(value["machineId"]), AgentType: text(value["agentType"]), CLIType: text(value["cliType"]), Row: value}
 			if cfg.ID == "" {
@@ -615,7 +623,7 @@ func projectMeta(rows []flock.Row) Catalog {
 				if name == "" {
 					name = localID
 				}
-				c.Projects = append(c.Projects, Project{ID: machineID + ":local:" + localID, MachineID: machineID, Name: name, RootPath: text(p["rootPath"])})
+				c.Projects = append(c.Projects, Project{ID: machineID + ":local:" + localID, MachineID: machineID, Name: name, RootPath: text(p["rootPath"]), MemberOnly: p["standaloneVisible"] == false})
 			}
 			continue
 		}
@@ -673,6 +681,9 @@ func projectMeta(rows []flock.Row) Catalog {
 			BaseBranch:            text(value["baseBranch"]),
 			IsWorktree:            value["isWorktree"] == true,
 			ChildPlacement:        text(value["childSessionPlacement"]),
+		}
+		if run := object(value["projectRun"]); text(run["id"]) != "" {
+			s.ProjectGroupID, s.ProjectGroupName = text(run["id"]), text(run["name"])
 		}
 		if s.ID == "" {
 			s.ID = strings.TrimPrefix(id, "session-")

@@ -30,6 +30,7 @@ const (
 	rowSession
 	rowMore
 	rowNote
+	rowGroup // a project of several repositories or folders
 )
 
 type sideRow struct {
@@ -71,12 +72,16 @@ func (a *App) sideRows() []sideRow {
 	// opened it, in that one's group.
 	group := map[string]string{}
 	for _, s := range listed {
-		switch {
+		switch pr := a.catalog.Project(s.ProjectID); {
 		case s.Pinned:
 			group[s.ID] = "pinned"
-		case a.catalog.Project(s.ProjectID) != nil:
+		case s.ProjectGroupID != "":
+			// A conversation of a project of several sits under it.
+			group[s.ID] = "group:" + s.ProjectGroupID
+		case pr != nil && !pr.MemberOnly:
 			group[s.ID] = "project:" + s.ProjectID
 		default:
+			// A project the sidebar does not list hosts nothing.
 			group[s.ID] = "chats"
 		}
 	}
@@ -123,6 +128,7 @@ func (a *App) sideRows() []sideRow {
 
 	var pinned, chats []*catalog.Session
 	byProject := map[string][]*catalog.Session{}
+	byGroup := map[string][]*catalog.Session{}
 	for i := range sessions {
 		s := &sessions[i]
 		if listed[s.ID] == nil {
@@ -133,6 +139,8 @@ func (a *App) sideRows() []sideRow {
 			pinned = append(pinned, s)
 		case strings.HasPrefix(g, "project:"):
 			byProject[strings.TrimPrefix(g, "project:")] = append(byProject[strings.TrimPrefix(g, "project:")], s)
+		case strings.HasPrefix(g, "group:"):
+			byGroup[strings.TrimPrefix(g, "group:")] = append(byGroup[strings.TrimPrefix(g, "group:")], s)
 		default:
 			chats = append(chats, s)
 		}
@@ -140,14 +148,16 @@ func (a *App) sideRows() []sideRow {
 	if len(pinned) > 0 && section("pinned", locales.SidebarPinned(), "") {
 		addSessions("pinned", pinned, false, 0)
 	}
+	groups := a.sidebarGroups(byGroup)
 	for _, machine := range a.catalog.MachineIDs {
 		var projects []catalog.Project
 		for _, p := range a.catalog.Projects {
-			if p.MachineID == machine {
+			// A folder registered only for projects of several isn't one.
+			if p.MachineID == machine && !p.MemberOnly {
 				projects = append(projects, p)
 			}
 		}
-		if len(projects) == 0 {
+		if len(projects) == 0 && len(groups[machine]) == 0 {
 			continue
 		}
 		if !section("machine:"+machine, a.machineLabel(machine), machine) {
@@ -157,6 +167,15 @@ func (a *App) sideRows() []sideRow {
 			group := "project:" + p.ID
 			list := byProject[p.ID]
 			rows = append(rows, sideRow{kind: rowProject, key: "p:" + p.ID, group: group, label: p.Name, machine: machine, project: p.ID, count: len(list)})
+			if !a.collapsed[group] {
+				addSessions(group, list, true, projectPreview)
+			}
+		}
+		// Its projects of several after its folders, as Lody's.
+		for _, g := range groups[machine] {
+			group := "group:" + g.id
+			list := byGroup[g.id]
+			rows = append(rows, sideRow{kind: rowGroup, key: "g:" + g.id, group: group, label: g.name, machine: machine, project: g.id, count: len(list)})
 			if !a.collapsed[group] {
 				addSessions(group, list, true, projectPreview)
 			}
@@ -211,6 +230,8 @@ func (a *App) sidebar(c *ui.Context, p *palette) ui.Element {
 				a.sectionHeader(c, p, r)
 			case rowProject:
 				a.projectRow(c, p, r)
+			case rowGroup:
+				a.groupRow(c, p, r)
 			case rowSession:
 				a.sessionRow(c, p, r)
 			case rowMore:
@@ -312,7 +333,14 @@ func (a *App) projectRow(c *ui.Context, p *palette, r sideRow) {
 			a.collapsed[r.group] = !a.collapsed[r.group]
 			a.savePrefs()
 		})
-	hovered := row.Hovered()
+	// Its menu, on a right click or its ⋯, as Lody's project row: none
+	// while its machine removes it.
+	menu := a.rowMenu("side-project/" + r.project)
+	removing := a.catalog.Removing[r.project]
+	if !removing {
+		lodyContextMenu(c, p, row, menu, 28, func(m *lodyMenu) { a.sideProjectMenu(m, r) })
+	}
+	hovered := row.Hovered() || menu.open
 	switch {
 	case selected:
 		row.Background(p.SideSelect)
@@ -322,6 +350,7 @@ func (a *App) projectRow(c *ui.Context, p *palette, r sideRow) {
 	// The row's hover controls fade in with the pointer over 100ms, and
 	// take no pointer while they are away.
 	actions := row.AnimateWith("actions", b2f(hovered), 100*time.Millisecond, twEase)
+	rowBox := row.Bounds()
 	// With the pointer the folder gives way to the chevron, which turns
 	// between open and folded: both over 100ms, as Lody's.
 	swap := row.AnimateWith("swap", b2f(hovered), 100*time.Millisecond, ui.CubicBezier(0.4, 0, 0.2, 1))
@@ -344,6 +373,9 @@ func (a *App) projectRow(c *ui.Context, p *palette, r sideRow) {
 			}
 		})
 		ui.Text(c, r.label).FontSize(sizeSub).TextColor(p.SideRow).SingleLine().Grow(1).MinWidth(0)
+		if actions > 0 && !removing {
+			sideMoreButton(c, p, menu, rowBox, actions, hovered)
+		}
 		if actions > 0 {
 			b := ui.ButtonBase(c.Key("new-chat")).Size(20, 20).Radius(4).Label(locales.NewChatIn(r.label)).Opacity(actions).
 				Transition(ui.ElementTransition{Colors: true, Duration: 100 * time.Millisecond, Ease: twEase})

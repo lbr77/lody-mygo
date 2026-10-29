@@ -1422,7 +1422,7 @@ func (a *App) schedFormView(c *ui.Context, p *palette, f *schedForm, row *schedu
 			if f.dest == schedule.NewSession {
 				projects := []option{{"", locales.SchedChatOnly()}}
 				for _, pr := range a.catalog.Projects {
-					if pr.MachineID == f.machine && strings.Contains(pr.ID, ":local:") {
+					if pr.MachineID == f.machine && strings.Contains(pr.ID, ":local:") && !pr.MemberOnly {
 						projects = append(projects, option{pr.ID, pr.Name})
 					}
 				}

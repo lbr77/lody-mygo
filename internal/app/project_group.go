@@ -1,6 +1,8 @@
 package app
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
 	"regexp"
 	"slices"
@@ -32,6 +34,10 @@ type groupSource struct {
 	preferLocal bool
 	machine     string // of a local source
 	local       string // its local project's id
+	// What a saved member carries that the editor leaves as it is: the
+	// branch its worktrees start from, and the repository's GitHub id.
+	baseBranch string
+	repoID     float64
 }
 
 func githubSource(repo string) groupSource { return groupSource{kind: "github", repo: repo} }
@@ -50,14 +56,29 @@ func (s groupSource) key() string {
 
 // row is the source as the workspace stream stores it.
 func (s groupSource) row() map[string]any {
+	row := map[string]any{"kind": "local", "machineId": s.machine, "localProjectId": s.local}
 	if s.kind == "github" {
-		row := map[string]any{"kind": "github", "repoFullName": s.repo}
+		row = map[string]any{"kind": "github", "repoFullName": s.repo}
+		if s.repoID > 0 {
+			row["repoId"] = s.repoID
+		}
 		if s.preferLocal {
 			row["preferLocal"] = true
 		}
-		return row
 	}
-	return map[string]any{"kind": "local", "machineId": s.machine, "localProjectId": s.local}
+	if s.baseBranch != "" {
+		row["baseBranch"] = s.baseBranch
+	}
+	return row
+}
+
+// sourceOf reads a source as the workspace stream stores it.
+func sourceOf(row map[string]any) groupSource {
+	text := func(k string) string { s, _ := row[k].(string); return s }
+	s := groupSource{kind: text("kind"), repo: text("repoFullName"), preferLocal: row["preferLocal"] == true,
+		machine: text("machineId"), local: text("localProjectId"), baseBranch: text("baseBranch")}
+	s.repoID, _ = row["repoId"].(float64)
+	return s
 }
 
 // groupFolder is a folder picked from a machine's browser for a project.
@@ -68,17 +89,33 @@ type groupFolder struct {
 	name, rootPath string
 	isGit          bool
 	repo           string // its GitHub remote, as the machine inspected it
+	submodules     []detectedSubmodule
 }
 
-// groupMember is a member of the draft. Every one is top-level, in a
-// directory of its own: Lody nests a member as another's submodule only
-// once its machine or GitHub reports the submodules, which this port does
-// not ask.
+// groupMember is a member of the draft: top-level in a directory of its
+// own, or, once its machine or GitHub reports it, a submodule of another
+// member at the path the parent's .gitmodules gives it.
 type groupMember struct {
 	id     string
 	source groupSource
 	dir    string
+	// parent and path place it as parent's submodule; dir is then unused.
+	parent, path string
+	// origin is where its placement came from: default, detected, or the
+	// user's. Detection moves only the first two.
+	origin string
 	folder *groupFolder
+}
+
+// submodule is whether the member sits inside another.
+func (m groupMember) submodule() bool { return m.parent != "" }
+
+// placementRow is where the member sits, as the stream stores it.
+func (m groupMember) placementRow() map[string]any {
+	if m.submodule() {
+		return map[string]any{"kind": "submodule", "parent": m.parent, "path": m.path}
+	}
+	return map[string]any{"kind": "root", "dir": m.dir}
 }
 
 // usage is how a member is used: a folder in place, a machine's copy of
@@ -184,12 +221,28 @@ func (d groupDraft) add(source groupSource, label string) groupDraft {
 	if d.find(source.key()) >= 0 {
 		return d
 	}
+	d.members = append(slices.Clone(d.members), groupMember{id: newMemberID(), source: source, dir: uniqueDir(suggestMemberDir(label), d.rootDirs()), origin: "default"})
+	return d
+}
+
+// rootDirs are the directories the top-level members take, lowercased.
+func (d groupDraft) rootDirs() map[string]bool {
 	taken := map[string]bool{}
 	for _, m := range d.members {
-		taken[strings.ToLower(m.dir)] = true
+		if !m.submodule() {
+			taken[strings.ToLower(m.dir)] = true
+		}
 	}
-	d.members = append(slices.Clone(d.members), groupMember{id: newMemberID(), source: source, dir: uniqueDir(suggestMemberDir(label), taken)})
-	return d
+	return taken
+}
+
+// rootAgain makes a submodule a top-level member again, in a directory
+// of its own named after it.
+func rootAgain(m groupMember, label string, taken map[string]bool) groupMember {
+	m.dir = uniqueDir(suggestMemberDir(label), taken)
+	taken[strings.ToLower(m.dir)] = true
+	m.parent, m.path, m.origin = "", "", "default"
+	return m
 }
 
 // addFolder adds a folder picked from the browser: as its repository,
@@ -214,18 +267,37 @@ func (d groupDraft) addFolder(f groupFolder) groupDraft {
 	return next
 }
 
-// remove takes a member out.
-func (d groupDraft) remove(id string) groupDraft {
+// remove takes a member out. Its submodules become top-level again rather
+// than going with it: one repository was removed, not those inside it.
+func (d groupDraft) remove(id string, labelOf func(groupMember) string) groupDraft {
 	d.members = slices.DeleteFunc(slices.Clone(d.members), func(m groupMember) bool { return m.id == id })
+	taken := d.rootDirs()
+	for i, m := range d.members {
+		if m.parent == id {
+			d.members[i] = rootAgain(m, memberLabel(m, labelOf), taken)
+		}
+	}
 	return d
+}
+
+// memberLabel is a member's name, by labelOf when there is one.
+func memberLabel(m groupMember, labelOf func(groupMember) string) string {
+	switch {
+	case labelOf != nil:
+		return labelOf(m)
+	case m.folder != nil:
+		return m.folder.name
+	case m.source.kind == "github":
+		return m.source.repo
+	}
+	return m.source.local
 }
 
 // retain drops the members a scope cannot hold: folders of another
 // machine, and every folder for a GitHub-only project, even one a GitHub
 // remote made portable. GitHub only means a clone for each conversation,
 // never a machine's copy.
-func (d groupDraft) retain(scope groupScope) groupDraft {
-	var members []groupMember
+func (d groupDraft) retain(scope groupScope, labelOf func(groupMember) string) groupDraft {
 	for _, m := range d.members {
 		machine := ""
 		if m.folder != nil {
@@ -234,14 +306,15 @@ func (d groupDraft) retain(scope groupScope) groupDraft {
 			machine = m.source.machine
 		}
 		if machine != "" && (scope.kind == "github" || machine != scope.machine) {
-			continue
+			d = d.remove(m.id, labelOf)
 		}
-		if scope.kind == "github" && m.source.kind == "github" {
-			m.source.preferLocal = false
-		}
-		members = append(members, m)
 	}
-	d.members = members
+	if scope.kind == "github" {
+		d.members = slices.Clone(d.members)
+		for i := range d.members {
+			d.members[i].source.preferLocal = false
+		}
+	}
 	return d
 }
 
@@ -325,7 +398,20 @@ func (d groupDraft) validate(repoOf func(groupSource) string, taken map[string]b
 	}
 	v.membersRequired = len(d.members) == 0
 	dirs := map[string]string{}
+	ids := map[string]bool{}
 	for _, m := range d.members {
+		ids[m.id] = true
+	}
+	for _, m := range d.members {
+		if m.submodule() {
+			switch {
+			case !safeProjectPath(m.path):
+				v.memberErrors[m.id] = "submodule_path_invalid"
+			case !ids[m.parent] || m.parent == m.id:
+				v.memberErrors[m.id] = "submodule_parent_missing"
+			}
+			continue
+		}
 		if !safeProjectPath(m.dir) || strings.Contains(m.dir, "/") {
 			v.memberErrors[m.id] = "dir_invalid"
 			continue
@@ -362,21 +448,210 @@ func (d groupDraft) validate(repoOf func(groupSource) string, taken map[string]b
 		}
 		seen[key] = true
 	}
+	// The contract rejects the tree as a whole, overlapping or in a cycle:
+	// the submodules are marked, as what a user can fix, or else all.
+	if len(v.memberErrors) == 0 && len(d.members) > 0 {
+		if _, err := memberPaths(d.members); err != nil {
+			for _, m := range d.members {
+				if m.submodule() {
+					v.memberErrors[m.id] = "path_overlap"
+				}
+			}
+			if len(v.memberErrors) == 0 {
+				for _, m := range d.members {
+					v.memberErrors[m.id] = "path_overlap"
+				}
+			}
+		}
+	}
 	v.valid = !v.nameRequired && !v.nameTaken && !v.membersRequired && len(v.memberErrors) == 0
 	return v
 }
 
-// row is the project as the workspace stream stores it, a first revision.
-func (d groupDraft) row(id, owner string, now float64) map[string]any {
+var errMemberPaths = errors.New("invalid project member paths")
+
+// memberPaths is each member's directory in a conversation, as Lody's
+// resolveProjectMemberPaths: a top-level member at its dir, a submodule at
+// its path within its parent's; none of them inside another unless it is
+// that one's submodule.
+func memberPaths(members []groupMember) (map[string]string, error) {
+	byID := map[string]groupMember{}
+	for _, m := range members {
+		if _, dup := byID[m.id]; dup {
+			return nil, errMemberPaths
+		}
+		byID[m.id] = m
+	}
+	paths, visiting := map[string]string{}, map[string]bool{}
+	var visit func(id string) (string, error)
+	visit = func(id string) (string, error) {
+		if p, ok := paths[id]; ok {
+			return p, nil
+		}
+		m, ok := byID[id]
+		if !ok || visiting[id] {
+			return "", errMemberPaths
+		}
+		visiting[id] = true
+		suffix := m.dir
+		if m.submodule() {
+			suffix = m.path
+		}
+		if !safeProjectPath(suffix) || !m.submodule() && strings.Contains(suffix, "/") {
+			return "", errMemberPaths
+		}
+		path := suffix
+		if m.submodule() {
+			parent, err := visit(m.parent)
+			if err != nil {
+				return "", err
+			}
+			path = parent + "/" + suffix
+		}
+		delete(visiting, id)
+		paths[id] = path
+		return path, nil
+	}
+	for _, m := range members {
+		if _, err := visit(m.id); err != nil {
+			return nil, err
+		}
+	}
+	// One inside another only as its submodule, however deep.
+	inside := func(parent string, child groupMember) bool {
+		for child.submodule() {
+			if child.parent == parent {
+				return true
+			}
+			child = byID[child.parent]
+		}
+		return false
+	}
+	for i, a := range members {
+		for _, b := range members[i+1:] {
+			ap, bp := strings.ToLower(paths[a.id]), strings.ToLower(paths[b.id])
+			if ap == bp || strings.HasPrefix(ap, bp+"/") && !inside(b.id, a) || strings.HasPrefix(bp, ap+"/") && !inside(a.id, b) {
+				return nil, errMemberPaths
+			}
+		}
+	}
+	return paths, nil
+}
+
+// membersRow is the members as the stream stores them.
+func (d groupDraft) membersRow() []any {
 	members := []any{}
 	for _, m := range d.members {
-		members = append(members, map[string]any{"id": m.id, "source": m.source.row(), "placement": map[string]any{"kind": "root", "dir": m.dir}})
+		members = append(members, map[string]any{"id": m.id, "source": m.source.row(), "placement": m.placementRow()})
 	}
-	row := map[string]any{"v": 1, "id": id, "name": strings.TrimSpace(d.name), "ownerUserId": owner, "createdAtMs": now, "revision": 1, "members": members}
+	return members
+}
+
+// row is the project as the workspace stream stores it: a first revision,
+// or, editing one, the next, as Lody's buildWorkspaceProjectFromForm. Its
+// creator and creation stay; the revision moves only when what it holds
+// does, so saving it unchanged hands back the row as it was.
+func (d groupDraft) row(id, owner string, now float64, existing *catalog.ProjectGroup) map[string]any {
+	row := map[string]any{"v": 1, "id": id, "name": strings.TrimSpace(d.name), "ownerUserId": owner, "createdAtMs": now, "revision": 1, "members": d.membersRow()}
 	if instructions := strings.TrimSpace(d.instructions); instructions != "" {
 		row["instructions"] = instructions
 	}
+	if existing == nil {
+		return row
+	}
+	row["ownerUserId"], row["createdAtMs"], row["revision"] = existing.OwnerUserID, existing.CreatedAt, max(existing.Revision, 1)
+	before, _ := json.Marshal(existing.Row["members"])
+	after, _ := json.Marshal(row["members"])
+	if row["name"] == existing.Name && strings.TrimSpace(d.instructions) == strings.TrimSpace(existing.Instructions) && string(before) == string(after) {
+		return existing.Row
+	}
+	row["revision"] = max(existing.Revision, 1) + 1
 	return row
+}
+
+// draftOf is a saved project as the editor drafts it, as Lody's
+// buildProjectGroupFormValue: every placement it saved is the user's.
+func draftOf(g catalog.ProjectGroup) groupDraft {
+	d := groupDraft{name: g.Name, instructions: g.Instructions}
+	raws, _ := g.Row["members"].([]any)
+	for _, raw := range raws {
+		row, _ := raw.(map[string]any)
+		id, _ := row["id"].(string)
+		src, _ := row["source"].(map[string]any)
+		at, _ := row["placement"].(map[string]any)
+		m := groupMember{id: id, source: sourceOf(src), origin: "user"}
+		if at["kind"] == "submodule" {
+			m.parent, _ = at["parent"].(string)
+			m.path, _ = at["path"].(string)
+		} else {
+			m.dir, _ = at["dir"].(string)
+		}
+		if m.id != "" && (m.source.kind == "github" || m.source.kind == "local") {
+			d.members = append(d.members, m)
+		}
+	}
+	return d
+}
+
+// detectedSubmodule is one submodule a member's repository declares, and
+// the repository it points at.
+type detectedSubmodule struct {
+	path, repo string
+}
+
+// applySubmodules places members inside the member that declares them as
+// submodules, as Lody's applyDetectedProjectSubmodules: a member becomes
+// parent's submodule when one of parent's points at its repository. Only
+// a default or detected placement moves, never the user's; a detected one
+// no longer declared goes back to the top. A result the contract would
+// reject, as two repositories vendoring each other, is not applied.
+func (d groupDraft) applySubmodules(detected map[string][]detectedSubmodule, repositoryOf, labelOf func(groupMember) string) groupDraft {
+	byRepo := map[string]string{}
+	for _, m := range d.members {
+		if repo := strings.ToLower(repositoryOf(m)); repo != "" {
+			if _, ok := byRepo[repo]; !ok {
+				byRepo[repo] = m.id
+			}
+		}
+	}
+	type place struct{ parent, path string }
+	next := map[string]place{}
+	for _, parent := range d.members {
+		for _, sub := range detected[parent.id] {
+			child := byRepo[strings.ToLower(sub.repo)]
+			if _, taken := next[child]; sub.repo == "" || child == "" || child == parent.id || taken || !safeProjectPath(sub.path) {
+				continue
+			}
+			next[child] = place{parent.id, sub.path}
+		}
+	}
+	taken := d.rootDirs()
+	members := slices.Clone(d.members)
+	changed := false
+	for i, m := range members {
+		if m.origin == "user" {
+			continue
+		}
+		if at, ok := next[m.id]; ok {
+			if m.parent != at.parent || m.path != at.path {
+				members[i].parent, members[i].path, members[i].origin = at.parent, at.path, "detected"
+				changed = true
+			}
+			continue
+		}
+		if m.origin == "detected" && m.submodule() {
+			members[i] = rootAgain(m, memberLabel(m, labelOf), taken)
+			changed = true
+		}
+	}
+	if !changed {
+		return d
+	}
+	if _, err := memberPaths(members); err != nil {
+		return d
+	}
+	d.members = members
+	return d
 }
 
 // memberCopy is a machine's copy of a repository: a local project there.
@@ -520,11 +795,14 @@ func optionsByKey(options []memberOption) map[string]*memberOption {
 	return by
 }
 
-// takenGroupNames are the other projects' names, normalized.
+// takenGroupNames are the other projects' names, normalized: the one the
+// wizard edits keeps its own.
 func (a *App) takenGroupNames() map[string]bool {
 	taken := map[string]bool{}
 	for _, g := range a.catalog.Groups {
-		taken[normalizeGroupName(g.Name)] = true
+		if g.ID != a.projectWizard.id {
+			taken[normalizeGroupName(g.Name)] = true
+		}
 	}
 	return taken
 }
@@ -540,6 +818,12 @@ func groupMemberError(code string) string {
 		return locales.WizardErrDuplicateRepository()
 	case "machine_mismatch":
 		return locales.WizardErrMachineMismatch()
+	case "submodule_path_invalid":
+		return locales.GroupErrSubmodulePath()
+	case "submodule_parent_missing":
+		return locales.GroupErrSubmoduleParent()
+	case "path_overlap":
+		return locales.GroupErrPathOverlap()
 	}
 	return code
 }

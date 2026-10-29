@@ -41,10 +41,13 @@ func (a *App) homeView(c *ui.Context, p *palette) {
 	agent := a.agent(a.newChat.machine, a.newChat.agent)
 	a.sharingNotice(c, p)
 	a.composerBox(c, p, composerOptions{
-		canSend:  agent != nil && !a.sending,
-		onSend:   a.startChat,
+		canSend:  agent != nil && !a.sending && !a.groupBlocked(),
+		onSend:   a.startHomeChat,
 		sendSize: 32,
-		above:    func() { a.homeTargets(c, p) },
+		above: func() {
+			a.homeTargets(c, p)
+			a.homeGroupStatus(c, p)
+		},
 		footer: func() {
 			agentLabel := locales.NoAgent()
 			if agent != nil {
@@ -111,11 +114,13 @@ func (a *App) homeTargets(c *ui.Context, p *palette) {
 		})
 
 		openProject := a.popover("project")
-		label := locales.SelectProject()
+		label, projectIcon := locales.SelectProject(), iconFolderOpen
 		if pr := a.catalog.Project(a.newChat.project); pr != nil {
 			label = pr.Name
 		} else if repo, ok := strings.CutPrefix(a.newChat.project, "github:"); ok {
 			label = repo
+		} else if name, ok := a.homeProjectLabel(); ok {
+			label, projectIcon = name, iconFolders
 		}
 		// With a project chosen, the pointer on the pill swaps its folder
 		// for a clear button in the same place, each fading over 150ms, as
@@ -134,7 +139,7 @@ func (a *App) homeTargets(c *ui.Context, p *palette) {
 				swap = group.AnimateWith("clear", b2f(group.Hovered() || group.FocusWithin()), 150*time.Millisecond, twEase)
 			}
 			project.Children(func() {
-				ui.Icon(c, iconFolderOpen).Size(16, 16).TextColor(p.Text.Alpha(0.8)).Opacity(1 - swap)
+				ui.Icon(c, projectIcon).Size(16, 16).TextColor(p.Text.Alpha(0.8)).Opacity(1 - swap)
 				ui.Text(c, label).FontSize(12.6).TextColor(p.Text.Alpha(0.8)).SingleLine().MaxWidth(240)
 			})
 			if !chosen {
@@ -153,9 +158,7 @@ func (a *App) homeTargets(c *ui.Context, p *palette) {
 				*openProject = false
 			})
 		})
-		a.optionList(c, p, project, openProject, a.projectOptions(), a.newChat.project, func(id string) {
-			a.newChat.project, a.newChat.branch = id, ""
-		})
+		a.homeProjectList(c, p, project, openProject)
 		a.workdirControls(c, p)
 	})
 }
@@ -186,7 +189,8 @@ func (a *App) agentOptions() []option {
 func (a *App) projectOptions() []option {
 	out := []option{{"", locales.NoProject()}}
 	for _, pr := range a.catalog.Projects {
-		if pr.MachineID == a.newChat.machine && strings.Contains(pr.ID, ":local:") {
+		// A folder registered only for projects of several isn't offered.
+		if pr.MachineID == a.newChat.machine && strings.Contains(pr.ID, ":local:") && !pr.MemberOnly {
 			out = append(out, option{pr.ID, pr.Name})
 		}
 	}
