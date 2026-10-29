@@ -845,6 +845,49 @@ func (r *Replica) Answer(ctx context.Context, entryID, itemID, requestID, option
 	return r.upload(ctx, before)
 }
 
+// SetNoticeMeta merges fields into a system notice's metadata, as a
+// proposal's outcome is written back to it.
+func (r *Replica) SetNoticeMeta(ctx context.Context, entryID, itemID string, fields map[string]any) error {
+	r.mu.Lock()
+	if !r.ready {
+		r.mu.Unlock()
+		return errNotReady
+	}
+	item := r.locateItem(entryID, itemID)
+	if item == nil {
+		r.mu.Unlock()
+		return errors.New("session: the notice is gone")
+	}
+	before := r.doc.OplogVv()
+	var err error
+	if meta, ok := item.GetLoroMap("meta"); ok && meta != nil {
+		for k, v := range fields {
+			if err = meta.InsertAny(k, v); err != nil {
+				break
+			}
+		}
+	} else {
+		v, _ := item.GetAny("meta")
+		next := map[string]any{}
+		for k, v := range obj(normalize(v)) {
+			next[k] = v
+		}
+		for k, v := range fields {
+			next[k] = v
+		}
+		err = item.InsertAny("meta", next)
+	}
+	if err == nil {
+		r.doc.Commit()
+	}
+	r.mu.Unlock()
+	if err != nil {
+		return err
+	}
+	r.emit(true)
+	return r.upload(ctx, before)
+}
+
 // locateItem finds an item map by entry and item id. Callers hold r.mu.
 func (r *Replica) locateItem(entryID, itemID string) *loro.LoroMap {
 	history := r.doc.GetList(loro.AsContainerId("history"))

@@ -13,6 +13,7 @@ func lucide(body string) *ui.SVG {
 }
 
 var (
+	iconCircleX        = lucide(`<circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/>`)
 	iconListTodo       = lucide(`<rect x="3" y="5" width="6" height="6" rx="1"/><path d="m3 17 2 2 4-4"/><path d="M13 6h8"/><path d="M13 12h8"/><path d="M13 18h8"/>`)
 	iconCalendarClock  = lucide(`<path d="M21 7.5V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3.5"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h5"/><path d="M17.5 17.5 16 16.3V14"/><circle cx="16" cy="16" r="6"/>`)
 	iconArrowUpRight   = lucide(`<path d="M7 7h10v10"/><path d="M7 17 17 7"/>`)

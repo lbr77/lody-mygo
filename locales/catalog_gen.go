@@ -15756,3 +15756,597 @@ func SmNotSent() string { return In(i18n.Locale()).SmNotSent() }
 func (msgs Messages) SmNotSent() string {
 	return Catalog.Format(msgs.locale, "smNotSent", nil)
 }
+
+// NoticeAgentWarning says "Agent warning"
+// in the language the app shows.
+func NoticeAgentWarning() string { return In(i18n.Locale()).NoticeAgentWarning() }
+
+// NoticeAgentWarning says "Agent warning"
+// in the language of msgs.
+func (msgs Messages) NoticeAgentWarning() string {
+	return Catalog.Format(msgs.locale, "noticeAgentWarning", nil)
+}
+
+// NoticeAcpAuthRequired says "Authentication required"
+// in the language the app shows.
+func NoticeAcpAuthRequired() string { return In(i18n.Locale()).NoticeAcpAuthRequired() }
+
+// NoticeAcpAuthRequired says "Authentication required"
+// in the language of msgs.
+func (msgs Messages) NoticeAcpAuthRequired() string {
+	return Catalog.Format(msgs.locale, "noticeAcpAuthRequired", nil)
+}
+
+// NoticeAcpInternalError says "Agent internal error"
+// in the language the app shows.
+func NoticeAcpInternalError() string { return In(i18n.Locale()).NoticeAcpInternalError() }
+
+// NoticeAcpInternalError says "Agent internal error"
+// in the language of msgs.
+func (msgs Messages) NoticeAcpInternalError() string {
+	return Catalog.Format(msgs.locale, "noticeAcpInternalError", nil)
+}
+
+// NoticeAcpInvalidParams says "Invalid request parameters"
+// in the language the app shows.
+func NoticeAcpInvalidParams() string { return In(i18n.Locale()).NoticeAcpInvalidParams() }
+
+// NoticeAcpInvalidParams says "Invalid request parameters"
+// in the language of msgs.
+func (msgs Messages) NoticeAcpInvalidParams() string {
+	return Catalog.Format(msgs.locale, "noticeAcpInvalidParams", nil)
+}
+
+// NoticeAcpInvalidRequest says "Invalid request"
+// in the language the app shows.
+func NoticeAcpInvalidRequest() string { return In(i18n.Locale()).NoticeAcpInvalidRequest() }
+
+// NoticeAcpInvalidRequest says "Invalid request"
+// in the language of msgs.
+func (msgs Messages) NoticeAcpInvalidRequest() string {
+	return Catalog.Format(msgs.locale, "noticeAcpInvalidRequest", nil)
+}
+
+// NoticeAcpMethodNotFound says "Agent protocol method not found"
+// in the language the app shows.
+func NoticeAcpMethodNotFound() string { return In(i18n.Locale()).NoticeAcpMethodNotFound() }
+
+// NoticeAcpMethodNotFound says "Agent protocol method not found"
+// in the language of msgs.
+func (msgs Messages) NoticeAcpMethodNotFound() string {
+	return Catalog.Format(msgs.locale, "noticeAcpMethodNotFound", nil)
+}
+
+// NoticeAcpNotReady says "Agent is not ready - please try again"
+// in the language the app shows.
+func NoticeAcpNotReady() string { return In(i18n.Locale()).NoticeAcpNotReady() }
+
+// NoticeAcpNotReady says "Agent is not ready - please try again"
+// in the language of msgs.
+func (msgs Messages) NoticeAcpNotReady() string {
+	return Catalog.Format(msgs.locale, "noticeAcpNotReady", nil)
+}
+
+// NoticeAcpParseError says "Failed to parse request"
+// in the language the app shows.
+func NoticeAcpParseError() string { return In(i18n.Locale()).NoticeAcpParseError() }
+
+// NoticeAcpParseError says "Failed to parse request"
+// in the language of msgs.
+func (msgs Messages) NoticeAcpParseError() string {
+	return Catalog.Format(msgs.locale, "noticeAcpParseError", nil)
+}
+
+// NoticeAcpProviderOverloaded says "Selected model is at capacity. Please try a different model."
+// in the language the app shows.
+func NoticeAcpProviderOverloaded() string { return In(i18n.Locale()).NoticeAcpProviderOverloaded() }
+
+// NoticeAcpProviderOverloaded says "Selected model is at capacity. Please try a different model."
+// in the language of msgs.
+func (msgs Messages) NoticeAcpProviderOverloaded() string {
+	return Catalog.Format(msgs.locale, "noticeAcpProviderOverloaded", nil)
+}
+
+// NoticeAcpRequestCancelled says "Request was cancelled"
+// in the language the app shows.
+func NoticeAcpRequestCancelled() string { return In(i18n.Locale()).NoticeAcpRequestCancelled() }
+
+// NoticeAcpRequestCancelled says "Request was cancelled"
+// in the language of msgs.
+func (msgs Messages) NoticeAcpRequestCancelled() string {
+	return Catalog.Format(msgs.locale, "noticeAcpRequestCancelled", nil)
+}
+
+// NoticeAcpResourceNotFound says "Agent resource not found"
+// in the language the app shows.
+func NoticeAcpResourceNotFound() string { return In(i18n.Locale()).NoticeAcpResourceNotFound() }
+
+// NoticeAcpResourceNotFound says "Agent resource not found"
+// in the language of msgs.
+func (msgs Messages) NoticeAcpResourceNotFound() string {
+	return Catalog.Format(msgs.locale, "noticeAcpResourceNotFound", nil)
+}
+
+// NoticeAcpSessionStorageIncompatible says "DeepSeek session storage uses incompatible compression — keep one format or use a separate DSH_HOME"
+// in the language the app shows.
+func NoticeAcpSessionStorageIncompatible() string {
+	return In(i18n.Locale()).NoticeAcpSessionStorageIncompatible()
+}
+
+// NoticeAcpSessionStorageIncompatible says "DeepSeek session storage uses incompatible compression — keep one format or use a separate DSH_HOME"
+// in the language of msgs.
+func (msgs Messages) NoticeAcpSessionStorageIncompatible() string {
+	return Catalog.Format(msgs.locale, "noticeAcpSessionStorageIncompatible", nil)
+}
+
+// NoticeAcpUnknownError says "Agent error"
+// in the language the app shows.
+func NoticeAcpUnknownError() string { return In(i18n.Locale()).NoticeAcpUnknownError() }
+
+// NoticeAcpUnknownError says "Agent error"
+// in the language of msgs.
+func (msgs Messages) NoticeAcpUnknownError() string {
+	return Catalog.Format(msgs.locale, "noticeAcpUnknownError", nil)
+}
+
+// NoticeAcpUpstreamApiError says "Upstream API error — you can retry your message"
+// in the language the app shows.
+func NoticeAcpUpstreamApiError() string { return In(i18n.Locale()).NoticeAcpUpstreamApiError() }
+
+// NoticeAcpUpstreamApiError says "Upstream API error — you can retry your message"
+// in the language of msgs.
+func (msgs Messages) NoticeAcpUpstreamApiError() string {
+	return Catalog.Format(msgs.locale, "noticeAcpUpstreamApiError", nil)
+}
+
+// NoticeAgentDisconnected says "Agent disconnected unexpectedly"
+// in the language the app shows.
+func NoticeAgentDisconnected() string { return In(i18n.Locale()).NoticeAgentDisconnected() }
+
+// NoticeAgentDisconnected says "Agent disconnected unexpectedly"
+// in the language of msgs.
+func (msgs Messages) NoticeAgentDisconnected() string {
+	return Catalog.Format(msgs.locale, "noticeAgentDisconnected", nil)
+}
+
+// NoticeAgentNoOutput says "The agent ended the turn without producing any output — you can retry your message"
+// in the language the app shows.
+func NoticeAgentNoOutput() string { return In(i18n.Locale()).NoticeAgentNoOutput() }
+
+// NoticeAgentNoOutput says "The agent ended the turn without producing any output — you can retry your message"
+// in the language of msgs.
+func (msgs Messages) NoticeAgentNoOutput() string {
+	return Catalog.Format(msgs.locale, "noticeAgentNoOutput", nil)
+}
+
+// NoticeAgentTypeMismatch says "Agent type mismatch - session requires a different agent"
+// in the language the app shows.
+func NoticeAgentTypeMismatch() string { return In(i18n.Locale()).NoticeAgentTypeMismatch() }
+
+// NoticeAgentTypeMismatch says "Agent type mismatch - session requires a different agent"
+// in the language of msgs.
+func (msgs Messages) NoticeAgentTypeMismatch() string {
+	return Catalog.Format(msgs.locale, "noticeAgentTypeMismatch", nil)
+}
+
+// NoticeCopyError says "Copy error"
+// in the language the app shows.
+func NoticeCopyError() string { return In(i18n.Locale()).NoticeCopyError() }
+
+// NoticeCopyError says "Copy error"
+// in the language of msgs.
+func (msgs Messages) NoticeCopyError() string {
+	return Catalog.Format(msgs.locale, "noticeCopyError", nil)
+}
+
+// NoticeCopied says "Copied"
+// in the language the app shows.
+func NoticeCopied() string { return In(i18n.Locale()).NoticeCopied() }
+
+// NoticeCopied says "Copied"
+// in the language of msgs.
+func (msgs Messages) NoticeCopied() string {
+	return Catalog.Format(msgs.locale, "noticeCopied", nil)
+}
+
+// NoticeDeepseekNodeAction says "Install a supported Node.js with npm/npx on the machine running this Agent, add node to PATH, fully restart Lody/CLI,…"
+// in the language the app shows.
+func NoticeDeepseekNodeAction() string { return In(i18n.Locale()).NoticeDeepseekNodeAction() }
+
+// NoticeDeepseekNodeAction says "Install a supported Node.js with npm/npx on the machine running this Agent, add node to PATH, fully restart Lody/CLI,…"
+// in the language of msgs.
+func (msgs Messages) NoticeDeepseekNodeAction() string {
+	return Catalog.Format(msgs.locale, "noticeDeepseekNodeAction", nil)
+}
+
+// NoticeDeepseekNodeExecFailed says "DeepSeek Harness could not run Node.js on the target machine"
+// in the language the app shows.
+func NoticeDeepseekNodeExecFailed() string { return In(i18n.Locale()).NoticeDeepseekNodeExecFailed() }
+
+// NoticeDeepseekNodeExecFailed says "DeepSeek Harness could not run Node.js on the target machine"
+// in the language of msgs.
+func (msgs Messages) NoticeDeepseekNodeExecFailed() string {
+	return Catalog.Format(msgs.locale, "noticeDeepseekNodeExecFailed", nil)
+}
+
+// NoticeDeepseekNodeNotFound says "DeepSeek Harness needs Node.js on the target machine"
+// in the language the app shows.
+func NoticeDeepseekNodeNotFound() string { return In(i18n.Locale()).NoticeDeepseekNodeNotFound() }
+
+// NoticeDeepseekNodeNotFound says "DeepSeek Harness needs Node.js on the target machine"
+// in the language of msgs.
+func (msgs Messages) NoticeDeepseekNodeNotFound() string {
+	return Catalog.Format(msgs.locale, "noticeDeepseekNodeNotFound", nil)
+}
+
+// NoticeDeepseekNodeUnsupported says "DeepSeek Harness needs a supported standalone Node.js version"
+// in the language the app shows.
+func NoticeDeepseekNodeUnsupported() string { return In(i18n.Locale()).NoticeDeepseekNodeUnsupported() }
+
+// NoticeDeepseekNodeUnsupported says "DeepSeek Harness needs a supported standalone Node.js version"
+// in the language of msgs.
+func (msgs Messages) NoticeDeepseekNodeUnsupported() string {
+	return Catalog.Format(msgs.locale, "noticeDeepseekNodeUnsupported", nil)
+}
+
+// NoticeGitExecutableNotFound says "Git executable was not found on the target machine"
+// in the language the app shows.
+func NoticeGitExecutableNotFound() string { return In(i18n.Locale()).NoticeGitExecutableNotFound() }
+
+// NoticeGitExecutableNotFound says "Git executable was not found on the target machine"
+// in the language of msgs.
+func (msgs Messages) NoticeGitExecutableNotFound() string {
+	return Catalog.Format(msgs.locale, "noticeGitExecutableNotFound", nil)
+}
+
+// NoticeGitExecutableNotFoundAction says "Install Git for Windows or add git.exe to PATH, fully restart Lody/CLI, verify “git --version” in a new terminal,…"
+// in the language the app shows.
+func NoticeGitExecutableNotFoundAction() string {
+	return In(i18n.Locale()).NoticeGitExecutableNotFoundAction()
+}
+
+// NoticeGitExecutableNotFoundAction says "Install Git for Windows or add git.exe to PATH, fully restart Lody/CLI, verify “git --version” in a new terminal,…"
+// in the language of msgs.
+func (msgs Messages) NoticeGitExecutableNotFoundAction() string {
+	return Catalog.Format(msgs.locale, "noticeGitExecutableNotFoundAction", nil)
+}
+
+// NoticeInstallNode says "Download Node.js"
+// in the language the app shows.
+func NoticeInstallNode() string { return In(i18n.Locale()).NoticeInstallNode() }
+
+// NoticeInstallNode says "Download Node.js"
+// in the language of msgs.
+func (msgs Messages) NoticeInstallNode() string {
+	return Catalog.Format(msgs.locale, "noticeInstallNode", nil)
+}
+
+// NoticeMachineAccessDenied says "Machine access denied"
+// in the language the app shows.
+func NoticeMachineAccessDenied() string { return In(i18n.Locale()).NoticeMachineAccessDenied() }
+
+// NoticeMachineAccessDenied says "Machine access denied"
+// in the language of msgs.
+func (msgs Messages) NoticeMachineAccessDenied() string {
+	return Catalog.Format(msgs.locale, "noticeMachineAccessDenied", nil)
+}
+
+// NoticeMemoryPressure says "The machine is low on memory - free some memory and retry"
+// in the language the app shows.
+func NoticeMemoryPressure() string { return In(i18n.Locale()).NoticeMemoryPressure() }
+
+// NoticeMemoryPressure says "The machine is low on memory - free some memory and retry"
+// in the language of msgs.
+func (msgs Messages) NoticeMemoryPressure() string {
+	return Catalog.Format(msgs.locale, "noticeMemoryPressure", nil)
+}
+
+// NoticeMessageDeliveryFailed says "Message delivery failed - please resend after sync recovers"
+// in the language the app shows.
+func NoticeMessageDeliveryFailed() string { return In(i18n.Locale()).NoticeMessageDeliveryFailed() }
+
+// NoticeMessageDeliveryFailed says "Message delivery failed - please resend after sync recovers"
+// in the language of msgs.
+func (msgs Messages) NoticeMessageDeliveryFailed() string {
+	return Catalog.Format(msgs.locale, "noticeMessageDeliveryFailed", nil)
+}
+
+// NoticeRetryAgain says "Retry again"
+// in the language the app shows.
+func NoticeRetryAgain() string { return In(i18n.Locale()).NoticeRetryAgain() }
+
+// NoticeRetryAgain says "Retry again"
+// in the language of msgs.
+func (msgs Messages) NoticeRetryAgain() string {
+	return Catalog.Format(msgs.locale, "noticeRetryAgain", nil)
+}
+
+// NoticeRetryAndEnableAuto says "Retry and auto-retry"
+// in the language the app shows.
+func NoticeRetryAndEnableAuto() string { return In(i18n.Locale()).NoticeRetryAndEnableAuto() }
+
+// NoticeRetryAndEnableAuto says "Retry and auto-retry"
+// in the language of msgs.
+func (msgs Messages) NoticeRetryAndEnableAuto() string {
+	return Catalog.Format(msgs.locale, "noticeRetryAndEnableAuto", nil)
+}
+
+// NoticeRetryIn says "Retry in {seconds}s"
+// in the language the app shows.
+func NoticeRetryIn(seconds string) string { return In(i18n.Locale()).NoticeRetryIn(seconds) }
+
+// NoticeRetryIn says "Retry in {seconds}s"
+// in the language of msgs.
+func (msgs Messages) NoticeRetryIn(seconds string) string {
+	return Catalog.Format(msgs.locale, "noticeRetryIn", map[string]any{"seconds": seconds})
+}
+
+// NoticeRetryNow says "Retry now"
+// in the language the app shows.
+func NoticeRetryNow() string { return In(i18n.Locale()).NoticeRetryNow() }
+
+// NoticeRetryNow says "Retry now"
+// in the language of msgs.
+func (msgs Messages) NoticeRetryNow() string {
+	return Catalog.Format(msgs.locale, "noticeRetryNow", nil)
+}
+
+// NoticeRetrying says "Retrying…"
+// in the language the app shows.
+func NoticeRetrying() string { return In(i18n.Locale()).NoticeRetrying() }
+
+// NoticeRetrying says "Retrying…"
+// in the language of msgs.
+func (msgs Messages) NoticeRetrying() string {
+	return Catalog.Format(msgs.locale, "noticeRetrying", nil)
+}
+
+// NoticeSessionArchived says "Session is archived and cannot receive new messages"
+// in the language the app shows.
+func NoticeSessionArchived() string { return In(i18n.Locale()).NoticeSessionArchived() }
+
+// NoticeSessionArchived says "Session is archived and cannot receive new messages"
+// in the language of msgs.
+func (msgs Messages) NoticeSessionArchived() string {
+	return Catalog.Format(msgs.locale, "noticeSessionArchived", nil)
+}
+
+// NoticeSessionInitFailed says "Failed to initialize session"
+// in the language the app shows.
+func NoticeSessionInitFailed() string { return In(i18n.Locale()).NoticeSessionInitFailed() }
+
+// NoticeSessionInitFailed says "Failed to initialize session"
+// in the language of msgs.
+func (msgs Messages) NoticeSessionInitFailed() string {
+	return Catalog.Format(msgs.locale, "noticeSessionInitFailed", nil)
+}
+
+// NoticeSessionNotFound says "Session not found"
+// in the language the app shows.
+func NoticeSessionNotFound() string { return In(i18n.Locale()).NoticeSessionNotFound() }
+
+// NoticeSessionNotFound says "Session not found"
+// in the language of msgs.
+func (msgs Messages) NoticeSessionNotFound() string {
+	return Catalog.Format(msgs.locale, "noticeSessionNotFound", nil)
+}
+
+// NoticeSessionRestoreFailed says "Failed to restore session"
+// in the language the app shows.
+func NoticeSessionRestoreFailed() string { return In(i18n.Locale()).NoticeSessionRestoreFailed() }
+
+// NoticeSessionRestoreFailed says "Failed to restore session"
+// in the language of msgs.
+func (msgs Messages) NoticeSessionRestoreFailed() string {
+	return Catalog.Format(msgs.locale, "noticeSessionRestoreFailed", nil)
+}
+
+// NoticeStopAutoRetry says "Stop auto-retry"
+// in the language the app shows.
+func NoticeStopAutoRetry() string { return In(i18n.Locale()).NoticeStopAutoRetry() }
+
+// NoticeStopAutoRetry says "Stop auto-retry"
+// in the language of msgs.
+func (msgs Messages) NoticeStopAutoRetry() string {
+	return Catalog.Format(msgs.locale, "noticeStopAutoRetry", nil)
+}
+
+// NoticeTurnPrePromptFailed says "Failed before the agent could start"
+// in the language the app shows.
+func NoticeTurnPrePromptFailed() string { return In(i18n.Locale()).NoticeTurnPrePromptFailed() }
+
+// NoticeTurnPrePromptFailed says "Failed before the agent could start"
+// in the language of msgs.
+func (msgs Messages) NoticeTurnPrePromptFailed() string {
+	return Catalog.Format(msgs.locale, "noticeTurnPrePromptFailed", nil)
+}
+
+// NoticeUnknown says "An unexpected error occurred"
+// in the language the app shows.
+func NoticeUnknown() string { return In(i18n.Locale()).NoticeUnknown() }
+
+// NoticeUnknown says "An unexpected error occurred"
+// in the language of msgs.
+func (msgs Messages) NoticeUnknown() string {
+	return Catalog.Format(msgs.locale, "noticeUnknown", nil)
+}
+
+// NoticeForkOrigin says "This conversation was forked from"
+// in the language the app shows.
+func NoticeForkOrigin() string { return In(i18n.Locale()).NoticeForkOrigin() }
+
+// NoticeForkOrigin says "This conversation was forked from"
+// in the language of msgs.
+func (msgs Messages) NoticeForkOrigin() string {
+	return Catalog.Format(msgs.locale, "noticeForkOrigin", nil)
+}
+
+// NoticeResumeHistory says "Resuming conversation from chat history. Some context may be limited."
+// in the language the app shows.
+func NoticeResumeHistory() string { return In(i18n.Locale()).NoticeResumeHistory() }
+
+// NoticeResumeHistory says "Resuming conversation from chat history. Some context may be limited."
+// in the language of msgs.
+func (msgs Messages) NoticeResumeHistory() string {
+	return Catalog.Format(msgs.locale, "noticeResumeHistory", nil)
+}
+
+// NoticeResumeTruncated says "(History truncated due to length)"
+// in the language the app shows.
+func NoticeResumeTruncated() string { return In(i18n.Locale()).NoticeResumeTruncated() }
+
+// NoticeResumeTruncated says "(History truncated due to length)"
+// in the language of msgs.
+func (msgs Messages) NoticeResumeTruncated() string {
+	return Catalog.Format(msgs.locale, "noticeResumeTruncated", nil)
+}
+
+// NoticeResumeTooltip says "Native ACP resume is not yet supported (WIP). Context is restored from chat history."
+// in the language the app shows.
+func NoticeResumeTooltip() string { return In(i18n.Locale()).NoticeResumeTooltip() }
+
+// NoticeResumeTooltip says "Native ACP resume is not yet supported (WIP). Context is restored from chat history."
+// in the language of msgs.
+func (msgs Messages) NoticeResumeTooltip() string {
+	return Catalog.Format(msgs.locale, "noticeResumeTooltip", nil)
+}
+
+// PropAgentNotFound says "The named Agent is not available."
+// in the language the app shows.
+func PropAgentNotFound() string { return In(i18n.Locale()).PropAgentNotFound() }
+
+// PropAgentNotFound says "The named Agent is not available."
+// in the language of msgs.
+func (msgs Messages) PropAgentNotFound() string {
+	return Catalog.Format(msgs.locale, "propAgentNotFound", nil)
+}
+
+// PropBy says "Proposed by {name}"
+// in the language the app shows.
+func PropBy(name string) string { return In(i18n.Locale()).PropBy(name) }
+
+// PropBy says "Proposed by {name}"
+// in the language of msgs.
+func (msgs Messages) PropBy(name string) string {
+	return Catalog.Format(msgs.locale, "propBy", map[string]any{"name": name})
+}
+
+// PropCreate says "Create"
+// in the language the app shows.
+func PropCreate() string { return In(i18n.Locale()).PropCreate() }
+
+// PropCreate says "Create"
+// in the language of msgs.
+func (msgs Messages) PropCreate() string {
+	return Catalog.Format(msgs.locale, "propCreate", nil)
+}
+
+// PropCreated says "Scheduled task created"
+// in the language the app shows.
+func PropCreated() string { return In(i18n.Locale()).PropCreated() }
+
+// PropCreated says "Scheduled task created"
+// in the language of msgs.
+func (msgs Messages) PropCreated() string {
+	return Catalog.Format(msgs.locale, "propCreated", nil)
+}
+
+// PropDismiss says "Ignore"
+// in the language the app shows.
+func PropDismiss() string { return In(i18n.Locale()).PropDismiss() }
+
+// PropDismiss says "Ignore"
+// in the language of msgs.
+func (msgs Messages) PropDismiss() string {
+	return Catalog.Format(msgs.locale, "propDismiss", nil)
+}
+
+// PropDismissed says "Proposal ignored"
+// in the language the app shows.
+func PropDismissed() string { return In(i18n.Locale()).PropDismissed() }
+
+// PropDismissed says "Proposal ignored"
+// in the language of msgs.
+func (msgs Messages) PropDismissed() string {
+	return Catalog.Format(msgs.locale, "propDismissed", nil)
+}
+
+// PropDoneEditing says "Done"
+// in the language the app shows.
+func PropDoneEditing() string { return In(i18n.Locale()).PropDoneEditing() }
+
+// PropDoneEditing says "Done"
+// in the language of msgs.
+func (msgs Messages) PropDoneEditing() string {
+	return Catalog.Format(msgs.locale, "propDoneEditing", nil)
+}
+
+// PropEdit says "Edit"
+// in the language the app shows.
+func PropEdit() string { return In(i18n.Locale()).PropEdit() }
+
+// PropEdit says "Edit"
+// in the language of msgs.
+func (msgs Messages) PropEdit() string {
+	return Catalog.Format(msgs.locale, "propEdit", nil)
+}
+
+// PropMachineMismatch says "That Agent does not run on the named machine."
+// in the language the app shows.
+func PropMachineMismatch() string { return In(i18n.Locale()).PropMachineMismatch() }
+
+// PropMachineMismatch says "That Agent does not run on the named machine."
+// in the language of msgs.
+func (msgs Messages) PropMachineMismatch() string {
+	return Catalog.Format(msgs.locale, "propMachineMismatch", nil)
+}
+
+// PropNoAgent says "This conversation has no Agent to run with."
+// in the language the app shows.
+func PropNoAgent() string { return In(i18n.Locale()).PropNoAgent() }
+
+// PropNoAgent says "This conversation has no Agent to run with."
+// in the language of msgs.
+func (msgs Messages) PropNoAgent() string {
+	return Catalog.Format(msgs.locale, "propNoAgent", nil)
+}
+
+// PropOpen says "Open"
+// in the language the app shows.
+func PropOpen() string { return In(i18n.Locale()).PropOpen() }
+
+// PropOpen says "Open"
+// in the language of msgs.
+func (msgs Messages) PropOpen() string {
+	return Catalog.Format(msgs.locale, "propOpen", nil)
+}
+
+// PropRoleMachineRequired says "That Agent Role runs on several machines; name the machine to use."
+// in the language the app shows.
+func PropRoleMachineRequired() string { return In(i18n.Locale()).PropRoleMachineRequired() }
+
+// PropRoleMachineRequired says "That Agent Role runs on several machines; name the machine to use."
+// in the language of msgs.
+func (msgs Messages) PropRoleMachineRequired() string {
+	return Catalog.Format(msgs.locale, "propRoleMachineRequired", nil)
+}
+
+// PropRoleNotFound says "The named Agent Role no longer exists."
+// in the language the app shows.
+func PropRoleNotFound() string { return In(i18n.Locale()).PropRoleNotFound() }
+
+// PropRoleNotFound says "The named Agent Role no longer exists."
+// in the language of msgs.
+func (msgs Messages) PropRoleNotFound() string {
+	return Catalog.Format(msgs.locale, "propRoleNotFound", nil)
+}
+
+// PropTitle says "Schedule this task?"
+// in the language the app shows.
+func PropTitle() string { return In(i18n.Locale()).PropTitle() }
+
+// PropTitle says "Schedule this task?"
+// in the language of msgs.
+func (msgs Messages) PropTitle() string {
+	return Catalog.Format(msgs.locale, "propTitle", nil)
+}

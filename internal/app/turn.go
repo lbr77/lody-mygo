@@ -17,10 +17,11 @@ import (
 // block is a run of items shown together: text, or an activity group of
 // the thinking and tool calls between texts.
 type block struct {
-	text  bool
-	plan  bool // a proposed plan, a panel of its own
-	items []session.Item
-	key   string
+	text   bool
+	plan   bool // a proposed plan, a panel of its own
+	notice bool // a system notice, which never folds away
+	items  []session.Item
+	key    string
 }
 
 func blocks(items []session.Item) []block {
@@ -31,6 +32,8 @@ func blocks(items []session.Item) []block {
 			continue // the task card shows these
 		case it.Type == "text":
 			out = append(out, block{text: true, items: []session.Item{it}, key: it.ID})
+		case it.Type == "system_notice":
+			out = append(out, block{notice: true, items: []session.Item{it}, key: it.ID})
 		case it.Type == "proposed_plan":
 			if strings.TrimSpace(it.Text) != "" && it.Status != "cleared" {
 				out = append(out, block{plan: true, items: []session.Item{it}, key: it.ID})
@@ -50,7 +53,7 @@ func blocks(items []session.Item) []block {
 // text. What comes before folds under "Worked for".
 func answerStart(bs []block) int {
 	k := len(bs)
-	for k > 0 && (bs[k-1].text || bs[k-1].plan) {
+	for k > 0 && (bs[k-1].text || bs[k-1].plan || bs[k-1].notice) {
 		k--
 	}
 	return k
@@ -136,6 +139,8 @@ func (a *App) block(c *ui.Context, p *palette, e session.Entry, b block, last bo
 	switch {
 	case b.plan:
 		a.planPanel(c, p, e, b.items[0])
+	case b.notice:
+		a.systemNotice(c, p, e, b.items[0])
 	case b.text:
 		it := b.items[0]
 		id := e.ID + "/" + it.ID
@@ -293,7 +298,7 @@ func (a *App) step(c *ui.Context, p *palette, key string, it session.Item) {
 			}
 		})
 	case "system_notice":
-		ui.Text(c, firstNonEmpty(it.Text, it.Title)).FontSize(sizeSub).TextColor(p.Warning).Padding(2, 4)
+		a.systemNotice(c, p, session.Entry{}, it)
 	case "goal":
 		goalMarker(c, p, it)
 	case "tool_call":

@@ -220,7 +220,7 @@ func (a *App) conversation(c *ui.Context, p *palette, sess *catalog.Session) {
 		a.bottom(c, p, sess, v)
 		return
 	}
-	entries := v.Entries
+	entries := foldNotices(v.Entries)
 	a.indexFind(entries)
 	a.revealFind()
 	defer func() {

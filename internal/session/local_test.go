@@ -103,3 +103,50 @@ func TestFollowLocal(t *testing.T) {
 	d.Drop()
 	waitFor(t, "syncing", func() bool { return r.View().Status == "syncing" })
 }
+
+// A notice's outcome is written into its metadata and sent on.
+func TestSetNoticeMeta(t *testing.T) {
+	daemon := loro.NewLoroDoc()
+	history := daemon.GetList(loro.AsContainerId("history"))
+	reply, _ := history.InsertLoroMap(0)
+	reply.InsertAny("id", "a1")
+	reply.InsertAny("role", "assistant")
+	items, _ := reply.GetOrCreateLoroList("items")
+	n, _ := items.InsertLoroMap(0)
+	n.InsertAny("type", "system_notice")
+	n.InsertAny("itemId", "p1")
+	n.InsertAny("name", "schedule_proposal")
+	n.InsertAny("meta", map[string]any{"proposalId": "x", "title": "T"})
+	daemon.Commit()
+	room := localplane.DocRoom("session-sid")
+	d := localplanetest.Start(t)
+	d.OnJoin = func(r localplane.Room) *localplane.Payload {
+		p := localplane.DocUpdate(mustExport(t, daemon))
+		return &p
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	lc, err := localplane.Dial(ctx, d.Path, "ws")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer lc.Close()
+	r := OpenLocal(nil, lc, "sid", func(*View) {})
+	defer r.Close()
+	if err := r.WaitReady(ctx); err != nil {
+		t.Fatal(err)
+	}
+	item := r.View().Entries[0].Items[0]
+	if err := r.SetNoticeMeta(ctx, "a1", item.ID, map[string]any{"outcome": "created", "scheduleId": "x"}); err != nil {
+		t.Fatal(err)
+	}
+	got := r.View().Entries[0].Items[0].Notice
+	if got["outcome"] != "created" || got["title"] != "T" {
+		t.Fatalf("meta %+v", got)
+	}
+	data, _ := d.WaitUpdates(t, room, 1)[0].Payload.Bytes()
+	daemon.Import(data)
+	if m := project(daemon, "live", "").Entries[0].Items[0].Notice; m["scheduleId"] != "x" {
+		t.Fatalf("the daemon's %+v", m)
+	}
+}

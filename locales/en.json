@@ -3154,5 +3154,78 @@
   "smCancelled": "Scheduled message cancelled",
   "smSaveError": "Could not confirm the scheduled message. Your draft is kept. Retry to check the same reservation.",
   "smEditTime": "Edit scheduled time",
-  "smNotSent": "Not sent"
+  "smNotSent": "Not sent",
+  "noticeAgentWarning": "Agent warning",
+  "noticeAcpAuthRequired": "Authentication required",
+  "noticeAcpInternalError": "Agent internal error",
+  "noticeAcpInvalidParams": "Invalid request parameters",
+  "noticeAcpInvalidRequest": "Invalid request",
+  "noticeAcpMethodNotFound": "Agent protocol method not found",
+  "noticeAcpNotReady": "Agent is not ready - please try again",
+  "noticeAcpParseError": "Failed to parse request",
+  "noticeAcpProviderOverloaded": "Selected model is at capacity. Please try a different model.",
+  "noticeAcpRequestCancelled": "Request was cancelled",
+  "noticeAcpResourceNotFound": "Agent resource not found",
+  "noticeAcpSessionStorageIncompatible": "DeepSeek session storage uses incompatible compression — keep one format or use a separate DSH_HOME",
+  "noticeAcpUnknownError": "Agent error",
+  "noticeAcpUpstreamApiError": "Upstream API error — you can retry your message",
+  "noticeAgentDisconnected": "Agent disconnected unexpectedly",
+  "noticeAgentNoOutput": "The agent ended the turn without producing any output — you can retry your message",
+  "noticeAgentTypeMismatch": "Agent type mismatch - session requires a different agent",
+  "noticeCopyError": "Copy error",
+  "noticeCopied": "Copied",
+  "noticeDeepseekNodeAction": "Install a supported Node.js with npm/npx on the machine running this Agent, add node to PATH, fully restart Lody/CLI, then retry. Supported: 22.23.4+ (22.x), 24.22.1+ (24.x), or 26.12.1+ (26.x). Download: https://nodejs.org/en/download",
+  "noticeDeepseekNodeExecFailed": "DeepSeek Harness could not run Node.js on the target machine",
+  "noticeDeepseekNodeNotFound": "DeepSeek Harness needs Node.js on the target machine",
+  "noticeDeepseekNodeUnsupported": "DeepSeek Harness needs a supported standalone Node.js version",
+  "noticeGitExecutableNotFound": "Git executable was not found on the target machine",
+  "noticeGitExecutableNotFoundAction": "Install Git for Windows or add git.exe to PATH, fully restart Lody/CLI, verify “git --version” in a new terminal, then try again.",
+  "noticeInstallNode": "Download Node.js",
+  "noticeMachineAccessDenied": "Machine access denied",
+  "noticeMemoryPressure": "The machine is low on memory - free some memory and retry",
+  "noticeMessageDeliveryFailed": "Message delivery failed - please resend after sync recovers",
+  "noticeRetryAgain": "Retry again",
+  "noticeRetryAndEnableAuto": "Retry and auto-retry",
+  "noticeRetryIn": "Retry in {seconds}s",
+  "@noticeRetryIn": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
+  "noticeRetryNow": "Retry now",
+  "noticeRetrying": "Retrying…",
+  "noticeSessionArchived": "Session is archived and cannot receive new messages",
+  "noticeSessionInitFailed": "Failed to initialize session",
+  "noticeSessionNotFound": "Session not found",
+  "noticeSessionRestoreFailed": "Failed to restore session",
+  "noticeStopAutoRetry": "Stop auto-retry",
+  "noticeTurnPrePromptFailed": "Failed before the agent could start",
+  "noticeUnknown": "An unexpected error occurred",
+  "noticeForkOrigin": "This conversation was forked from",
+  "noticeResumeHistory": "Resuming conversation from chat history. Some context may be limited.",
+  "noticeResumeTruncated": "(History truncated due to length)",
+  "noticeResumeTooltip": "Native ACP resume is not yet supported (WIP). Context is restored from chat history.",
+  "propAgentNotFound": "The named Agent is not available.",
+  "propBy": "Proposed by {name}",
+  "@propBy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "propCreate": "Create",
+  "propCreated": "Scheduled task created",
+  "propDismiss": "Ignore",
+  "propDismissed": "Proposal ignored",
+  "propDoneEditing": "Done",
+  "propEdit": "Edit",
+  "propMachineMismatch": "That Agent does not run on the named machine.",
+  "propNoAgent": "This conversation has no Agent to run with.",
+  "propOpen": "Open",
+  "propRoleMachineRequired": "That Agent Role runs on several machines; name the machine to use.",
+  "propRoleNotFound": "The named Agent Role no longer exists.",
+  "propTitle": "Schedule this task?"
 }

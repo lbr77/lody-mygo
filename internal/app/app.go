@@ -74,6 +74,8 @@ type App struct {
 	// schedSendDlg the picker.
 	schedSends   map[string]*schedSendDraft
 	schedSendDlg schedSendDialog
+	capRetries   map[string]*capRetry     // capacity retries, by chat
+	proposals    map[string]*proposalEdit // schedule proposals being edited, by notice
 	local        *localplane.Conn
 	stopLocal    context.CancelFunc
 

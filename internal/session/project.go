@@ -16,6 +16,8 @@ type Item struct {
 	ID   string
 	Type string
 	Text string // text, thought; markdown of proposed_plan; notice message
+	// Notice is a system notice's metadata; Title is its name.
+	Notice map[string]any
 	// Spans are a user text's mentions as sent, which show as chips, and
 	// Latest whether a proposed plan is the latest.
 	Spans  []TextSpan
@@ -302,6 +304,7 @@ func summarizeItem(raw map[string]any, identity string) Item {
 	case "system_notice":
 		it.Title = str(raw["name"])
 		it.Text = str(obj(raw["meta"])["message"])
+		it.Notice = obj(raw["meta"])
 	case "proposed_plan":
 		it.Text = str(raw["markdown"])
 		it.Status = str(raw["status"])
