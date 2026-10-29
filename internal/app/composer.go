@@ -1,6 +1,7 @@
 package app
 
 import (
+	"github.com/lbr77/lody-mygo/locales"
 	"strings"
 
 	"github.com/egoist/mygo/ui"
@@ -27,9 +28,9 @@ func (a *App) bottom(c *ui.Context, p *palette, sess *catalog.Session, v *sessio
 	if sess != nil && !a.presence.IsOnline(sess.MachineID) {
 		hint = a.machineName(sess.MachineID) + " is offline. Messages wait until it reconnects."
 	}
-	busyLabel := "Queue"
+	busyLabel := locales.Queue()
 	if sess != nil && a.busyBehavior == "steer" && a.steerable(sess) {
-		busyLabel = "Steer"
+		busyLabel = locales.Steer()
 	}
 	a.composerBox(c, p, composerOptions{
 		hint:      hint,
@@ -146,7 +147,7 @@ type composerOptions struct {
 // above its controls.
 func (a *App) composerBox(c *ui.Context, p *palette, o composerOptions) {
 	if o.placeholder == "" {
-		o.placeholder = "Ask anything"
+		o.placeholder = locales.ComposerPlaceholder()
 	}
 	if o.sendSize == 0 {
 		o.sendSize = 28
@@ -171,7 +172,7 @@ func (a *App) composerBox(c *ui.Context, p *palette, o composerOptions) {
 			ui.Box(c).FillWidth().Children(func() {
 				empty := strings.TrimSpace(a.draft) == "" && !hasFiles
 				input := ui.TextAreaBase(c, &a.draft).Lines(2, 10).Placeholder(o.placeholder).FontSize(sizeBody).LineHeight(24.0/14).
-					TextColor(p.Reading).Padding(2, 4).FillWidth().AutoFocus().Label("Message").Bind(&a.composerFocus).
+					TextColor(p.Reading).Padding(2, 4).FillWidth().AutoFocus().Label(locales.ComposerLabel()).Bind(&a.composerFocus).
 					OnTextKey(func(k ui.TextKey) bool {
 						if k.Key == ui.KeyEnter && k.Mods&ui.Shift == 0 {
 							if o.canSend && (strings.TrimSpace(k.Text()) != "" || len(a.attachments) > 0) {
@@ -191,7 +192,7 @@ func (a *App) composerBox(c *ui.Context, p *palette, o composerOptions) {
 				}
 			})
 			ui.Row(c).Gap(4).AlignItems(ui.Center).Padding(2, 0, 0, 0).Children(func() {
-				iconButton(c, p, iconPlus, "Attach files", p.Text.Alpha(0.06)).OnClick(a.pickFiles)
+				iconButton(c, p, iconPlus, locales.AttachFiles(), p.Text.Alpha(0.06)).OnClick(a.pickFiles)
 				if o.footer != nil {
 					o.footer()
 				}
@@ -205,10 +206,10 @@ func (a *App) composerBox(c *ui.Context, p *palette, o composerOptions) {
 				}
 				empty := strings.TrimSpace(a.draft) == "" && !hasFiles
 				if o.working && empty && o.onStop != nil {
-					sendDisc(c, p, nil, "Stop", true, o.sendSize).OnClick(o.onStop)
+					sendDisc(c, p, nil, locales.Stop(), true, o.sendSize).OnClick(o.onStop)
 					return
 				}
-				label := "Send"
+				label := locales.Send()
 				if o.working {
 					label = o.busyLabel
 				}
@@ -261,7 +262,7 @@ func (a *App) runConfig(c *ui.Context, p *palette, key, agentConfig, current str
 		label = last.Name
 	}
 	if label == "" {
-		label = "Default model"
+		label = locales.DefaultModel()
 	}
 	var options []option
 	for _, m := range models {
@@ -306,7 +307,7 @@ func (a *App) picker(c *ui.Context, p *palette, key string, icon *ui.SVG, label 
 
 // modeFace is how a permission mode shows on its button, as Lody classifies
 // modes: an icon by what it allows, amber for those that skip approval,
-// "Auto" for those a reviewing model approves.
+// locales.ModeAuto() for those a reviewing model approves.
 func modeFace(id string) (icon *ui.SVG, warning, auto bool) {
 	switch id {
 	case "read-only":
@@ -330,7 +331,7 @@ func (a *App) modeButton(c *ui.Context, p *palette, key string, modes []catalog.
 	if len(modes) == 0 {
 		return
 	}
-	name := "Default"
+	name := locales.ModeDefault()
 	for _, m := range modes {
 		if m.ID == current {
 			name = m.Name
@@ -339,7 +340,7 @@ func (a *App) modeButton(c *ui.Context, p *palette, key string, modes []catalog.
 	icon, warning, auto := modeFace(current)
 	open := a.popover(key)
 	b := ui.ButtonBase(c.Key(key)).Height(28).MinWidth(28).Padding(0, 6).Radius(8).Cursor(ui.CursorPointer).
-		Label("Permission mode: " + name).Tooltip(name).OnClick(func() { *open = !*open })
+		Label(locales.PermissionMode(name)).Tooltip(name).OnClick(func() { *open = !*open })
 	if b.Hovered() || *open {
 		b.Background(p.Text.Alpha(0.06))
 	}
@@ -349,7 +350,7 @@ func (a *App) modeButton(c *ui.Context, p *palette, key string, modes []catalog.
 	}
 	b.Children(func() {
 		if auto {
-			ui.Text(c, "Auto").FontSize(sizeCaption).FontWeight(500).TextColor(ink)
+			ui.Text(c, locales.ModeAuto()).FontSize(sizeCaption).FontWeight(500).TextColor(ink)
 			return
 		}
 		ui.Icon(c, icon).Size(16, 16).TextColor(ink)
@@ -399,14 +400,14 @@ func (a *App) optionList(c *ui.Context, p *palette, anchor ui.Element, open *boo
 // floating request does: a question, what it is about, and the choices,
 // refusals first and the suggested one in ink.
 func (a *App) permissionCard(c *ui.Context, p *palette, e session.Entry, it session.Item) {
-	question := "Allow this action?"
+	question := locales.PermissionAction()
 	switch {
 	case it.Permission.Question:
-		question = firstNonEmpty(it.Title, "The agent has a question")
+		question = firstNonEmpty(it.Title, locales.PermissionQuestion())
 	case it.Kind == "execute":
-		question = "Run this command?"
+		question = locales.PermissionRunCommand()
 	case it.Kind == "edit" || it.Kind == "delete" || it.Kind == "move":
-		question = "Make this edit?"
+		question = locales.PermissionEdit()
 	}
 	var allow, reject []session.Option
 	for _, o := range it.Permission.Options {
@@ -423,13 +424,13 @@ func (a *App) permissionCard(c *ui.Context, p *palette, e session.Entry, it sess
 	card.Children(func() {
 		ui.Row(c).Gap(8).AlignItems(ui.Start).Children(func() {
 			ui.Text(c, question).FontSize(sizeBody).LineHeight(20.0 / 14).FontWeight(600).TextColor(p.Strong).Grow(1).MinWidth(0)
-			stop := ui.ButtonBase(c).Height(24).Padding(0, 6).Radius(6).Gap(4).Cursor(ui.CursorPointer).Label("Stop the agent").OnClick(a.stop)
+			stop := ui.ButtonBase(c).Height(24).Padding(0, 6).Radius(6).Gap(4).Cursor(ui.CursorPointer).Label(locales.StopAgent()).OnClick(a.stop)
 			if stop.Hovered() {
 				stop.Background(p.Text.Alpha(0.06))
 			}
 			stop.Children(func() {
 				ui.Icon(c, iconCircleStop).Size(14, 14).TextColor(p.Secondary)
-				ui.Text(c, "Stop the agent").FontSize(sizeFoot).TextColor(p.Secondary)
+				ui.Text(c, locales.StopAgent()).FontSize(sizeFoot).TextColor(p.Secondary)
 			})
 		})
 		if !it.Permission.Question && it.Title != "" {
@@ -473,7 +474,7 @@ func (a *App) choiceButton(c *ui.Context, p *palette, label string, suggested bo
 			return
 		}
 		ui.Box(c).Width(1).Background(ink.Alpha(0.2))
-		chevron := ui.ButtonBase(c).Width(24).Cursor(ui.CursorPointer).Label("More options")
+		chevron := ui.ButtonBase(c).Width(24).Cursor(ui.CursorPointer).Label(locales.MoreOptions())
 		if chevron.Hovered() {
 			chevron.Background(ink.Alpha(0.08))
 		}

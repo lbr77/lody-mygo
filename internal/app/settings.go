@@ -1,7 +1,7 @@
 package app
 
 import (
-	"fmt"
+	"github.com/lbr77/lody-mygo/locales"
 	"strings"
 
 	"github.com/egoist/mygo"
@@ -10,22 +10,33 @@ import (
 
 const appVersion = "0.1.0"
 
+// appearanceChoices are the saved values of Appearance; appearanceLabels
+// say them.
 var appearanceChoices = []string{"System", "Light", "Dark"}
+
+func appearanceLabels() []string {
+	return []string{locales.ThemeSystem(), locales.ThemeLight(), locales.ThemeDark()}
+}
 
 type settingsTab struct {
 	id, label string
 	icon      *ui.SVG
 }
 
-// The tabs this client can fill: the personal ones, the workspace's that
-// its catalog holds, and About.
-var settingsSections = []struct {
+type settingsSection struct {
 	title string
 	tabs  []settingsTab
-}{
-	{"Personal", []settingsTab{{"account", "", nil}, {"preferences", "Preferences", iconSliders}, {"appearance", "Appearance", iconPalette}, {"keyboard", "Keyboard", iconKeyboard}}},
-	{"Workspace", []settingsTab{{"general", "General", iconBuilding}, {"agents", "Agents", iconBot}, {"projects", "Projects", iconFolder}}},
-	{"Other", []settingsTab{{"about", "About", iconInfo}}},
+}
+
+// settingsSections are the tabs this client can fill: the personal ones,
+// the workspace's that its catalog holds, and About; said in the app's
+// language as the view is built.
+func settingsSections() []settingsSection {
+	return []settingsSection{
+		{locales.SettingsPersonal(), []settingsTab{{"account", "", nil}, {"preferences", locales.SettingsPreferences(), iconSliders}, {"appearance", locales.SettingsAppearance(), iconPalette}, {"keyboard", locales.SettingsKeyboard(), iconKeyboard}}},
+		{locales.SettingsWorkspace(), []settingsTab{{"general", locales.SettingsGeneral(), iconBuilding}, {"agents", locales.SettingsAgents(), iconBot}, {"projects", locales.SettingsProjects(), iconFolder}}},
+		{locales.SettingsOther(), []settingsTab{{"about", locales.SettingsAbout(), iconInfo}}},
+	}
 }
 
 // settingsDialog is Settings: a large dialog with its tabs on the left, as
@@ -42,7 +53,7 @@ func (a *App) settingsDialog(c *ui.Context, p *palette) {
 				ui.Scroll(c).Fill().Padding(36, 56, 40, 56).Children(func() {
 					ui.Column(c).FillWidth().MaxWidth(728).Gap(12).Children(func() { a.settingsPage(c, p) })
 				})
-				iconButton(c, p, iconX, "Close", p.Hover).Absolute().Top(12).Right(12).OnClick(func() { a.settingsOpen = false })
+				iconButton(c, p, iconX, locales.Close(), p.Hover).Absolute().Top(12).Right(12).OnClick(func() { a.settingsOpen = false })
 			})
 		})
 	})
@@ -50,7 +61,7 @@ func (a *App) settingsDialog(c *ui.Context, p *palette) {
 
 func (a *App) settingsNav(c *ui.Context, p *palette) {
 	ui.Column(c).Width(240).Shrink(0).Background(p.Ground).Padding(16, 12).Gap(2).Children(func() {
-		for si, section := range settingsSections {
+		for si, section := range settingsSections() {
 			ui.Text(c, section.title).FontSize(sizeFoot).TextColor(p.Tertiary).Padding(4, 8).Margin(map[bool]float32{true: 0, false: 14}[si == 0], 0, 2, 0)
 			for _, tab := range section.tabs {
 				t := tab
@@ -65,7 +76,7 @@ func (a *App) settingsNav(c *ui.Context, p *palette) {
 				}
 				row.Children(func() {
 					if t.id == "account" {
-						name := "Account"
+						name := locales.SettingsAccount()
 						if a.account != nil {
 							name = a.account.User.Name
 						}
@@ -81,14 +92,14 @@ func (a *App) settingsNav(c *ui.Context, p *palette) {
 			}
 		}
 		ui.Spacer(c)
-		bug := ui.ButtonBase(c).Height(32).Padding(0, 8).Radius(8).Gap(8).Justify(ui.Start).Cursor(ui.CursorPointer).Label("Report bug").
+		bug := ui.ButtonBase(c).Height(32).Padding(0, 8).Radius(8).Gap(8).Justify(ui.Start).Cursor(ui.CursorPointer).Label(locales.ReportBug()).
 			OnClick(func() { mygo.Shell.OpenExternal("https://github.com/lbr77/lody-mygo/issues") })
 		if bug.Hovered() {
 			bug.Background(p.SideHover)
 		}
 		bug.Children(func() {
 			ui.Icon(c, iconBug).Size(16, 16).TextColor(p.SideMuted)
-			ui.Text(c, "Report bug").FontSize(sizeBody).TextColor(p.Text)
+			ui.Text(c, locales.ReportBug()).FontSize(sizeBody).TextColor(p.Text)
 		})
 	})
 }
@@ -98,22 +109,22 @@ func (a *App) settingsPage(c *ui.Context, p *palette) {
 	case "account":
 		a.accountPage(c, p)
 	case "preferences":
-		settingsTitle(c, p, "Preferences")
-		settingRow(c, p, "When the agent is busy", "Steer gives your message to the running turn, when its agent takes steering. Otherwise messages wait in the queue.", func() {
+		settingsTitle(c, p, locales.SettingsPreferences())
+		settingRow(c, p, locales.SettingsBusy(), locales.SettingsBusyHelp(), func() {
 			picked := 0
 			if a.busyBehavior == "steer" {
 				picked = 1
 			}
 			was := picked
-			ui.Segmented(c, &picked, "Queue", "Steer").Label("When the agent is busy")
+			ui.Segmented(c, &picked, locales.Queue(), locales.Steer()).Label(locales.SettingsBusy())
 			if picked != was {
 				a.busyBehavior = []string{"queue", "steer"}[picked]
 				a.savePrefs()
 			}
 		})
 	case "appearance":
-		settingsTitle(c, p, "Appearance")
-		settingRow(c, p, "Theme", "Follow the system, or keep Lody light or dark.", func() {
+		settingsTitle(c, p, locales.SettingsAppearance())
+		settingRow(c, p, locales.SettingsTheme(), locales.SettingsThemeHelp(), func() {
 			picked := 0
 			for i, choice := range appearanceChoices {
 				if a.appearance == choice {
@@ -121,16 +132,16 @@ func (a *App) settingsPage(c *ui.Context, p *palette) {
 				}
 			}
 			was := picked
-			ui.Segmented(c, &picked, appearanceChoices...).Label("Theme")
+			ui.Segmented(c, &picked, appearanceLabels()...).Label(locales.SettingsTheme())
 			if picked != was {
 				a.setAppearance(appearanceChoices[picked])
 			}
 		})
 	case "keyboard":
-		settingsTitle(c, p, "Keyboard")
+		settingsTitle(c, p, locales.SettingsKeyboard())
 		for _, sc := range [][2]string{
-			{"New chat", "⌘ N"}, {"Focus the message box", "⌘ L"}, {"Toggle the sidebar", "⌘ \\"},
-			{"Send the message", "↩"}, {"New line", "⇧ ↩"},
+			{locales.NewChat(), "⌘ N"}, {locales.KeyFocusComposer(), "⌘ L"}, {locales.KeyToggleSidebar(), "⌘ \\"},
+			{locales.KeySend(), "↩"}, {locales.KeyNewLine(), "⇧ ↩"},
 		} {
 			settingRow(c.Key(sc[0]), p, sc[0], "", func() {
 				ui.Row(c).Gap(4).Children(func() {
@@ -147,18 +158,18 @@ func (a *App) settingsPage(c *ui.Context, p *palette) {
 	case "projects":
 		a.projectsPage(c, p)
 	case "about":
-		settingsTitle(c, p, "About")
-		settingRow(c, p, "Lody Native "+appVersion, "A native Lody client: MyGo draws it on the GPU, without a web view, and it syncs with Lody Cloud directly.", nil)
+		settingsTitle(c, p, locales.SettingsAbout())
+		settingRow(c, p, "Lody Native "+appVersion, locales.SettingsAboutDescription(), nil)
 		divider(c, p)
 		for _, link := range []struct{ label, url string }{
-			{"Lody documentation", "https://lody.ai/docs"},
-			{"Source code", "https://github.com/lbr77/lody-mygo"},
+			{locales.SettingsDocs(), "https://lody.ai/docs"},
+			{locales.SettingsSource(), "https://github.com/lbr77/lody-mygo"},
 		} {
 			settingRow(c.Key(link.label), p, link.label, "", func() {
-				ghostButton(c, p, "Open").Border(1, p.Border).OnClick(func() { mygo.Shell.OpenExternal(link.url) })
+				ghostButton(c, p, locales.Open()).Border(1, p.Border).OnClick(func() { mygo.Shell.OpenExternal(link.url) })
 			})
 		}
-		settingRow(c, p, "License", "AGPL-3.0-only", nil)
+		settingRow(c, p, locales.SettingsLicense(), "AGPL-3.0-only", nil)
 	}
 }
 
@@ -195,42 +206,42 @@ func valueText(c *ui.Context, p *palette, s string) {
 }
 
 func (a *App) accountPage(c *ui.Context, p *palette) {
-	settingsTitle(c, p, "Account")
+	settingsTitle(c, p, locales.SettingsAccount())
 	if a.account == nil {
 		return
 	}
 	u := a.account.User
-	settingsHeading(c, p, "Profile")
-	settingRow(c, p, "Email", "", func() { valueText(c, p, u.Email) })
-	settingRow(c, p, "Name", "", func() { valueText(c, p, u.Name) })
-	settingRow(c, p, "Avatar", "", func() { a.accountAvatar(c, p, 32) })
+	settingsHeading(c, p, locales.SettingsProfile())
+	settingRow(c, p, locales.SettingsEmail(), "", func() { valueText(c, p, u.Email) })
+	settingRow(c, p, locales.SettingsName(), "", func() { valueText(c, p, u.Name) })
+	settingRow(c, p, locales.SettingsAvatar(), "", func() { a.accountAvatar(c, p, 32) })
 	divider(c, p)
-	settingsHeading(c, p, "My machines")
+	settingsHeading(c, p, locales.SettingsMyMachines())
 	if len(a.catalog.MachineIDs) == 0 {
-		ui.Text(c, "No machine is connected. Run npx lody daemon start on a computer to connect it.").FontSize(sizeFoot).TextColor(p.Secondary)
+		ui.Text(c, locales.SettingsNoMachine()).FontSize(sizeFoot).TextColor(p.Secondary)
 	}
 	for _, id := range a.catalog.MachineIDs {
 		var facts []string
 		if a.presence.Live {
-			facts = append(facts, map[bool]string{true: "Online", false: "Offline"}[a.presence.IsOnline(id)])
+			facts = append(facts, map[bool]string{true: locales.Online(), false: locales.Offline()}[a.presence.IsOnline(id)])
 		}
 		if os := a.catalog.MachineOS[id]; os != "" {
 			facts = append(facts, os)
 		}
-		facts = append(facts, plural(len(a.catalog.Agents[id]), "agent", "agents"))
+		facts = append(facts, locales.SettingsAgentCount(len(a.catalog.Agents[id])))
 		folders := 0
 		for _, pr := range a.catalog.Projects {
 			if pr.MachineID == id && strings.Contains(pr.ID, ":local:") {
 				folders++
 			}
 		}
-		facts = append(facts, plural(folders, "folder", "folders"))
+		facts = append(facts, locales.SettingsFolderCount(folders))
 		settingRow(c.Key(id), p, a.machineName(id), strings.Join(facts, " · "), nil)
 	}
 	divider(c, p)
-	settingsHeading(c, p, "Sign in")
-	settingRow(c, p, "Sign out", "Sign out of Lody on this Mac. Your chats stay in the workspace.", func() {
-		ghostButton(c, p, "Sign out").Border(1, p.Border).OnClick(func() {
+	settingsHeading(c, p, locales.SettingsSignIn())
+	settingRow(c, p, locales.SignOut(), locales.SettingsSignOutDescription(), func() {
+		ghostButton(c, p, locales.SettingsSignOutButton()).Border(1, p.Border).OnClick(func() {
 			a.settingsOpen = false
 			a.signOut()
 		})
@@ -238,36 +249,36 @@ func (a *App) accountPage(c *ui.Context, p *palette) {
 }
 
 func (a *App) workspacePage(c *ui.Context, p *palette) {
-	settingsTitle(c, p, "General")
+	settingsTitle(c, p, locales.SettingsGeneral())
 	ws := a.workspace()
 	if ws == nil {
 		return
 	}
-	settingRow(c, p, "Workspace", "", func() {
+	settingRow(c, p, locales.SettingsWorkspace(), "", func() {
 		ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
 			workspaceTile(c, ws.Name, 20)
 			valueText(c, p, ws.Name)
 		})
 	})
 	if ws.Slug != "" {
-		settingRow(c, p, "Slug", "", func() { valueText(c, p, ws.Slug) })
+		settingRow(c, p, locales.SettingsSlug(), "", func() { valueText(c, p, ws.Slug) })
 	}
-	settingRow(c, p, "Workspace ID", "", func() {
+	settingRow(c, p, locales.SettingsWorkspaceID(), "", func() {
 		ui.Row(c).Gap(6).AlignItems(ui.Center).Children(func() {
 			ui.Text(c, ws.ID).Font(fontMono).FontSize(sizeFoot).TextColor(p.Secondary).Selectable()
-			iconButton(c, p, iconCopy, "Copy", p.Hover).Size(24, 24).OnClick(func() { mygo.Clipboard.WriteText(ws.ID) })
+			iconButton(c, p, iconCopy, locales.Copy(), p.Hover).Size(24, 24).OnClick(func() { mygo.Clipboard.WriteText(ws.ID) })
 		})
 	})
 	divider(c, p)
-	settingsHeading(c, p, "Workspaces")
+	settingsHeading(c, p, locales.SettingsWorkspaces())
 	for _, w := range a.account.Workspaces {
 		id := w.ID
 		settingRow(c.Key(w.ID), p, w.Name, "", func() {
 			if id == a.workspaceID {
-				ui.Text(c, "Current").FontSize(sizeFoot).TextColor(p.Secondary)
+				ui.Text(c, locales.SettingsCurrent()).FontSize(sizeFoot).TextColor(p.Secondary)
 				return
 			}
-			ghostButton(c, p, "Switch").Border(1, p.Border).OnClick(func() {
+			ghostButton(c, p, locales.SettingsSwitch()).Border(1, p.Border).OnClick(func() {
 				a.settingsOpen = false
 				a.connect(id)
 			})
@@ -276,25 +287,25 @@ func (a *App) workspacePage(c *ui.Context, p *palette) {
 }
 
 func (a *App) agentsPage(c *ui.Context, p *palette) {
-	settingsTitle(c, p, "Agents")
-	ui.Text(c, "The agents each machine offers. Configure them with the Lody app or CLI on the machine.").FontSize(sizeFoot).TextColor(p.Secondary)
+	settingsTitle(c, p, locales.SettingsAgents())
+	ui.Text(c, locales.SettingsAgentsHelp()).FontSize(sizeFoot).TextColor(p.Secondary)
 	for _, machine := range a.catalog.MachineIDs {
 		settingsHeading(c.Key(machine), p, a.machineName(machine))
 		agents := a.catalog.Agents[machine]
 		if len(agents) == 0 {
-			ui.Text(c, "No agents").FontSize(sizeFoot).TextColor(p.Tertiary)
+			ui.Text(c, locales.SettingsNoAgents()).FontSize(sizeFoot).TextColor(p.Tertiary)
 		}
 		for _, ag := range agents {
 			capability := a.catalog.Capabilities[ag.ID]
 			facts := []string{firstNonEmpty(ag.AgentType, "agent"), ag.CLIType}
 			if n := len(capability.Models); n > 0 {
-				facts = append(facts, plural(n, "model", "models"))
+				facts = append(facts, locales.SettingsModelCount(n))
 			}
 			if n := len(a.catalog.ModesFor(ag.ID, ag.AgentType)); n > 0 {
-				facts = append(facts, plural(n, "mode", "modes"))
+				facts = append(facts, locales.SettingsModeCount(n))
 			}
 			if capability.Steer {
-				facts = append(facts, "steering")
+				facts = append(facts, locales.SettingsSteering())
 			}
 			settingRow(c.Key(ag.ID), p, ag.Name, strings.Join(facts, " · "), nil)
 		}
@@ -302,8 +313,8 @@ func (a *App) agentsPage(c *ui.Context, p *palette) {
 }
 
 func (a *App) projectsPage(c *ui.Context, p *palette) {
-	settingsTitle(c, p, "Projects")
-	ui.Text(c, "The folders each machine works in. Add one with the Lody app or CLI on the machine.").FontSize(sizeFoot).TextColor(p.Secondary)
+	settingsTitle(c, p, locales.SettingsProjects())
+	ui.Text(c, locales.SettingsProjectsHelp()).FontSize(sizeFoot).TextColor(p.Secondary)
 	for _, machine := range a.catalog.MachineIDs {
 		settingsHeading(c.Key(machine), p, a.machineName(machine))
 		shown := 0
@@ -315,16 +326,9 @@ func (a *App) projectsPage(c *ui.Context, p *palette) {
 			settingRow(c.Key(pr.ID), p, pr.Name, pr.RootPath, nil)
 		}
 		if shown == 0 {
-			ui.Text(c, "No projects").FontSize(sizeFoot).TextColor(p.Tertiary)
+			ui.Text(c, locales.SettingsNoProjects()).FontSize(sizeFoot).TextColor(p.Tertiary)
 		}
 	}
-}
-
-func plural(n int, one, many string) string {
-	if n == 1 {
-		return "1 " + one
-	}
-	return fmt.Sprintf("%d %s", n, many)
 }
 
 // accountAvatar is the signed-in user's picture, or the stand-in.

@@ -1,0 +1,502 @@
+{
+  "@@locale": "en",
+  "loading": "Loading",
+  "signInTitle": "Welcome to Lody AI",
+  "signInDescription": "Sign in from your browser to continue in Lody.",
+  "signInOpenBrowser": "Open browser to sign in",
+  "signInHint": "Lody opens lody.ai in your browser. Approve this device there, then come back.",
+  "signInFootnote": "An independent native client for Lody Cloud. It signs in with Lody's device flow and keeps your session in the macOS Keychain.",
+  "signInContacting": "Contacting Lody…",
+  "signInConfirmCode": "Confirm this code in your browser",
+  "signInWaiting": "Waiting for approval…",
+  "signInReopen": "Reopen",
+  "signInUnreachable": "Couldn't reach Lody: {error}",
+  "@signInUnreachable": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "signInKeychainFailed": "Couldn't save the sign-in to the keychain: {error}",
+  "@signInKeychainFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "cancel": "Cancel",
+  "close": "Close",
+  "copy": "Copy",
+  "open": "Open",
+  "sidebarToggle": "Toggle Sidebar",
+  "navBack": "Back",
+  "navForward": "Forward",
+  "newChat": "New chat",
+  "newChatIn": "New chat in {project}",
+  "@newChatIn": {
+    "placeholders": {
+      "project": {
+        "type": "String"
+      }
+    }
+  },
+  "search": "Search",
+  "searchChats": "Search chats",
+  "searchNoMatches": "No matching chats",
+  "sidebarPinned": "Pinned",
+  "sidebarChats": "Chats",
+  "sidebarShowAll": "Show all ({count})",
+  "@sidebarShowAll": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sidebarNoChats": "No chats yet",
+  "sidebarSyncing": "Syncing workspace…",
+  "moreActions": "More actions",
+  "statusWaiting": "Waiting for you",
+  "statusWorking": "Working",
+  "dismiss": "Dismiss",
+  "workspaceSwitch": "Switch workspace",
+  "workspaceFallback": "Workspace",
+  "connectionSyncing": "Syncing",
+  "offline": "Offline",
+  "online": "Online",
+  "help": "Help",
+  "helpDocs": "Docs",
+  "helpCommunity": "Join community",
+  "reportBug": "Report bug",
+  "archivedChats": "Archived chats",
+  "settings": "Settings",
+  "signOut": "Sign out",
+  "machineFallback": "Machine {id}",
+  "@machineFallback": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "actionRename": "Rename",
+  "actionPinned": "Pinned",
+  "actionMarkRead": "Mark as Read",
+  "actionArchive": "Archive",
+  "actionRestore": "Restore",
+  "renameLabel": "Title",
+  "actionFailed": "Couldn't {action}: {error}",
+  "@actionFailed": {
+    "placeholders": {
+      "action": {
+        "type": "String"
+      },
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "failPin": "pin the chat",
+  "failMarkRead": "mark the chat read",
+  "failArchive": "archive the chat",
+  "failRestore": "restore the chat",
+  "failRename": "rename the chat",
+  "failDelete": "delete the session",
+  "failCreate": "Couldn't create the chat: {error}",
+  "@failCreate": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "failStop": "Couldn't stop: {error}",
+  "@failStop": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "untitledSession": "Untitled session",
+  "loadingConversation": "Loading conversation…",
+  "reconnecting": "Reconnecting… ({reason})",
+  "@reconnecting": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "sendToStart": "Send a message to start.",
+  "messageToday": "{time, time, short}",
+  "@messageToday": {
+    "placeholders": {
+      "time": {
+        "type": "DateTime"
+      }
+    }
+  },
+  "messageThisWeek": "{time, date, ::EEE} {time, time, short}",
+  "@messageThisWeek": {
+    "placeholders": {
+      "time": {
+        "type": "DateTime"
+      }
+    }
+  },
+  "messageEarlier": "{time, date, ::Md} {time, time, short}",
+  "@messageEarlier": {
+    "placeholders": {
+      "time": {
+        "type": "DateTime"
+      }
+    }
+  },
+  "deliveryQueued": "Queued",
+  "deliverySendingNext": "Sending next",
+  "deliverySteerUnconfirmed": "Steer unconfirmed",
+  "deliverySteering": "Steering…",
+  "deliverySteered": "Steered",
+  "queuedSteer": "Steer",
+  "queuedSteerTooltip": "Give this message to the running turn",
+  "queuedSendNow": "Send now",
+  "queuedSendNowTooltip": "Stop the running turn and send this next",
+  "worked": "Worked",
+  "workedFor": "Worked for {duration}",
+  "@workedFor": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "activityWithDuration": "{label} (Worked for {duration})",
+  "@activityWithDuration": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      },
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "thinking": "Thinking…",
+  "thought": "Thought",
+  "thoughtFor": "Thought for {duration}",
+  "@thoughtFor": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "toolCommands": "{count, plural, one {Ran # command} other {Ran # commands}}",
+  "@toolCommands": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "toolReadFiles": "{count, plural, one {Read # file} other {Read # files}}",
+  "@toolReadFiles": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "toolEditedFiles": "{count, plural, one {Edited # file} other {Edited # files}}",
+  "@toolEditedFiles": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "toolSearches": "{count, plural, one {Ran # search} other {Ran # searches}}",
+  "@toolSearches": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "toolFetches": "{count, plural, one {Fetched # resource} other {Fetched # resources}}",
+  "@toolFetches": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "toolCalls": "{count, plural, one {Called # tool} other {Called # tools}}",
+  "@toolCalls": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "workingDots": "Working…",
+  "subagent": "Subagent",
+  "subagentWith": "Subagent: {description}",
+  "@subagentWith": {
+    "placeholders": {
+      "description": {
+        "type": "String"
+      }
+    }
+  },
+  "showDetails": "Show details",
+  "showSteps": "Show steps",
+  "showThinking": "Show thinking",
+  "verbReading": "Reading",
+  "verbRead": "Read",
+  "verbEditing": "Editing",
+  "verbEdited": "Edited",
+  "verbDeleting": "Deleting",
+  "verbDeleted": "Deleted",
+  "verbMoving": "Moving",
+  "verbMoved": "Moved",
+  "verbSearching": "Searching",
+  "verbSearched": "Searched",
+  "verbRunning": "Running",
+  "verbRan": "Ran",
+  "verbFetching": "Fetching",
+  "verbFetched": "Fetched",
+  "verbThinking": "Thinking",
+  "verbThought": "Thought",
+  "editedFilesShowMore": "Show {count} more",
+  "@editedFilesShowMore": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "exitedWith": "Exited with code {code}",
+  "@exitedWith": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "detailInput": "Input",
+  "detailOutput": "Output",
+  "composerPlaceholder": "Ask anything",
+  "composerLabel": "Message",
+  "attachFiles": "Attach files",
+  "uploading": "Uploading",
+  "uploadingCount": "Uploading {n} of {total}",
+  "@uploadingCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "send": "Send",
+  "queue": "Queue",
+  "steer": "Steer",
+  "stop": "Stop",
+  "machineOffline": "{machine} is offline. Messages wait until it reconnects.",
+  "@machineOffline": {
+    "placeholders": {
+      "machine": {
+        "type": "String"
+      }
+    }
+  },
+  "sentUnconfirmed": "Sent, but the machine hasn't confirmed it yet.",
+  "defaultModel": "Default model",
+  "permissionMode": "Permission mode: {name}",
+  "@permissionMode": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "modeDefault": "Default",
+  "modeAuto": "Auto",
+  "permissionRunCommand": "Run this command?",
+  "permissionEdit": "Make this edit?",
+  "permissionAction": "Allow this action?",
+  "permissionQuestion": "The agent has a question",
+  "stopAgent": "Stop the agent",
+  "moreOptions": "More options",
+  "noAgent": "No agent",
+  "homeShip": "Let's ship something",
+  "homeWork": "What should we work on?",
+  "homeSyncing": "Syncing your workspace…",
+  "homeNoMachine": "No machine is connected to this workspace yet. Run this on a computer to connect it:",
+  "homeMachine": "Machine",
+  "homeProject": "Project",
+  "selectProject": "Select a project",
+  "noProject": "No project",
+  "machineOfflineOption": "{name} (offline)",
+  "@machineOfflineOption": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "attachNotFile": "{name} isn't a file.",
+  "@attachNotFile": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "attachEmpty": "{name} is empty.",
+  "@attachEmpty": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "attachTooLarge": "{name} is larger than 100 MB.",
+  "@attachTooLarge": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "attachTooMany": "A message takes at most {max} attachments.",
+  "@attachTooMany": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "attachTooManyKinds": "A message takes at most {images} images and {files} files.",
+  "@attachTooManyKinds": {
+    "placeholders": {
+      "images": {
+        "type": "int"
+      },
+      "files": {
+        "type": "int"
+      }
+    }
+  },
+  "attachRemove": "Remove {name}",
+  "@attachRemove": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "image": "Image",
+  "file": "File",
+  "archiveTitle": "Archive",
+  "archiveAll": "All sessions",
+  "archiveSearchPlaceholder": "Search archived sessions…",
+  "archiveSearch": "Search archive",
+  "archiveByProject": "By project",
+  "archiveOneList": "One list",
+  "archiveNewest": "Newest first",
+  "archiveOldest": "Oldest first",
+  "archiveTitleAZ": "Title A–Z",
+  "archiveNoMatches": "No matching archived sessions",
+  "archiveNoMatchesHint": "Try a different search or clear filters.",
+  "archiveEmpty": "No archived sessions",
+  "archiveEmptyHint": "Sessions you archive will appear here.",
+  "archiveRestore": "Restore session",
+  "archiveDelete": "Delete permanently",
+  "archiveDeleteTitle": "Delete permanently?",
+  "archiveDeleteChat": "This will permanently delete the chat session.",
+  "archiveDeleteCode": "This will delete the session and remove the session branch's worktree directory on your machine.",
+  "settingsPersonal": "Personal",
+  "settingsWorkspace": "Workspace",
+  "settingsOther": "Other",
+  "settingsAccount": "Account",
+  "settingsPreferences": "Preferences",
+  "settingsAppearance": "Appearance",
+  "settingsKeyboard": "Keyboard",
+  "settingsGeneral": "General",
+  "settingsAgents": "Agents",
+  "settingsProjects": "Projects",
+  "settingsAbout": "About",
+  "settingsProfile": "Profile",
+  "settingsEmail": "Email",
+  "settingsName": "Name",
+  "settingsAvatar": "Avatar",
+  "settingsMyMachines": "My machines",
+  "settingsNoMachine": "No machine is connected. Run npx lody daemon start on a computer to connect it.",
+  "settingsAgentCount": "{count, plural, one {# agent} other {# agents}}",
+  "@settingsAgentCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsFolderCount": "{count, plural, one {# folder} other {# folders}}",
+  "@settingsFolderCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsSignIn": "Sign in",
+  "settingsSignOutDescription": "Sign out of Lody on this Mac. Your chats stay in the workspace.",
+  "settingsSignOutButton": "Sign out",
+  "settingsBusy": "Queued message behavior",
+  "settingsBusyHelp": "For messages you send while the agent is working. Steer gives them to the running turn, when its agent takes steering.",
+  "settingsTheme": "Theme",
+  "settingsThemeHelp": "Follow the system, or keep Lody light or dark.",
+  "themeSystem": "System",
+  "themeLight": "Light",
+  "themeDark": "Dark",
+  "keyFocusComposer": "Focus the message box",
+  "keyToggleSidebar": "Toggle the sidebar",
+  "keySend": "Send the message",
+  "keyNewLine": "New line",
+  "settingsSlug": "Slug",
+  "settingsWorkspaceID": "Workspace ID",
+  "settingsWorkspaces": "Workspaces",
+  "settingsCurrent": "Current",
+  "settingsSwitch": "Switch",
+  "settingsAgentsHelp": "The agents each machine offers. Configure them with the Lody app or CLI on the machine.",
+  "settingsProjectsHelp": "The folders each machine works in. Add one with the Lody app or CLI on the machine.",
+  "settingsNoAgents": "No agents",
+  "settingsNoProjects": "No projects",
+  "settingsModelCount": "{count, plural, one {# model} other {# models}}",
+  "@settingsModelCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsModeCount": "{count, plural, one {# mode} other {# modes}}",
+  "@settingsModeCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsSteering": "steering",
+  "settingsAboutDescription": "A native Lody client: MyGo draws it on the GPU, without a web view, and it syncs with Lody Cloud directly.",
+  "settingsDocs": "Lody documentation",
+  "settingsSource": "Source code",
+  "settingsLicense": "License"
+}

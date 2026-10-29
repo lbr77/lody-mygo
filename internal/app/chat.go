@@ -2,6 +2,7 @@ package app
 
 import (
 	"fmt"
+	"github.com/lbr77/lody-mygo/locales"
 	"strings"
 	"time"
 
@@ -56,16 +57,16 @@ func (a *App) tabBar(c *ui.Context, p *palette, sess *catalog.Session) {
 	}
 	ui.Row(c).Height(titleBarHeight).Shrink(0).AlignItems(ui.Center).Padding(0, 8, 0, left).Gap(4).DragWindow().Children(func() {
 		if a.sidebarHidden {
-			iconButton(c, p, iconSidebar, "Toggle Sidebar", p.Hover).OnClick(func() { a.sidebarHidden = false })
+			iconButton(c, p, iconSidebar, locales.SidebarToggle(), p.Hover).OnClick(func() { a.sidebarHidden = false })
 		}
 		if sess != nil {
 			a.sessionTab(c, p, sess)
-			iconButton(c, p, iconPlus, "New chat", p.Hover).OnClick(func() { a.open("") })
+			iconButton(c, p, iconPlus, locales.NewChat(), p.Hover).OnClick(func() { a.open("") })
 		}
 		ui.Spacer(c)
 		if sess != nil {
 			s := *sess
-			iconButton(c, p, iconMore, "More actions", p.Hover).Menu(func(m *ui.Menu) { a.sessionMenu(m, s) })
+			iconButton(c, p, iconMore, locales.MoreActions(), p.Hover).Menu(func(m *ui.Menu) { a.sessionMenu(m, s) })
 		}
 	})
 }
@@ -85,7 +86,7 @@ func (a *App) sessionTab(c *ui.Context, p *palette, s *catalog.Session) {
 				ui.Icon(c, iconBot).Size(12, 12).TextColor(p.Text).Opacity(0.6)
 			}
 		})
-		ui.Text(c, firstNonEmpty(s.Title, "Untitled session")).FontSize(12.6).TextColor(p.Text).SingleLine().MinWidth(0).MaxWidth(320)
+		ui.Text(c, firstNonEmpty(s.Title, locales.UntitledSession())).FontSize(12.6).TextColor(p.Text).SingleLine().MinWidth(0).MaxWidth(320)
 	})
 }
 
@@ -96,9 +97,9 @@ func (a *App) sessionView(c *ui.Context, p *palette) {
 	if v == nil || (v.Status != "live" && len(v.Entries) == 0) {
 		ui.Column(c).Grow(1).Center().Gap(10).Children(func() {
 			ui.Spinner(c).Size(18, 18)
-			msg := "Loading conversation…"
+			msg := locales.LoadingConversation()
 			if v != nil && v.Reason != "" {
-				msg = "Reconnecting… (" + v.Reason + ")"
+				msg = locales.Reconnecting(v.Reason)
 			}
 			ui.Text(c, msg).FontSize(sizeSub).TextColor(p.Secondary)
 		})
@@ -121,14 +122,14 @@ func (a *App) sessionView(c *ui.Context, p *palette) {
 		}
 		a.entry(c, p, entries, i)
 	}).Grow(1).MinHeight(0).Padding(16, 0, 24, 0).Children(func() {
-		ui.Text(c, "Send a message to start.").FontSize(sizeSub).TextColor(p.Secondary).Margin(ui.Auto)
+		ui.Text(c, locales.SendToStart()).FontSize(sizeSub).TextColor(p.Secondary).Margin(ui.Auto)
 	})
 	a.bottom(c, p, sess, v)
 }
 
 // offlinePill marks a machine that isn't connected.
 func offlinePill(c *ui.Context, p *palette) {
-	ui.Text(c, "Offline").FontSize(10).FontWeight(500).TextColor(p.Danger).Padding(1, 5).Radius(5).Background(p.Danger.Alpha(0.14)).Shrink(0)
+	ui.Text(c, locales.Offline()).FontSize(10).FontWeight(500).TextColor(p.Danger).Padding(1, 5).Radius(5).Background(p.Danger.Alpha(0.14)).Shrink(0)
 }
 
 // column centers the conversation column: 768 DIPs of content between
@@ -172,15 +173,15 @@ func (a *App) entry(c *ui.Context, p *palette, entries []session.Entry, i int) {
 func deliveryLabel(e session.Entry) string {
 	switch {
 	case e.Steer && e.SteerMode == "interrupt" && e.Queued:
-		return "Sending next"
+		return locales.DeliverySendingNext()
 	case e.Queued:
-		return "Queued"
+		return locales.DeliveryQueued()
 	case e.Steer && e.SteerState == "unknown":
-		return "Steer unconfirmed"
+		return locales.DeliverySteerUnconfirmed()
 	case e.Steer && (e.Status == "pending_apply" || e.SteerState == "confirming"):
-		return "Steering…"
+		return locales.DeliverySteering()
 	case e.Steer:
-		return "Steered"
+		return locales.DeliverySteered()
 	}
 	return ""
 }
@@ -260,10 +261,10 @@ func (a *App) queuedActions(c *ui.Context, p *palette, e session.Entry, first bo
 	}
 	ui.Row(c).Gap(4).Children(func() {
 		if a.steerable(sess) {
-			ghostButton(c, p, "Steer").Tooltip("Give this message to the running turn").OnClick(func() { a.steerQueued(e.ID, false) })
+			ghostButton(c, p, locales.Steer()).Tooltip(locales.QueuedSteerTooltip()).OnClick(func() { a.steerQueued(e.ID, false) })
 		}
 		if first {
-			ghostButton(c, p, "Send now").Tooltip("Stop the running turn and send this next").OnClick(func() { a.steerQueued(e.ID, true) })
+			ghostButton(c, p, locales.QueuedSendNow()).Tooltip(locales.QueuedSendNowTooltip()).OnClick(func() { a.steerQueued(e.ID, true) })
 		}
 	})
 }
@@ -275,26 +276,25 @@ func userAvatar(c *ui.Context, p *palette) ui.Element {
 	})
 }
 
-// conversationTime formats a message time as Lody does: the time today,
-// the weekday within a week, the date before.
+// conversationTime formats a message time as Lody does, in the app's
+// language: the time today, the weekday within a week, the date before.
 func conversationTime(ts string, now time.Time) string {
 	t, err := time.Parse(time.RFC3339Nano, ts)
 	if err != nil {
 		return ""
 	}
 	t = t.Local()
-	clock := t.Format("03:04 PM")
 	y1, m1, d1 := t.Date()
 	y2, m2, d2 := now.Date()
 	today := time.Date(y2, m2, d2, 0, 0, 0, 0, now.Location())
 	day := time.Date(y1, m1, d1, 0, 0, 0, 0, now.Location())
 	switch days := int(today.Sub(day).Hours() / 24); {
 	case days <= 0:
-		return clock
+		return locales.MessageToday(t)
 	case days < 7:
-		return t.Format("Mon") + " " + clock
+		return locales.MessageThisWeek(t)
 	}
-	return fmt.Sprintf("%d/%d %s", int(m1), d1, clock)
+	return locales.MessageEarlier(t)
 }
 
 // formatDuration is Lody's: "12s", "1m 05s", "1h 02m 05s".

@@ -1,6 +1,7 @@
 package app
 
 import (
+	"github.com/lbr77/lody-mygo/locales"
 	"strings"
 	"time"
 
@@ -16,16 +17,16 @@ func (a *App) homeView(c *ui.Context, p *palette) {
 	}
 	ui.Row(c).Height(titleBarHeight).Shrink(0).AlignItems(ui.Center).Padding(0, 8, 0, left).DragWindow().Children(func() {
 		if a.sidebarHidden {
-			iconButton(c, p, iconSidebar, "Toggle Sidebar", p.Hover).OnClick(func() { a.sidebarHidden = false })
+			iconButton(c, p, iconSidebar, locales.SidebarToggle(), p.Hover).OnClick(func() { a.sidebarHidden = false })
 		}
 	})
 	ui.Column(c).Grow(1).MinHeight(0).Justify(ui.Center).AlignItems(ui.Center).Padding(0, 24).Gap(20).Children(func() {
 		ui.Text(c, homeHeading(time.Now())).FontSize(36).LineHeight(40.0 / 36).FontWeight(600).LetterSpacing(-0.9).TextColor(p.Strong).TextAlign(ui.Center)
 		if len(a.catalog.MachineIDs) == 0 {
 			ui.Column(c).Gap(8).AlignItems(ui.Center).MaxWidth(420).Children(func() {
-				msg := "Syncing your workspace…"
+				msg := locales.HomeSyncing()
 				if a.synced {
-					msg = "No machine is connected to this workspace yet. Run this on a computer to connect it:"
+					msg = locales.HomeNoMachine()
 				}
 				ui.Text(c, msg).FontSize(sizeBody).TextColor(p.Secondary).TextAlign(ui.Center)
 				if a.synced {
@@ -44,7 +45,7 @@ func (a *App) homeView(c *ui.Context, p *palette) {
 		sendSize: 32,
 		above:    func() { a.homeTargets(c, p) },
 		footer: func() {
-			agentLabel := "No agent"
+			agentLabel := locales.NoAgent()
 			if agent != nil {
 				agentLabel = agent.Name
 			}
@@ -64,9 +65,9 @@ func (a *App) homeView(c *ui.Context, p *palette) {
 // homeHeading alternates Lody's two headings by day.
 func homeHeading(now time.Time) string {
 	if now.YearDay()%2 == 0 {
-		return "Let's ship something"
+		return locales.HomeShip()
 	}
-	return "What should we work on?"
+	return locales.HomeWork()
 }
 
 // homeTargets is the row above the composer: the machine, then the
@@ -75,7 +76,7 @@ func (a *App) homeTargets(c *ui.Context, p *palette) {
 	ui.Row(c).Gap(4).AlignItems(ui.Center).Padding(0, 2).Children(func() {
 		open := a.popover("machine")
 		machine := ui.ButtonBase(c).Height(24).Padding(0, 8).Radius(6).Gap(4).Border(1, p.Border).Background(p.Composer).Cursor(ui.CursorPointer).
-			Label("Machine").OnClick(func() { *open = !*open })
+			Label(locales.HomeMachine()).OnClick(func() { *open = !*open })
 		if machine.Hovered() {
 			machine.Background(p.Hover)
 		}
@@ -92,12 +93,12 @@ func (a *App) homeTargets(c *ui.Context, p *palette) {
 		})
 
 		openProject := a.popover("project")
-		label := "Select a project"
+		label := locales.SelectProject()
 		if pr := a.catalog.Project(a.newChat.project); pr != nil {
 			label = pr.Name
 		}
 		project := ui.ButtonBase(c).Height(24).Padding(0, 8).Radius(12).Gap(4).Cursor(ui.CursorPointer).
-			Label("Project").OnClick(func() { *openProject = !*openProject })
+			Label(locales.HomeProject()).OnClick(func() { *openProject = !*openProject })
 		if project.Hovered() {
 			project.Background(p.Text.Alpha(0.06))
 		}
@@ -114,7 +115,7 @@ func (a *App) machineOptions() []option {
 	for _, id := range a.catalog.MachineIDs {
 		label := a.machineLabel(id)
 		if !a.presence.IsOnline(id) {
-			label += " (offline)"
+			label = locales.MachineOfflineOption(label)
 		}
 		out = append(out, option{id, label})
 	}
@@ -130,7 +131,7 @@ func (a *App) agentOptions() []option {
 }
 
 func (a *App) projectOptions() []option {
-	out := []option{{"", "No project"}}
+	out := []option{{"", locales.NoProject()}}
 	for _, pr := range a.catalog.Projects {
 		if pr.MachineID == a.newChat.machine && strings.Contains(pr.ID, ":local:") {
 			out = append(out, option{pr.ID, pr.Name})

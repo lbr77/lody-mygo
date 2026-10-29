@@ -1,6 +1,7 @@
 package app
 
 import (
+	"github.com/lbr77/lody-mygo/locales"
 	"strings"
 	"unicode/utf8"
 
@@ -15,7 +16,7 @@ func (a *App) render(c *ui.Context) {
 	switch a.phase {
 	case phaseLoading:
 		ui.Column(c).Fill().Center().Background(p.Ground).DragWindow().Children(func() {
-			ui.Spinner(c).Label("Loading")
+			ui.Spinner(c).Label(locales.Loading())
 		})
 	case phaseSignedOut:
 		a.signInView(c, p)
@@ -33,22 +34,22 @@ func (a *App) signInView(c *ui.Context, p *palette) {
 			ui.Spacer(c).DragWindow()
 			ui.Column(c).MaxWidth(360).Gap(24).Children(func() {
 				ui.Column(c).Gap(10).Children(func() {
-					ui.Text(c, "Welcome to Lody AI").FontSize(28).FontWeight(600).LineHeight(1.2).LetterSpacing(-0.7).TextColor(p.Strong)
-					ui.Text(c, "Sign in from your browser to continue in Lody.").FontSize(sizeBody).LineHeight(1.5).TextColor(p.Secondary)
+					ui.Text(c, locales.SignInTitle()).FontSize(28).FontWeight(600).LineHeight(1.2).LetterSpacing(-0.7).TextColor(p.Strong)
+					ui.Text(c, locales.SignInDescription()).FontSize(sizeBody).LineHeight(1.5).TextColor(p.Secondary)
 				})
 				ui.Column(c).Gap(12).Children(func() {
 					if a.signIn.busy {
 						a.deviceCodeCard(c, p)
-					} else if inkButton(c, p, "Open browser to sign in", iconExternal, 40).FillWidth().Clicked() {
+					} else if inkButton(c, p, locales.SignInOpenBrowser(), iconExternal, 40).FillWidth().Clicked() {
 						a.beginSignIn()
 					}
 					if a.signIn.err != "" {
 						ui.Text(c, a.signIn.err).FontSize(sizeFoot).TextColor(p.Danger).Selectable()
 					}
-					ui.Text(c, "Lody opens lody.ai in your browser. Approve this device there, then come back.").FontSize(sizeFoot).TextColor(p.Secondary).TextAlign(ui.Center)
+					ui.Text(c, locales.SignInHint()).FontSize(sizeFoot).TextColor(p.Secondary).TextAlign(ui.Center)
 				})
 				ui.Column(c).BorderWidth(1, 0, 0, 0).BorderColor(p.Border).Padding(16, 0, 0, 0).Children(func() {
-					ui.Text(c, "An independent native client for Lody Cloud. It signs in with Lody's device flow and keeps your session in the macOS Keychain.").FontSize(sizeCaption).LineHeight(1.6).TextColor(p.Tertiary)
+					ui.Text(c, locales.SignInFootnote()).FontSize(sizeCaption).LineHeight(1.6).TextColor(p.Tertiary)
 				})
 			})
 		})
@@ -60,17 +61,17 @@ func (a *App) deviceCodeCard(c *ui.Context, p *palette) {
 		if a.signIn.code == "" {
 			ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
 				ui.Spinner(c).Size(14, 14)
-				ui.Text(c, "Contacting Lody…").FontSize(sizeSub).TextColor(p.Secondary)
+				ui.Text(c, locales.SignInContacting()).FontSize(sizeSub).TextColor(p.Secondary)
 			})
 			return
 		}
-		ui.Text(c, "Confirm this code in your browser").FontSize(sizeSub).FontWeight(500).TextColor(p.Text)
+		ui.Text(c, locales.SignInConfirmCode()).FontSize(sizeSub).FontWeight(500).TextColor(p.Text)
 		ui.Text(c, a.signIn.code).Font(fontMono).FontSize(24).FontWeight(600).LetterSpacing(2).TextColor(p.Strong).Selectable()
 		ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
 			ui.Spinner(c).Size(12, 12)
-			ui.Text(c, "Waiting for approval…").FontSize(sizeFoot).TextColor(p.Secondary).Grow(1)
-			ghostButton(c, p, "Reopen").OnClick(func() { mygo.Shell.OpenExternal(a.signIn.url) })
-			if ghostButton(c, p, "Cancel").Clicked() {
+			ui.Text(c, locales.SignInWaiting()).FontSize(sizeFoot).TextColor(p.Secondary).Grow(1)
+			ghostButton(c, p, locales.SignInReopen()).OnClick(func() { mygo.Shell.OpenExternal(a.signIn.url) })
+			if ghostButton(c, p, locales.Cancel()).Clicked() {
 				a.cancelSignIn()
 			}
 		})

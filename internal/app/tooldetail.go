@@ -3,6 +3,7 @@ package app
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/lbr77/lody-mygo/locales"
 	"strings"
 
 	"github.com/egoist/mygo/ui"
@@ -45,10 +46,10 @@ func (a *App) toolDetail(c *ui.Context, p *palette, key string, it session.Item)
 			return
 		}
 		if it.RawInput != nil {
-			textSection(c.Key("in"), p, "Input", pretty(it.RawInput))
+			textSection(c.Key("in"), p, locales.DetailInput(), pretty(it.RawInput))
 		}
 		if it.RawOutput != nil {
-			textSection(c.Key("out"), p, "Output", pretty(it.RawOutput))
+			textSection(c.Key("out"), p, locales.DetailOutput(), pretty(it.RawOutput))
 		}
 	})
 }
@@ -81,7 +82,7 @@ func terminalSection(c *ui.Context, p *palette, command, output string, exit any
 			ui.Text(c, clip(output)).Font(fontMono).FontSize(sizeFoot).LineHeight(1.45).TextColor(p.Secondary).Selectable()
 		}
 		if code, ok := exit.(map[string]any); ok && code["exitCode"] != nil && code["exitCode"] != 0.0 {
-			ui.Text(c, fmt.Sprintf("Exited with code %v", code["exitCode"])).FontSize(sizeCaption).TextColor(p.Danger)
+			ui.Text(c, locales.ExitedWith(fmt.Sprint(code["exitCode"]))).FontSize(sizeCaption).TextColor(p.Danger)
 		}
 	})
 }

@@ -1,6 +1,7 @@
 package app
 
 import (
+	"github.com/egoist/mygo/i18n"
 	"image/png"
 	"os"
 	"path/filepath"
@@ -303,7 +304,7 @@ func TestSettingsDialog(t *testing.T) {
 		t.Fatal(err)
 	}
 	tt.Frame()
-	if !tt.HasText("When the agent is busy") {
+	if !tt.HasText("Queued message behavior") {
 		t.Fatalf("preferences: %q", tt.Texts())
 	}
 	if err := tt.Click("Steer"); err != nil {
@@ -349,5 +350,32 @@ func TestSettingsAgents(t *testing.T) {
 	tt := snap(t, a, "settings-agents", true, nil)
 	if !tt.HasText("Claude Code") || !tt.HasText("claude · builtin · 6 modes") {
 		t.Fatalf("agents: %q", tt.Texts())
+	}
+}
+
+// The app speaks the system's language; tests pin English but this one.
+func TestMain(m *testing.M) {
+	i18n.SetLocaleFunc(func() string { return "en" })
+	os.Exit(m.Run())
+}
+
+func TestChinese(t *testing.T) {
+	i18n.SetLocaleFunc(func() string { return "zh-Hans" })
+	defer i18n.SetLocaleFunc(func() string { return "en" })
+	a := fixture()
+	a.view.Entries = a.view.Entries[:2]
+	a.view.Working = false
+	tt := snap(t, a, "chinese", false, nil)
+	for _, want := range []string{"新对话", "搜索", "已置顶", "工作了1m 12s", "添加附件", "权限模式：默认", "复制"} {
+		if !tt.HasText(want) {
+			t.Errorf("missing %q in %q", want, tt.Texts())
+		}
+	}
+	a.settingsOpen = true
+	tt = snap(t, a, "chinese-settings", false, nil)
+	for _, want := range []string{"账号", "个人资料", "我的机器", "1 个 Agent", "2 个目录", "偏好设置"} {
+		if !tt.HasText(want) {
+			t.Errorf("missing %q in %q", want, tt.Texts())
+		}
 	}
 }

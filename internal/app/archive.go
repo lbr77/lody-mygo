@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"fmt"
+	"github.com/lbr77/lody-mygo/locales"
 	"sort"
 	"strings"
 	"time"
@@ -22,16 +23,16 @@ func (a *App) archiveView(c *ui.Context, p *palette) {
 	}
 	ui.Row(c).Height(titleBarHeight).Shrink(0).AlignItems(ui.Center).Padding(0, 12, 0, left).Gap(8).DragWindow().Children(func() {
 		if a.sidebarHidden {
-			iconButton(c, p, iconSidebar, "Toggle Sidebar", p.Hover).OnClick(func() { a.sidebarHidden = false })
+			iconButton(c, p, iconSidebar, locales.SidebarToggle(), p.Hover).OnClick(func() { a.sidebarHidden = false })
 		}
 		ui.Icon(c, iconArchive).Size(16, 16).TextColor(p.Text)
-		ui.Text(c, "Archive").FontSize(sizeBody).FontWeight(600).TextColor(p.Text)
-		label := "All sessions"
+		ui.Text(c, locales.ArchiveTitle()).FontSize(sizeBody).FontWeight(600).TextColor(p.Text)
+		label := locales.ArchiveAll()
 		switch {
 		case a.archiveFilter == "chats":
-			label = "Chats"
+			label = locales.SidebarChats()
 		case a.archiveFilter != "":
-			label = firstNonEmpty(a.projectName(a.archiveFilter), "Project")
+			label = firstNonEmpty(a.projectName(a.archiveFilter), locales.HomeProject())
 		}
 		a.toolbarPicker(c, p, "archive/filter", nil, label, a.archiveFilters(), a.archiveFilter, func(id string) { a.archiveFilter = id })
 	})
@@ -41,28 +42,28 @@ func (a *App) archiveView(c *ui.Context, p *palette) {
 		search := ui.Row(c).Grow(1).MinWidth(0).Height(32).Padding(0, 10).Gap(8).Radius(8).Border(1, p.Border).Background(p.Composer).AlignItems(ui.Center)
 		search.Children(func() {
 			ui.Icon(c, iconSearch).Size(14, 14).TextColor(p.Tertiary)
-			ui.TextInputBase(c, &a.archiveSearch).Placeholder("Search archived sessions…").FontSize(sizeSub).Grow(1).Label("Search archive")
+			ui.TextInputBase(c, &a.archiveSearch).Placeholder(locales.ArchiveSearchPlaceholder()).FontSize(sizeSub).Grow(1).Label(locales.ArchiveSearch())
 		})
-		groupLabel := "By project"
+		groupLabel := locales.ArchiveByProject()
 		if a.archiveGroup == "flat" {
-			groupLabel = "One list"
+			groupLabel = locales.ArchiveOneList()
 		}
-		a.toolbarPicker(c, p, "archive/group", iconLayers, groupLabel, []option{{"project", "By project"}, {"flat", "One list"}}, firstNonEmpty(a.archiveGroup, "project"), func(id string) { a.archiveGroup = id })
-		sortLabels := map[string]string{"newest": "Newest first", "oldest": "Oldest first", "title": "Title A–Z"}
+		a.toolbarPicker(c, p, "archive/group", iconLayers, groupLabel, []option{{"project", locales.ArchiveByProject()}, {"flat", locales.ArchiveOneList()}}, firstNonEmpty(a.archiveGroup, "project"), func(id string) { a.archiveGroup = id })
+		sortLabels := map[string]string{"newest": locales.ArchiveNewest(), "oldest": locales.ArchiveOldest(), "title": locales.ArchiveTitleAZ()}
 		sortKey := firstNonEmpty(a.archiveSort, "newest")
-		a.toolbarPicker(c, p, "archive/sort", iconArrowUpDown, sortLabels[sortKey], []option{{"newest", "Newest first"}, {"oldest", "Oldest first"}, {"title", "Title A–Z"}}, sortKey, func(id string) { a.archiveSort = id })
+		a.toolbarPicker(c, p, "archive/sort", iconArrowUpDown, sortLabels[sortKey], []option{{"newest", locales.ArchiveNewest()}, {"oldest", locales.ArchiveOldest()}, {"title", locales.ArchiveTitleAZ()}}, sortKey, func(id string) { a.archiveSort = id })
 	})
 
 	ui.Scroll(c).Grow(1).MinHeight(0).Padding(4, 24, 32, 24).Gap(28).Children(func() {
 		if len(sessions) == 0 {
 			ui.Column(c).FillWidth().Padding(80, 0).AlignItems(ui.Center).Gap(6).Children(func() {
 				if strings.TrimSpace(a.archiveSearch) != "" || a.archiveFilter != "" {
-					ui.Text(c, "No matching archived sessions").FontSize(sizeBody).FontWeight(500).TextColor(p.Text)
-					ui.Text(c, "Try a different search or clear filters.").FontSize(sizeSub).TextColor(p.Secondary)
+					ui.Text(c, locales.ArchiveNoMatches()).FontSize(sizeBody).FontWeight(500).TextColor(p.Text)
+					ui.Text(c, locales.ArchiveNoMatchesHint()).FontSize(sizeSub).TextColor(p.Secondary)
 					return
 				}
-				ui.Text(c, "No archived sessions").FontSize(sizeBody).FontWeight(500).TextColor(p.Text)
-				ui.Text(c, "Sessions you archive will appear here.").FontSize(sizeSub).TextColor(p.Secondary)
+				ui.Text(c, locales.ArchiveEmpty()).FontSize(sizeBody).FontWeight(500).TextColor(p.Text)
+				ui.Text(c, locales.ArchiveEmptyHint()).FontSize(sizeSub).TextColor(p.Secondary)
 			})
 			return
 		}
@@ -159,7 +160,7 @@ func (a *App) archiveGroups(sessions []catalog.Session) []archiveGroup {
 	var groups []archiveGroup
 	index := map[string]int{}
 	for _, s := range sessions {
-		id, name, path := "", "Chats", ""
+		id, name, path := "", locales.SidebarChats(), ""
 		if pr := a.catalog.Project(s.ProjectID); pr != nil {
 			id, name, path = pr.ID, pr.Name, pr.RootPath
 		}
@@ -175,7 +176,7 @@ func (a *App) archiveGroups(sessions []catalog.Session) []archiveGroup {
 }
 
 func (a *App) archiveFilters() []option {
-	out := []option{{"", "All sessions"}, {"chats", "Chats"}}
+	out := []option{{"", locales.ArchiveAll()}, {"chats", locales.SidebarChats()}}
 	seen := map[string]bool{}
 	for _, s := range a.catalog.Sessions {
 		if s.Archived && !seen[s.ProjectID] {
@@ -222,13 +223,13 @@ func (a *App) archivedRow(c *ui.Context, p *palette, s catalog.Session) {
 		// Restore and delete show while the row is hovered.
 		ui.Row(c).Width(52).Shrink(0).Gap(4).Opacity(map[bool]float32{true: 1, false: 0}[hovered]).Children(func() {
 			id := s.ID
-			restore := iconButton(c, p, iconUndo, "Restore session", p.Text.Alpha(0.08)).Size(24, 24).Disabled(!hovered)
+			restore := iconButton(c, p, iconUndo, locales.ArchiveRestore(), p.Text.Alpha(0.08)).Size(24, 24).Disabled(!hovered)
 			restore.OnClick(func() {
 				a.catalogAction("restore the session", func(ctx context.Context, sync *catalog.Sync) error {
 					return sync.Archive(ctx, id, false)
 				})
 			})
-			del := iconButton(c, p, iconTrash, "Delete permanently", p.Danger.Alpha(0.12)).Size(24, 24).Disabled(!hovered)
+			del := iconButton(c, p, iconTrash, locales.ArchiveDelete(), p.Danger.Alpha(0.12)).Size(24, 24).Disabled(!hovered)
 			sess := s
 			del.OnClick(func() { a.deleting, a.deleteOpen = &sess, true })
 		})
@@ -244,15 +245,15 @@ func (a *App) deleteDialog(c *ui.Context, p *palette) {
 	ui.DialogBase(c, &a.deleteOpen, func(backdrop, panel ui.Element) {
 		backdrop.Background(ui.RGBA(0, 0, 0, 0.28))
 		panel.Width(400).Radius(14).Border(0.5, p.CardRim).Background(p.Popover).Padding(20).Gap(12).Shadow(0, 22, 70, 0, ui.RGBA(0, 0, 0, 0.25))
-		ui.Text(c, "Delete permanently?").FontSize(16).FontWeight(600).TextColor(p.Strong)
-		description := "This will permanently delete the chat session."
+		ui.Text(c, locales.ArchiveDeleteTitle()).FontSize(16).FontWeight(600).TextColor(p.Strong)
+		description := locales.ArchiveDeleteChat()
 		if a.catalog.Project(s.ProjectID) != nil {
-			description = "This will delete the session and remove the session branch's worktree directory on your machine."
+			description = locales.ArchiveDeleteCode()
 		}
 		ui.Text(c, description).FontSize(sizeSub).LineHeight(1.45).TextColor(p.Secondary)
 		ui.Row(c).Gap(8).Justify(ui.End).Padding(8, 0, 0, 0).Children(func() {
-			ghostButton(c, p, "Cancel").Border(1, p.Border).OnClick(func() { a.deleteOpen = false })
-			b := ui.ButtonBase(c).Height(28).Padding(0, 12).Radius(8).Background(p.Danger).Cursor(ui.CursorPointer).Label("Delete permanently")
+			ghostButton(c, p, locales.Cancel()).Border(1, p.Border).OnClick(func() { a.deleteOpen = false })
+			b := ui.ButtonBase(c).Height(28).Padding(0, 12).Radius(8).Background(p.Danger).Cursor(ui.CursorPointer).Label(locales.ArchiveDelete())
 			b.OnClick(func() {
 				a.deleteOpen = false
 				id := s.ID
@@ -261,7 +262,7 @@ func (a *App) deleteDialog(c *ui.Context, p *palette) {
 				})
 			})
 			b.Children(func() {
-				ui.Text(c, "Delete permanently").FontSize(sizeSub).FontWeight(500).TextColor(ui.RGB(255, 255, 255))
+				ui.Text(c, locales.ArchiveDelete()).FontSize(sizeSub).FontWeight(500).TextColor(ui.RGB(255, 255, 255))
 			})
 		})
 	})

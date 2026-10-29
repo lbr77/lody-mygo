@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"github.com/lbr77/lody-mygo/locales"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -189,7 +190,7 @@ func (a *App) refreshAccount() {
 		case err != nil:
 			if a.account == nil {
 				a.phase = phaseSignedOut
-				a.signIn.err = "Couldn't reach Lody: " + err.Error()
+				a.signIn.err = locales.SignInUnreachable(err.Error())
 			}
 		default:
 			saveAccount(account)
@@ -245,7 +246,7 @@ func (a *App) beginSignIn() {
 			return
 		}
 		if err := mygo.Secrets.Set(secretKey, []byte(token)); err != nil {
-			fail(errors.New("couldn't save the sign-in to the keychain: " + err.Error()))
+			fail(errors.New(locales.SignInKeychainFailed(err.Error())))
 			return
 		}
 		saveAccount(account)
@@ -532,7 +533,7 @@ func (a *App) send() {
 				}
 				a.sendError = err.Error()
 			} else if err != nil {
-				a.sendError = "Sent, but the machine hasn't confirmed it yet."
+				a.sendError = locales.SentUnconfirmed()
 			}
 		})
 	}()
@@ -566,7 +567,7 @@ func (a *App) stop() {
 		ctx, cancel := context.WithTimeout(context.Background(), 40*time.Second)
 		defer cancel()
 		if err := r.Stop(ctx, machine); err != nil {
-			a.update(func() { a.sendError = "Couldn't stop: " + err.Error() })
+			a.update(func() { a.sendError = locales.FailStop(err.Error()) })
 		}
 	}()
 }
@@ -649,7 +650,7 @@ func (a *App) startChat() {
 			Agent: *agent, LocalProject: localProject, CreatedAt: time.Now(),
 		})
 		if err != nil {
-			a.update(func() { a.sending, a.sendError = false, "Couldn't create the chat: "+err.Error() })
+			a.update(func() { a.sending, a.sendError = false, locales.FailCreate(err.Error()) })
 			return
 		}
 		opened := make(chan *session.Replica, 1)

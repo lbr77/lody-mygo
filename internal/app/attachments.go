@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"fmt"
+	"github.com/lbr77/lody-mygo/locales"
 	"io"
 	"net/http"
 	"os"
@@ -47,21 +48,21 @@ func (a *App) addFiles(paths []string) {
 		name := filepath.Base(path)
 		switch {
 		case err != nil || !info.Mode().IsRegular():
-			a.sendError = name + " isn't a file."
+			a.sendError = locales.AttachNotFile(name)
 			continue
 		case info.Size() == 0:
-			a.sendError = name + " is empty."
+			a.sendError = locales.AttachEmpty(name)
 			continue
 		case info.Size() > cloud.MaxFileBytes:
-			a.sendError = name + " is larger than 100 MB."
+			a.sendError = locales.AttachTooLarge(name)
 			continue
 		case len(a.attachments) >= cloud.MaxAttachments:
-			a.sendError = fmt.Sprintf("A message takes at most %d attachments.", cloud.MaxAttachments)
+			a.sendError = locales.AttachTooMany(cloud.MaxAttachments)
 			return
 		}
 		f := pendingFile{Path: path, Name: name, Image: cloud.IsImage(path), Size: info.Size()}
 		if f.Image && images >= cloud.MaxImages || !f.Image && files >= cloud.MaxFiles {
-			a.sendError = fmt.Sprintf("A message takes at most %d images and %d files.", cloud.MaxImages, cloud.MaxFiles)
+			a.sendError = locales.AttachTooManyKinds(cloud.MaxImages, cloud.MaxFiles)
 			continue
 		}
 		if f.Image {
@@ -79,7 +80,7 @@ func (a *App) addFiles(paths []string) {
 func (a *App) pickFiles() {
 	win := a.win
 	go func() {
-		paths, err := mygo.Dialog.Open(mygo.OpenDialogOptions{Parent: win, Title: "Attach files", Multiple: true})
+		paths, err := mygo.Dialog.Open(mygo.OpenDialogOptions{Parent: win, Title: locales.AttachFiles(), Multiple: true})
 		if err != nil || len(paths) == 0 {
 			return
 		}
@@ -138,7 +139,7 @@ func (a *App) attachmentChips(c *ui.Context, p *palette) {
 
 func removeButton(c *ui.Context, p *palette, name string, remove func()) {
 	b := ui.ButtonBase(c).Size(18, 18).Radius(9).Background(p.Text.Alpha(0.7)).Cursor(ui.CursorPointer).
-		Label("Remove " + name).OnClick(remove).Absolute().Top(4).Right(4)
+		Label(locales.AttachRemove(name)).OnClick(remove).Absolute().Top(4).Right(4)
 	b.Children(func() { ui.Icon(c, iconX).Size(10, 10).TextColor(p.Canvas) })
 }
 
@@ -158,9 +159,9 @@ func (a *App) upload(ctx context.Context, workspace, sessionID string, files []p
 	var blocks []map[string]any
 	for i, f := range files {
 		progress := func(sent, total int64) {
-			label := "Uploading"
+			label := locales.Uploading()
 			if len(files) > 1 {
-				label = fmt.Sprintf("Uploading %d of %d", i+1, len(files))
+				label = locales.UploadingCount(i+1, len(files))
 			}
 			if total > 0 {
 				label += fmt.Sprintf(" · %d%%", sent*100/total)
@@ -230,7 +231,7 @@ func (a *App) sessionImage(c *ui.Context, p *palette, sessionID string, it sessi
 			a.update(func() { a.images[key] = &remoteImage{bitmap: bm, failed: err != nil} })
 		}()
 	}
-	ui.Box(c.Key(key)).Size(size, size).Radius(12).Clip().Background(p.Text.Alpha(0.05)).Label(firstNonEmpty(it.FileName, "Image")).Children(func() {
+	ui.Box(c.Key(key)).Size(size, size).Radius(12).Clip().Background(p.Text.Alpha(0.05)).Label(firstNonEmpty(it.FileName, locales.Image())).Children(func() {
 		switch {
 		case img != nil && img.bitmap != nil:
 			ui.Image(c, img.bitmap).Size(size, size).Fit(ui.Cover)
@@ -247,7 +248,7 @@ func fileChip(c *ui.Context, p *palette, it session.Item) {
 	ui.Row(c.Key(it.ID)).Height(40).Padding(0, 10).Radius(10).Gap(8).AlignItems(ui.Center).Background(p.UserBubble).MaxWidth(280).Children(func() {
 		ui.Icon(c, iconFile).Size(16, 16).TextColor(p.Secondary)
 		ui.Column(c).MinWidth(0).Children(func() {
-			ui.Text(c, firstNonEmpty(it.FileName, "File")).FontSize(sizeFoot).FontWeight(500).TextColor(p.Text).SingleLine()
+			ui.Text(c, firstNonEmpty(it.FileName, locales.File())).FontSize(sizeFoot).FontWeight(500).TextColor(p.Text).SingleLine()
 			if it.SizeBytes > 0 {
 				ui.Text(c, byteSize(it.SizeBytes)).FontSize(sizeCaption).TextColor(p.Secondary)
 			}

@@ -2,6 +2,7 @@ package app
 
 import (
 	"fmt"
+	"github.com/lbr77/lody-mygo/locales"
 	"math"
 	"path"
 	"strings"
@@ -85,9 +86,9 @@ func (a *App) assistantMessage(c *ui.Context, p *palette, e session.Entry) {
 		if k > 0 {
 			key := e.ID + "/work"
 			open := a.expanded[key]
-			label := "Worked"
+			label := locales.Worked()
 			if d := turnDuration(e); d > 0 {
-				label = "Worked for " + formatDuration(d)
+				label = locales.WorkedFor(formatDuration(d))
 			}
 			place(block{key: "work"}, func() {
 				disclosure(c.Key(key), p, label, open, false, func() { a.expanded[key] = !a.expanded[key] })
@@ -158,12 +159,12 @@ func shimmer(c *ui.Context, text ui.Element) {
 // only once clicked.
 func (a *App) thought(c *ui.Context, p *palette, key string, it session.Item, live bool) {
 	open := a.expanded[key]
-	label := "Thought"
+	label := locales.Thought()
 	switch {
 	case live:
-		label = "Thinking…"
+		label = locales.Thinking()
 	case it.ThoughtFor >= time.Second:
-		label = "Thought for " + formatDuration(it.ThoughtFor)
+		label = locales.ThoughtFor(formatDuration(it.ThoughtFor))
 	}
 	ui.Column(c).FillWidth().Gap(2).Padding(0, 4).Children(func() {
 		disclosure(c.Key(key), p, label, open, live, func() { a.expanded[key] = !a.expanded[key] })
@@ -181,7 +182,7 @@ func (a *App) activity(c *ui.Context, p *palette, e session.Entry, b block, live
 	open := a.expanded[key]
 	label := activityLabel(b.items, live)
 	if live && e.StartedAt > 0 {
-		label += " (Worked for " + formatDuration(time.Since(time.UnixMilli(int64(e.StartedAt)))) + ")"
+		label = locales.ActivityWithDuration(label, formatDuration(time.Since(time.UnixMilli(int64(e.StartedAt)))))
 		c.After(time.Second)
 	}
 	ui.Column(c).FillWidth().Gap(2).Children(func() {
@@ -220,7 +221,7 @@ func (a *App) step(c *ui.Context, p *palette, key string, it session.Item) {
 	case "subagent_task":
 		sa := it.Subagent
 		ui.Row(c).MinHeight(24).Padding(2, 4).Gap(6).AlignItems(ui.Center).Children(func() {
-			label := "Subagent"
+			label := locales.Subagent()
 			if sa != nil && sa.Description != "" {
 				label += ": " + sa.Description
 			}
@@ -236,7 +237,7 @@ func (a *App) step(c *ui.Context, p *palette, key string, it session.Item) {
 		row := ui.Row(c).MinHeight(24).Padding(2, 4).Gap(8).AlignItems(ui.Center).Radius(5)
 		hovered := false
 		if it.HasDetail {
-			row.Cursor(ui.CursorPointer).Label("Show details").OnClick(func() { a.expanded[key] = !a.expanded[key] })
+			row.Cursor(ui.CursorPointer).Label(locales.ShowDetails()).OnClick(func() { a.expanded[key] = !a.expanded[key] })
 			hovered = row.Hovered()
 		}
 		running := it.Status == "pending" || it.Status == "in_progress"
@@ -273,31 +274,37 @@ func (a *App) step(c *ui.Context, p *palette, key string, it session.Item) {
 	}
 }
 
+// toolVerbs are the English verbs agents start their titles with, and the
+// verbs in the app's language, by tool kind: in progress, then done.
+var toolVerbs = map[string]struct {
+	english     [2]string
+	going, done func() string
+}{
+	"read":    {[2]string{"Reading", "Read"}, locales.VerbReading, locales.VerbRead},
+	"edit":    {[2]string{"Editing", "Edited"}, locales.VerbEditing, locales.VerbEdited},
+	"delete":  {[2]string{"Deleting", "Deleted"}, locales.VerbDeleting, locales.VerbDeleted},
+	"move":    {[2]string{"Moving", "Moved"}, locales.VerbMoving, locales.VerbMoved},
+	"search":  {[2]string{"Searching", "Searched"}, locales.VerbSearching, locales.VerbSearched},
+	"execute": {[2]string{"Running", "Ran"}, locales.VerbRunning, locales.VerbRan},
+	"fetch":   {[2]string{"Fetching", "Fetched"}, locales.VerbFetching, locales.VerbFetched},
+	"think":   {[2]string{"Thinking", "Thought"}, locales.VerbThinking, locales.VerbThought},
+}
+
 // toolVerb names what a tool call does, in the tense of its status.
 func toolVerb(it session.Item) string {
-	done := it.Status == "completed" || it.Status == "failed"
-	verbs := map[string][2]string{
-		"read":    {"Reading", "Read"},
-		"edit":    {"Editing", "Edited"},
-		"delete":  {"Deleting", "Deleted"},
-		"move":    {"Moving", "Moved"},
-		"search":  {"Searching", "Searched"},
-		"execute": {"Running", "Ran"},
-		"fetch":   {"Fetching", "Fetched"},
-		"think":   {"Thinking", "Thought"},
-	}
-	v, ok := verbs[it.Kind]
+	v, ok := toolVerbs[it.Kind]
 	if !ok {
 		return ""
 	}
-	// ACP titles often start with the verb already.
-	if strings.HasPrefix(strings.ToLower(it.Title), strings.ToLower(v[1])) || strings.HasPrefix(strings.ToLower(it.Title), strings.ToLower(v[0])) {
+	// Agents' titles often start with the verb already.
+	title := strings.ToLower(it.Title)
+	if strings.HasPrefix(title, strings.ToLower(v.english[0])) || strings.HasPrefix(title, strings.ToLower(v.english[1])) {
 		return ""
 	}
-	if done {
-		return v[1]
+	if it.Status == "completed" || it.Status == "failed" {
+		return v.done()
 	}
-	return v[0]
+	return v.going()
 }
 
 // activityLabel summarizes a group in Lody's words: how long it thought,
@@ -317,41 +324,35 @@ func activityLabel(items []session.Item, live bool) string {
 			other++
 		}
 	}
-	plural := func(n int, one, many string) string {
-		if n == 1 {
-			return "1 " + one
-		}
-		return fmt.Sprintf("%d %s", n, many)
-	}
 	var parts []string
 	switch {
 	case live && len(items) > 0 && items[len(items)-1].Type == "thought":
-		parts = append(parts, "Thinking…")
+		parts = append(parts, locales.Thinking())
 	case thoughts > 0 && thought >= time.Second:
-		parts = append(parts, "Thought for "+formatDuration(thought))
+		parts = append(parts, locales.ThoughtFor(formatDuration(thought)))
 	case thoughts > 0:
-		parts = append(parts, "Thought")
+		parts = append(parts, locales.Thought())
 	}
 	if n := counts["execute"]; n > 0 {
-		parts = append(parts, "Ran "+plural(n, "command", "commands"))
+		parts = append(parts, locales.ToolCommands(n))
 	}
 	if n := counts["read"]; n > 0 {
-		parts = append(parts, "Read "+plural(n, "file", "files"))
+		parts = append(parts, locales.ToolReadFiles(n))
 	}
 	if n := counts["edit"] + counts["delete"] + counts["move"]; n > 0 {
-		parts = append(parts, "Edited "+plural(n, "file", "files"))
+		parts = append(parts, locales.ToolEditedFiles(n))
 	}
 	if n := counts["search"]; n > 0 {
-		parts = append(parts, "Ran "+plural(n, "search", "searches"))
+		parts = append(parts, locales.ToolSearches(n))
 	}
 	if n := counts["fetch"]; n > 0 {
-		parts = append(parts, "Fetched "+plural(n, "resource", "resources"))
+		parts = append(parts, locales.ToolFetches(n))
 	}
 	if n := counts["other"] + counts["think"] + counts[""] + other; n > 0 {
-		parts = append(parts, "Called "+plural(n, "tool", "tools"))
+		parts = append(parts, locales.ToolCalls(n))
 	}
 	if len(parts) == 0 && live {
-		return "Working…"
+		return locales.WorkingDots()
 	}
 	return strings.Join(parts, " · ")
 }
@@ -372,7 +373,7 @@ func (a *App) editedFiles(c *ui.Context, p *palette, e session.Entry) {
 				add, del = add+d.Add, del+d.Del
 			}
 			ui.Row(c).Height(32).Padding(0, 10).Gap(8).AlignItems(ui.Center).Background(p.Secondary.Alpha(0.03)).BorderWidth(0, 0, 1, 0).BorderColor(p.Border).Children(func() {
-				ui.Text(c, fmt.Sprintf("Edited %d files", len(diffs))).FontSize(sizeSub).FontWeight(500).TextColor(p.Text).Grow(1)
+				ui.Text(c, locales.ToolEditedFiles(len(diffs))).FontSize(sizeSub).FontWeight(500).TextColor(p.Text).Grow(1)
 				diffCounts(c, p, add, del)
 			})
 		}
@@ -390,9 +391,9 @@ func (a *App) editedFiles(c *ui.Context, p *palette, e session.Entry) {
 		}
 		if more > 0 {
 			row := ui.Row(c).Height(32).Padding(0, 10).AlignItems(ui.Center).Cursor(ui.CursorPointer).
-				Label("Show more").OnClick(func() { a.expanded[key] = true })
+				Label(locales.EditedFilesShowMore(more)).OnClick(func() { a.expanded[key] = true })
 			row.Children(func() {
-				ui.Text(c, fmt.Sprintf("Show %d more", more)).FontSize(sizeSub).TextColor(p.Secondary)
+				ui.Text(c, locales.EditedFilesShowMore(more)).FontSize(sizeSub).TextColor(p.Secondary)
 			})
 		}
 	})
@@ -411,7 +412,7 @@ func (a *App) turnFooter(c *ui.Context, p *palette, e session.Entry, hovered boo
 		row.Opacity(0)
 	}
 	row.Children(func() {
-		iconButton(c, p, iconCopy, "Copy", p.Hover).Size(24, 24).OnClick(func() {
+		iconButton(c, p, iconCopy, locales.Copy(), p.Hover).Size(24, 24).OnClick(func() {
 			var parts []string
 			for _, b := range blocks(e.Items)[answerStart(blocks(e.Items)):] {
 				parts = append(parts, b.items[0].Text)
@@ -420,7 +421,7 @@ func (a *App) turnFooter(c *ui.Context, p *palette, e session.Entry, hovered boo
 		})
 		var meta []string
 		if e.EndedAt > 0 {
-			meta = append(meta, time.UnixMilli(int64(e.EndedAt)).Local().Format("03:04 PM"))
+			meta = append(meta, locales.MessageToday(time.UnixMilli(int64(e.EndedAt)).Local()))
 		}
 		if d := turnDuration(e); d > 0 {
 			meta = append(meta, formatDuration(d))
@@ -439,7 +440,7 @@ func (a *App) liveStatus(c *ui.Context, p *palette, v *session.View) {
 		if last.Role == "assistant" && !last.Finished {
 			return // the reply shows its own progress
 		}
-		text := ui.Text(c, "Working…").FontSize(sizeSub).TextColor(p.Secondary).Padding(36, 4, 0, 4)
+		text := ui.Text(c, locales.WorkingDots()).FontSize(sizeSub).TextColor(p.Secondary).Padding(36, 4, 0, 4)
 		shimmer(c, text)
 	})
 }

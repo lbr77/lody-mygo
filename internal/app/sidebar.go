@@ -1,7 +1,7 @@
 package app
 
 import (
-	"fmt"
+	"github.com/lbr77/lody-mygo/locales"
 	"math"
 	"sort"
 	"strings"
@@ -116,7 +116,7 @@ func (a *App) sideRows() []sideRow {
 			chats = append(chats, s)
 		}
 	}
-	if len(pinned) > 0 && section("pinned", "Pinned", "") {
+	if len(pinned) > 0 && section("pinned", locales.SidebarPinned(), "") {
 		addSessions("pinned", pinned, false, 0)
 	}
 	for _, machine := range a.catalog.MachineIDs {
@@ -141,7 +141,7 @@ func (a *App) sideRows() []sideRow {
 			}
 		}
 	}
-	if len(chats) > 0 && section("chats", "Chats", "") {
+	if len(chats) > 0 && section("chats", locales.SidebarChats(), "") {
 		addSessions("chats", chats, false, 0)
 	}
 	return rows
@@ -151,23 +151,23 @@ func (a *App) sidebar(c *ui.Context, p *palette) {
 	ui.Column(c).Width(sidebarWidth).Shrink(0).Children(func() {
 		// The traffic lights sit on the left of this row.
 		ui.Row(c).Height(titleBarHeight).Shrink(0).AlignItems(ui.Center).Justify(ui.End).Padding(0, 6).Gap(2).DragWindow().Children(func() {
-			iconButton(c, p, iconSidebar, "Toggle Sidebar", p.SideHover).OnClick(func() { a.sidebarHidden = true })
-			back := iconButton(c, p, iconChevronLeft, "Back", p.SideHover).Disabled(!a.canGoBack())
+			iconButton(c, p, iconSidebar, locales.SidebarToggle(), p.SideHover).OnClick(func() { a.sidebarHidden = true })
+			back := iconButton(c, p, iconChevronLeft, locales.NavBack(), p.SideHover).Disabled(!a.canGoBack())
 			if !a.canGoBack() {
 				back.Opacity(0.6)
 			}
 			back.OnClick(a.goBack)
-			forward := iconButton(c, p, iconChevronRight, "Forward", p.SideHover).Disabled(!a.canGoForward())
+			forward := iconButton(c, p, iconChevronRight, locales.NavForward(), p.SideHover).Disabled(!a.canGoForward())
 			if !a.canGoForward() {
 				forward.Opacity(0.6)
 			}
 			forward.OnClick(a.goForward)
 		})
 		ui.Column(c).Padding(0, 6).Gap(1).Shrink(0).Children(func() {
-			if navRow(c, p, iconNewChat, "New chat", a.selected == "" && a.page == "").Clicked() {
+			if navRow(c, p, iconNewChat, locales.NewChat(), a.selected == "" && a.page == "").Clicked() {
 				a.open("")
 			}
-			search := navRow(c, p, iconSearch, "Search", a.searchOpen).OnClick(func() {
+			search := navRow(c, p, iconSearch, locales.Search(), a.searchOpen).OnClick(func() {
 				a.searchOpen, a.searchText = !a.searchOpen, ""
 			})
 			ui.Popover(c, search, &a.searchOpen, func() { a.searchPanel(c, p) })
@@ -195,16 +195,16 @@ func (a *App) sidebar(c *ui.Context, p *palette) {
 			}
 		}).Grow(1).MinHeight(0).Padding(12, sidebarListPadX, 12, sidebarListPadX).Gap(1).Children(func() {
 			if len(rows) == 0 {
-				msg := "No chats yet"
+				msg := locales.SidebarNoChats()
 				if !a.synced {
-					msg = "Syncing workspace…"
+					msg = locales.SidebarSyncing()
 				}
 				ui.Text(c, msg).FontSize(sizeSub).TextColor(p.SideMuted).Margin(24, 10)
 			}
 		})
 		if a.notice != "" {
 			ui.Row(c).Shrink(0).Margin(0, 10).Padding(6, 8).Gap(6).Radius(8).Background(p.Danger.Alpha(0.1)).AlignItems(ui.Center).Cursor(ui.CursorPointer).
-				Label("Dismiss").OnClick(func() { a.notice = "" }).Children(func() {
+				Label(locales.Dismiss()).OnClick(func() { a.notice = "" }).Children(func() {
 				ui.Icon(c, iconCircleAlert).Size(12, 12).TextColor(p.Danger)
 				ui.Text(c, a.notice).FontSize(sizeFoot).TextColor(p.Danger).MaxLines(3).Grow(1).MinWidth(0)
 			})
@@ -290,7 +290,7 @@ func (a *App) projectRow(c *ui.Context, p *palette, r sideRow) {
 		ui.Box(c).Size(14, 16).Center().Shrink(0).Children(func() { ui.Icon(c, icon).Size(16, 16).TextColor(p.SideMuted) })
 		ui.Text(c, r.label).FontSize(sizeSub).TextColor(p.SideRow).SingleLine().Grow(1).MinWidth(0)
 		if hovered {
-			b := ui.ButtonBase(c).Size(20, 20).Radius(4).Cursor(ui.CursorPointer).Label("New chat in " + r.label).Tooltip("New chat")
+			b := ui.ButtonBase(c).Size(20, 20).Radius(4).Cursor(ui.CursorPointer).Label(locales.NewChatIn(r.label)).Tooltip(locales.NewChat())
 			if b.Hovered() {
 				b.Background(p.Text.Alpha(0.08))
 			}
@@ -306,12 +306,12 @@ func (a *App) projectRow(c *ui.Context, p *palette, r sideRow) {
 
 func (a *App) moreRow(c *ui.Context, p *palette, r sideRow) {
 	row := ui.Row(c.Key(r.key)).Height(28).Padding(4, 8, 4, 37).Radius(6).AlignItems(ui.Center).Cursor(ui.CursorPointer).
-		Label("Show all").OnClick(func() { a.showAll[r.group] = true })
+		Label(locales.SidebarShowAll(r.count)).OnClick(func() { a.showAll[r.group] = true })
 	if row.Hovered() {
 		row.Background(p.SideHover)
 	}
 	row.Children(func() {
-		ui.Text(c, fmt.Sprintf("Show all (%d)", r.count)).FontSize(sizeSub).TextColor(p.SideMuted)
+		ui.Text(c, locales.SidebarShowAll(r.count)).FontSize(sizeSub).TextColor(p.SideMuted)
 	})
 }
 
@@ -346,7 +346,7 @@ func (a *App) sessionRow(c *ui.Context, p *palette, r sideRow) {
 			if r.depth > 0 {
 				ui.Box(c).Width(14).Shrink(0)
 			}
-			slot := ui.ButtonBase(c).Size(14, 18).Shrink(0).Radius(4).Label("More actions")
+			slot := ui.ButtonBase(c).Size(14, 18).Shrink(0).Radius(4).Label(locales.MoreActions())
 			if hovered {
 				slot.Menu(func(m *ui.Menu) { a.sessionMenu(m, sess) })
 			}
@@ -373,7 +373,7 @@ func (a *App) sessionRow(c *ui.Context, p *palette, r sideRow) {
 func (a *App) statusMark(c *ui.Context, p *palette, s *catalog.Session, age bool) {
 	switch {
 	case s.Waiting():
-		ui.Icon(c, iconHand).Size(12, 12).TextColor(p.Primary).Tooltip("Waiting for you")
+		ui.Icon(c, iconHand).Size(12, 12).TextColor(p.Primary).Tooltip(locales.StatusWaiting())
 	case s.Working():
 		workingGrid(c, p, 12)
 	case s.Unread() && a.selected != s.ID:
@@ -391,7 +391,7 @@ func workingGrid(c *ui.Context, p *palette, size float32) {
 	tile := size / 3.36
 	gap := tile * 0.18
 	phase := float64(time.Now().UnixMilli()%1400) / 1400
-	ui.Column(c).Size(size, size).Shrink(0).Gap(gap).Center().Label("Working").Children(func() {
+	ui.Column(c).Size(size, size).Shrink(0).Gap(gap).Center().Label(locales.StatusWorking()).Children(func() {
 		for row := 0; row < 3; row++ {
 			ui.Row(c).Gap(gap).Children(func() {
 				for col := 0; col < 3; col++ {
@@ -418,14 +418,14 @@ func (a *App) searchPanel(c *ui.Context, p *palette) {
 		matches = matches[:12]
 	}
 	ui.Column(c).Width(360).Gap(6).Children(func() {
-		in := ui.TextInput(c, &a.searchText).Placeholder("Search chats").AutoFocus().Label("Search chats")
+		in := ui.TextInput(c, &a.searchText).Placeholder(locales.SearchChats()).AutoFocus().Label(locales.SearchChats())
 		if in.Submitted() && len(matches) > 0 {
 			a.searchOpen = false
 			a.open(matches[0].ID)
 		}
 		ui.Column(c).Gap(1).Children(func() {
 			if len(matches) == 0 {
-				ui.Text(c, "No matching chats").FontSize(sizeSub).TextColor(p.Secondary).Padding(6, 8)
+				ui.Text(c, locales.SearchNoMatches()).FontSize(sizeSub).TextColor(p.Secondary).Padding(6, 8)
 			}
 			for _, s := range matches {
 				row := menuRow(c.Key(s.ID), p, s.Title)
@@ -454,12 +454,12 @@ func (a *App) projectName(id string) string {
 // footer holds the workspace switcher, Help, Archive and Settings.
 func (a *App) footer(c *ui.Context, p *palette) {
 	ws := a.workspace()
-	name := "Workspace"
+	name := locales.WorkspaceFallback()
 	if ws != nil {
 		name = ws.Name
 	}
 	ui.Row(c).Shrink(0).Padding(6, 10).Gap(4).AlignItems(ui.Center).Children(func() {
-		switcher := ui.ButtonBase(c).Height(28).Padding(0, 6).Radius(8).Gap(6).Grow(1).MinWidth(0).Justify(ui.Start).Cursor(ui.CursorPointer).Label("Switch workspace")
+		switcher := ui.ButtonBase(c).Height(28).Padding(0, 6).Radius(8).Gap(6).Grow(1).MinWidth(0).Justify(ui.Start).Cursor(ui.CursorPointer).Label(locales.WorkspaceSwitch())
 		if switcher.Hovered() || a.workspacesOpen {
 			switcher.Background(p.Text.Alpha(0.06))
 		}
@@ -468,27 +468,27 @@ func (a *App) footer(c *ui.Context, p *palette) {
 			workspaceTile(c, name, 16)
 			ui.Text(c, name).FontSize(sizeSub).TextColor(p.SideRow).SingleLine().MinWidth(0)
 			if !a.syncState.Live && a.sync != nil {
-				label, color := "Syncing", p.SideMuted
+				label, color := locales.ConnectionSyncing(), p.SideMuted
 				if a.syncState.Reason != "" {
-					label, color = "Offline", p.Danger
+					label, color = locales.Offline(), p.Danger
 				}
 				ui.Text(c, label).FontSize(10).FontWeight(500).TextColor(color).Padding(1, 5).Radius(5).Background(color.Alpha(0.14)).Shrink(0)
 			}
 		})
 		ui.Popover(c, switcher, &a.workspacesOpen, func() { a.workspaceMenu(c, p) })
-		iconButton(c, p, iconHelp, "Help", p.SideHover).Menu(func(m *ui.Menu) {
+		iconButton(c, p, iconHelp, locales.Help(), p.SideHover).Menu(func(m *ui.Menu) {
 			for _, link := range []struct{ label, url string }{
-				{"Docs", "https://lody.ai/docs"},
+				{locales.HelpDocs(), "https://lody.ai/docs"},
 				{"GitHub", "https://github.com/LodyAI/Lody"},
-				{"Join community", "https://discord.gg/E8mZtMu38s"},
-				{"Report bug", "https://github.com/lbr77/lody-mygo/issues"},
+				{locales.HelpCommunity(), "https://discord.gg/E8mZtMu38s"},
+				{locales.ReportBug(), "https://github.com/lbr77/lody-mygo/issues"},
 			} {
 				if m.Item(link.label).Chosen() {
 					mygo.Shell.OpenExternal(link.url)
 				}
 			}
 		})
-		archive := iconButton(c, p, iconArchive, "Archived chats", p.SideHover).OnClick(func() {
+		archive := iconButton(c, p, iconArchive, locales.ArchivedChats(), p.SideHover).OnClick(func() {
 			if a.page == "archive" {
 				a.page = ""
 			} else {
@@ -498,7 +498,7 @@ func (a *App) footer(c *ui.Context, p *palette) {
 		if a.page == "archive" {
 			archive.Background(p.SideSelect)
 		}
-		iconButton(c, p, iconSettings, "Settings", p.SideHover).OnClick(func() { a.settingsOpen = true })
+		iconButton(c, p, iconSettings, locales.Settings(), p.SideHover).OnClick(func() { a.settingsOpen = true })
 	})
 }
 
@@ -580,13 +580,13 @@ func (a *App) workspaceMenu(c *ui.Context, p *palette) {
 			}
 			ui.Box(c).Height(1).Background(p.Border).Margin(4, 0)
 		}
-		out := menuRow(c, p, "Sign out").OnClick(func() {
+		out := menuRow(c, p, locales.SignOut()).OnClick(func() {
 			a.workspacesOpen = false
 			a.signOut()
 		})
 		out.Children(func() {
 			ui.Icon(c, iconLogOut).Size(16, 16).TextColor(p.Secondary)
-			ui.Text(c, "Sign out").FontSize(sizeSub).TextColor(p.Text)
+			ui.Text(c, locales.SignOut()).FontSize(sizeSub).TextColor(p.Text)
 		})
 	})
 }
@@ -605,7 +605,7 @@ func (a *App) machineName(id string) string {
 		return name
 	}
 	if len(id) > 8 {
-		return "Machine " + strings.ToUpper(id[:6])
+		return locales.MachineFallback(strings.ToUpper(id[:6]))
 	}
 	return id
 }
