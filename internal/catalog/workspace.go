@@ -2,6 +2,7 @@ package catalog
 
 import (
 	"context"
+	"encoding/json"
 	"sort"
 	"strings"
 
@@ -105,6 +106,20 @@ func projectWorkspace(rows []flock.Row) Catalog {
 		}
 		id := text(row.Key[1])
 		v := object(row.Value)
+		if row.Key[0] == "projectMcpDefault" && id != "" && v != nil {
+			// Keyed by the project, not an id: the servers its new chats load.
+			ids := []string{}
+			for _, x := range anyList(v["ids"]) {
+				if s := text(x); s != "" {
+					ids = append(ids, s)
+				}
+			}
+			if c.ProjectMCP == nil {
+				c.ProjectMCP = map[string][]string{}
+			}
+			c.ProjectMCP[id] = ids
+			continue
+		}
 		if id == "" || v == nil || text(v["id"]) != id {
 			continue
 		}
@@ -188,4 +203,11 @@ func project(mode string, rows []flock.Row) Catalog {
 		return projectWorkspace(rows)
 	}
 	return projectMachine(rows, mode)
+}
+
+// ProjectMCPKey is how the workspace stream keys a local project's
+// default MCP servers.
+func ProjectMCPKey(machineID, localProjectID string) string {
+	b, _ := json.Marshal([]string{"v1", "local", machineID, localProjectID})
+	return string(b)
 }

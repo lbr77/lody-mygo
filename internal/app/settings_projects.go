@@ -87,6 +87,7 @@ func (a *App) projectsPage(c *ui.Context, p *palette) {
 		})
 	}
 	a.addProjectDialog(c, p)
+	a.projectWindow(c, p)
 }
 
 func (a *App) projectSettingsRow(c *ui.Context, p *palette, pr catalog.Project, chats int) {
@@ -111,6 +112,7 @@ func (a *App) projectSettingsRow(c *ui.Context, p *palette, pr catalog.Project, 
 		if removing {
 			return
 		}
+		iconButton(c, p, iconChevronRight, locales.ProjectOpen(), p.Hover).OnClick(func() { a.openProject(project.ID) })
 		iconButton(c, p, iconMore, locales.MoreActions(), p.Hover).Menu(func(m *ui.Menu) {
 			if m.Item(locales.ProjectNewChat()).Chosen() {
 				a.settingsOpen = false

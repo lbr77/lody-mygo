@@ -1309,5 +1309,43 @@
   },
   "rolesDeleteBody": "Chats can no longer mention it.",
   "monitorWaiting": "Waiting for a resource sample",
-  "monitorDevice": "Device"
+  "monitorDevice": "Device",
+  "projectOpen": "Open project",
+  "projectPageGeneral": "General",
+  "projectPageGeneralLead": "Where the project is, and who may use it.",
+  "projectPageWorktreeLead": "Scripts run when a chat makes its own worktree, and when the chat is archived.",
+  "projectPageSkills": "Skills",
+  "projectPageSkillsLead": "The skills agents find in this project.",
+  "projectPageMCP": "Default MCP",
+  "projectPageMCPLead": "The MCP servers new chats in this project start with. The composer can still change them.",
+  "projectMachineOffline": "{name} is offline. Worktree setup and skills load when it comes online.",
+  "@projectMachineOffline": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "projectFolder": "Folder",
+  "projectShareHint": "Members can start chats in this folder on your machine.",
+  "projectDeleteSafe": "Lody never deletes the project's folder or its files.",
+  "worktreeSetupLead": "Runs after the git worktree is made, before the agent starts.",
+  "worktreeCleanupLead": "Runs when a chat is archived, before its worktree is removed.",
+  "worktreeEnvHint": "Variables set here exist only in the script's process; the agent can't read them. Set the agent's in its provider.",
+  "worktreeSaving": "Saving…",
+  "projectNoSkills": "No skills in this project's folder.",
+  "projectMCPEmpty": "This workspace has no MCP servers yet.",
+  "projectMCPManage": "Manage MCP servers",
+  "projectMCPInherited": "Until you change a switch, the project follows the workspace's defaults.",
+  "projectMCPCustom": "This project has its own list; servers the workspace turns on by default later aren't added.",
+  "projectMCPNoConnection": "No connection yet; it won't load until one is added.",
+  "projectMCPToggle": "New chats load {name}",
+  "@projectMCPToggle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "projectMCPNotOwner": "Only the owner of the project's machine changes its defaults."
 }

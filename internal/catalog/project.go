@@ -140,6 +140,7 @@ type Catalog struct {
 	Capabilities map[string]Capability    `json:"capabilities,omitempty"`
 	MCPServers   []MCPServer              `json:"-"`
 	Roles        []AgentRole              `json:"-"`
+	ProjectMCP   map[string][]string      `json:"-"` // default MCP servers by project key
 	Memories     map[string][]Memory      `json:"-"` // by machine
 	Removing     map[string]bool          `json:"-"` // projects their machines are removing
 }
@@ -501,7 +502,7 @@ func merge(meta Catalog, machines map[string]Catalog) Catalog {
 		out.Projects = append(out.Projects, projects[id])
 	}
 	ws := machines[workspaceMode]
-	out.MCPServers, out.Roles = ws.MCPServers, ws.Roles
+	out.MCPServers, out.Roles, out.ProjectMCP = ws.MCPServers, ws.Roles, ws.ProjectMCP
 	for _, id := range meta.MachineIDs {
 		m := machines[id]
 		for _, mem := range m.Memories[id] {

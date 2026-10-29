@@ -47,3 +47,9 @@ func TestProjectMeta(t *testing.T) {
 		t.Fatalf("machines = %+v %+v", c.MachineNames, c.Agents)
 	}
 }
+
+func TestProjectMCPKey(t *testing.T) {
+	if got := ProjectMCPKey("m1", "p1"); got != `["v1","local","m1","p1"]` {
+		t.Fatalf("key = %s", got)
+	}
+}

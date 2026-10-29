@@ -780,6 +780,15 @@ func TestCloudSettings(t *testing.T) {
 	seed("memory/m1", `{"type":"machine/memory","status":"ready","memories":[{"id":"ada","name":"Ada's memory"},{"id":"grace","name":"Grace"}]}`, &memoryInventory{})
 	check("memory", "Ada's memory", "Add memory")
 	check("projects", "lody-mygo", "src/lody-mygo", "Add project")
+	a.openProject("m1:local:p1")
+	check("projects", "General", "Worktree", "Skills", "Default MCP", "Folder", "/src/lody-mygo", "Copy path", "Delete project")
+	a.projectWin.page = "worktree"
+	check("projects", "Worktree Setup", "Worktree Cleanup", "bash")
+	a.projectWin.page = "mcp"
+	check("projects", "Until you change a switch, the project follows the workspace's defaults.", "IDA Pro", "Notes")
+	a.catalog.ProjectMCP = map[string][]string{catalog.ProjectMCPKey("m1", "p1"): {"x2"}}
+	check("projects", "This project has its own list; servers the workspace turns on by default later aren't added.")
+	a.projectWin.open = false
 	seed("shortcuts", `[{"v":1,"id":"p1","workspaceId":"w1","ownerUserId":"u1","visibility":"private","name":"Review","slug":"review","scope":{},"revision":"r1","createdAt":1,"updatedAt":1,"bodyDocId":"b1","dependencySummary":[]}]`, &[]shortcuts.Entry{})
 	check("prompt-shortcuts", "Review", "/review", "Private", "New Prompt Shortcut")
 	a.catalog.Roles = []catalog.AgentRole{{ID: "r1", OwnerUserID: "u1", Visibility: "workspace", Name: "Reviewer", Emoji: "🔍", Targets: []catalog.RoleTarget{{MachineID: "m1", AgentConfigID: "a1"}}}}

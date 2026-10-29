@@ -6338,3 +6338,243 @@ func MonitorDevice() string { return In(i18n.Locale()).MonitorDevice() }
 func (msgs Messages) MonitorDevice() string {
 	return Catalog.Format(msgs.locale, "monitorDevice", nil)
 }
+
+// ProjectOpen says "Open project"
+// in the language the app shows.
+func ProjectOpen() string { return In(i18n.Locale()).ProjectOpen() }
+
+// ProjectOpen says "Open project"
+// in the language of msgs.
+func (msgs Messages) ProjectOpen() string {
+	return Catalog.Format(msgs.locale, "projectOpen", nil)
+}
+
+// ProjectPageGeneral says "General"
+// in the language the app shows.
+func ProjectPageGeneral() string { return In(i18n.Locale()).ProjectPageGeneral() }
+
+// ProjectPageGeneral says "General"
+// in the language of msgs.
+func (msgs Messages) ProjectPageGeneral() string {
+	return Catalog.Format(msgs.locale, "projectPageGeneral", nil)
+}
+
+// ProjectPageGeneralLead says "Where the project is, and who may use it."
+// in the language the app shows.
+func ProjectPageGeneralLead() string { return In(i18n.Locale()).ProjectPageGeneralLead() }
+
+// ProjectPageGeneralLead says "Where the project is, and who may use it."
+// in the language of msgs.
+func (msgs Messages) ProjectPageGeneralLead() string {
+	return Catalog.Format(msgs.locale, "projectPageGeneralLead", nil)
+}
+
+// ProjectPageWorktreeLead says "Scripts run when a chat makes its own worktree, and when the chat is archived."
+// in the language the app shows.
+func ProjectPageWorktreeLead() string { return In(i18n.Locale()).ProjectPageWorktreeLead() }
+
+// ProjectPageWorktreeLead says "Scripts run when a chat makes its own worktree, and when the chat is archived."
+// in the language of msgs.
+func (msgs Messages) ProjectPageWorktreeLead() string {
+	return Catalog.Format(msgs.locale, "projectPageWorktreeLead", nil)
+}
+
+// ProjectPageSkills says "Skills"
+// in the language the app shows.
+func ProjectPageSkills() string { return In(i18n.Locale()).ProjectPageSkills() }
+
+// ProjectPageSkills says "Skills"
+// in the language of msgs.
+func (msgs Messages) ProjectPageSkills() string {
+	return Catalog.Format(msgs.locale, "projectPageSkills", nil)
+}
+
+// ProjectPageSkillsLead says "The skills agents find in this project."
+// in the language the app shows.
+func ProjectPageSkillsLead() string { return In(i18n.Locale()).ProjectPageSkillsLead() }
+
+// ProjectPageSkillsLead says "The skills agents find in this project."
+// in the language of msgs.
+func (msgs Messages) ProjectPageSkillsLead() string {
+	return Catalog.Format(msgs.locale, "projectPageSkillsLead", nil)
+}
+
+// ProjectPageMCP says "Default MCP"
+// in the language the app shows.
+func ProjectPageMCP() string { return In(i18n.Locale()).ProjectPageMCP() }
+
+// ProjectPageMCP says "Default MCP"
+// in the language of msgs.
+func (msgs Messages) ProjectPageMCP() string {
+	return Catalog.Format(msgs.locale, "projectPageMCP", nil)
+}
+
+// ProjectPageMCPLead says "The MCP servers new chats in this project start with. The composer can still change them."
+// in the language the app shows.
+func ProjectPageMCPLead() string { return In(i18n.Locale()).ProjectPageMCPLead() }
+
+// ProjectPageMCPLead says "The MCP servers new chats in this project start with. The composer can still change them."
+// in the language of msgs.
+func (msgs Messages) ProjectPageMCPLead() string {
+	return Catalog.Format(msgs.locale, "projectPageMCPLead", nil)
+}
+
+// ProjectMachineOffline says "{name} is offline. Worktree setup and skills load when it comes online."
+// in the language the app shows.
+func ProjectMachineOffline(name string) string { return In(i18n.Locale()).ProjectMachineOffline(name) }
+
+// ProjectMachineOffline says "{name} is offline. Worktree setup and skills load when it comes online."
+// in the language of msgs.
+func (msgs Messages) ProjectMachineOffline(name string) string {
+	return Catalog.Format(msgs.locale, "projectMachineOffline", map[string]any{"name": name})
+}
+
+// ProjectFolder says "Folder"
+// in the language the app shows.
+func ProjectFolder() string { return In(i18n.Locale()).ProjectFolder() }
+
+// ProjectFolder says "Folder"
+// in the language of msgs.
+func (msgs Messages) ProjectFolder() string {
+	return Catalog.Format(msgs.locale, "projectFolder", nil)
+}
+
+// ProjectShareHint says "Members can start chats in this folder on your machine."
+// in the language the app shows.
+func ProjectShareHint() string { return In(i18n.Locale()).ProjectShareHint() }
+
+// ProjectShareHint says "Members can start chats in this folder on your machine."
+// in the language of msgs.
+func (msgs Messages) ProjectShareHint() string {
+	return Catalog.Format(msgs.locale, "projectShareHint", nil)
+}
+
+// ProjectDeleteSafe says "Lody never deletes the project's folder or its files."
+// in the language the app shows.
+func ProjectDeleteSafe() string { return In(i18n.Locale()).ProjectDeleteSafe() }
+
+// ProjectDeleteSafe says "Lody never deletes the project's folder or its files."
+// in the language of msgs.
+func (msgs Messages) ProjectDeleteSafe() string {
+	return Catalog.Format(msgs.locale, "projectDeleteSafe", nil)
+}
+
+// WorktreeSetupLead says "Runs after the git worktree is made, before the agent starts."
+// in the language the app shows.
+func WorktreeSetupLead() string { return In(i18n.Locale()).WorktreeSetupLead() }
+
+// WorktreeSetupLead says "Runs after the git worktree is made, before the agent starts."
+// in the language of msgs.
+func (msgs Messages) WorktreeSetupLead() string {
+	return Catalog.Format(msgs.locale, "worktreeSetupLead", nil)
+}
+
+// WorktreeCleanupLead says "Runs when a chat is archived, before its worktree is removed."
+// in the language the app shows.
+func WorktreeCleanupLead() string { return In(i18n.Locale()).WorktreeCleanupLead() }
+
+// WorktreeCleanupLead says "Runs when a chat is archived, before its worktree is removed."
+// in the language of msgs.
+func (msgs Messages) WorktreeCleanupLead() string {
+	return Catalog.Format(msgs.locale, "worktreeCleanupLead", nil)
+}
+
+// WorktreeEnvHint says "Variables set here exist only in the script's process; the agent can't read them. Set the agent's in its provider."
+// in the language the app shows.
+func WorktreeEnvHint() string { return In(i18n.Locale()).WorktreeEnvHint() }
+
+// WorktreeEnvHint says "Variables set here exist only in the script's process; the agent can't read them. Set the agent's in its provider."
+// in the language of msgs.
+func (msgs Messages) WorktreeEnvHint() string {
+	return Catalog.Format(msgs.locale, "worktreeEnvHint", nil)
+}
+
+// WorktreeSaving says "Saving…"
+// in the language the app shows.
+func WorktreeSaving() string { return In(i18n.Locale()).WorktreeSaving() }
+
+// WorktreeSaving says "Saving…"
+// in the language of msgs.
+func (msgs Messages) WorktreeSaving() string {
+	return Catalog.Format(msgs.locale, "worktreeSaving", nil)
+}
+
+// ProjectNoSkills says "No skills in this project's folder."
+// in the language the app shows.
+func ProjectNoSkills() string { return In(i18n.Locale()).ProjectNoSkills() }
+
+// ProjectNoSkills says "No skills in this project's folder."
+// in the language of msgs.
+func (msgs Messages) ProjectNoSkills() string {
+	return Catalog.Format(msgs.locale, "projectNoSkills", nil)
+}
+
+// ProjectMCPEmpty says "This workspace has no MCP servers yet."
+// in the language the app shows.
+func ProjectMCPEmpty() string { return In(i18n.Locale()).ProjectMCPEmpty() }
+
+// ProjectMCPEmpty says "This workspace has no MCP servers yet."
+// in the language of msgs.
+func (msgs Messages) ProjectMCPEmpty() string {
+	return Catalog.Format(msgs.locale, "projectMCPEmpty", nil)
+}
+
+// ProjectMCPManage says "Manage MCP servers"
+// in the language the app shows.
+func ProjectMCPManage() string { return In(i18n.Locale()).ProjectMCPManage() }
+
+// ProjectMCPManage says "Manage MCP servers"
+// in the language of msgs.
+func (msgs Messages) ProjectMCPManage() string {
+	return Catalog.Format(msgs.locale, "projectMCPManage", nil)
+}
+
+// ProjectMCPInherited says "Until you change a switch, the project follows the workspace's defaults."
+// in the language the app shows.
+func ProjectMCPInherited() string { return In(i18n.Locale()).ProjectMCPInherited() }
+
+// ProjectMCPInherited says "Until you change a switch, the project follows the workspace's defaults."
+// in the language of msgs.
+func (msgs Messages) ProjectMCPInherited() string {
+	return Catalog.Format(msgs.locale, "projectMCPInherited", nil)
+}
+
+// ProjectMCPCustom says "This project has its own list; servers the workspace turns on by default later aren't added."
+// in the language the app shows.
+func ProjectMCPCustom() string { return In(i18n.Locale()).ProjectMCPCustom() }
+
+// ProjectMCPCustom says "This project has its own list; servers the workspace turns on by default later aren't added."
+// in the language of msgs.
+func (msgs Messages) ProjectMCPCustom() string {
+	return Catalog.Format(msgs.locale, "projectMCPCustom", nil)
+}
+
+// ProjectMCPNoConnection says "No connection yet; it won't load until one is added."
+// in the language the app shows.
+func ProjectMCPNoConnection() string { return In(i18n.Locale()).ProjectMCPNoConnection() }
+
+// ProjectMCPNoConnection says "No connection yet; it won't load until one is added."
+// in the language of msgs.
+func (msgs Messages) ProjectMCPNoConnection() string {
+	return Catalog.Format(msgs.locale, "projectMCPNoConnection", nil)
+}
+
+// ProjectMCPToggle says "New chats load {name}"
+// in the language the app shows.
+func ProjectMCPToggle(name string) string { return In(i18n.Locale()).ProjectMCPToggle(name) }
+
+// ProjectMCPToggle says "New chats load {name}"
+// in the language of msgs.
+func (msgs Messages) ProjectMCPToggle(name string) string {
+	return Catalog.Format(msgs.locale, "projectMCPToggle", map[string]any{"name": name})
+}
+
+// ProjectMCPNotOwner says "Only the owner of the project's machine changes its defaults."
+// in the language the app shows.
+func ProjectMCPNotOwner() string { return In(i18n.Locale()).ProjectMCPNotOwner() }
+
+// ProjectMCPNotOwner says "Only the owner of the project's machine changes its defaults."
+// in the language of msgs.
+func (msgs Messages) ProjectMCPNotOwner() string {
+	return Catalog.Format(msgs.locale, "projectMCPNotOwner", nil)
+}
