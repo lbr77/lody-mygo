@@ -429,3 +429,27 @@ func TestExtendedCode(t *testing.T) {
 		t.Fatalf("%q", tt.Texts())
 	}
 }
+
+func TestMermaid(t *testing.T) {
+	fc, ok := parseFlowchart("flowchart LR\n  A[Start] --> B{Ready?}\n  B -->|yes| C(Ship)\n  B -- no --> D((Wait))\n  D -.-> A")
+	if !ok || len(fc.nodes) != 4 || len(fc.edges) != 4 || fc.dir != "LR" || fc.byID["B"].shape != "diamond" || fc.edges[1].label != "yes" || fc.edges[2].label != "no" || !fc.edges[3].dashed {
+		t.Fatalf("flowchart %+v %+v", fc, fc.edges)
+	}
+	if w, h := fc.layout(13); w <= 0 || h <= 0 {
+		t.Fatal("no layout")
+	}
+	sq, ok := parseSequence("sequenceDiagram\n  participant U as User\n  U->>Lody: send\n  Lody-->>U: reply")
+	if !ok || len(sq.actors) != 2 || len(sq.messages) != 2 || !sq.messages[1].dashed || sq.label("U") != "User" {
+		t.Fatalf("sequence %+v", sq)
+	}
+	for src, kind := range map[string]string{"graph TD\nA-->B": "flowchart", "%% c\nsequenceDiagram\nA->>B: x": "sequence", "pie\n\"a\": 1": ""} {
+		if got := mermaidKind(src); got != kind {
+			t.Errorf("%q: %q", src, got)
+		}
+	}
+	a := fixture()
+	a.view.Working = false
+	a.view.Entries = a.view.Entries[:2]
+	a.view.Entries[1].Items = []session.Item{{ID: "m", Type: "text", Text: "```mermaid\nflowchart TD\n  A[Write code] --> B{Tests pass?}\n  B -->|yes| C(Commit)\n  B -->|no| A\n```\n\n```mermaid\nsequenceDiagram\n  participant U as User\n  U->>Lody: send\n  Lody-->>U: reply\n```"}}
+	snap(t, a, "mermaid", false, nil)
+}
