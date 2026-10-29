@@ -76,9 +76,14 @@ type App struct {
 
 	newChat struct {
 		machine, agent, project string
-		worktree                bool   // the chat gets a worktree of its own
-		branch                  string // the worktree's base, picked
+		worktree                bool     // the chat gets a worktree of its own
+		branch                  string   // the worktree's base, picked
+		mcp                     []string // the MCP servers chosen, when mcpSet
+		mcpSet                  bool
+		mcpProject              string // the project they were chosen in
 	}
+	sessionMCP map[string][]string  // MCP servers chosen for chats' next turns
+	plusLevel  string               // the "+" menu's level: "" or "mcp"
 	gitStates  map[string]*gitState // projects' Git, by project
 	quotaAsked map[string]time.Time // when each provider's quota was last asked for
 
@@ -595,6 +600,7 @@ func (a *App) send() {
 	store := a.shortcutStore()
 	working := a.view != nil && a.view.Working || sess.Working()
 	turn := session.Turn{
+		MCPServerIDs: a.mcpSelection(a.selected),
 		Text:         text,
 		UserID:       userID,
 		MachineID:    sess.MachineID,
@@ -764,6 +770,7 @@ func (a *App) startChat() {
 	skills, sessions := a.mentionItems(target)
 	store := a.shortcutStore()
 	model, mode := a.models[""], a.modes[""]
+	mcp := a.mcpSelection("")
 	title := draftTitle(text)
 	if title == "" && len(files) > 0 {
 		title = draftTitle(files[0].Name)
@@ -807,7 +814,8 @@ func (a *App) startChat() {
 		if blocks, err = a.upload(ctx, workspace, id, files); err == nil {
 			if err = r.WaitReady(ctx); err == nil {
 				state, err = r.Send(ctx, session.Turn{
-					Text: expandMentions(ctx, conn, userID, target, text, skills, sessions, store), UserID: userID, MachineID: nc.machine, ModelID: model, ModeID: mode, Attachments: blocks,
+					MCPServerIDs: mcp,
+					Text:         expandMentions(ctx, conn, userID, target, text, skills, sessions, store), UserID: userID, MachineID: nc.machine, ModelID: model, ModeID: mode, Attachments: blocks,
 					AgentType: agent.AgentType, CLIType: agent.CLIType, MarkDispatch: sync.MarkDispatch,
 				})
 			}

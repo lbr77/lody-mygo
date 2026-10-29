@@ -1708,3 +1708,42 @@ func TestPasswordSteps(t *testing.T) {
 		t.Fatalf("step 1: %q", tt.Texts())
 	}
 }
+
+func TestMCPSelection(t *testing.T) {
+	a := fixture()
+	a.catalog.MCPServers = []catalog.MCPServer{
+		{ID: "x1", Name: "IDA Pro", Transport: "stdio", Connection: map[string]any{"command": "uvx", "args": []any{"ida-mcp"}}, EnabledByDefault: true},
+		{ID: "x2", Name: "Notes", Transport: "http", Connection: map[string]any{"url": "https://notes.example/mcp"}, Description: "A note server"},
+	}
+	if got := a.defaultMCP(""); len(got) != 1 || got[0] != "x1" {
+		t.Fatalf("workspace defaults %v", got)
+	}
+	a.catalog.ProjectMCP = map[string][]string{catalog.ProjectMCPKey("m1", "p1"): {"x2", "gone"}}
+	if got := a.defaultMCP("m1:local:p1"); len(got) != 1 || got[0] != "x2" {
+		t.Fatalf("project defaults %v", got)
+	}
+	a.selected = ""
+	a.newChat.machine, a.newChat.project = "m1", "m1:local:p1"
+	a.pickers = map[string]*bool{"plus": new(bool)}
+	*a.pickers["plus"] = true
+	tt := snap(t, a, "plus-menu", false, nil)
+	if !tt.HasText("Add attachment") || !tt.HasText("Load 1 MCP server") {
+		t.Fatalf("root: %q", tt.Texts())
+	}
+	a.plusLevel = "mcp"
+	tt.Frame()
+	if !tt.HasText("MCP servers") || !tt.HasText("A note server") || !tt.HasText("uvx ida-mcp") {
+		t.Fatalf("mcp level: %q", tt.Texts())
+	}
+	if err := tt.Click("IDA Pro"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if got := a.mcpSelection(""); len(got) != 2 {
+		t.Fatalf("after ticking: %v", got)
+	}
+	a.newChat.project = "m1:local:p2"
+	if got := a.mcpSelection(""); len(got) != 1 || got[0] != "x1" {
+		t.Fatalf("a new project starts from its defaults: %v", got)
+	}
+}

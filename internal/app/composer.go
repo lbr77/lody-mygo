@@ -38,6 +38,7 @@ func (a *App) bottom(c *ui.Context, p *palette, sess *catalog.Session, v *sessio
 		busyLabel = locales.Steer()
 	}
 	a.composerBox(c, p, composerOptions{
+		sessionID: a.selected,
 		hint:      hint,
 		busyLabel: busyLabel,
 		canSend:   ready && !a.sending,
@@ -146,6 +147,7 @@ type composerOptions struct {
 	onStop      func()
 	above       func() // between the hint and the box
 	footer      func()
+	sessionID   string // the chat the composer writes to; "" for a new one
 }
 
 // composerBox is Lody's message box: a 16-DIP-round card with the text
@@ -201,7 +203,7 @@ func (a *App) composerBox(c *ui.Context, p *palette, o composerOptions) {
 				}
 			})
 			ui.Row(c).Gap(4).AlignItems(ui.Center).Padding(2, 0, 0, 0).Children(func() {
-				iconButton(c, p, iconPlus, locales.AttachFiles(), p.Text.Alpha(0.06)).OnClick(a.pickFiles)
+				a.plusMenu(c, p, o.sessionID)
 				if o.footer != nil {
 					o.footer()
 				}

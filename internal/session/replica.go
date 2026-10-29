@@ -344,6 +344,9 @@ type Turn struct {
 	// Attachments are uploaded blocks ({type: "image", imageId, ...} or
 	// {type: "file", fileId, ...}) sent after the text.
 	Attachments []map[string]any
+	// MCPServerIDs are the MCP servers the turn loads; nil keeps the
+	// previous turn's.
+	MCPServerIDs []string
 
 	// MarkDispatch records the turn in the catalog, which wakes the machine.
 	MarkDispatch func(ctx context.Context, sessionID, turnID string, queued bool) error
@@ -518,6 +521,13 @@ func inputConfig(history []any, t Turn, text string) map[string]any {
 		"taskToolsEnabled": false,
 	}
 	if ids := list(previous["mcpServerIds"]); ids != nil {
+		config["mcpServerIds"] = ids
+	}
+	if t.MCPServerIDs != nil {
+		ids := make([]any, len(t.MCPServerIDs))
+		for i, id := range t.MCPServerIDs {
+			ids[i] = id
+		}
 		config["mcpServerIds"] = ids
 	}
 	if v, ok := previous["taskToolsEnabled"].(bool); ok {

@@ -3,6 +3,7 @@ package session
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -218,5 +219,20 @@ func TestAttachmentBlocks(t *testing.T) {
 	it := v.Entries[0].Items[0]
 	if it.Type != "image" || it.ImageID != "img1" || v.ModeID != "plan" {
 		t.Fatalf("item = %+v, mode %q", it, v.ModeID)
+	}
+}
+
+func TestTurnMCPServers(t *testing.T) {
+	previous := []any{map[string]any{"role": "user", "inputConfig": map[string]any{"mcpServerIds": []any{"old"}}}}
+	if cfg := inputConfig(previous, Turn{CLIType: "builtin", AgentType: "claude"}, "x"); fmt.Sprint(cfg["mcpServerIds"]) != "[old]" {
+		t.Fatalf("kept: %v", cfg["mcpServerIds"])
+	}
+	cfg := inputConfig(previous, Turn{CLIType: "builtin", AgentType: "claude", MCPServerIDs: []string{"a", "b"}}, "x")
+	if fmt.Sprint(cfg["mcpServerIds"]) != "[a b]" {
+		t.Fatalf("chosen: %v", cfg["mcpServerIds"])
+	}
+	cfg = inputConfig(previous, Turn{CLIType: "builtin", AgentType: "claude", MCPServerIDs: []string{}}, "x")
+	if ids, _ := cfg["mcpServerIds"].([]any); ids == nil || len(ids) != 0 {
+		t.Fatalf("none chosen: %#v", cfg["mcpServerIds"])
 	}
 }

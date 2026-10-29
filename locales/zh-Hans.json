@@ -1111,5 +1111,10 @@
   "passwordMismatch": "两次输入的密码不一致。",
   "passwordCurrentRequired": "请输入当前密码。",
   "passwordVerifyFailed": "无法验证密码，请重试。",
-  "sending": "发送中"
+  "sending": "发送中",
+  "attachMenu": "添加附件",
+  "mcpServersTitle": "MCP 服务器",
+  "mcpLoadNone": "未加载 MCP",
+  "mcpLoadCount": "{count, plural, other {加载 # 个 MCP}}",
+  "mcpNextStartHint": "选择变更会在 Agent 下次启动时生效。"
 }

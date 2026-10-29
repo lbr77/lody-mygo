@@ -2262,5 +2262,17 @@
   "passwordMismatch": "Passwords do not match.",
   "passwordCurrentRequired": "Enter your current password.",
   "passwordVerifyFailed": "Couldn't verify your password. Please try again.",
-  "sending": "Sending"
+  "sending": "Sending",
+  "attachMenu": "Add attachment",
+  "mcpServersTitle": "MCP servers",
+  "mcpLoadNone": "No MCP servers loaded",
+  "mcpLoadCount": "{count, plural, one {Load # MCP server} other {Load # MCP servers}}",
+  "@mcpLoadCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mcpNextStartHint": "Selection changes take effect the next time the agent starts."
 }

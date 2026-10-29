@@ -11212,3 +11212,53 @@ func Sending() string { return In(i18n.Locale()).Sending() }
 func (msgs Messages) Sending() string {
 	return Catalog.Format(msgs.locale, "sending", nil)
 }
+
+// AttachMenu says "Add attachment"
+// in the language the app shows.
+func AttachMenu() string { return In(i18n.Locale()).AttachMenu() }
+
+// AttachMenu says "Add attachment"
+// in the language of msgs.
+func (msgs Messages) AttachMenu() string {
+	return Catalog.Format(msgs.locale, "attachMenu", nil)
+}
+
+// McpServersTitle says "MCP servers"
+// in the language the app shows.
+func McpServersTitle() string { return In(i18n.Locale()).McpServersTitle() }
+
+// McpServersTitle says "MCP servers"
+// in the language of msgs.
+func (msgs Messages) McpServersTitle() string {
+	return Catalog.Format(msgs.locale, "mcpServersTitle", nil)
+}
+
+// McpLoadNone says "No MCP servers loaded"
+// in the language the app shows.
+func McpLoadNone() string { return In(i18n.Locale()).McpLoadNone() }
+
+// McpLoadNone says "No MCP servers loaded"
+// in the language of msgs.
+func (msgs Messages) McpLoadNone() string {
+	return Catalog.Format(msgs.locale, "mcpLoadNone", nil)
+}
+
+// McpLoadCount says "{count, plural, one {Load # MCP server} other {Load # MCP servers}}"
+// in the language the app shows.
+func McpLoadCount(count int) string { return In(i18n.Locale()).McpLoadCount(count) }
+
+// McpLoadCount says "{count, plural, one {Load # MCP server} other {Load # MCP servers}}"
+// in the language of msgs.
+func (msgs Messages) McpLoadCount(count int) string {
+	return Catalog.Format(msgs.locale, "mcpLoadCount", map[string]any{"count": count})
+}
+
+// McpNextStartHint says "Selection changes take effect the next time the agent starts."
+// in the language the app shows.
+func McpNextStartHint() string { return In(i18n.Locale()).McpNextStartHint() }
+
+// McpNextStartHint says "Selection changes take effect the next time the agent starts."
+// in the language of msgs.
+func (msgs Messages) McpNextStartHint() string {
+	return Catalog.Format(msgs.locale, "mcpNextStartHint", nil)
+}
