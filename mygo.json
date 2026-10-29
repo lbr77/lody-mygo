@@ -1,0 +1,7 @@
+{
+  "name": "Lody Native",
+  "identifier": "dev.libr.lody-native",
+  "version": "0.1.0",
+  "icon": "icon.png",
+  "out": "build"
+}

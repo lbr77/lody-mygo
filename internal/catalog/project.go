@@ -1,0 +1,389 @@
+// Package catalog keeps a workspace's catalog: its machines, projects and
+// sessions, replicated from the Flock streams "meta" and "mf:<machine>".
+package catalog
+
+import (
+	"math"
+	"sort"
+	"strings"
+
+	"github.com/lbr77/lody-mygo/internal/flock"
+)
+
+type Project struct {
+	ID           string `json:"id"`
+	MachineID    string `json:"machineId"`
+	Name         string `json:"name"`
+	RootPath     string `json:"rootPath"`
+	RepoFullName string `json:"repoFullName,omitempty"`
+}
+
+type Model struct {
+	ModelID string `json:"modelId,omitempty"`
+	Name    string `json:"name,omitempty"`
+}
+
+type Session struct {
+	ID                string  `json:"id"`
+	MachineID         string  `json:"machineId"`
+	Title             string  `json:"title"`
+	Status            string  `json:"status"`
+	Archived          bool    `json:"archived"`
+	Pinned            bool    `json:"pinned"`
+	ProjectID         string  `json:"projectId"`
+	CreatedAt         string  `json:"createdAt"`
+	CLIType           string  `json:"cliType,omitempty"`
+	AgentType         string  `json:"agentType,omitempty"`
+	Resume            string  `json:"resume,omitempty"`
+	LastModel         *Model  `json:"lastModel,omitempty"`
+	ParentSessionID   string  `json:"parentSessionId,omitempty"`
+	OpenedBySessionID string  `json:"openedBySessionId,omitempty"`
+	LatestUserMsgID   string  `json:"latestUserMsgId,omitempty"`
+	LastMessageAt     float64 `json:"lastMessageAt,omitempty"`
+	LastReadAt        float64 `json:"lastReadAt,omitempty"`
+	LastRunningSeen   float64 `json:"lastRunningSeen,omitempty"`
+	AwaitingUserSince float64 `json:"awaitingUserSince,omitempty"`
+	BranchName        string  `json:"branchName,omitempty"`
+	DiffAdd           float64 `json:"diffAdd,omitempty"`
+	DiffDel           float64 `json:"diffDel,omitempty"`
+}
+
+// Working reports whether the session's agent is busy, by the statuses the
+// iOS outbox queues behind.
+func (s *Session) Working() bool {
+	switch s.Status {
+	case "running", "initializing", "processing", "in_progress", "queued", "requestPermission", "waiting":
+		return true
+	}
+	return false
+}
+
+// Waiting reports whether the agent waits for the user.
+func (s *Session) Waiting() bool {
+	return s.AwaitingUserSince > 0 || s.Status == "requestPermission" || s.Status == "waiting"
+}
+
+// Unread reports whether there are messages newer than the last read.
+func (s *Session) Unread() bool {
+	return s.LastMessageAt > 0 && s.LastMessageAt > s.LastReadAt
+}
+
+// AgentConfig is an agent a machine offers for new sessions.
+type AgentConfig struct {
+	ID        string `json:"id"`
+	Name      string `json:"name"`
+	MachineID string `json:"machineId"`
+	AgentType string `json:"agentType"`
+	CLIType   string `json:"cliType"`
+}
+
+// Capability lists what an agent config supports.
+type Capability struct {
+	Models []Model `json:"models,omitempty"`
+}
+
+type Catalog struct {
+	Projects     []Project                `json:"projects"`
+	Sessions     []Session                `json:"sessions"`
+	MachineIDs   []string                 `json:"machineIds"`
+	MachineNames map[string]string        `json:"machineNames,omitempty"`
+	Agents       map[string][]AgentConfig `json:"agents,omitempty"` // by machine
+	Capabilities map[string]Capability    `json:"capabilities,omitempty"`
+}
+
+// Session returns the session with id.
+func (c *Catalog) Session(id string) *Session {
+	for i := range c.Sessions {
+		if c.Sessions[i].ID == id {
+			return &c.Sessions[i]
+		}
+	}
+	return nil
+}
+
+// Project returns the project with id.
+func (c *Catalog) Project(id string) *Project {
+	for i := range c.Projects {
+		if c.Projects[i].ID == id {
+			return &c.Projects[i]
+		}
+	}
+	return nil
+}
+
+func object(v any) map[string]any {
+	m, _ := v.(map[string]any)
+	if m == nil {
+		return map[string]any{}
+	}
+	return m
+}
+
+func text(v any) string {
+	s, _ := v.(string)
+	return s
+}
+
+func stamp(v any) float64 {
+	f, ok := v.(float64)
+	if !ok || math.IsNaN(f) || math.IsInf(f, 0) {
+		return 0
+	}
+	return f
+}
+
+func modelOf(v any) *Model {
+	m, ok := v.(map[string]any)
+	if !ok {
+		return nil
+	}
+	return &Model{ModelID: strings.TrimSpace(text(m["modelId"])), Name: strings.TrimSpace(text(m["name"]))}
+}
+
+// projectMachine projects the rows of a machine stream "mf:<machine>".
+func projectMachine(rows []flock.Row, machineID string) Catalog {
+	c := Catalog{Agents: map[string][]AgentConfig{}, Capabilities: map[string]Capability{}}
+	for _, row := range rows {
+		if !row.Live || len(row.Key) < 2 {
+			continue
+		}
+		id := text(row.Key[1])
+		value := object(row.Value)
+		switch row.Key[0] {
+		case "localProject":
+			if id == "" {
+				continue
+			}
+			name := text(value["name"])
+			if name == "" {
+				name = id
+			}
+			c.Projects = append(c.Projects, Project{ID: machineID + ":local:" + id, MachineID: machineID, Name: name, RootPath: text(value["rootPath"])})
+		case "agentConfig":
+			cfg := AgentConfig{ID: text(value["id"]), Name: text(value["name"]), MachineID: text(value["machineId"]), AgentType: text(value["agentType"]), CLIType: text(value["cliType"])}
+			if cfg.ID == "" {
+				cfg.ID = id
+			}
+			if cfg.MachineID == "" {
+				cfg.MachineID = machineID
+			}
+			if cfg.Name == "" {
+				cfg.Name = cfg.AgentType
+			}
+			c.Agents[machineID] = append(c.Agents[machineID], cfg)
+		case "acpCapability":
+			var capability Capability
+			for _, m := range anyList(value["models"]) {
+				if model := modelOf(m); model != nil && model.ModelID != "" {
+					capability.Models = append(capability.Models, *model)
+				}
+			}
+			c.Capabilities[id] = capability
+		}
+	}
+	return c
+}
+
+func anyList(v any) []any {
+	l, _ := v.([]any)
+	return l
+}
+
+// projectMeta projects the rows of the workspace stream "meta". Rows come in
+// key order, so a room's whole-object row precedes its field overrides.
+func projectMeta(rows []flock.Row) Catalog {
+	var c Catalog
+	c.MachineNames = map[string]string{}
+	active := map[string]bool{}
+	metadata := map[string]map[string]any{}
+	var order []string
+	for _, row := range rows {
+		if len(row.Key) < 2 {
+			continue
+		}
+		id := text(row.Key[1])
+		if row.Key[0] == "e" && row.Live && row.Value == true {
+			active[id] = true
+		}
+		if row.Key[0] != "m" || id == "" {
+			continue
+		}
+		fields, ok := metadata[id]
+		if !ok {
+			fields = map[string]any{}
+			metadata[id] = fields
+			order = append(order, id)
+		}
+		if len(row.Key) == 2 {
+			if row.Live {
+				for k, v := range object(row.Value) {
+					fields[k] = v
+				}
+			}
+		} else if field, ok := row.Key[2].(string); ok {
+			if !row.Live {
+				delete(fields, field)
+			} else {
+				fields[field] = row.Value
+			}
+		}
+	}
+	for _, id := range order {
+		if !active[id] {
+			continue
+		}
+		value := metadata[id]
+		if machineID, ok := strings.CutPrefix(id, "machine-"); ok {
+			c.MachineIDs = append(c.MachineIDs, machineID)
+			if name := text(value["name"]); name != "" {
+				c.MachineNames[machineID] = name
+			}
+			local := object(value["localProjects"])
+			keys := make([]string, 0, len(local))
+			for k := range local {
+				keys = append(keys, k)
+			}
+			sort.Strings(keys)
+			for _, localID := range keys {
+				p := object(local[localID])
+				name := text(p["name"])
+				if name == "" {
+					name = localID
+				}
+				c.Projects = append(c.Projects, Project{ID: machineID + ":local:" + localID, MachineID: machineID, Name: name, RootPath: text(p["rootPath"])})
+			}
+			continue
+		}
+		if !strings.HasPrefix(id, "session-") || strings.HasPrefix(id, "session-comment-") {
+			continue
+		}
+		machineID := text(value["machineId"])
+		project := object(value["project"])
+		localID := text(project["localProjectId"])
+		repo := text(project["repoFullName"])
+		if repo == "" {
+			repo = text(value["repoFullName"])
+		}
+		projectID := machineID + ":unassigned"
+		switch {
+		case project["kind"] == "local" && localID != "":
+			projectID = machineID + ":local:" + localID
+		case repo != "":
+			projectID = "github:" + repo
+		}
+		status := text(value["status"])
+		if status == "" {
+			status = text(object(value["status"])["type"])
+		}
+		if status == "" {
+			status = "unknown"
+		}
+		s := Session{
+			ID:                text(value["id"]),
+			MachineID:         machineID,
+			Title:             text(value["title"]),
+			Status:            status,
+			Archived:          value["isArchived"] == true,
+			Pinned:            value["isPinned"] == true,
+			ProjectID:         projectID,
+			CreatedAt:         text(value["createdAt"]),
+			CLIType:           text(value["cliType"]),
+			AgentType:         text(value["agentType"]),
+			Resume:            text(value["acpSessionId"]),
+			LastModel:         modelOf(value["lastModel"]),
+			ParentSessionID:   strings.TrimSpace(text(value["parentSessionId"])),
+			OpenedBySessionID: strings.TrimSpace(text(value["openedBySessionId"])),
+			LatestUserMsgID:   text(value["latestUserMsgId"]),
+			LastMessageAt:     stamp(value["lastMessageAt"]),
+			LastReadAt:        stamp(value["lastReadAt"]),
+			LastRunningSeen:   stamp(value["lastRunningSeen"]),
+			AwaitingUserSince: stamp(value["awaitingUserSince"]),
+			BranchName:        text(value["branchName"]),
+		}
+		if s.ID == "" {
+			s.ID = strings.TrimPrefix(id, "session-")
+		}
+		if s.Title == "" {
+			s.Title = "Untitled session"
+		}
+		change := object(object(value["diffStats"])["allChange"])
+		s.DiffAdd, s.DiffDel = stamp(change["add"]), stamp(change["del"])
+		c.Sessions = append(c.Sessions, s)
+		if localID != "" || repo != "" {
+			name := repo
+			if name == "" {
+				name = "Local project"
+			}
+			githubRepo := repo
+			if githubRepo == "" {
+				githubRepo = text(project["githubRepoFullName"])
+			}
+			c.Projects = append(c.Projects, Project{ID: projectID, MachineID: machineID, Name: name, RepoFullName: githubRepo})
+		}
+	}
+	c.Projects = uniqueProjects(c.Projects)
+	return c
+}
+
+// uniqueProjects keeps the first project of each id, filling in a repo a
+// later one knows.
+func uniqueProjects(projects []Project) []Project {
+	index := map[string]int{}
+	var out []Project
+	for _, p := range projects {
+		if i, ok := index[p.ID]; ok {
+			if out[i].RepoFullName == "" && p.RepoFullName != "" {
+				out[i].RepoFullName = p.RepoFullName
+			}
+			continue
+		}
+		index[p.ID] = len(out)
+		out = append(out, p)
+	}
+	return out
+}
+
+// merge combines the meta catalog with the machine catalogs: machine
+// projects overlay meta's by id. Projects sort by name, sessions newest
+// first.
+func merge(meta Catalog, machines map[string]Catalog) Catalog {
+	out := Catalog{
+		MachineIDs:   meta.MachineIDs,
+		MachineNames: meta.MachineNames,
+		Agents:       map[string][]AgentConfig{},
+		Capabilities: map[string]Capability{},
+	}
+	projects := map[string]Project{}
+	var order []string
+	add := func(p Project) {
+		prev, ok := projects[p.ID]
+		if !ok {
+			order = append(order, p.ID)
+		} else if p.RepoFullName == "" {
+			p.RepoFullName = prev.RepoFullName
+		}
+		projects[p.ID] = p
+	}
+	for _, p := range meta.Projects {
+		add(p)
+	}
+	for _, id := range meta.MachineIDs {
+		m := machines[id]
+		for _, p := range m.Projects {
+			add(p)
+		}
+		out.Agents[id] = m.Agents[id]
+		for k, v := range m.Capabilities {
+			out.Capabilities[k] = v
+		}
+	}
+	for _, id := range order {
+		out.Projects = append(out.Projects, projects[id])
+	}
+	sort.SliceStable(out.Projects, func(i, j int) bool {
+		return strings.ToLower(out.Projects[i].Name) < strings.ToLower(out.Projects[j].Name)
+	})
+	out.Sessions = append([]Session(nil), meta.Sessions...)
+	sort.SliceStable(out.Sessions, func(i, j int) bool { return out.Sessions[i].CreatedAt > out.Sessions[j].CreatedAt })
+	return out
+}
