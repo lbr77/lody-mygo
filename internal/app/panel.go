@@ -228,7 +228,9 @@ func (a *App) panelChooser(c *ui.Context, p *palette, in *inspectState) {
 }
 
 func panelTab(c *ui.Context, p *palette, label string, active bool, close func()) ui.Element {
-	tab := ui.ButtonBase(c.Key(label)).Height(28).Padding(0, 4, 0, 10).Radius(8).Gap(4).AlignItems(ui.Center).Cursor(ui.CursorPointer).Label(label).Transition(colorFade)
+	// A tab opens out and folds away along the bar over 200ms, as Lody's.
+	tab := ui.ButtonBase(c.Key(label)).Height(28).Padding(0, 4, 0, 10).Radius(8).Gap(4).AlignItems(ui.Center).Cursor(ui.CursorPointer).Label(label).
+		Transition(ui.ElementTransition{Colors: true, Size: true, Duration: 200 * time.Millisecond, Ease: ui.EaseOut, Enter: &ui.Motion{Collapse: true}, Exit: &ui.Motion{Collapse: true}})
 	ink := p.Secondary
 	switch {
 	case active:
