@@ -109,14 +109,18 @@ type panelOption struct {
 }
 
 // panelOptions are the panels Lody offers beside a session, the pull
-// request's when the session has one.
+// request's when the session has one: in a project of several, when the
+// member chosen has one.
 func (a *App) panelOptions() []panelOption {
 	options := []panelOption{
 		{tabFiles, locales.PanelFiles(), iconFiles},
 		{tabChanges, locales.PanelAllChanges(), iconFileDiff},
 		{tabPreview, locales.PanelBrowser(), iconMonitorPlay},
 	}
-	if s := a.catalog.Session(a.selected); s != nil && s.LatestPR() != nil {
+	if s := a.catalog.Session(a.selected); s != nil {
+		if _, pr := a.sessionPR(s); pr == nil {
+			return options
+		}
 		options = append(options, panelOption{tabPR, locales.PrTabTitle(), iconGitPR})
 	}
 	return options

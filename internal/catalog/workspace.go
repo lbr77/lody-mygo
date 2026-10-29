@@ -127,6 +127,84 @@ type ProjectGroupMember struct {
 	Dir, Parent, Path string
 }
 
+// ProjectRun is the snapshot of a project of several a conversation
+// started in carries, Lody's SessionProjectRun: the client writes it as
+// the conversation is created, and from then on only the machine that
+// owns the conversation does, recording what it observes of each member.
+type ProjectRun struct {
+	ID, Name     string
+	Instructions string
+	Root         string // the conversation's directory the members sit in
+	// Members in the snapshot's order (its "o").
+	Members []RunMember
+}
+
+// RunMember is one repository or folder of a run, Lody's
+// SessionProjectMember: where it came from, where it sits, and what the
+// machine has seen of it.
+type RunMember struct {
+	ID             string
+	Order          float64
+	Kind           string // github or local, as its source
+	RepoFullName   string // a GitHub source's repository
+	MachineID      string // a local source's
+	LocalProjectID string
+	// Where it sits: a top-level Dir, or as Parent's submodule at
+	// SubPath; Path is its directory under the run's.
+	Dir, Parent, SubPath string
+	Path                 string
+	Base                 string // the commit or branch its worktree started from
+	// Access is how the agent reaches it, as the owning machine says:
+	// worktree, or a local folder used in place, additional or link.
+	Access string
+	// Observed is the GitHub repository the machine saw, a local
+	// member's remote included.
+	Observed string
+	Branch   string
+	Dirty    bool
+	Unpushed bool
+	// HasDiff tells that the machine counted its lines, DiffAdd and
+	// DiffDel.
+	HasDiff          bool
+	DiffAdd, DiffDel float64
+}
+
+// Submodule is whether the member sits inside another.
+func (m RunMember) Submodule() bool { return m.Parent != "" }
+
+// projectRunOf reads a session's projectRun, its members by their order.
+// A member with no id or an unknown source is left out.
+func projectRunOf(v map[string]any) *ProjectRun {
+	run := &ProjectRun{ID: text(v["id"]), Name: text(v["name"]), Instructions: text(v["instructions"]), Root: text(v["root"])}
+	for id, raw := range object(v["members"]) {
+		m := object(raw)
+		src, at := object(m["src"]), object(m["placement"])
+		member := RunMember{ID: id, Order: stamp(m["o"]), Kind: text(src["kind"]), RepoFullName: text(src["repoFullName"]),
+			MachineID: text(src["machineId"]), LocalProjectID: text(src["localProjectId"]), Path: text(m["path"]), Base: text(m["base"]),
+			Access: text(m["access"]), Observed: text(m["repoFullName"]), Branch: text(m["branch"]),
+			Dirty: m["dirty"] == true, Unpushed: m["unpushed"] == true}
+		if text(at["kind"]) == "submodule" {
+			member.Parent, member.SubPath = text(at["parent"]), text(at["path"])
+		} else {
+			member.Dir = text(at["dir"])
+		}
+		if diff, ok := m["diff"].(map[string]any); ok {
+			member.HasDiff, member.DiffAdd, member.DiffDel = true, stamp(diff["add"]), stamp(diff["del"])
+		}
+		if id == "" || member.Kind != "github" && member.Kind != "local" {
+			continue
+		}
+		run.Members = append(run.Members, member)
+	}
+	sort.SliceStable(run.Members, func(i, j int) bool {
+		if run.Members[i].Order != run.Members[j].Order {
+			return run.Members[i].Order < run.Members[j].Order
+		}
+		return run.Members[i].ID < run.Members[j].ID
+	})
+	return run
+}
+
 // BoundMachine is the one machine a project's folders put it on, as
 // Lody's getProjectBoundMachineId: none when it runs anywhere, or its
 // folders disagree.

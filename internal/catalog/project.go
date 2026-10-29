@@ -71,6 +71,14 @@ type Session struct {
 	// repositories it was started in, as its projectRun snapshot keeps them.
 	ProjectGroupID   string `json:"projectGroupId,omitempty"`
 	ProjectGroupName string `json:"projectGroupName,omitempty"`
+	// ProjectRun is that snapshot: the members it froze, each at its path,
+	// with what its machine observed of it since.
+	ProjectRun *ProjectRun `json:"projectRun,omitempty"`
+	// WorkspaceDirty and WorkspaceUnpushed are what the machine saw of
+	// its work after the last turn: changes not committed, and commits
+	// not pushed.
+	WorkspaceDirty    bool `json:"workspaceDirty,omitempty"`
+	WorkspaceUnpushed bool `json:"workspaceUnpushed,omitempty"`
 	// ChildPlacement is where a child conversation shows: "side-panel",
 	// or among its parent's tabs.
 	ChildPlacement string  `json:"childPlacement,omitempty"`
@@ -684,7 +692,9 @@ func projectMeta(rows []flock.Row) Catalog {
 		}
 		if run := object(value["projectRun"]); text(run["id"]) != "" {
 			s.ProjectGroupID, s.ProjectGroupName = text(run["id"]), text(run["name"])
+			s.ProjectRun = projectRunOf(run)
 		}
+		s.WorkspaceDirty, s.WorkspaceUnpushed = value["workspaceDirty"] == true, value["workspaceUnpushed"] == true
 		if s.ID == "" {
 			s.ID = strings.TrimPrefix(id, "session-")
 		}

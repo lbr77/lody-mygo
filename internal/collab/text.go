@@ -68,10 +68,17 @@ func (r *textReply) file() (*File, error) {
 	return &File{Path: r.Path, Digest: r.Digest, Text: string(b), Format: r.Format, ReadOnly: r.ReadOnly}, nil
 }
 
+// params are a request's: the session, and extra, its path, if any, split
+// into a root and a path within it (Session.request).
 func params(s Session, extra map[string]any) map[string]any {
 	p := map[string]any{"sessionId": s.ID}
 	for k, v := range extra {
 		p[k] = v
+	}
+	if path, ok := extra["path"].(string); ok {
+		if root, rel := s.request(path); root != "" {
+			p["path"], p["rootId"] = rel, root
+		}
 	}
 	return p
 }
@@ -186,6 +193,7 @@ func TurnDiff(ctx context.Context, conn *cloud.Conn, s Session, turn, path strin
 	if res.Status == "error" {
 		return nil, &cloud.RPCError{Code: res.Reason, Message: res.Message}
 	}
+	res.Change.Path = s.Display(firstOf(res.Change.Path, path))
 	return &res.Change, nil
 }
 

@@ -67,3 +67,38 @@ func TestProjectGroupDetails(t *testing.T) {
 		t.Fatalf("session %+v", s)
 	}
 }
+
+// A conversation's run snapshot, as its machine writes it back: the
+// members in their order, where each sits, how the agent reaches it, the
+// repository and branch it saw and the lines it counted; a member with an
+// unknown source is left out.
+func TestProjectRunSnapshot(t *testing.T) {
+	meta := map[string]any{"id": "s", "machineId": "m1", "workspaceDirty": true, "projectRun": map[string]any{"id": "g", "name": "Shop", "root": "project-shop-g", "members": map[string]any{
+		"b": map[string]any{"o": 1.0, "src": map[string]any{"kind": "github", "repoFullName": "acme/proto"}, "placement": map[string]any{"kind": "submodule", "parent": "a", "path": "vendor/proto"},
+			"path": "web/vendor/proto", "base": "gitlink", "branch": "lody/b", "unpushed": true},
+		"a": map[string]any{"o": 0.0, "src": map[string]any{"kind": "github", "repoFullName": "acme/web"}, "placement": map[string]any{"kind": "root", "dir": "web"},
+			"path": "web", "base": "HEAD", "branch": "lody/a", "access": "worktree", "diff": map[string]any{"add": 3.0, "del": 1.0}, "dirty": true},
+		"c": map[string]any{"o": 2.0, "src": map[string]any{"kind": "local", "machineId": "m1", "localProjectId": "p2"}, "placement": map[string]any{"kind": "root", "dir": "docs"},
+			"path": "docs", "base": "HEAD", "access": "additional", "repoFullName": "acme/docs"},
+		"x": map[string]any{"o": 3.0, "src": map[string]any{"kind": "svn"}, "path": "x"},
+	}}}
+	c := projectMeta([]flock.Row{row(true, "e", "session-s"), row(meta, "m", "session-s")})
+	s := c.Session("s")
+	if s == nil || s.ProjectRun == nil || !s.WorkspaceDirty || s.WorkspaceUnpushed {
+		t.Fatalf("session %+v", s)
+	}
+	run := s.ProjectRun
+	if run.ID != "g" || run.Name != "Shop" || run.Root != "project-shop-g" || len(run.Members) != 3 {
+		t.Fatalf("run %+v", run)
+	}
+	a, b, d := run.Members[0], run.Members[1], run.Members[2]
+	if a.ID != "a" || a.Dir != "web" || a.Branch != "lody/a" || !a.HasDiff || a.DiffAdd != 3 || a.DiffDel != 1 || !a.Dirty || a.Access != "worktree" || a.Submodule() {
+		t.Fatalf("a %+v", a)
+	}
+	if b.ID != "b" || !b.Submodule() || b.Parent != "a" || b.SubPath != "vendor/proto" || b.Path != "web/vendor/proto" || b.Base != "gitlink" || !b.Unpushed || b.HasDiff {
+		t.Fatalf("b %+v", b)
+	}
+	if d.ID != "c" || d.Kind != "local" || d.MachineID != "m1" || d.LocalProjectID != "p2" || d.Access != "additional" || d.Observed != "acme/docs" {
+		t.Fatalf("c %+v", d)
+	}
+}

@@ -2005,5 +2005,19 @@
   "groupMachinesConflictStatus": "这个项目的本地文件夹分布在不同机器上，无法在同一个对话中使用。",
   "groupMissingLocalStatus": "这台机器上缺少项目中 {count} 个仓库的本地副本。请先在这台机器上添加它们，或换一台机器开始。",
   "groupUnsupportedMachine": "请更新这台机器上的 Lody，才能开始多仓库项目的对话。",
-  "groupUnsupportedRepositoryMembers": "请更新这台机器上的 Lody，才能使用它本地的仓库副本。"
+  "groupUnsupportedRepositoryMembers": "请更新这台机器上的 Lody，才能使用它本地的仓库副本。",
+  "runMembers": "仓库",
+  "runMembersSummary": "{repos} 个仓库 · {prs} 个 PR",
+  "runOpenPr": "打开 PR #{number}",
+  "runInPlace": "原目录 · 不隔离",
+  "infoCreatePr": "创建 PR",
+  "infoCreateDraftPr": "创建草稿 PR",
+  "infoCommitAndPush": "提交并推送",
+  "promptCreatePr": "为当前工作区创建一个正式 PR（非草稿）。使用当前 PATH 中的 `gh`。`gh` 依赖本机已保存的 GitHub 登录信息，而沙盒内的命令通常读取不到它，所以需要访问 GitHub 的 `gh` 命令请在沙盒外运行（如果你的工具要求审批，就发起审批）。只有在沙盒外仍然认证失败时，才请用户登录。确认推送的提交与 PR head 一致，然后报告 PR URL。",
+  "promptCreateDraftPr": "为当前工作区创建一个草稿 PR。使用当前 PATH 中的 `gh`。`gh` 依赖本机已保存的 GitHub 登录信息，而沙盒内的命令通常读取不到它，所以需要访问 GitHub 的 `gh` 命令请在沙盒外运行（如果你的工具要求审批，就发起审批）。只有在沙盒外仍然认证失败时，才请用户登录。确认推送的提交与 PR head 一致，然后报告 PR URL。",
+  "promptCommitAndPush": "发布当前分支：提交所有未提交的改动，然后推送到远程分支。\n\n要求：\n- 根据变更生成简洁且准确的 commit message\n- 暂存全部变更（git add -A）\n- 使用生成的 commit message 提交\n- 如果工作区已经是干净的，就跳过提交——这个分支可能只是有从未推送过的提交\n- 推送到当前分支；如果推送失败，请明确说明",
+  "promptPrUpkeep": "PR 创建后请保持它是最新的：在本对话的每一轮结束前，提交所有未提交的改动并推送到 PR 分支，让 PR head 始终对应你最新的工作。把这当作默认行为，不必每次都先询问。只有在用户打断你，或要求做别的事情从而覆盖了这一点时才跳过——这种情况下请说明原因，而不是默默推送。",
+  "promptCreatePrOrigin": "（此消息由 Lody 的「**创建 PR**」按钮发送）",
+  "promptCreateDraftPrOrigin": "（此消息由 Lody 的「**创建草稿 PR**」按钮发送）",
+  "sidebarGroupReorder": "调整项目顺序"
 }

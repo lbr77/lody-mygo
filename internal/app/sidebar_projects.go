@@ -146,7 +146,7 @@ type sideGroup struct {
 // Lody's placeProjectGroups: one whose folders bind it to a machine sits
 // under it, conversations or not, as its folders do; one that runs
 // anywhere, or was deleted, sits where its latest conversation ran, while
-// it has one.
+// it has one. They come in the order dragged, the deleted ones last.
 func (a *App) sidebarGroups(byGroup map[string][]*catalog.Session) map[string][]sideGroup {
 	listed := map[string]bool{}
 	for _, id := range a.catalog.MachineIDs {
@@ -166,7 +166,7 @@ func (a *App) sidebarGroups(byGroup map[string][]*catalog.Session) map[string][]
 		}
 	}
 	defined := map[string]bool{}
-	for _, g := range a.catalog.Groups {
+	for _, g := range a.orderedGroups() {
 		defined[g.ID] = true
 		place(sideGroup{id: g.ID, name: g.Name}, g.BoundMachine())
 	}
@@ -196,9 +196,9 @@ func sortFold[T any](items []T, name func(T) string) {
 
 // groupRow is a project of several under its machine, as Lody's: its
 // mark of several folders giving way to the chevron with the pointer,
-// its name, and on hover its ⋯ and New chat in this project. Its menu
-// edits it (read only for whoever did not create it), archives its
-// chats, and, for its creator, deletes it.
+// its name, and on hover its ⋯, New chat in this project and, among two
+// or more, its grip. Its menu edits it (read only for whoever did not
+// create it), archives its chats, and, for its creator, deletes it.
 func (a *App) groupRow(c *ui.Context, p *palette, r sideRow) {
 	collapsed := a.collapsed[r.group]
 	selected := a.newChat.project == "group:"+r.project && a.selected == ""
@@ -209,6 +209,7 @@ func (a *App) groupRow(c *ui.Context, p *palette, r sideRow) {
 			a.collapsed[r.group] = !a.collapsed[r.group]
 			a.savePrefs()
 		})
+	a.groupBlockMotion(row, r)
 	menu := a.rowMenu("side-group/" + r.project)
 	id := r.project
 	lodyContextMenu(c, p, row, menu, 28, func(m *lodyMenu) {
@@ -228,7 +229,9 @@ func (a *App) groupRow(c *ui.Context, p *palette, r sideRow) {
 			a.requestProjectDelete(id)
 		}
 	})
-	hovered := row.Hovered() || menu.open
+	// Its controls stay while it is dragged, the grip among them.
+	dragging := a.groupDrag.id == r.project
+	hovered := row.Hovered() || menu.open || dragging
 	switch {
 	case selected:
 		row.Background(p.SideSelect)
@@ -275,5 +278,8 @@ func (a *App) groupRow(c *ui.Context, p *palette, r sideRow) {
 		}
 		ink = b.AnimateColor("ink", ink, ui.Animation{Duration: 100 * time.Millisecond, Ease: twEase})
 		b.Children(func() { ui.Icon(c, iconSquarePen).Size(14, 14).TextColor(ink) })
+		if r.reorder {
+			a.groupGrip(c, p, r, actions, hovered)
+		}
 	})
 }

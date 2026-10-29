@@ -48,8 +48,11 @@ type prPanel struct {
 	identityRun bool
 }
 
+// prPanelFor is the panel of the pull request s describes: in a project
+// of several, the chosen member's, on the conversation owning the
+// snapshot (sessionPR).
 func (a *App) prPanelFor(s *catalog.Session) *prPanel {
-	pr := s.LatestPR()
+	s, pr := a.sessionPR(s)
 	if pr == nil {
 		return nil
 	}
@@ -192,6 +195,9 @@ func (a *App) prTab(c *ui.Context, p *palette) {
 		return
 	}
 	st := a.prPanelFor(s)
+	// The pull request is the session's it describes, which reads and
+	// acts on it.
+	s, latest := a.sessionPR(s)
 	if st == nil {
 		panelStatus(c, p, false, locales.PrTabLoadError(), "")
 		return
@@ -206,7 +212,7 @@ func (a *App) prTab(c *ui.Context, p *palette) {
 			ui.Text(c, st.err).FontSize(sizeFoot).TextColor(p.Secondary).TextAlign(ui.Center).Selectable().MaxWidth(360)
 			ui.Row(c).Gap(8).Children(func() {
 				outlineButton(c, p, nil, locales.PrTabRetry()).OnClick(func() { st.err = ""; a.loadPR(s, st) })
-				outlineButton(c, p, iconExternal, locales.PrTabOpenOnGitHub()).OnClick(func() { openExternal(s.LatestPR().URL) })
+				outlineButton(c, p, iconExternal, locales.PrTabOpenOnGitHub()).OnClick(func() { openExternal(latest.URL) })
 			})
 		})
 		return

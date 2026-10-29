@@ -297,6 +297,16 @@ type App struct {
 	md               markdown.Options
 	mdMuted          markdown.Options
 	mdDark           bool
+
+	// memberPicks is the member each conversation in a project of several
+	// describes, by the conversation owning its snapshot: view state, as
+	// Lody's, not kept.
+	memberPicks map[string]string
+	// groupOrders are the projects of several as the sidebar's drags
+	// arranged them, by workspace, read once from groupOrderFile.
+	groupOrders    map[string][]string
+	groupOrderRead bool
+	groupDrag      sideGroupDrag // a project of several dragged in the sidebar
 }
 
 // New returns the app. Run it with Start once the window exists.

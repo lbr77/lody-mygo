@@ -382,7 +382,9 @@ func (a *App) sessionRowMenu(m *lodyMenu, s catalog.Session) {
 			a.shareWithTeam(&s, access)
 		}
 	}
-	if pr := s.LatestPR(); pr != nil {
+	// The pull request the conversation describes: in a project of
+	// several, the chosen member's.
+	if _, pr := a.sessionPR(&s); pr != nil {
 		m.sep()
 		url := pr.URL
 		if m.item("open-pr", iconGitPR, locales.OpenPullRequest(), menuItem{}) {
