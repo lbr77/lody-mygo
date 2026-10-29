@@ -234,8 +234,8 @@ func (a *App) usagePage(c *ui.Context, p *palette) {
 		return
 	}
 	ui.Row(c).FillWidth().Gap(12).Margin(4, 0).Children(func() {
-		bigStat(c, p, "Token", t.Totals.Tokens, formatCount)
-		bigStat(c, p, locales.UsageCostUSD(), t.Totals.CostUSD, formatUSD)
+		a.bigStat(c, p, "Token", t.Totals.Tokens, formatCount)
+		a.bigStat(c, p, locales.UsageCostUSD(), t.Totals.CostUSD, formatUSD)
 	})
 	cost := a.usageCost
 	models := usageSplit(t.Buckets, false)
@@ -261,7 +261,7 @@ func (a *App) usagePage(c *ui.Context, p *palette) {
 			frame.Children(func() {
 				if hourly {
 					ui.Column(c.Key("rings")).Width(170).Shrink(0).Transition(usageViewFade(150 * time.Millisecond)).Children(func() {
-						usageDonut(c, p, models, cost, t, settle)
+						a.usageDonut(c, p, models, cost, t, settle)
 					})
 				}
 				view := ui.Column(c.Key(map[bool]string{true: "hourly", false: "skyline"}[hourly])).Grow(1).MinWidth(0).Gap(16).
@@ -541,10 +541,12 @@ func slicesIndex(list []string, v string) int {
 
 // bigStat is one of the range's two totals, its digits rolling as
 // NumberFlow's when the range changes it.
-func bigStat(c *ui.Context, p *palette, label string, value float64, format func(float64) string) {
+func (a *App) bigStat(c *ui.Context, p *palette, label string, value float64, format func(float64) string) {
 	ui.Column(c.Key("stat/"+label)).Grow(1).Basis(0).Height(140).Padding(18, 18).Radius(12).Border(1, p.Border).Justify(ui.SpaceBetween).Children(func() {
 		ui.Text(c, label).FontSize(sizeSub).TextColor(p.Secondary)
-		numberFlow(ui.Text(c.Key("value"), format(value)).FontSize(40).FontWeight(500).LetterSpacing(-1).TextColor(p.Strong).SingleLine(), value)
+		a.rollingNumber(c, "stat/"+label, format(value), value, func(t ui.Element) ui.Element {
+			return t.FontSize(40).FontWeight(500).LetterSpacing(-1).TextColor(p.Strong)
+		})
 	})
 }
 
@@ -563,7 +565,7 @@ func smallStat(c *ui.Context, p *palette, label, value, note string) {
 // from the length it had to its new one over 850ms, 60ms after the one
 // before, a new slice from nothing, while where it starts moves at once.
 // settle says the card is showing for the first time.
-func usageDonut(c *ui.Context, p *palette, parts []usagePart, cost bool, t *usageTimeline, settle bool) {
+func (a *App) usageDonut(c *ui.Context, p *palette, parts []usagePart, cost bool, t *usageTimeline, settle bool) {
 	total := t.Totals.Tokens
 	if cost {
 		total = t.Totals.CostUSD
@@ -610,7 +612,9 @@ func usageDonut(c *ui.Context, p *palette, parts []usagePart, cost bool, t *usag
 				if cost {
 					ui.Text(c.Key("total-cost"), formatUSD(total)).FontSize(18).FontWeight(600).TextColor(p.Strong)
 				} else {
-					numberFlow(ui.Text(c.Key("total-tokens"), formatCount(total)).FontSize(18).FontWeight(600).TextColor(p.Strong), total)
+					a.rollingNumber(c, "donut-total", formatCount(total), total, func(t ui.Element) ui.Element {
+						return t.FontSize(18).FontWeight(600).TextColor(p.Strong)
+					})
 				}
 				ui.Text(c, map[bool]string{false: "TOKEN", true: "USD"}[cost]).FontSize(sizeCaption).TextColor(p.Tertiary)
 			})

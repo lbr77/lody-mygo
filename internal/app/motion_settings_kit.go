@@ -70,15 +70,6 @@ var numberFlowEase = func() ui.Easing {
 	}
 }()
 
-// numberFlow rolls the digits of a figure that change as NumberFlow does,
-// only as the value changes, never as it first shows: the new come up
-// from below as it grows and down from above as it shrinks, over 900ms.
-func numberFlow(e ui.Element, value float64) ui.Element {
-	was := e.AnimateWith("number-flow", float32(value), 900*time.Millisecond, ui.Linear)
-	return e.ContentTransition(ui.ContentTransition{Numeric: true, Down: float32(value) < was,
-		Animation: &ui.Animation{Duration: 900 * time.Millisecond, Ease: numberFlowEase}})
-}
-
 // cssBrightness is CSS's brightness() filter: each channel scaled by f.
 func cssBrightness(c ui.Color, f float32) ui.Color {
 	ch := func(v uint8) uint8 { return uint8(min(255, float32(v)*f+0.5)) }

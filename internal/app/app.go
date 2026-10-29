@@ -86,6 +86,7 @@ type App struct {
 	titleSwipe    titleSwipe                // a sidebar title moved by a sideways scroll
 	changesView   string                    // the Changes panel's Types or Files
 	lastHomeBoard string                    // the home board last unfolded, which the line's end unfolds again
+	rolls         map[string]*roll          // figures rolling their digits, by key
 	shareImg      shareImage                // "Share as image…": the messages picked, then their preview
 	binaries      map[string]binaryProgress // what machines said of runtime downloads, by machine/agent
 	motion        settingsMotion            // what the settings' and the home's motion keeps between frames
@@ -207,7 +208,7 @@ type App struct {
 	toggles          map[string]bool     // cloud switches flipped, until they settle
 	settingsError    string
 	settingsNotice   string // what a settings action did
-	avatarBusy       bool
+	avatarBusy       string // the avatar uploading: user or workspace
 	usageRange       string
 	usageCost        bool // the usage charts show cost rather than tokens
 	editingName      bool

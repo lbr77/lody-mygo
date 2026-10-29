@@ -83,7 +83,9 @@ func (a *App) usageDayDetail(c *ui.Context, p *palette, dayMs float64) {
 					// The day's total rolls as NumberFlow's from one day to
 					// the next; "—" while it is on its way.
 					if d != nil {
-						numberFlow(ui.Text(c.Key("total"), formatCount(d.Totals.Tokens)).FontSize(22).FontWeight(600).TextColor(p.Strong).FontFeatures("tnum"), d.Totals.Tokens)
+						a.rollingNumber(c, "day-total", formatCount(d.Totals.Tokens), d.Totals.Tokens, func(t ui.Element) ui.Element {
+							return t.FontSize(22).FontWeight(600).TextColor(p.Strong).FontFeatures("tnum")
+						})
 					} else {
 						ui.Text(c.Key("total-pending"), "—").FontSize(22).FontWeight(600).TextColor(p.Strong)
 					}

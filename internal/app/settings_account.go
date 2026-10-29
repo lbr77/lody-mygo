@@ -80,7 +80,8 @@ func (a *App) accountPage(c *ui.Context, p *palette) {
 // the pointer a scrim fades over it in 120ms, a pencil in it, and stays,
 // a spinner in place of the pencil, while the picture uploads.
 func (a *App) avatarEditor(c *ui.Context, p *palette, kind string, radius float32, face func()) {
-	busy := a.avatarBusy
+	// Only the avatar uploading shows it: the other stays as it is.
+	busy := a.avatarBusy == kind
 	b := ui.ButtonBase(c.Key("avatar-"+kind)).Size(32, 32).Shrink(0).Radius(radius).Clip().Label(locales.AvatarChange()).Disabled(busy)
 	if !busy {
 		b.Cursor(ui.CursorPointer).OnClick(func() { a.pickAvatar(kind) })
@@ -977,7 +978,7 @@ func (a *App) pickAvatar(kind string) {
 		if err != nil || len(paths) == 0 {
 			return
 		}
-		a.update(func() { a.avatarBusy = true })
+		a.update(func() { a.avatarBusy = kind })
 		err = func() error {
 			data, err := os.ReadFile(paths[0])
 			if err != nil {
@@ -999,7 +1000,7 @@ func (a *App) pickAvatar(kind string) {
 			return api.Call(ctx, token, "/api/auth/update-user", map[string]any{"image": url}, nil)
 		}()
 		a.update(func() {
-			a.avatarBusy = false
+			a.avatarBusy = ""
 			if err != nil {
 				a.settingsError = err.Error()
 				return
