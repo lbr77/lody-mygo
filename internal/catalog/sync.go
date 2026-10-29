@@ -12,6 +12,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/lbr77/lody-mygo/internal/cloud"
 	"github.com/lbr77/lody-mygo/internal/flock"
+	"github.com/lbr77/lody-mygo/internal/flocksync"
 	"github.com/lbr77/lody-mygo/internal/localplane"
 	"github.com/lbr77/lody-mygo/internal/streams"
 )
@@ -129,19 +130,6 @@ func (s *Sync) run(ctx context.Context, mode string) {
 }
 
 var errLimit = errors.New("catalog: replica exceeds its limit")
-
-// planeVersion is a Flock version as the data plane spells it: each peer's
-// {physicalTime, logicalCounter}, where the replica has [time, counter].
-func planeVersion(v flock.Version) string {
-	out := map[string]any{}
-	for peer, at := range v {
-		if pair, ok := at.([]any); ok && len(pair) == 2 {
-			out[peer] = map[string]any{"physicalTime": pair[0], "logicalCounter": pair[1]}
-		}
-	}
-	b, _ := json.Marshal(out)
-	return string(b)
-}
 
 // localRoom is a catalog stream's data plane room: the meta room, or the
 // Flock <workspace>:wf:workspace, or <workspace>:mf:<machine>.
@@ -433,7 +421,7 @@ func (s *Sync) writeTo(ctx context.Context, rep *replica, mode string, edit func
 		if verr != nil {
 			return verr
 		}
-		if err := s.Local.Update(*rep.room, planeVersion(after), localplane.Payload{Kind: "flock-json", Bundle: body}); err != nil {
+		if err := s.Local.Update(*rep.room, flocksync.PlaneVersion(after), localplane.Payload{Kind: "flock-json", Bundle: body}); err != nil {
 			return err
 		}
 	} else if _, err := rep.client.Append(ctx, "application/octet-stream", streams.EncodeFrame(body)); err != nil {
@@ -665,12 +653,15 @@ type NewSession struct {
 
 // CreateSession creates the session's stream and its catalog entry.
 func (s *Sync) CreateSession(ctx context.Context, n NewSession) error {
-	stream, err := s.Conn.Stream(ctx, "s:"+n.ID)
-	if err != nil {
-		return err
-	}
-	if err := stream.Create(ctx, "application/octet-stream", 0); err != nil {
-		return err
+	// Through the daemon, its document comes with the first join.
+	if s.Local == nil {
+		stream, err := s.Conn.Stream(ctx, "s:"+n.ID)
+		if err != nil {
+			return err
+		}
+		if err := stream.Create(ctx, "application/octet-stream", 0); err != nil {
+			return err
+		}
 	}
 	meta := map[string]any{
 		"id":            n.ID,
