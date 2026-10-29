@@ -298,5 +298,12 @@
   "previewHint": "Lody 通过临时 Cloudflare 隧道共享它；任何拿到地址的人都能访问。",
   "previewOwnerOnly": "只有启动这个会话的人可以共享它的预览。",
   "previewStarting": "正在启动隧道…可能需要一分钟。",
-  "previewOpen": "打开预览"
+  "previewOpen": "打开预览",
+  "panelOpenTitle": "打开面板",
+  "panelAllChanges": "全部变更",
+  "panelAdd": "打开面板",
+  "panelHide": "隐藏面板",
+  "previewBadAddress": "请输入端口，或会话所在机器上的地址，例如 localhost:3000。",
+  "previewReported": "Agent 报告了一个服务：{address}。",
+  "previewAddress": "地址"
 }

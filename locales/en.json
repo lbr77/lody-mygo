@@ -690,5 +690,19 @@
   "previewHint": "Lody shares it through a temporary Cloudflare tunnel, whose address grants access to anyone who has it.",
   "previewOwnerOnly": "Only the person who started this session can share its preview.",
   "previewStarting": "Starting the tunnel… this can take a minute.",
-  "previewOpen": "Open preview"
+  "previewOpen": "Open preview",
+  "panelOpenTitle": "Open a panel",
+  "panelAllChanges": "All Changes",
+  "panelAdd": "Open a panel",
+  "panelHide": "Hide panel",
+  "previewBadAddress": "Enter a port, or an address on the session's machine such as localhost:3000.",
+  "previewReported": "The agent reported a server at {address}.",
+  "@previewReported": {
+    "placeholders": {
+      "address": {
+        "type": "String"
+      }
+    }
+  },
+  "previewAddress": "Address"
 }

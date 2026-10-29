@@ -15,8 +15,11 @@ import (
 	"time"
 )
 
+// AuthOrigin is Lody's backend: sign-in and the tokens it mints. Tests
+// point it elsewhere.
+var AuthOrigin = "https://backend.lody.ai"
+
 const (
-	AuthOrigin = "https://backend.lody.ai"
 	// ClientID is the device-flow client Lody registers for its CLI. Native
 	// clients without a registration of their own use it too.
 	ClientID = "lody-cli"

@@ -3,6 +3,7 @@ package app
 import (
 	"fmt"
 	"path"
+	"slices"
 	"sort"
 	"strings"
 
@@ -99,39 +100,122 @@ func lineChanges(old, new string) (add, del int) {
 	return add, del
 }
 
-// inspector is the panel's content: the session's files, or its changes.
+// panelOption is a panel the inspector can open.
+type panelOption struct {
+	id, label string
+	icon      *ui.SVG
+}
+
+// panelOptions are the panels Lody offers beside a session.
+func panelOptions() []panelOption {
+	return []panelOption{
+		{tabFiles, locales.PanelFiles(), iconFiles},
+		{tabChanges, locales.PanelAllChanges(), iconFileDiff},
+		{tabPreview, locales.PanelBrowser(), iconMonitorPlay},
+	}
+}
+
+// openPanel shows a panel, as a tab of its own.
+func (in *inspectState) openPanel(id string) {
+	if !slices.Contains(in.tabs, id) {
+		in.tabs = append(in.tabs, id)
+	}
+	in.tab = id
+}
+
+// closePanel closes a panel's tab, showing the one before it.
+func (in *inspectState) closePanel(id string) {
+	i := slices.Index(in.tabs, id)
+	if i < 0 {
+		return
+	}
+	in.tabs = slices.Delete(in.tabs, i, i+1)
+	if in.tab == id {
+		in.tab = ""
+		if len(in.tabs) > 0 {
+			in.tab = in.tabs[max(i-1, 0)]
+		}
+	}
+}
+
+// inspector is the panel beside the conversation: the panels opened as
+// tabs, or a choice of them while none is, as Lody's.
 func (a *App) inspector(c *ui.Context, p *palette) {
 	in := a.inspectFor(a.selected)
 	ui.Column(c).Fill().Background(p.Canvas).BorderWidth(0, 0, 0, 1).BorderColor(p.Border).Children(func() {
 		ui.Row(c).Height(titleBarHeight).Shrink(0).Padding(0, 8, 0, 8).Gap(2).AlignItems(ui.Center).DragWindow().
 			BorderWidth(0, 0, 1, 0).BorderColor(p.Border).Children(func() {
-			panelTab(c, p, locales.PanelFiles(), in.tab == tabFiles).OnClick(func() { in.tab = tabFiles })
-			panelTab(c, p, locales.PanelChanges(), in.tab == tabChanges).OnClick(func() { in.tab = tabChanges })
-			if a.hasPreview() {
-				panelTab(c, p, locales.PanelBrowser(), in.tab == tabPreview).OnClick(func() { in.tab = tabPreview })
-			}
-			ui.Spacer(c)
-			if in.tab != tabPreview {
+			ui.Row(c).Grow(1).MinWidth(0).Gap(2).AlignItems(ui.Center).Children(func() {
+				for _, o := range panelOptions() {
+					if slices.Contains(in.tabs, o.id) {
+						id := o.id
+						panelTab(c, p, o.label, in.tab == id, func() { in.closePanel(id) }).OnClick(func() { in.tab = id })
+					}
+				}
+			})
+			if in.tab == tabFiles || in.tab == tabChanges {
 				iconButton(c, p, iconRefresh, locales.Refresh(), p.Hover).OnClick(func() { a.refreshInspector(in) })
 			}
-			iconButton(c, p, iconX, locales.Close(), p.Hover).OnClick(func() { a.panelOpen = false })
+			if len(in.tabs) < len(panelOptions()) {
+				iconButton(c, p, iconPlus, locales.PanelAdd(), p.Hover).Menu(func(m *ui.Menu) {
+					for _, o := range panelOptions() {
+						if !slices.Contains(in.tabs, o.id) && m.Item(o.label).Chosen() {
+							in.openPanel(o.id)
+						}
+					}
+				})
+			}
+			iconButton(c, p, iconPanelRight, locales.PanelHide(), p.Hover).OnClick(func() { a.panelOpen = false })
 		})
-		if in.tab == tabPreview && !a.hasPreview() {
-			in.tab = tabChanges
-		}
 		switch in.tab {
 		case tabFiles:
 			a.filesTab(c, p, in)
+		case tabChanges:
+			a.changesTab(c, p, in)
 		case tabPreview:
 			a.previewTab(c, p)
 		default:
-			a.changesTab(c, p, in)
+			a.panelChooser(c, p, in)
 		}
 	})
 }
 
-func panelTab(c *ui.Context, p *palette, label string, active bool) ui.Element {
-	tab := ui.ButtonBase(c.Key(label)).Height(28).Padding(0, 10).Radius(8).Cursor(ui.CursorPointer).Label(label)
+// panelChooser offers the panels while none is open: a grid of two
+// columns, as wide as the panel lets it be.
+func (a *App) panelChooser(c *ui.Context, p *palette, in *inspectState) {
+	ui.Column(c).Grow(1).Justify(ui.Center).AlignItems(ui.Center).Padding(24, 12).Gap(14).Children(func() {
+		ui.Text(c, locales.PanelOpenTitle()).FontSize(sizeSub).FontWeight(600).TextColor(p.Text)
+		options := panelOptions()
+		ui.Column(c).FillWidth().MaxWidth(328).Gap(8).Children(func() {
+			for i := 0; i < len(options); i += 2 {
+				ui.Row(c.Key(i)).FillWidth().Children(func() {
+					for j := i; j < i+2; j++ {
+						// Half the row each, the gap padded in, so no cell
+						// has to shrink to fit.
+						ui.Box(c.Key(j)).BasisPercent(50).MinWidth(0).Padding(0, 4).Children(func() {
+							if j >= len(options) {
+								return
+							}
+							o := options[j]
+							b := ui.ButtonBase(c).FillWidth().Height(40).Padding(0, 12).Radius(8).Gap(8).Justify(ui.Start).AlignItems(ui.Center).
+								Border(1, p.Border).Cursor(ui.CursorPointer).Label(o.label).OnClick(func() { in.openPanel(o.id) })
+							if b.Hovered() {
+								b.Background(p.Hover)
+							}
+							b.Children(func() {
+								ui.Icon(c, o.icon).Size(15, 15).TextColor(p.Secondary).Shrink(0)
+								ui.Text(c, o.label).FontSize(sizeSub).TextColor(p.Text).SingleLine().MinWidth(0)
+							})
+						})
+					}
+				})
+			}
+		})
+	})
+}
+
+func panelTab(c *ui.Context, p *palette, label string, active bool, close func()) ui.Element {
+	tab := ui.ButtonBase(c.Key(label)).Height(28).Padding(0, 4, 0, 10).Radius(8).Gap(4).AlignItems(ui.Center).Cursor(ui.CursorPointer).Label(label)
 	ink := p.Secondary
 	switch {
 	case active:
@@ -140,8 +224,17 @@ func panelTab(c *ui.Context, p *palette, label string, active bool) ui.Element {
 	case tab.Hovered():
 		tab.Background(p.Hover)
 	}
+	shown := active || tab.Hovered()
 	tab.Children(func() {
-		ui.Text(c, label).FontSize(sizeSub).FontWeight(500).TextColor(ink)
+		ui.Text(c, label).FontSize(sizeSub).FontWeight(500).TextColor(ink).SingleLine()
+		x := ui.ButtonBase(c).Size(18, 18).Radius(5).Center().Cursor(ui.CursorPointer).Label(locales.Close() + " " + label).OnClick(close)
+		if x.Hovered() {
+			x.Background(p.Text.Alpha(0.08))
+		}
+		if !shown {
+			x.Opacity(0)
+		}
+		x.Children(func() { ui.Icon(c, iconX).Size(11, 11).TextColor(ink) })
 	})
 	return tab
 }

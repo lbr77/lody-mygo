@@ -106,7 +106,7 @@ func (a *App) sessionView(c *ui.Context, p *palette) {
 		return
 	}
 	if a.panelPercent == 0 {
-		a.panelPercent = 66
+		a.panelPercent = 60
 	}
 	// Keep the panel at least 280 DIPs wide, as Lody's, and the
 	// conversation at least as wide as the panel.

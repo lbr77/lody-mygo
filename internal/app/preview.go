@@ -3,6 +3,8 @@ package app
 import (
 	"context"
 	"net/url"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/egoist/mygo"
@@ -10,6 +12,7 @@ import (
 
 	"github.com/lbr77/lody-mygo/internal/catalog"
 	"github.com/lbr77/lody-mygo/internal/preview"
+	"github.com/lbr77/lody-mygo/internal/session"
 	"github.com/lbr77/lody-mygo/locales"
 )
 
@@ -21,6 +24,7 @@ import (
 const tabPreview = "preview"
 
 type previewState struct {
+	address  string // what the address bar holds
 	url      string
 	starting bool
 	stopping bool
@@ -42,24 +46,60 @@ func (a *App) previewFor(id string) *previewState {
 	return ps
 }
 
-// hasPreview reports whether the open session has a server to show.
-func (a *App) hasPreview() bool {
-	if a.view != nil && a.view.Preview != nil {
-		return true
-	}
-	ps := a.previews[a.selected]
-	return ps != nil && ps.url != ""
-}
-
 func (a *App) previewRequest(s *catalog.Session) preview.Request {
 	return preview.Request{Workspace: a.conn.ID, Machine: s.MachineID, Session: s.ID, User: a.account.User.ID, Token: a.tokenNow()}
 }
 
+// previewAddress reads what was typed in the address bar: a port, or a
+// URL on this machine's loopback, as Lody's browser panel takes it.
+func previewAddress(s string) (session.PreviewTarget, bool) {
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return session.PreviewTarget{}, false
+	}
+	if _, err := strconv.Atoi(s); err == nil {
+		s = "localhost:" + s
+	}
+	if !strings.Contains(s, "://") {
+		s = "http://" + s
+	}
+	u, err := url.Parse(s)
+	if err != nil || (u.Scheme != "http" && u.Scheme != "https") || u.User != nil {
+		return session.PreviewTarget{}, false
+	}
+	port, err := strconv.Atoi(u.Port())
+	if err != nil {
+		return session.PreviewTarget{}, false
+	}
+	host := strings.ToLower(u.Hostname())
+	if host == "::1" {
+		host = "[::1]"
+	}
+	switch host {
+	case "localhost", "127.0.0.1", "[::1]":
+	default:
+		return session.PreviewTarget{}, false
+	}
+	t := session.PreviewTarget{Protocol: u.Scheme, Host: host, Port: port}
+	if p := u.EscapedPath(); p != "" && p != "/" || u.RawQuery != "" {
+		t.Path = "/" + strings.TrimPrefix(p, "/")
+		if u.RawQuery != "" {
+			t.Path += "?" + u.RawQuery
+		}
+	}
+	return t, port > 0 && port < 65536
+}
+
 func (a *App) startPreview(s *catalog.Session, ps *previewState) {
-	if a.conn == nil || a.view == nil || a.view.Preview == nil || ps.starting {
+	target, ok := previewAddress(ps.address)
+	if !ok {
+		ps.err = locales.PreviewBadAddress()
 		return
 	}
-	conn, api, req, target := a.conn, a.api, a.previewRequest(s), a.view.Preview.Target
+	if a.conn == nil || ps.starting {
+		return
+	}
+	conn, api, req := a.conn, a.api, a.previewRequest(s)
 	ps.starting, ps.err = true, ""
 	go func() {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
@@ -169,30 +209,37 @@ func (a *App) previewTab(c *ui.Context, p *palette) {
 	ui.WebView(c, ps.web).Grow(1).MinHeight(0).FillWidth()
 }
 
-// previewStart offers to share the server, as only the session's owner
-// may.
+// previewStart is the address bar: the server the agent reported, or one
+// typed, and the way to share it, as only the session's owner may.
 func (a *App) previewStart(c *ui.Context, p *palette, s *catalog.Session, ps *previewState) {
 	pv := a.view.Preview
+	if ps.address == "" && pv != nil {
+		ps.address = pv.Target.Label() + pv.Target.Path
+	}
 	ui.Column(c).Grow(1).Center().Padding(24).Gap(12).Children(func() {
 		ui.Icon(c, iconGlobe).Size(28, 28).TextColor(p.Tertiary)
-		if pv == nil {
-			ui.Text(c, locales.PreviewNone()).FontSize(sizeSub).TextColor(p.Secondary)
-			return
+		if pv != nil {
+			ui.Text(c, locales.PreviewReported(pv.Target.Label())).FontSize(sizeSub).TextColor(p.Secondary).TextAlign(ui.Center)
 		}
-		ui.Text(c, pv.Target.Label()).Font(fontMono).FontSize(sizeBody).FontWeight(600).TextColor(p.Text)
-		ui.Text(c, locales.PreviewHint()).FontSize(sizeFoot).LineHeight(1.5).TextColor(p.Secondary).TextAlign(ui.Center).MaxWidth(300)
+		owner := s.UserID == "" || s.UserID == a.account.User.ID
+		ui.Row(c).Gap(8).AlignItems(ui.Center).Width(320).MaxWidth(320).Children(func() {
+			ui.TextInput(c, &ps.address).Placeholder("localhost:3000").Font(fontMono).FontSize(sizeSub).Grow(1).
+				Label(locales.PreviewAddress()).Disabled(!owner || ps.starting).OnSubmit(func() { a.startPreview(s, ps) })
+			if ps.starting {
+				ui.Spinner(c).Size(14, 14)
+				return
+			}
+			inkButton(c, p, locales.PreviewOpen(), nil, 30).Disabled(!owner || !a.presence.IsOnline(s.MachineID)).OnClick(func() { a.startPreview(s, ps) })
+		})
 		switch {
-		case s.UserID != "" && s.UserID != a.account.User.ID:
-			ui.Text(c, locales.PreviewOwnerOnly()).FontSize(sizeFoot).TextColor(p.Tertiary).TextAlign(ui.Center).MaxWidth(300)
+		case !owner:
+			ui.Text(c, locales.PreviewOwnerOnly()).FontSize(sizeFoot).TextColor(p.Tertiary).TextAlign(ui.Center).MaxWidth(320)
 		case ps.starting:
-			ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
-				ui.Spinner(c).Size(13, 13)
-				ui.Text(c, locales.PreviewStarting()).FontSize(sizeSub).TextColor(p.Secondary)
-			})
+			ui.Text(c, locales.PreviewStarting()).FontSize(sizeFoot).TextColor(p.Secondary).TextAlign(ui.Center)
 		case !a.presence.IsOnline(s.MachineID):
 			ui.Text(c, locales.MentionOffline(a.machineName(s.MachineID))).FontSize(sizeFoot).TextColor(p.Tertiary)
 		default:
-			inkButton(c, p, locales.PreviewOpen(), nil, 32).OnClick(func() { a.startPreview(s, ps) })
+			ui.Text(c, locales.PreviewHint()).FontSize(sizeFoot).LineHeight(1.5).TextColor(p.Secondary).TextAlign(ui.Center).MaxWidth(320)
 		}
 		if ps.err != "" {
 			ui.Text(c, ps.err).FontSize(sizeFoot).TextColor(p.Danger).TextAlign(ui.Center).MaxWidth(320).Selectable()

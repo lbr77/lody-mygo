@@ -25,7 +25,8 @@ const (
 // listed and opened, the file it shows, and the changes it compared.
 type inspectState struct {
 	session string
-	tab     string
+	tabs    []string               // the panels open, in the order they opened
+	tab     string                 // the one shown
 	dirs    map[string]*dirListing // by path relative to the project
 	open    map[string]bool
 	tree    ui.ListState
@@ -68,7 +69,7 @@ type changesState struct {
 func (a *App) inspectFor(id string) *inspectState {
 	if a.inspect == nil || a.inspect.session != id {
 		a.inspect = &inspectState{
-			session: id, tab: tabChanges, scope: collab.ScopeBranch,
+			session: id, scope: collab.ScopeBranch,
 			dirs: map[string]*dirListing{}, open: map[string]bool{}, changes: map[string]*changesState{},
 		}
 	}

@@ -470,6 +470,13 @@ func TestChangesPanel(t *testing.T) {
 		if err := tt.Click("Show panel"); err != nil {
 			t.Fatal(err)
 		}
+		tt.Frame()
+		if !tt.HasText("Open a panel") {
+			t.Fatalf("no chooser: %q", tt.Texts())
+		}
+		if err := tt.Click("All Changes"); err != nil {
+			t.Fatal(err)
+		}
 	})
 	if !a.panelOpen || !tt.HasText("sync.go") || !tt.HasText("README.md") {
 		t.Fatalf("panel: %q", tt.Texts())
@@ -561,6 +568,7 @@ func TestFilesPanel(t *testing.T) {
 	in.dirs[""] = &dirListing{entries: []collab.DirEntry{{Name: "internal", Type: "directory"}, {Name: "README.md", Type: "file"}}}
 	in.dirs["internal"] = &dirListing{entries: []collab.DirEntry{{Name: "app", Type: "directory"}}}
 	in.preview = &filePreview{path: "README.md", text: "# Hello from the machine"}
+	in.openPanel(tabChanges)
 	tt := snap(t, a, "files-panel", false, nil)
 	if !tt.HasText("view.go") || !tt.HasText("Compared with 0123456") {
 		t.Fatalf("changes: %q", tt.Texts())
@@ -572,11 +580,10 @@ func TestFilesPanel(t *testing.T) {
 	if in.change != "internal/app/view.go" || a.diffs["machine/branch/internal/app/view.go"] == nil {
 		t.Fatalf("diff not shown: %q", tt.Texts())
 	}
-	if err := tt.Click("Files"); err != nil {
-		t.Fatal(err)
-	}
+	// Files opens from the + menu, beside All Changes.
+	in.openPanel(tabFiles)
 	tt.Frame()
-	if !tt.HasText("README.md") || tt.HasText("app") {
+	if len(in.tabs) != 2 || !tt.HasText("README.md") || tt.HasText("app") {
 		t.Fatalf("tree: %q", tt.Texts())
 	}
 	if err := tt.Click("internal"); err != nil {
@@ -635,8 +642,11 @@ func TestPreviewTab(t *testing.T) {
 			t.Fatal(err)
 		}
 	})
-	if !tt.HasText("localhost:5173") || !tt.HasText("Open preview") {
+	if !tt.HasText("The agent reported a server at localhost:5173.") || !tt.HasText("Open preview") {
 		t.Fatalf("start: %q", tt.Texts())
+	}
+	if ps := a.previews["s1"]; ps == nil || ps.address != "localhost:5173/app" {
+		t.Fatalf("address bar: %+v", a.previews["s1"])
 	}
 	// Once the machine shares it, its page shows.
 	a.view.Preview.Connection, a.view.Preview.PublicURL = "active", "https://calm-river.trycloudflare.com/?__lody_preview_token=tok"
@@ -646,5 +656,52 @@ func TestPreviewTab(t *testing.T) {
 	}
 	if !tt.HasText("localhost:5173/app") {
 		t.Fatalf("toolbar: %q", tt.Texts())
+	}
+}
+
+func TestPreviewAddress(t *testing.T) {
+	cases := map[string]string{
+		"3000":                        "http localhost:3000 ",
+		"localhost:5173/app?x=1":      "http localhost:5173 /app?x=1",
+		"https://127.0.0.1:8443":      "https 127.0.0.1:8443 ",
+		"http://[::1]:8080/":          "http [::1]:8080 ",
+		"example.com:80":              "",
+		"localhost":                   "",
+		"http://user@localhost:3000/": "",
+	}
+	for in, want := range cases {
+		got := ""
+		if t2, ok := previewAddress(in); ok {
+			got = t2.Protocol + " " + t2.Label() + " " + t2.Path
+		}
+		if got != want {
+			t.Errorf("previewAddress(%q) = %q, want %q", in, got, want)
+		}
+	}
+}
+
+func TestPanelChooser(t *testing.T) {
+	a := fixture()
+	a.view.Entries = a.view.Entries[:2]
+	a.view.Working = false
+	a.panelOpen = true
+	tt := snap(t, a, "panel-chooser", false, nil)
+	for _, want := range []string{"Open a panel", "Files", "All Changes", "Browser"} {
+		if !tt.HasText(want) {
+			t.Fatalf("no %q: %q", want, tt.Texts())
+		}
+	}
+	if err := tt.Click("Browser"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	in := a.inspectFor("s1")
+	if in.tab != tabPreview || !tt.HasText("Open preview") {
+		t.Fatalf("browser: %+v %q", in.tabs, tt.Texts())
+	}
+	in.closePanel(tabPreview)
+	tt.Frame()
+	if in.tab != "" || !tt.HasText("Open a panel") {
+		t.Fatalf("after close: %+v %q", in.tabs, tt.Texts())
 	}
 }

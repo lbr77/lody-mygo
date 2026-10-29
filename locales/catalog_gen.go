@@ -3032,3 +3032,73 @@ func PreviewOpen() string { return In(i18n.Locale()).PreviewOpen() }
 func (msgs Messages) PreviewOpen() string {
 	return Catalog.Format(msgs.locale, "previewOpen", nil)
 }
+
+// PanelOpenTitle says "Open a panel"
+// in the language the app shows.
+func PanelOpenTitle() string { return In(i18n.Locale()).PanelOpenTitle() }
+
+// PanelOpenTitle says "Open a panel"
+// in the language of msgs.
+func (msgs Messages) PanelOpenTitle() string {
+	return Catalog.Format(msgs.locale, "panelOpenTitle", nil)
+}
+
+// PanelAllChanges says "All Changes"
+// in the language the app shows.
+func PanelAllChanges() string { return In(i18n.Locale()).PanelAllChanges() }
+
+// PanelAllChanges says "All Changes"
+// in the language of msgs.
+func (msgs Messages) PanelAllChanges() string {
+	return Catalog.Format(msgs.locale, "panelAllChanges", nil)
+}
+
+// PanelAdd says "Open a panel"
+// in the language the app shows.
+func PanelAdd() string { return In(i18n.Locale()).PanelAdd() }
+
+// PanelAdd says "Open a panel"
+// in the language of msgs.
+func (msgs Messages) PanelAdd() string {
+	return Catalog.Format(msgs.locale, "panelAdd", nil)
+}
+
+// PanelHide says "Hide panel"
+// in the language the app shows.
+func PanelHide() string { return In(i18n.Locale()).PanelHide() }
+
+// PanelHide says "Hide panel"
+// in the language of msgs.
+func (msgs Messages) PanelHide() string {
+	return Catalog.Format(msgs.locale, "panelHide", nil)
+}
+
+// PreviewBadAddress says "Enter a port, or an address on the session's machine such as localhost:3000."
+// in the language the app shows.
+func PreviewBadAddress() string { return In(i18n.Locale()).PreviewBadAddress() }
+
+// PreviewBadAddress says "Enter a port, or an address on the session's machine such as localhost:3000."
+// in the language of msgs.
+func (msgs Messages) PreviewBadAddress() string {
+	return Catalog.Format(msgs.locale, "previewBadAddress", nil)
+}
+
+// PreviewReported says "The agent reported a server at {address}."
+// in the language the app shows.
+func PreviewReported(address string) string { return In(i18n.Locale()).PreviewReported(address) }
+
+// PreviewReported says "The agent reported a server at {address}."
+// in the language of msgs.
+func (msgs Messages) PreviewReported(address string) string {
+	return Catalog.Format(msgs.locale, "previewReported", map[string]any{"address": address})
+}
+
+// PreviewAddress says "Address"
+// in the language the app shows.
+func PreviewAddress() string { return In(i18n.Locale()).PreviewAddress() }
+
+// PreviewAddress says "Address"
+// in the language of msgs.
+func (msgs Messages) PreviewAddress() string {
+	return Catalog.Format(msgs.locale, "previewAddress", nil)
+}
