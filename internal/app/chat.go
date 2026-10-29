@@ -76,6 +76,7 @@ func (a *App) mainView(c *ui.Context, p *palette) {
 	a.deviceAuthDialog(c, p)
 	a.messageShareDialog(c, p)
 	a.scheduleSendDialog(c, p)
+	a.stuckBanner(c, p)
 	a.paletteView(c, p)
 	if !a.settingsOpen {
 		// Settings shows its own; outside it, what the conversation asks.

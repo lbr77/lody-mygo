@@ -3253,5 +3253,15 @@
   "cmdSchedulesNew": "New Schedule",
   "cmdSchedulesOpen": "Open Schedules",
   "cmdSchedulesPause": "Pause Schedule",
-  "scrollToLatest": "Scroll to latest message"
+  "scrollToLatest": "Scroll to latest message",
+  "stuckTitle": "Still connecting…",
+  "stuckDescription": "This can be a sign-in, network or local data problem.",
+  "stuckRecover": "Recover…",
+  "stuckDismiss": "Dismiss",
+  "recoverySlowTitle": "Lody is taking too long to open",
+  "recoveryDescription": "Reload first. If that doesn't help, clearing the local cache rebuilds the data stored on this device; work already synced is safe and you stay signed in.",
+  "recoveryReload": "Reload Lody",
+  "recoveryClearCache": "Clear local cache and retry",
+  "recoveryCopyDiagnostics": "Copy diagnostics",
+  "recoveryCopied": "Copied"
 }

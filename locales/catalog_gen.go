@@ -16610,3 +16610,103 @@ func ScrollToLatest() string { return In(i18n.Locale()).ScrollToLatest() }
 func (msgs Messages) ScrollToLatest() string {
 	return Catalog.Format(msgs.locale, "scrollToLatest", nil)
 }
+
+// StuckTitle says "Still connecting…"
+// in the language the app shows.
+func StuckTitle() string { return In(i18n.Locale()).StuckTitle() }
+
+// StuckTitle says "Still connecting…"
+// in the language of msgs.
+func (msgs Messages) StuckTitle() string {
+	return Catalog.Format(msgs.locale, "stuckTitle", nil)
+}
+
+// StuckDescription says "This can be a sign-in, network or local data problem."
+// in the language the app shows.
+func StuckDescription() string { return In(i18n.Locale()).StuckDescription() }
+
+// StuckDescription says "This can be a sign-in, network or local data problem."
+// in the language of msgs.
+func (msgs Messages) StuckDescription() string {
+	return Catalog.Format(msgs.locale, "stuckDescription", nil)
+}
+
+// StuckRecover says "Recover…"
+// in the language the app shows.
+func StuckRecover() string { return In(i18n.Locale()).StuckRecover() }
+
+// StuckRecover says "Recover…"
+// in the language of msgs.
+func (msgs Messages) StuckRecover() string {
+	return Catalog.Format(msgs.locale, "stuckRecover", nil)
+}
+
+// StuckDismiss says "Dismiss"
+// in the language the app shows.
+func StuckDismiss() string { return In(i18n.Locale()).StuckDismiss() }
+
+// StuckDismiss says "Dismiss"
+// in the language of msgs.
+func (msgs Messages) StuckDismiss() string {
+	return Catalog.Format(msgs.locale, "stuckDismiss", nil)
+}
+
+// RecoverySlowTitle says "Lody is taking too long to open"
+// in the language the app shows.
+func RecoverySlowTitle() string { return In(i18n.Locale()).RecoverySlowTitle() }
+
+// RecoverySlowTitle says "Lody is taking too long to open"
+// in the language of msgs.
+func (msgs Messages) RecoverySlowTitle() string {
+	return Catalog.Format(msgs.locale, "recoverySlowTitle", nil)
+}
+
+// RecoveryDescription says "Reload first. If that doesn't help, clearing the local cache rebuilds the data stored on this device; work already sy…"
+// in the language the app shows.
+func RecoveryDescription() string { return In(i18n.Locale()).RecoveryDescription() }
+
+// RecoveryDescription says "Reload first. If that doesn't help, clearing the local cache rebuilds the data stored on this device; work already sy…"
+// in the language of msgs.
+func (msgs Messages) RecoveryDescription() string {
+	return Catalog.Format(msgs.locale, "recoveryDescription", nil)
+}
+
+// RecoveryReload says "Reload Lody"
+// in the language the app shows.
+func RecoveryReload() string { return In(i18n.Locale()).RecoveryReload() }
+
+// RecoveryReload says "Reload Lody"
+// in the language of msgs.
+func (msgs Messages) RecoveryReload() string {
+	return Catalog.Format(msgs.locale, "recoveryReload", nil)
+}
+
+// RecoveryClearCache says "Clear local cache and retry"
+// in the language the app shows.
+func RecoveryClearCache() string { return In(i18n.Locale()).RecoveryClearCache() }
+
+// RecoveryClearCache says "Clear local cache and retry"
+// in the language of msgs.
+func (msgs Messages) RecoveryClearCache() string {
+	return Catalog.Format(msgs.locale, "recoveryClearCache", nil)
+}
+
+// RecoveryCopyDiagnostics says "Copy diagnostics"
+// in the language the app shows.
+func RecoveryCopyDiagnostics() string { return In(i18n.Locale()).RecoveryCopyDiagnostics() }
+
+// RecoveryCopyDiagnostics says "Copy diagnostics"
+// in the language of msgs.
+func (msgs Messages) RecoveryCopyDiagnostics() string {
+	return Catalog.Format(msgs.locale, "recoveryCopyDiagnostics", nil)
+}
+
+// RecoveryCopied says "Copied"
+// in the language the app shows.
+func RecoveryCopied() string { return In(i18n.Locale()).RecoveryCopied() }
+
+// RecoveryCopied says "Copied"
+// in the language of msgs.
+func (msgs Messages) RecoveryCopied() string {
+	return Catalog.Format(msgs.locale, "recoveryCopied", nil)
+}

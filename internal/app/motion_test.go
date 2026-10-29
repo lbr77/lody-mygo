@@ -189,3 +189,50 @@ func TestNowListFocus(t *testing.T) {
 		t.Fatalf("not landed back: focus %q open %q", a.homeNowFocus, a.homeNowOpen)
 	}
 }
+
+// A workspace connecting for 45 seconds says so near the bottom, with a
+// way to recover, as Lody's stuck-connection banner.
+func TestStuckConnection(t *testing.T) {
+	a := fixture()
+	a.view.Entries, a.view.Working = a.view.Entries[:2], false
+	a.sync = &catalog.Sync{}
+	a.syncState = catalog.State{}
+	a.token.Store("token")
+	tt := snap(t, a, "stuck-early", false, nil)
+	if tt.HasText("Still connecting…") {
+		t.Fatal("shown at once")
+	}
+	a.stuck.since = time.Now().Add(-46 * time.Second)
+	tt.Frame()
+	tt.Advance(600 * time.Millisecond)
+	tt.Frame()
+	snapFrame(t, tt, "stuck-banner")
+	if !tt.HasText("Still connecting…") || !tt.HasText("Recover…") {
+		t.Fatalf("no banner in %q", tt.Texts())
+	}
+	if err := tt.Click("Recover…"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	tt.Advance(400 * time.Millisecond)
+	tt.Frame()
+	if !tt.HasText("Lody is taking too long to open") || !tt.HasText("Reload Lody") || !tt.HasText("Clear local cache and retry") {
+		t.Fatalf("no recovery in %q", tt.Texts())
+	}
+	var copied string
+	old := writeClipboard
+	writeClipboard = func(s string) { copied = s }
+	defer func() { writeClipboard = old }()
+	if err := tt.Click("Copy diagnostics"); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(copied, "Workspace: w1") || !strings.Contains(copied, "Catalog live: false") {
+		t.Fatalf("diagnostics %q", copied)
+	}
+	a.syncState.Live = true
+	a.stuck.recovery = false
+	tt.Frame()
+	if tt.HasText("Still connecting…") || !a.stuck.since.IsZero() {
+		t.Fatal("still stuck once live")
+	}
+}

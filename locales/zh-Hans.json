@@ -1648,5 +1648,15 @@
   "cmdSchedulesNew": "新建定时任务",
   "cmdSchedulesOpen": "打开定时任务",
   "cmdSchedulesPause": "暂停定时任务",
-  "scrollToLatest": "回到底部"
+  "scrollToLatest": "回到底部",
+  "stuckTitle": "连接时间较长",
+  "stuckDescription": "可能是登录、网络或本地数据异常",
+  "stuckRecover": "恢复选项",
+  "stuckDismiss": "关闭",
+  "recoverySlowTitle": "Lody 打开的时间过长",
+  "recoveryDescription": "请先重新加载。如果没有效果，清除本地缓存会重新构建此设备上保存的数据；已同步的内容不会丢失，也不会退出登录。",
+  "recoveryReload": "重新加载 Lody",
+  "recoveryClearCache": "清除本地缓存并重试",
+  "recoveryCopyDiagnostics": "复制诊断信息",
+  "recoveryCopied": "已复制"
 }
