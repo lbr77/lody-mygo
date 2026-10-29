@@ -169,7 +169,8 @@ func disclosure(c *ui.Context, p *palette, label string, open, live bool, toggle
 // on a permission.
 func disclosureMarked(c *ui.Context, p *palette, label string, open, live, attention bool, toggle func()) float32 {
 	head := ui.Row(c).MinHeight(24).Gap(6).AlignItems(ui.Center).Cursor(ui.CursorPointer).Label(label).OnClick(toggle)
-	shown := head.AnimateWith("open", b2f(open), foldTime, easeStandard)
+	// The body shows at once, as Lody's CollapsibleCard renders it.
+	shown := b2f(open)
 	hovered := head.Hovered()
 	// Lody's chevron turns over 200ms easing out, and fades in with the
 	// pointer over 150ms.
@@ -304,7 +305,7 @@ func (a *App) step(c *ui.Context, p *palette, key string, it session.Item) {
 	case "tool_call":
 		open := a.expanded[key]
 		row := ui.Row(c).MinHeight(24).Padding(2, 4).Gap(8).AlignItems(ui.Center).Radius(5)
-		shown := row.AnimateWith("open", b2f(open), foldTime, easeStandard)
+		shown := b2f(open)
 		hovered := false
 		if it.HasDetail {
 			row.Cursor(ui.CursorPointer).Label(locales.ShowDetails()).OnClick(func() { a.expanded[key] = !a.expanded[key] })

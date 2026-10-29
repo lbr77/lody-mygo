@@ -63,8 +63,8 @@ func (a *App) mainView(c *ui.Context, p *palette) {
 			case a.selected == "":
 				page, key = a.homeView, "home"
 			}
-			// Each page fades in where the last was.
-			ui.Column(c.Key(key)).Fill().Transition(pageIn).Children(func() { page(c, p) })
+			// Pages and sessions cut over, as Lody's routes do.
+			ui.Column(c.Key(key)).Fill().Children(func() { page(c, p) })
 		})
 	})
 	a.settingsDialog(c, p)
@@ -247,7 +247,7 @@ func (a *App) conversation(c *ui.Context, p *palette, sess *catalog.Session) {
 			return
 		}
 		a.entry(c, p, entries, i)
-	}).Grow(1).MinHeight(0).Padding(16, 0, 24, 0).FontFeatures(a.ligatureFeatures()...).Transition(pageIn).Children(func() {
+	}).Grow(1).MinHeight(0).Padding(16, 0, 24, 0).FontFeatures(a.ligatureFeatures()...).Children(func() {
 		ui.Text(c, locales.SendToStart()).FontSize(sizeSub).TextColor(p.Secondary).Margin(ui.Auto)
 	})
 	a.bottom(c, p, sess, v)

@@ -202,7 +202,7 @@ func (a *App) tabStrip(c *ui.Context, p *palette, sess *catalog.Session) {
 				title = firstNonEmpty(s.Title, locales.UntitledSession())
 			}
 			tab := ui.Row(c.Key("tab/"+tabID)).Height(32).Radius(10).Padding(0, 6, 0, 12).Gap(6).Border(1, ui.Transparent).AlignItems(ui.Center).
-				MinWidth(0).Shrink(1).MaxWidth(240).Cursor(ui.CursorPointer).Label(title).Transition(ui.ElementTransition{Colors: true, Size: true, Duration: 150 * time.Millisecond, Ease: ui.EaseOut, Enter: &ui.Motion{Collapse: true}, Exit: &ui.Motion{Collapse: true}})
+				MinWidth(0).Shrink(1).MaxWidth(240).Cursor(ui.CursorPointer).Label(title).Transition(tabFade)
 			hovered := tab.Hovered()
 			ink := p.Secondary
 			switch {
@@ -254,7 +254,7 @@ func (a *App) tabStrip(c *ui.Context, p *palette, sess *catalog.Session) {
 // draftView is a draft tab: what to ask of the branch, over the composer
 // that sends the first message and makes it a child conversation.
 func (a *App) draftView(c *ui.Context, p *palette, root *catalog.Session, d *draftTab) {
-	ui.Column(c.Key("draft/"+d.id)).Grow(1).MinHeight(0).Justify(ui.End).Padding(0, 0, 16, 0).Transition(pageIn).Children(func() {
+	ui.Column(c.Key("draft/"+d.id)).Grow(1).MinHeight(0).Justify(ui.End).Padding(0, 0, 16, 0).Children(func() {
 		a.column(c, "suggestions", func() {
 			ui.Column(c).FillWidth().AlignItems(ui.End).Gap(4).Children(func() {
 				for _, s := range []string{locales.TabSuggestReview(), locales.TabSuggestSummarize(), locales.TabSuggestSimplify()} {

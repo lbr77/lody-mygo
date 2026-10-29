@@ -276,17 +276,17 @@ func (a *App) sectionHeader(c *ui.Context, p *palette, r sideRow) {
 		})
 	hovered := row.Hovered()
 	collapsed := a.collapsed[r.group]
+	// The chevron fades in with the pointer, and stays while folded, and
+	// turns to point right as it folds: 150ms, easing out, as Lody's.
+	reveal := row.AnimateWith("reveal", b2f(hovered || collapsed), 150*time.Millisecond, ui.EaseOut)
+	turn := row.AnimateWith("turn", b2f(collapsed), 150*time.Millisecond, ui.EaseOut)
 	row.Children(func() {
 		ui.Text(c, r.label).FontSize(sizeFoot).FontWeight(500).TextColor(p.SideMuted.Alpha(0.8)).SingleLine().MinWidth(0)
 		if r.machine != "" && !a.presence.IsOnline(r.machine) {
 			offlinePill(c, p)
 		}
-		if hovered || collapsed {
-			icon := iconChevronDown
-			if collapsed {
-				icon = iconChevronRight
-			}
-			ui.Icon(c, icon).Size(14, 14).TextColor(p.SideMuted)
+		if reveal > 0 {
+			ui.Icon(c, iconChevronDown).Size(14, 14).TextColor(p.SideMuted).Rotate(-90 * turn).Opacity(reveal)
 		}
 	})
 }
@@ -309,19 +309,26 @@ func (a *App) projectRow(c *ui.Context, p *palette, r sideRow) {
 	case hovered:
 		row.Background(p.SideHover)
 	}
-	// The chevron turns between open and folded over 150ms, easing out.
-	turn := row.AnimateWith("chevron", b2f(collapsed), 150*time.Millisecond, ui.EaseOut)
+	// With the pointer the folder gives way to the chevron, which turns
+	// between open and folded: both over 100ms, as Lody's.
+	swap := row.AnimateWith("swap", b2f(hovered), 100*time.Millisecond, ui.CubicBezier(0.4, 0, 0.2, 1))
+	turn := row.AnimateWith("chevron", b2f(collapsed), 100*time.Millisecond, ui.CubicBezier(0.4, 0, 0.2, 1))
 	row.Children(func() {
 		icon := iconFolderOpen
 		if collapsed {
 			icon = iconFolder
 		}
 		ui.Box(c).Size(14, 16).Center().Shrink(0).Children(func() {
-			if hovered {
-				ui.Icon(c, iconChevronDown).Size(16, 16).TextColor(p.SideMuted).Rotate(-90 * turn)
-				return
+			if swap < 1 {
+				ink := p.SideMuted
+				if selected {
+					ink = p.SideRowSel
+				}
+				ui.Icon(c, icon).Size(16, 16).TextColor(ink).Opacity(1 - swap).Absolute()
 			}
-			ui.Icon(c, icon).Size(16, 16).TextColor(p.SideMuted)
+			if swap > 0 {
+				ui.Icon(c, iconChevronDown).Size(16, 16).TextColor(p.SideRow).Rotate(-90 * turn).Opacity(swap).Absolute()
+			}
 		})
 		ui.Text(c, r.label).FontSize(sizeSub).TextColor(p.SideRow).SingleLine().Grow(1).MinWidth(0)
 		if hovered {
@@ -677,7 +684,9 @@ func (a *App) workspaceMenu(c *ui.Context, p *palette) {
 }
 
 func menuRow(c *ui.Context, p *palette, label string) ui.Element {
-	row := ui.ButtonBase(c).Height(30).Padding(0, 8).Radius(6).Gap(8).Justify(ui.Start).Cursor(ui.CursorPointer).Label(label).Transition(colorFade)
+	// A popup row's highlight is instant: it follows the pointer and the
+	// arrow keys, which a fade would leave behind.
+	row := ui.ButtonBase(c).Height(30).Padding(0, 8).Radius(6).Gap(8).Justify(ui.Start).Cursor(ui.CursorPointer).Label(label)
 	if row.Hovered() {
 		row.Background(p.Hover)
 	}

@@ -51,8 +51,8 @@ func settingsSections() []settingsSection {
 func (a *App) settingsDialog(c *ui.Context, p *palette) {
 	a.syncMonitors()
 	w, h := c.Size()
+	// Lody opens Settings without animation.
 	ui.DialogBase(c, &a.settingsOpen, func(backdrop, panel ui.Element) {
-		sheetIn(backdrop, panel)
 		backdrop.Background(ui.RGBA(0, 0, 0, 0.28))
 		panel.Size(min(1100, w-80), min(950, h-48)).Radius(14).Border(0.5, p.CardRim).Background(p.Popover).Clip().
 			Shadow(0, 22, 70, 0, ui.RGBA(0, 0, 0, 0.25))
@@ -60,8 +60,7 @@ func (a *App) settingsDialog(c *ui.Context, p *palette) {
 			a.settingsNav(c, p)
 			ui.Box(c).Grow(1).MinWidth(0).Children(func() {
 				ui.Scroll(c).Fill().Padding(36, 56, 40, 56).Children(func() {
-					// Keyed by tab, so that each page fades in as it's chosen.
-					ui.Column(c.Key(firstNonEmpty(a.settingsTab, "account"))).FillWidth().MaxWidth(728).Gap(12).Transition(pageIn).Children(func() {
+					ui.Column(c.Key(firstNonEmpty(a.settingsTab, "account"))).FillWidth().MaxWidth(728).Gap(12).Children(func() {
 						a.settingsPage(c, p)
 						a.removalDialog(c, p)
 						a.confirmDialog(c, p)

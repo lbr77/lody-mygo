@@ -174,8 +174,7 @@ func (a *App) inspector(c *ui.Context, p *palette) {
 			}
 			iconButton(c, p, iconPanelRight, locales.PanelHide(), p.Hover).OnClick(func() { a.panelOpen = false })
 		})
-		// Keyed by tab, so that each panel fades in as it's chosen.
-		ui.Column(c.Key(in.tab)).FillWidth().Grow(1).MinHeight(0).Transition(pageIn).Children(func() {
+		ui.Column(c.Key(in.tab)).FillWidth().Grow(1).MinHeight(0).Children(func() {
 			switch in.tab {
 			case tabFiles:
 				a.filesTab(c, p, in)
@@ -228,9 +227,9 @@ func (a *App) panelChooser(c *ui.Context, p *palette, in *inspectState) {
 }
 
 func panelTab(c *ui.Context, p *palette, label string, active bool, close func()) ui.Element {
-	// A tab opens out and folds away along the bar over 200ms, as Lody's.
+	// A tab's colors fade over 150ms; it opens and closes at once, as Lody's.
 	tab := ui.ButtonBase(c.Key(label)).Height(28).Padding(0, 4, 0, 10).Radius(8).Gap(4).AlignItems(ui.Center).Cursor(ui.CursorPointer).Label(label).
-		Transition(ui.ElementTransition{Colors: true, Size: true, Duration: 200 * time.Millisecond, Ease: ui.EaseOut, Enter: &ui.Motion{Collapse: true}, Exit: &ui.Motion{Collapse: true}})
+		Transition(tabFade)
 	ink := p.Secondary
 	switch {
 	case active:

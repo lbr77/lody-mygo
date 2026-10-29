@@ -44,6 +44,9 @@ var (
 )
 
 var (
+	// tabFade fades a tab's colors over 150ms, as Lody's tab bars'
+	// Tailwind transition-colors.
+	tabFade = ui.ElementTransition{Colors: true, Duration: 150 * time.Millisecond, Ease: ui.CubicBezier(0.4, 0, 0.2, 1)}
 	// colorFade fades an element's background and border as hover, press
 	// and selection change them, without moving it.
 	colorFade = ui.ElementTransition{Colors: true, Duration: fadeTime, Ease: easeStandard}
@@ -56,6 +59,11 @@ var (
 	// backdropFade fades a dialog's backdrop in and out over 180ms; the
 	// overlay root that render keeps lets it fade out.
 	backdropFade = ui.ElementTransition{Colors: true, Duration: sheetTime, Ease: easeStandard, Enter: &ui.Motion{}, Exit: &ui.Motion{}}
+	// popAbove is popIn for a popup above what opened it: it starts 4px
+	// higher and comes down into place.
+	popAbove = ui.ElementTransition{Colors: true, Duration: popTime, Ease: easeStandard, Enter: &ui.Motion{Y: -4}, Exit: &ui.Motion{Y: -4}}
+	// sheetOut sinks a dialog's panel 4px as it fades out.
+	sheetOut = ui.ElementTransition{Colors: true, Duration: sheetTime, Ease: easeStandard, Exit: &ui.Motion{Y: 4}}
 	// popIn raises a popover 4px into place as it fades in, and lets it
 	// sink and fade the same way out, as Lody's popups.
 	popIn = ui.ElementTransition{Colors: true, Duration: popTime, Ease: easeStandard, Enter: &ui.Motion{Y: 4}, Exit: &ui.Motion{Y: 4}}
@@ -80,15 +88,28 @@ func pressable(b ui.Element, scale float32) ui.Element {
 // scaling: call it first in a DialogBase.
 func sheetIn(backdrop, panel ui.Element) {
 	backdrop.Transition(backdropFade)
+	// Closing, the panel sinks back the 4px it rose, as it fades.
+	panel.Transition(sheetOut)
 	k := panel.Keyframes("in", []ui.Keyframe{{Value: 0}, {At: sheetTime, Value: 1, Ease: easeStandard}})
 	if k < 1 {
 		panel.Translate(0, 4*(1-k)).Opacity(k)
 	}
 }
 
-// popup is a Popover that grows in and fades out.
+// popup is a Popover that rises in and sinks out, as Lody's: it starts
+// 4px further from its anchor on the side it landed, below or above, and
+// closes that step as it arrives.
 func popup(c *ui.Context, anchor ui.Element, open *bool, fn func()) ui.Element {
-	return ui.Popover(c, anchor, open, fn).Transition(popIn)
+	pop := ui.Popover(c, anchor, open, fn)
+	away := float32(4)
+	if pb, ab := pop.Bounds(), anchor.Bounds(); pb.H > 0 && pb.Y+pb.H <= ab.Y+1 {
+		away = -4 // it opened above its anchor
+	}
+	pop.Transition(ui.ElementTransition{Colors: true, Duration: popTime, Ease: easeStandard, Exit: &ui.Motion{Y: away}})
+	if k := pop.Keyframes("in", []ui.Keyframe{{Value: 0}, {At: popTime, Value: 1, Ease: easeStandard}}); k < 1 {
+		pop.Translate(0, away*(1-k)).Opacity(k)
+	}
+	return pop
 }
 
 // unfold builds fn below a disclosure while it is open, growing it into

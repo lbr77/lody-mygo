@@ -13,13 +13,26 @@ func luma(tt *ui.Tester, x, y int) int {
 	return int(c.R) + int(c.G) + int(c.B)
 }
 
-func TestSettingsFadeInAndOut(t *testing.T) {
+// Settings opens and closes at once, as Lody's (noAnimation); other
+// dialogs fade their backdrop in and out.
+func TestDialogMotion(t *testing.T) {
 	a := fixture()
 	tt := ui.NewTester(a.render, 1100, 720)
 	tt.Frame()
 	// A corner of the window, which only the backdrop covers.
 	ground := luma(tt, 2, 710)
 	a.settingsOpen = true
+	tt.Frame()
+	if got := luma(tt, 2, 710); got >= ground-20 {
+		t.Fatalf("Settings fades in: %d, was %d", got, ground)
+	}
+	a.settingsOpen = false
+	tt.Frame()
+	if got := luma(tt, 2, 710); got < ground-2 {
+		t.Fatalf("Settings fades out: %d, was %d", got, ground)
+	}
+
+	a.confirm("Delete?", "", "Delete", func() {})
 	tt.Frame()
 	if got := luma(tt, 2, 710); got < ground-6 {
 		t.Fatalf("the backdrop dims the window at once: %d, was %d", got, ground)
@@ -29,7 +42,7 @@ func TestSettingsFadeInAndOut(t *testing.T) {
 	if dimmed >= ground-20 {
 		t.Fatalf("the backdrop doesn't dim the window once in: %d, was %d", dimmed, ground)
 	}
-	a.settingsOpen = false
+	a.confirming.open = false
 	tt.Frame()
 	if got := luma(tt, 2, 710); got > dimmed+6 {
 		t.Fatalf("the backdrop goes at once on closing: %d, was %d", got, dimmed)

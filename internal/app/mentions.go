@@ -489,7 +489,7 @@ func (a *App) mentionPanel(c *ui.Context, p *palette, box, input ui.Element) {
 		}
 		panel := ui.Column(c.Key("mentions")).AttachTo(box, ui.AnchorTopStart, ui.AnchorBottomStart).Margin(6, 0, 0, 0).
 			Width(width).Radius(12).Border(0.5, p.CardRim).Background(p.Popover).KeepFocus().Clip().
-			Shadow(0, 12, 32, -8, ui.RGBA(0, 0, 0, 0.18)).Transition(popIn)
+			Shadow(0, 12, 32, -8, ui.RGBA(0, 0, 0, 0.18)).Transition(popAbove)
 		panel.Children(func() {
 			list := ui.Scroll(c).MaxHeight(320).Padding(4).Gap(1)
 			if k := list.Keyframes("level", []ui.Keyframe{{Value: 0}, {At: popTime, Value: 1, Ease: easeStandard}}, ui.KeyframeOptions{Run: m.levelRun}); m.levelRun > 1 && k < 1 {
@@ -534,7 +534,8 @@ func (a *App) mentionRowView(c *ui.Context, p *palette, row mentionRow, highligh
 	if row.category == "" {
 		label = row.item.Name
 	}
-	r := ui.Row(c).Height(32).Padding(0, 8).Radius(8).Gap(8).AlignItems(ui.Center).Cursor(ui.CursorPointer).Label(label).Transition(colorFade)
+	// Instant, as a popup row's highlight: it keeps up with the arrow keys.
+	r := ui.Row(c).Height(32).Padding(0, 8).Radius(8).Gap(8).AlignItems(ui.Center).Cursor(ui.CursorPointer).Label(label)
 	switch {
 	case highlighted:
 		r.Background(p.Text.Alpha(0.07))
