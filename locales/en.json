@@ -2255,5 +2255,11 @@
   "daemonStartingMessage": "The local daemon doesn't seem to have finished starting yet. If you run into trouble, click the button below to report a bug to us.",
   "hintReportBug": "Report a Bug",
   "hintDownloadClient": "Download the client",
-  "hintDiscordMessage": "Have questions? Join our Discord community for help."
+  "hintDiscordMessage": "Have questions? Join our Discord community for help.",
+  "passwordCurrentStepHint": "First, enter your current password.",
+  "passwordNewStepHint": "Now choose a new password. You'll be signed out afterwards.",
+  "passwordContinue": "Continue",
+  "passwordMismatch": "Passwords do not match.",
+  "passwordCurrentRequired": "Enter your current password.",
+  "passwordVerifyFailed": "Couldn't verify your password. Please try again."
 }

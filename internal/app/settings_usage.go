@@ -257,16 +257,24 @@ func (a *App) usagePage(c *ui.Context, p *palette) {
 				ui.Segmented(c, &picked, "Token", locales.UsageCostUSD()).Label(locales.UsageSkyline())
 				a.usageCost = picked == 1
 			})
-			if rng == "day" || rng == "week" {
-				ui.Row(c).FillWidth().Gap(24).AlignItems(ui.Start).Children(func() {
-					usageDonut(c, p, models, cost, t)
-					usageSkyline(c, p, t, cost, t.BucketSizeMs > 0 && t.BucketSizeMs < 86400000)
-				})
-			} else if days := a.usageCalendar(); days != nil {
-				// Longer ranges show the year, the range's days lit.
-				a.usageHeatmap(c, p, days, cost, rng == "month")
-				a.usageDayPanel(c, p)
+			// A range comes in sharpening out of a 6px blur over 200ms, as
+			// Lody's range switch.
+			chart := ui.Column(c.Key("chart/" + rng)).FillWidth().Gap(16)
+			if k := chart.Keyframes("in", []ui.Keyframe{{Value: 0}, {At: 200 * time.Millisecond, Value: 1, Ease: ui.EaseOut}}); k < 1 {
+				chart.Opacity(k).Blur(6 * (1 - k))
 			}
+			chart.Children(func() {
+				if rng == "day" || rng == "week" {
+					ui.Row(c).FillWidth().Gap(24).AlignItems(ui.Start).Children(func() {
+						usageDonut(c, p, models, cost, t)
+						usageSkyline(c, p, t, cost, t.BucketSizeMs > 0 && t.BucketSizeMs < 86400000)
+					})
+				} else if days := a.usageCalendar(); days != nil {
+					// Longer ranges show the year, the range's days lit.
+					a.usageHeatmap(c, p, days, cost, rng == "month")
+					a.usageDayPanel(c, p)
+				}
+			})
 		})
 		stats := usageStatsOf(t.Buckets, cost)
 		dayStats := rng == "total" && a.usageCalendar() != nil
@@ -395,7 +403,14 @@ func (a *App) usageHeatmap(c *ui.Context, p *palette, days []usageDay, cost, mon
 	}
 	ui.Row(c).FillWidth().Gap(2).Children(func() {
 		for w := 0; w*7 < len(days); w++ {
-			ui.Column(c.Key(w)).Gap(2).Children(func() {
+			// The weeks resolve in order, each a blurred rise 22ms after the
+			// last, as Lody's range sweep.
+			col := ui.Column(c.Key(w)).Gap(2)
+			if k := col.Keyframes("sweep", []ui.Keyframe{{Value: 0}, {At: 360 * time.Millisecond, Value: 1, Ease: easeSweep}},
+				ui.KeyframeOptions{Delay: time.Duration(w) * 22 * time.Millisecond}); k < 1 {
+				col.Opacity(k).Blur(5*(1-k)).Translate(0, 6*(1-k))
+			}
+			col.Children(func() {
 				for i := w * 7; i < min(len(days), w*7+7); i++ {
 					d := days[i]
 					cell := ui.ButtonBase(c.Key(i)).Size(9, 9).Radius(2).Tooltip(d.Date + " · " + fmtv(values[i])).Label(d.Date)
@@ -538,7 +553,14 @@ func usageDonut(c *ui.Context, p *palette, parts []usagePart, cost bool, t *usag
 		total = t.Totals.CostUSD
 	}
 	ui.Column(c).Width(170).Shrink(0).Gap(12).Children(func() {
-		ui.Box(c).Size(170, 170).Center().Draw(func(pt *ui.Painter, r ui.Rect) {
+		ring := ui.Box(c.Key("donut")).Size(170, 170).Center()
+		// Each slice draws its arc over 850ms, 60ms after the one before.
+		drawn := make([]float64, len(parts))
+		for i := range parts {
+			drawn[i] = float64(ring.Keyframes(fmt.Sprint("slice", i), []ui.Keyframe{{Value: 0}, {At: 850 * time.Millisecond, Value: 1, Ease: easeSweep}},
+				ui.KeyframeOptions{Delay: time.Duration(i) * 60 * time.Millisecond}))
+		}
+		ring.Draw(func(pt *ui.Painter, r ui.Rect) {
 			cx, cy := r.X+r.W/2, r.Y+r.H/2
 			outer, inner := float32(83), float32(57)
 			pt.FillPath(ringSlice(cx, cy, inner, outer, 0, 1), p.Text.Alpha(0.06))
@@ -553,7 +575,9 @@ func usageDonut(c *ui.Context, p *palette, parts []usagePart, cost bool, t *usag
 				}
 				// A hairline between slices, as Lody's donut has.
 				gap := math.Min(0.003, share/4)
-				pt.FillPath(ringSlice(cx, cy, inner, outer, from+gap, math.Min(from+share, 1)-gap), usagePalette(p, i))
+				if end := from + gap + (math.Min(from+share, 1)-gap-from-gap)*drawn[i]; end > from+gap {
+					pt.FillPath(ringSlice(cx, cy, inner, outer, from+gap, end), usagePalette(p, i))
+				}
 				from += share
 			}
 		}).Children(func() {
@@ -656,7 +680,10 @@ func usageShareBar(c *ui.Context, p *palette, title string, parts []usagePart, c
 		ui.Row(c).FillWidth().Height(6).Radius(3).Gap(2).Clip().Background(p.Text.Alpha(0.06)).Children(func() {
 			for i, s := range parts {
 				if total > 0 && s.value(cost) > 0 {
-					ui.Box(c.Key(s.key)).BasisPercent(float32(s.value(cost) / total * 100)).Shrink(1).MinWidth(1).Height(6).Background(usagePalette(p, i))
+					// Each part grows to its share over 500ms.
+					seg := ui.Box(c.Key(s.key)).Shrink(1).MinWidth(1).Height(6).Background(usagePalette(p, i))
+					grow := seg.Keyframes("grow", []ui.Keyframe{{Value: 0}, {At: 500 * time.Millisecond, Value: 1, Ease: easeSweep}})
+					seg.BasisPercent(grow * seg.AnimateWith("share", float32(s.value(cost)/total*100), 500*time.Millisecond, easeSweep))
 				}
 			}
 		})

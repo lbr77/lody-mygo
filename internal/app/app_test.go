@@ -1680,3 +1680,18 @@ func TestNoMachineHint(t *testing.T) {
 		t.Fatalf("hint: %q", tt.Texts())
 	}
 }
+
+func TestPasswordSteps(t *testing.T) {
+	a := fixture()
+	a.settingsOpen, a.settingsTab = true, "account"
+	a.password = passwordForm{open: true}
+	tt := snap(t, a, "password-current", false, nil)
+	if !tt.HasText("First, enter your current password.") || !tt.HasText("Continue") {
+		t.Fatalf("step 0: %q", tt.Texts())
+	}
+	a.password.step, a.password.dir, a.password.run = 1, 1, 1
+	tt.Frame()
+	if !tt.HasText("Now choose a new password. You'll be signed out afterwards.") || !tt.HasText("Back") {
+		t.Fatalf("step 1: %q", tt.Texts())
+	}
+}

@@ -1104,5 +1104,11 @@
   "daemonStartingMessage": "守护进程好像还没有完成启动。如果你遇到问题，可以点击下方按钮向我们报告 Bug。",
   "hintReportBug": "报告 Bug",
   "hintDownloadClient": "下载客户端",
-  "hintDiscordMessage": "遇到问题？加入 Discord 社区获取帮助。"
+  "hintDiscordMessage": "遇到问题？加入 Discord 社区获取帮助。",
+  "passwordCurrentStepHint": "请先输入当前密码。",
+  "passwordNewStepHint": "设置新密码，完成后你将被登出。",
+  "passwordContinue": "继续",
+  "passwordMismatch": "两次输入的密码不一致。",
+  "passwordCurrentRequired": "请输入当前密码。",
+  "passwordVerifyFailed": "无法验证密码，请重试。"
 }

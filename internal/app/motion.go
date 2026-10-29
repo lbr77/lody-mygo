@@ -29,6 +29,8 @@ var (
 
 	// pressMotion sinks a button a pixel while it is held, as Lody's.
 	pressMotion = ui.Animation{Duration: fadeTime, Ease: easeStandard}
+	// easeSweep is the curve Lody's usage charts sweep in on.
+	easeSweep = ui.CubicBezier(0.22, 1, 0.36, 1)
 	// peekSpring grows the composer's image peek out of its thumbnail.
 	peekSpring = ui.Animation{Spring: ui.SpringOptions{Stiffness: 420, Damping: 28, Mass: 1}}
 	// streamReveal paces a streaming reply.

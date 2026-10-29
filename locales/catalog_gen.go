@@ -11142,3 +11142,63 @@ func HintDiscordMessage() string { return In(i18n.Locale()).HintDiscordMessage()
 func (msgs Messages) HintDiscordMessage() string {
 	return Catalog.Format(msgs.locale, "hintDiscordMessage", nil)
 }
+
+// PasswordCurrentStepHint says "First, enter your current password."
+// in the language the app shows.
+func PasswordCurrentStepHint() string { return In(i18n.Locale()).PasswordCurrentStepHint() }
+
+// PasswordCurrentStepHint says "First, enter your current password."
+// in the language of msgs.
+func (msgs Messages) PasswordCurrentStepHint() string {
+	return Catalog.Format(msgs.locale, "passwordCurrentStepHint", nil)
+}
+
+// PasswordNewStepHint says "Now choose a new password. You'll be signed out afterwards."
+// in the language the app shows.
+func PasswordNewStepHint() string { return In(i18n.Locale()).PasswordNewStepHint() }
+
+// PasswordNewStepHint says "Now choose a new password. You'll be signed out afterwards."
+// in the language of msgs.
+func (msgs Messages) PasswordNewStepHint() string {
+	return Catalog.Format(msgs.locale, "passwordNewStepHint", nil)
+}
+
+// PasswordContinue says "Continue"
+// in the language the app shows.
+func PasswordContinue() string { return In(i18n.Locale()).PasswordContinue() }
+
+// PasswordContinue says "Continue"
+// in the language of msgs.
+func (msgs Messages) PasswordContinue() string {
+	return Catalog.Format(msgs.locale, "passwordContinue", nil)
+}
+
+// PasswordMismatch says "Passwords do not match."
+// in the language the app shows.
+func PasswordMismatch() string { return In(i18n.Locale()).PasswordMismatch() }
+
+// PasswordMismatch says "Passwords do not match."
+// in the language of msgs.
+func (msgs Messages) PasswordMismatch() string {
+	return Catalog.Format(msgs.locale, "passwordMismatch", nil)
+}
+
+// PasswordCurrentRequired says "Enter your current password."
+// in the language the app shows.
+func PasswordCurrentRequired() string { return In(i18n.Locale()).PasswordCurrentRequired() }
+
+// PasswordCurrentRequired says "Enter your current password."
+// in the language of msgs.
+func (msgs Messages) PasswordCurrentRequired() string {
+	return Catalog.Format(msgs.locale, "passwordCurrentRequired", nil)
+}
+
+// PasswordVerifyFailed says "Couldn't verify your password. Please try again."
+// in the language the app shows.
+func PasswordVerifyFailed() string { return In(i18n.Locale()).PasswordVerifyFailed() }
+
+// PasswordVerifyFailed says "Couldn't verify your password. Please try again."
+// in the language of msgs.
+func (msgs Messages) PasswordVerifyFailed() string {
+	return Catalog.Format(msgs.locale, "passwordVerifyFailed", nil)
+}

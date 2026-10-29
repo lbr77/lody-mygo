@@ -218,3 +218,22 @@ func pulse(e ui.Element) ui.Element {
 		ui.KeyframeOptions{Repeat: ui.RepeatForever})
 	return e.Opacity(k)
 }
+
+// onlineDot is a machine's 10px status dot: grey offline; green online,
+// with a halo breathing round it every 2.8s, as Lody's machine list.
+func onlineDot(c *ui.Context, p *palette, online bool) {
+	ink := p.Tertiary
+	if online {
+		ink = p.Success
+	}
+	ui.Box(c.Key("online-dot")).Size(10, 10).Shrink(0).Children(func() {
+		if online {
+			halo := ui.Box(c.Key("halo")).Absolute().Left(-3).Top(-3).Right(-3).Bottom(-3).Radius(8).Background(ink)
+			k := halo.Keyframes("breathe", []ui.Keyframe{{Value: 0}, {At: 1400 * time.Millisecond, Value: 1}, {At: 2800 * time.Millisecond, Value: 0}},
+				ui.KeyframeOptions{Repeat: ui.RepeatForever})
+			s := 0.875 + (1.2-0.875)*k
+			halo.Scale(s, s).Opacity(0.12 + 0.16*k)
+		}
+		ui.Box(c).Size(10, 10).Radius(5).Background(ink)
+	})
+}

@@ -908,16 +908,30 @@ func (a *App) providerFormView(c *ui.Context, p *palette) {
 			area(c, p, &f.env, "KEY=value", envTitle, 3).Font(fontMono)
 			ui.Text(c, locales.McpEnvHint()).FontSize(sizeCaption).TextColor(p.Tertiary)
 		})
-		switch {
-		case f.testing:
-			ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
-				spinner(c).Size(13, 13)
-				ui.Text(c, locales.ProviderTesting()).FontSize(sizeFoot).TextColor(p.Secondary)
+		if f.testing || f.tested != "" || f.testErr != "" {
+			// The test's mark crossfades between its states, each growing in
+			// from .85 over 180ms.
+			swap := ui.ElementTransition{Duration: durRegular, Ease: easeStandard, Enter: &ui.Motion{Scale: 0.85}, Exit: &ui.Motion{Scale: 0.85}}
+			ui.Row(c).Gap(8).AlignItems(ui.Start).Children(func() {
+				ui.Box(c).Size(14, 14).Shrink(0).Margin(1, 0, 0, 0).Children(func() {
+					switch {
+					case f.testing:
+						spinner(c.Key("testing")).Size(14, 14).Absolute().Transition(swap)
+					case f.tested != "":
+						ui.Icon(c.Key("passed"), markSuccess).Size(14, 14).TextColor(p.Success).Absolute().Transition(swap)
+					default:
+						ui.Icon(c.Key("failed"), markDanger).Size(14, 14).TextColor(p.Danger).Absolute().Transition(swap)
+					}
+				})
+				switch {
+				case f.testing:
+					ui.Text(c, locales.ProviderTesting()).FontSize(sizeFoot).TextColor(p.Secondary)
+				case f.tested != "":
+					ui.Text(c, f.tested).FontSize(sizeFoot).TextColor(p.Success)
+				default:
+					ui.Text(c, f.testErr).FontSize(sizeFoot).TextColor(p.Danger).Selectable().Grow(1).MinWidth(0)
+				}
 			})
-		case f.tested != "":
-			ui.Text(c, f.tested).FontSize(sizeFoot).TextColor(p.Success)
-		case f.testErr != "":
-			ui.Text(c, f.testErr).FontSize(sizeFoot).TextColor(p.Danger).Selectable()
 		}
 		if f.err != "" {
 			ui.Text(c, f.err).FontSize(sizeFoot).TextColor(p.Danger)

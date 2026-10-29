@@ -301,11 +301,7 @@ func (a *App) machineCard(c *ui.Context, p *palette, id string, machines map[str
 		head := ui.Row(c).FillWidth().Height(48).Padding(0, 14).Gap(10).AlignItems(ui.Center).Cursor(ui.CursorPointer).
 			Label(a.machineName(id)).OnClick(func() { a.expanded[key] = !a.expanded[key] })
 		head.Children(func() {
-			dot := p.Tertiary
-			if a.presence.IsOnline(id) {
-				dot = p.Success
-			}
-			ui.Box(c).Size(8, 8).Radius(4).Background(dot).Shrink(0)
+			onlineDot(c, p, a.presence.IsOnline(id))
 			ui.Text(c, a.machineName(id)).FontSize(sizeSub).FontWeight(500).TextColor(p.Text).SingleLine().Grow(1).MinWidth(0)
 			if id == a.localMachine() {
 				pill(c, p, nil, locales.MachineThis())
@@ -769,61 +765,135 @@ func formatByteSize(b float64) string {
 
 type passwordForm struct {
 	open                     bool
+	step                     int     // 0 the current password, 1 the new one
+	dir                      float32 // which way the last step went: 1 on, -1 back
+	run                      uint64  // bumped as the step changes, to slide it in
 	current, next, confirmed string
 	busy                     bool
 	err                      string
 }
 
-// passwordDialog changes the password, as Lody does: it checks the
-// current one, changes it, signs out the other sessions, then this one.
+// passwordDialog changes the password in Lody's two steps: the current
+// one is checked first, then a new one is chosen; the change signs out
+// the other sessions, then this one. Each step slides in 28px from the
+// side it comes from as the last slides out the other way.
 func (a *App) passwordDialog(c *ui.Context, p *palette) {
 	f := &a.password
 	if !f.open {
 		return
 	}
-	sheet(c, p, &f.open, 420, func() {
-		sheetHeader(c, p, locales.PasswordChange(), locales.PasswordChangeLead(), func() { f.open = false })
-		ui.Column(c).FillWidth().Padding(8, 20).Gap(12).Children(func() {
-			field(c, p, locales.PasswordCurrent(), "", func() { input(c, p, &f.current, "", locales.PasswordCurrent()).Password().AutoFocus() })
-			field(c, p, locales.PasswordNew(), locales.PasswordRule(), func() { input(c, p, &f.next, "", locales.PasswordNew()).Password() })
-			field(c, p, locales.PasswordConfirm(), "", func() { input(c, p, &f.confirmed, "", locales.PasswordConfirm()).Password() })
-			if f.err != "" {
-				ui.Text(c, f.err).FontSize(sizeFoot).TextColor(p.Danger)
+	goTo := func(step int) {
+		f.dir = 1
+		if step < f.step {
+			f.dir = -1
+		}
+		f.step, f.err = step, ""
+		f.run++
+	}
+	verify := func() {
+		if f.busy {
+			return
+		}
+		if f.current == "" {
+			f.err = locales.PasswordCurrentRequired()
+			return
+		}
+		api, token, current := a.api, a.tokenNow(), f.current
+		f.busy, f.err = true, ""
+		go func() {
+			ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+			defer cancel()
+			var check struct {
+				Valid bool `json:"valid"`
 			}
+			err := api.Call(ctx, token, "/api/account/verify-password", map[string]any{"password": current}, &check)
+			a.update(func() {
+				f.busy = false
+				switch {
+				case err != nil:
+					f.err = locales.PasswordVerifyFailed()
+				case !check.Valid:
+					f.err = locales.PasswordWrong()
+				default:
+					goTo(1)
+				}
+			})
+		}()
+	}
+	submit := func() {
+		if f.busy || len(f.next) < 8 {
+			return
+		}
+		if f.next != f.confirmed {
+			f.err = locales.PasswordMismatch()
+			return
+		}
+		api, token, current, next := a.api, a.tokenNow(), f.current, f.next
+		f.busy, f.err = true, ""
+		go func() {
+			ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+			defer cancel()
+			err := api.Call(ctx, token, "/api/auth/change-password", map[string]any{"currentPassword": current, "newPassword": next, "revokeOtherSessions": true}, nil)
+			a.update(func() {
+				f.busy = false
+				if err != nil {
+					// Likely the current password, changed meanwhile: back to it.
+					f.err = err.Error()
+					goTo(0)
+					return
+				}
+				f.open, a.settingsOpen = false, false
+				a.signOut()
+			})
+		}()
+	}
+	sheet(c, p, &f.open, 420, func() {
+		lead := locales.PasswordCurrentStepHint()
+		if f.step == 1 {
+			lead = locales.PasswordNewStepHint()
+		}
+		sheetHeader(c, p, locales.PasswordChange(), lead, func() { f.open = false })
+		ui.Column(c).FillWidth().Padding(8, 20).ClipX().Children(func() {
+			step := ui.Column(c.Key(fmt.Sprint("password-step-", f.step))).FillWidth().Gap(12)
+			if k := step.Keyframes("in", []ui.Keyframe{{Value: 0}, {At: 200 * time.Millisecond, Value: 1, Ease: easeStandard}}, ui.KeyframeOptions{Run: f.run}); f.run > 0 && k < 1 {
+				step.Translate(28*f.dir*(1-k), 0).Opacity(k)
+			}
+			step.Children(func() {
+				if f.step == 0 {
+					field(c, p, locales.PasswordCurrent(), "", func() {
+						in := input(c, p, &f.current, "", locales.PasswordCurrent()).Password().AutoFocus()
+						if in.Submitted() {
+							verify()
+						}
+					})
+				} else {
+					field(c, p, locales.PasswordNew(), locales.PasswordRule(), func() { input(c, p, &f.next, "", locales.PasswordNew()).Password().AutoFocus() })
+					field(c, p, locales.PasswordConfirm(), "", func() {
+						in := input(c, p, &f.confirmed, "", locales.PasswordConfirm()).Password()
+						if in.Submitted() {
+							submit()
+						}
+					})
+				}
+				if f.err != "" {
+					ui.Text(c, f.err).FontSize(sizeFoot).TextColor(p.Danger)
+				}
+			})
 		})
-		ui.Row(c).FillWidth().Padding(12, 20, 16, 20).Gap(8).Justify(ui.End).Children(func() {
-			ghostButton(c, p, locales.Cancel()).Border(1, p.Border).OnClick(func() { f.open = false })
+		ui.Row(c).FillWidth().Padding(12, 20, 16, 20).Gap(8).Justify(ui.End).AlignItems(ui.Center).Children(func() {
+			if f.step == 0 {
+				ghostButton(c, p, locales.Cancel()).Border(1, p.Border).OnClick(func() { f.open = false })
+			} else {
+				ghostButton(c, p, locales.NavBack()).Border(1, p.Border).OnClick(func() { goTo(0) })
+			}
 			if f.busy {
 				spinner(c).Size(14, 14)
 			}
-			ok := f.current != "" && len(f.next) >= 8 && f.next == f.confirmed && !f.busy
-			primaryButton(c, p, locales.PasswordChange(), ok).OnClick(func() {
-				api, token, current, next := a.api, a.tokenNow(), f.current, f.next
-				f.busy, f.err = true, ""
-				go func() {
-					ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-					defer cancel()
-					var check struct {
-						Valid bool `json:"valid"`
-					}
-					err := api.Call(ctx, token, "/api/account/verify-password", map[string]any{"password": current}, &check)
-					if err == nil && !check.Valid {
-						err = fmt.Errorf("%s", locales.PasswordWrong())
-					}
-					if err == nil {
-						err = api.Call(ctx, token, "/api/auth/change-password", map[string]any{"currentPassword": current, "newPassword": next, "revokeOtherSessions": true}, nil)
-					}
-					a.update(func() {
-						f.busy = false
-						if err != nil {
-							f.err = err.Error()
-							return
-						}
-						f.open, a.settingsOpen = false, false
-						a.signOut()
-					})
-				}()
-			})
+			if f.step == 0 {
+				primaryButton(c, p, locales.PasswordContinue(), f.current != "" && !f.busy).OnClick(verify)
+				return
+			}
+			primaryButton(c, p, locales.PasswordChange(), len(f.next) >= 8 && f.confirmed != "" && !f.busy).OnClick(submit)
 		})
 	})
 }
