@@ -3267,5 +3267,20 @@
   "notifyPromptTitle": "Enable notifications?",
   "notifyPromptDescription": "Get notified when your AI tasks complete.",
   "notifyPromptEnable": "Enable",
-  "notifyPromptDontRemind": "Don't remind me"
+  "notifyPromptDontRemind": "Don't remind me",
+  "infoWorktree": "Worktree",
+  "infoBranch": "Branch",
+  "infoRepository": "Repository",
+  "infoFolder": "Folder",
+  "infoCopy": "Copy",
+  "infoCopied": "Copied",
+  "infoMachine": "Machine",
+  "infoAuthor": "Author",
+  "infoChat": "Chat",
+  "infoChanges": "Changes",
+  "infoCiPassing": "CI passed",
+  "infoCiFailing": "CI failed",
+  "infoCiExpected": "CI expected",
+  "infoCiRunning": "CI running",
+  "infoOpenPR": "Open pull request"
 }

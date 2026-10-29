@@ -272,3 +272,53 @@ func TestNotifyPrompt(t *testing.T) {
 		t.Fatal("asked with notifications on")
 	}
 }
+
+// Resting on a sidebar chat for 650ms shows its info card beside it;
+// within 3s of one the next shows at once, and a press closes it.
+func TestSessionHoverCard(t *testing.T) {
+	a := fixture()
+	s := &a.catalog.Sessions[1]
+	s.BranchName, s.UserID, s.DiffAdd, s.DiffDel = "lody/sidebar-marks", "u1", 42, 7
+	tt := snap(t, a, "hover-card-cold", false, nil)
+	r, ok := tt.Find("Sidebar status marks")
+	if !ok {
+		t.Fatalf("no row in %q", tt.Texts())
+	}
+	tt.Move(r.X+r.W/2, r.Y+r.H/2)
+	tt.Frame()
+	if tt.HasText("lody/sidebar-marks") {
+		t.Fatal("shown at once")
+	}
+	a.card.since = time.Now().Add(-time.Second)
+	tt.Frame()
+	tt.Advance(300 * time.Millisecond)
+	tt.Frame()
+	snapFrame(t, tt, "hover-card")
+	for _, want := range []string{"lody/sidebar-marks", "lody-mygo", "Ada Lovelace", "Studio", "+42", "−7"} {
+		if !tt.HasText(want) {
+			t.Errorf("missing %q in %q", want, tt.Texts())
+		}
+	}
+	// Warm: the next chat's card comes at once.
+	n, ok := tt.Find("Fix the flaky upload test")
+	if !ok {
+		t.Fatal("no second row")
+	}
+	tt.Move(n.X+n.W/2, n.Y+n.H/2)
+	tt.Frame()
+	if a.card.shown != "s3" || !a.card.inRun {
+		t.Fatalf("not warm: %+v", a.card)
+	}
+	if !tt.HasText("website") {
+		t.Fatalf("no folder in %q", tt.Texts())
+	}
+	// A press closes it, and it does not come back while the pointer stays.
+	tt.Press(n.X+n.W/2, n.Y+n.H/2)
+	tt.Release(n.X+n.W/2, n.Y+n.H/2)
+	tt.Frame()
+	tt.Advance(time.Second)
+	tt.Frame()
+	if a.card.shown != "" {
+		t.Fatalf("still shown after a press: %+v", a.card)
+	}
+}

@@ -16750,3 +16750,153 @@ func NotifyPromptDontRemind() string { return In(i18n.Locale()).NotifyPromptDont
 func (msgs Messages) NotifyPromptDontRemind() string {
 	return Catalog.Format(msgs.locale, "notifyPromptDontRemind", nil)
 }
+
+// InfoWorktree says "Worktree"
+// in the language the app shows.
+func InfoWorktree() string { return In(i18n.Locale()).InfoWorktree() }
+
+// InfoWorktree says "Worktree"
+// in the language of msgs.
+func (msgs Messages) InfoWorktree() string {
+	return Catalog.Format(msgs.locale, "infoWorktree", nil)
+}
+
+// InfoBranch says "Branch"
+// in the language the app shows.
+func InfoBranch() string { return In(i18n.Locale()).InfoBranch() }
+
+// InfoBranch says "Branch"
+// in the language of msgs.
+func (msgs Messages) InfoBranch() string {
+	return Catalog.Format(msgs.locale, "infoBranch", nil)
+}
+
+// InfoRepository says "Repository"
+// in the language the app shows.
+func InfoRepository() string { return In(i18n.Locale()).InfoRepository() }
+
+// InfoRepository says "Repository"
+// in the language of msgs.
+func (msgs Messages) InfoRepository() string {
+	return Catalog.Format(msgs.locale, "infoRepository", nil)
+}
+
+// InfoFolder says "Folder"
+// in the language the app shows.
+func InfoFolder() string { return In(i18n.Locale()).InfoFolder() }
+
+// InfoFolder says "Folder"
+// in the language of msgs.
+func (msgs Messages) InfoFolder() string {
+	return Catalog.Format(msgs.locale, "infoFolder", nil)
+}
+
+// InfoCopy says "Copy"
+// in the language the app shows.
+func InfoCopy() string { return In(i18n.Locale()).InfoCopy() }
+
+// InfoCopy says "Copy"
+// in the language of msgs.
+func (msgs Messages) InfoCopy() string {
+	return Catalog.Format(msgs.locale, "infoCopy", nil)
+}
+
+// InfoCopied says "Copied"
+// in the language the app shows.
+func InfoCopied() string { return In(i18n.Locale()).InfoCopied() }
+
+// InfoCopied says "Copied"
+// in the language of msgs.
+func (msgs Messages) InfoCopied() string {
+	return Catalog.Format(msgs.locale, "infoCopied", nil)
+}
+
+// InfoMachine says "Machine"
+// in the language the app shows.
+func InfoMachine() string { return In(i18n.Locale()).InfoMachine() }
+
+// InfoMachine says "Machine"
+// in the language of msgs.
+func (msgs Messages) InfoMachine() string {
+	return Catalog.Format(msgs.locale, "infoMachine", nil)
+}
+
+// InfoAuthor says "Author"
+// in the language the app shows.
+func InfoAuthor() string { return In(i18n.Locale()).InfoAuthor() }
+
+// InfoAuthor says "Author"
+// in the language of msgs.
+func (msgs Messages) InfoAuthor() string {
+	return Catalog.Format(msgs.locale, "infoAuthor", nil)
+}
+
+// InfoChat says "Chat"
+// in the language the app shows.
+func InfoChat() string { return In(i18n.Locale()).InfoChat() }
+
+// InfoChat says "Chat"
+// in the language of msgs.
+func (msgs Messages) InfoChat() string {
+	return Catalog.Format(msgs.locale, "infoChat", nil)
+}
+
+// InfoChanges says "Changes"
+// in the language the app shows.
+func InfoChanges() string { return In(i18n.Locale()).InfoChanges() }
+
+// InfoChanges says "Changes"
+// in the language of msgs.
+func (msgs Messages) InfoChanges() string {
+	return Catalog.Format(msgs.locale, "infoChanges", nil)
+}
+
+// InfoCiPassing says "CI passed"
+// in the language the app shows.
+func InfoCiPassing() string { return In(i18n.Locale()).InfoCiPassing() }
+
+// InfoCiPassing says "CI passed"
+// in the language of msgs.
+func (msgs Messages) InfoCiPassing() string {
+	return Catalog.Format(msgs.locale, "infoCiPassing", nil)
+}
+
+// InfoCiFailing says "CI failed"
+// in the language the app shows.
+func InfoCiFailing() string { return In(i18n.Locale()).InfoCiFailing() }
+
+// InfoCiFailing says "CI failed"
+// in the language of msgs.
+func (msgs Messages) InfoCiFailing() string {
+	return Catalog.Format(msgs.locale, "infoCiFailing", nil)
+}
+
+// InfoCiExpected says "CI expected"
+// in the language the app shows.
+func InfoCiExpected() string { return In(i18n.Locale()).InfoCiExpected() }
+
+// InfoCiExpected says "CI expected"
+// in the language of msgs.
+func (msgs Messages) InfoCiExpected() string {
+	return Catalog.Format(msgs.locale, "infoCiExpected", nil)
+}
+
+// InfoCiRunning says "CI running"
+// in the language the app shows.
+func InfoCiRunning() string { return In(i18n.Locale()).InfoCiRunning() }
+
+// InfoCiRunning says "CI running"
+// in the language of msgs.
+func (msgs Messages) InfoCiRunning() string {
+	return Catalog.Format(msgs.locale, "infoCiRunning", nil)
+}
+
+// InfoOpenPR says "Open pull request"
+// in the language the app shows.
+func InfoOpenPR() string { return In(i18n.Locale()).InfoOpenPR() }
+
+// InfoOpenPR says "Open pull request"
+// in the language of msgs.
+func (msgs Messages) InfoOpenPR() string {
+	return Catalog.Format(msgs.locale, "infoOpenPR", nil)
+}

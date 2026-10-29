@@ -374,11 +374,13 @@ func (a *App) sessionRow(c *ui.Context, p *palette, r sideRow) {
 	case hovered:
 		row.Background(p.SideHover)
 	}
-	if row.Clicked() && a.renaming != s.ID {
+	clicked := row.Clicked()
+	if clicked && a.renaming != s.ID {
 		a.open(s.ID)
 	}
 	sess := *s
 	row.ContextMenu(func(m *ui.Menu) { a.sessionMenu(m, sess) })
+	a.sessionHover(c, p, row, s, hovered, row.Pressed() || clicked)
 	ink := p.SideRow
 	if selected {
 		ink = p.SideRowSel

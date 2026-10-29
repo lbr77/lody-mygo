@@ -1662,5 +1662,20 @@
   "notifyPromptTitle": "开启通知？",
   "notifyPromptDescription": "在 AI 任务完成时收到通知提醒。",
   "notifyPromptEnable": "开启",
-  "notifyPromptDontRemind": "不再提醒"
+  "notifyPromptDontRemind": "不再提醒",
+  "infoWorktree": "工作树",
+  "infoBranch": "分支",
+  "infoRepository": "仓库",
+  "infoFolder": "文件夹",
+  "infoCopy": "复制",
+  "infoCopied": "已复制",
+  "infoMachine": "机器",
+  "infoAuthor": "作者",
+  "infoChat": "对话",
+  "infoChanges": "变更",
+  "infoCiPassing": "CI 已通过",
+  "infoCiFailing": "CI 未通过",
+  "infoCiExpected": "等待 CI 上报",
+  "infoCiRunning": "CI 运行中",
+  "infoOpenPR": "打开 Pull Request"
 }
