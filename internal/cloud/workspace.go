@@ -143,8 +143,26 @@ func (e *RPCError) Error() string {
 // machine's request stream and the reply comes back on a stream made for
 // this call. A timeout means the outcome is unknown, not that it failed.
 func (w *Conn) MachineRPC(ctx context.Context, machineID, method string, params any, timeout time.Duration) (json.RawMessage, error) {
-	ctx, cancel := context.WithTimeout(ctx, timeout+3*time.Second)
+	return w.MachineRPCProgress(ctx, machineID, method, params, timeout, nil)
+}
+
+// isProgress reports whether a reply is a progress frame, which a machine
+// sends while it works on a request (a runtime downloading, a sign-in
+// waiting for the user), before its answer.
+func isProgress(result json.RawMessage) bool {
+	var head struct {
+		Type string `json:"type"`
+	}
+	return json.Unmarshal(result, &head) == nil && strings.HasSuffix(head.Type, "-progress")
+}
+
+// MachineRPCProgress is MachineRPC that hands onProgress the progress
+// frames before the answer; each one restarts the timeout.
+func (w *Conn) MachineRPCProgress(ctx context.Context, machineID, method string, params any, timeout time.Duration, onProgress func(json.RawMessage)) (json.RawMessage, error) {
+	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
+	idle := time.AfterFunc(timeout+3*time.Second, cancel)
+	defer idle.Stop()
 	id := uuid.NewString()
 	replyName := fmt.Sprintf("rpc:res:%s:%s", machineID, uuid.NewString())
 	reply, err := w.Stream(ctx, replyName)
@@ -187,16 +205,25 @@ func (w *Conn) MachineRPC(ctx context.Context, machineID, method string, params 
 		if len(r.Payload) == 0 {
 			continue
 		}
-		if res, rpcErr, ok := findReply(r.Payload, id); ok {
-			if rpcErr != nil {
-				return nil, rpcErr
+		replies, rpcErr := findReplies(r.Payload, id)
+		if rpcErr != nil {
+			return nil, rpcErr
+		}
+		for _, res := range replies {
+			if isProgress(res) {
+				idle.Reset(timeout + 3*time.Second)
+				if onProgress != nil {
+					onProgress(res)
+				}
+				continue
 			}
 			return res, nil
 		}
 	}
 }
 
-func findReply(payload []byte, id string) (json.RawMessage, *RPCError, bool) {
+// findReplies are the results in a payload for request id, in order.
+func findReplies(payload []byte, id string) ([]json.RawMessage, *RPCError) {
 	type envelope struct {
 		ID     string          `json:"id"`
 		Result json.RawMessage `json:"result"`
@@ -205,19 +232,24 @@ func findReply(payload []byte, id string) (json.RawMessage, *RPCError, bool) {
 	var list []envelope
 	if strings.HasPrefix(strings.TrimSpace(string(payload)), "[") {
 		if json.Unmarshal(payload, &list) != nil {
-			return nil, nil, false
+			return nil, nil
 		}
 	} else {
 		var one envelope
 		if json.Unmarshal(payload, &one) != nil {
-			return nil, nil, false
+			return nil, nil
 		}
 		list = []envelope{one}
 	}
+	var out []json.RawMessage
 	for _, e := range list {
-		if e.ID == id {
-			return e.Result, e.Error, true
+		if e.ID != id {
+			continue
 		}
+		if e.Error != nil {
+			return out, e.Error
+		}
+		out = append(out, e.Result)
 	}
-	return nil, nil, false
+	return out, nil
 }

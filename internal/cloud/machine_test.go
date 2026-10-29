@@ -35,3 +35,18 @@ func TestSealRoundTrip(t *testing.T) {
 		t.Fatal("opened a tampered envelope")
 	}
 }
+
+// A machine answers a long request with progress frames before its answer,
+// all under the request's id.
+func TestFindReplies(t *testing.T) {
+	payload := []byte(`[{"id":"other","result":{"type":"x"}},
+{"id":"r1","result":{"type":"machine/acp-authentication-progress","status":"starting"}},
+{"id":"r1","result":{"type":"machine/acp-authenticate_response","success":true}}]`)
+	replies, rpcErr := findReplies(payload, "r1")
+	if rpcErr != nil || len(replies) != 2 || !isProgress(replies[0]) || isProgress(replies[1]) {
+		t.Fatalf("replies = %s, %v", replies, rpcErr)
+	}
+	if _, rpcErr := findReplies([]byte(`{"id":"r1","error":{"code":"x","message":"no"}}`), "r1"); rpcErr == nil || rpcErr.Message != "no" {
+		t.Fatalf("error = %v", rpcErr)
+	}
+}
