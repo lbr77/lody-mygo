@@ -164,9 +164,12 @@ func (a *App) inspector(c *ui.Context, p *palette) {
 				iconButton(c, p, iconRefresh, locales.Refresh(), p.Hover).OnClick(func() { a.refreshInspector(in) })
 			}
 			if len(in.tabs) < len(a.panelOptions()) {
-				iconButton(c, p, iconPlus, locales.PanelAdd(), p.Hover).Menu(func(m *ui.Menu) {
+				// The panels not open yet, each with its glyph, in Lody's
+				// drawn menu.
+				add := panelAddButton(c.Key("panel-add"), p)
+				lodyMenuButton(c, p, add, &a.rowMenu("panel-add").menuState, 160, 290, 32, func(m *lodyMenu) {
 					for _, o := range a.panelOptions() {
-						if !slices.Contains(in.tabs, o.id) && m.Item(o.label).Chosen() {
+						if !slices.Contains(in.tabs, o.id) && m.item(o.id, o.icon, o.label, menuItem{}) {
 							in.openPanel(o.id)
 						}
 					}
@@ -209,7 +212,7 @@ func (a *App) panelChooser(c *ui.Context, p *palette, in *inspectState) {
 							}
 							o := options[j]
 							b := ui.ButtonBase(c).FillWidth().Height(40).Padding(0, 12).Radius(8).Gap(8).Justify(ui.Start).AlignItems(ui.Center).
-								Border(1, p.Border).Cursor(ui.CursorPointer).Label(o.label).OnClick(func() { in.openPanel(o.id) }).Transition(colorFade)
+								Border(1, p.Border).Cursor(ui.CursorPointer).Label(o.label).OnClick(func() { in.openPanel(o.id) }).Transition(twFade)
 							if b.Hovered() {
 								b.Background(p.Hover)
 							}
@@ -226,30 +229,50 @@ func (a *App) panelChooser(c *ui.Context, p *palette, in *inspectState) {
 }
 
 func panelTab(c *ui.Context, p *palette, label string, active bool, close func()) ui.Element {
-	// A tab's colors fade over 150ms; it opens and closes at once, as Lody's.
+	// A tab's colors and ink fade over 150ms, as Lody's transition-colors;
+	// it opens and closes at once.
 	tab := ui.ButtonBase(c.Key(label)).Height(28).Padding(0, 4, 0, 10).Radius(8).Gap(4).AlignItems(ui.Center).Cursor(ui.CursorPointer).Label(label).
-		Transition(tabFade)
+		Transition(twFade)
+	hovered := tab.Hovered()
 	ink := p.Secondary
 	switch {
 	case active:
 		tab.Background(p.Text.Alpha(0.07))
 		ink = p.Text
-	case tab.Hovered():
+	case hovered:
 		tab.Background(p.Hover)
 	}
-	shown := active || tab.Hovered()
+	ink = tab.AnimateColor("ink", ink, ui.Animation{Duration: 150 * time.Millisecond, Ease: twEase})
 	tab.Children(func() {
 		ui.Text(c, label).FontSize(sizeSub).FontWeight(500).TextColor(ink).SingleLine()
-		x := ui.ButtonBase(c).Size(18, 18).Radius(5).Center().Cursor(ui.CursorPointer).Label(locales.Close() + " " + label).OnClick(close).Transition(colorFade)
+		// Close shows on the tab shown, and on another under the pointer;
+		// its opacity, fill and ink fade over 150ms, as Lody's.
+		x := ui.ButtonBase(c.Key("close")).Size(18, 18).Radius(5).Center().Cursor(ui.CursorPointer).Label(locales.Close() + " " + label).OnClick(close).
+			Transition(twFade)
+		xInk := ink
 		if x.Hovered() {
-			x.Background(p.Text.Alpha(0.08))
+			x.Background(p.Text.Alpha(0.1))
+			xInk = p.Text
 		}
-		if !shown {
-			x.Opacity(0)
-		}
-		x.Children(func() { ui.Icon(c, iconX).Size(11, 11).TextColor(ink) })
+		x.Opacity(x.AnimateWith("shown", b2f(active || hovered), 150*time.Millisecond, twEase))
+		xInk = x.AnimateColor("ink", xInk, ui.Animation{Duration: 150 * time.Millisecond, Ease: twEase})
+		x.Children(func() { ui.Icon(c, iconX).Size(11, 11).TextColor(xInk) })
 	})
 	return tab
+}
+
+// panelAddButton is the side panel's +: muted, filling and inking under the
+// pointer over 150ms, as Lody's.
+func panelAddButton(c *ui.Context, p *palette) ui.Element {
+	b := ui.ButtonBase(c).Size(28, 28).Radius(8).Center().Cursor(ui.CursorPointer).Label(locales.PanelAdd()).Transition(twFade)
+	ink := p.SideMuted
+	if b.Hovered() {
+		b.Background(p.Hover)
+		ink = p.Text
+	}
+	ink = b.AnimateColor("ink", ink, ui.Animation{Duration: 150 * time.Millisecond, Ease: twEase})
+	b.Children(func() { ui.Icon(c, iconPlus).Size(16, 16).TextColor(ink) })
+	return b
 }
 
 // changesTab lists what the session changed in its workspace, as the
@@ -301,7 +324,8 @@ func (a *App) changesTab(c *ui.Context, p *palette, in *inspectState) {
 	})
 	switch {
 	case cs.loading && cs.res == nil:
-		panelStatus(c, p, true, locales.PanelLoadingChanges(), "")
+		// Lody says it in words alone, without a spinner.
+		panelStatus(c, p, false, locales.PanelLoadingChanges(), "")
 		return
 	case cs.res != nil && cs.res.Status == "ok":
 		if len(cs.res.Entries) == 0 {
@@ -356,7 +380,8 @@ func (a *App) changesTab(c *ui.Context, p *palette, in *inspectState) {
 // changeRow is a changed file: its name over its folder, and its counts.
 func changeRow(c *ui.Context, p *palette, file, kind string, add, del int) ui.Element {
 	dir, name := path.Split(file)
-	row := ui.Row(c).MinHeight(36).Padding(4, 8).Radius(6).Gap(8).AlignItems(ui.Center).Cursor(ui.CursorPointer).Label(file).Transition(colorFade)
+	// The row fills under the pointer at once, as Lody's.
+	row := ui.Row(c).MinHeight(36).Padding(4, 8).Radius(6).Gap(8).AlignItems(ui.Center).Cursor(ui.CursorPointer).Label(file)
 	if row.Hovered() {
 		row.Background(p.Hover)
 	}
@@ -376,7 +401,7 @@ func changeRow(c *ui.Context, p *palette, file, kind string, add, del int) ui.El
 			}
 		})
 		if add < 0 && del < 0 {
-			ui.Text(c, "--").FontSize(sizeFoot).TextColor(p.Tertiary).Tooltip(locales.PanelNoStats())
+			tip(c, p, ui.Text(c, "--").FontSize(sizeFoot).TextColor(p.Tertiary), locales.PanelNoStats())
 			return
 		}
 		diffCounts(c, p, max(add, 0), max(del, 0))
@@ -443,7 +468,7 @@ func (a *App) machineDiff(c *ui.Context, p *palette, in *inspectState) {
 		}
 	})
 	if entry == nil {
-		panelStatus(c, p, true, locales.Loading(), "")
+		diffSkeleton(c, p)
 		return
 	}
 	a.changeDiff(c, p, "machine/"+in.scope+"/"+entry.Path, entry)
@@ -485,27 +510,58 @@ func (a *App) fileEdits(c *ui.Context, p *palette, ch fileChange) {
 		ui.Text(c, ch.path).Font(fontMono).FontSize(sizeFoot).TextColor(p.Text).SingleLine().Grow(1).MinWidth(0)
 		diffCounts(c, p, ch.add, ch.del)
 	})
+	in := a.inspectFor(a.selected)
 	ui.Scroll(c).Grow(1).MinHeight(0).Padding(12).Gap(12).Children(func() {
 		for i, ed := range ch.edits {
+			// Each edit is a card that folds, as Lody's diff cards: its
+			// header's chevron turns a quarter back over 200ms, and the diff
+			// grows or shrinks over 200ms on ease-out.
+			key := "panel/" + ed.key
+			open := !in.folded[key]
 			ui.Column(c.Key(ed.key)).FillWidth().Radius(8).Border(1, p.Border).Clip().Children(func() {
-				ui.Row(c).Height(28).Padding(0, 10).AlignItems(ui.Center).Background(p.Text.Alpha(0.03)).BorderWidth(0, 0, 1, 0).BorderColor(p.Border).Children(func() {
-					label := locales.PanelEdit(i + 1)
-					if t := conversationTimeOf(ed.at); t != "" {
-						label += " · " + t
+				head := ui.ButtonBase(c.Key("head")).FillWidth().Height(28).Padding(0, 10, 0, 4).Gap(4).AlignItems(ui.Center).Cursor(ui.CursorPointer).
+					Background(p.Text.Alpha(0.03)).OnClick(func() {
+					if in.folded == nil {
+						in.folded = map[string]bool{}
 					}
+					in.folded[key] = open
+				})
+				if open {
+					head.BorderWidth(0, 0, 1, 0).BorderColor(p.Border)
+				}
+				label := locales.PanelEdit(i + 1)
+				if t := conversationTimeOf(ed.at); t != "" {
+					label += " · " + t
+				}
+				head.Label(label).Children(func() {
+					ui.Box(c).Size(20, 20).Center().Shrink(0).Children(func() {
+						turnChevron(ui.Icon(c.Key("chevron"), iconChevronDown).Size(14, 14).TextColor(p.Secondary), -90, !open, 200*time.Millisecond, twEase)
+					})
 					ui.Text(c, label).FontSize(sizeCaption).TextColor(p.Secondary)
 				})
-				d := a.diffs["panel/"+ed.key]
-				if d == nil {
-					lang := editor.LanguageFor(ch.path)
-					before, after := editor.NewBuffer(ed.old), editor.NewBuffer(ed.new)
-					before.SetLanguage(lang)
-					after.SetLanguage(lang)
-					d = &editor.DiffState{Old: before, New: after, Layout: editor.DiffUnified, FitContent: true, Wrap: true}
-					a.diffs["panel/"+ed.key] = d
-				}
-				editor.DiffView(c, d).FillWidth()
+				foldOpen(c, key, open, 200*time.Millisecond, cssEaseOut, func() {
+					d := a.diffs[key]
+					if d == nil {
+						lang := editor.LanguageFor(ch.path)
+						before, after := editor.NewBuffer(ed.old), editor.NewBuffer(ed.new)
+						before.SetLanguage(lang)
+						after.SetLanguage(lang)
+						d = &editor.DiffState{Old: before, New: after, Layout: editor.DiffUnified, FitContent: true, Wrap: true}
+						a.diffs[key] = d
+					}
+					editor.DiffView(c, d).FillWidth()
+				})
 			})
+		}
+	})
+}
+
+// diffSkeleton holds a diff's room while it loads, as Lody's: five lines
+// breathing.
+func diffSkeleton(c *ui.Context, p *palette) {
+	ui.Column(c.Key("diff-skeleton")).FillWidth().Padding(12, 14).Gap(8).Children(func() {
+		for i, w := range []float32{100, 91, 80, 100, 75} {
+			skeleton(c, p, fmt.Sprint("diff-", i), 12).WidthPercent(w)
 		}
 	})
 }
@@ -555,7 +611,7 @@ func (a *App) turnDiffView(c *ui.Context, p *palette, in *inspectState) {
 	})
 	switch {
 	case td.loading:
-		panelStatus(c, p, true, locales.Loading(), "")
+		diffSkeleton(c, p)
 	case td.err != "":
 		panelStatus(c, p, false, locales.PanelNoDiff(), td.err)
 	case td.change == nil:

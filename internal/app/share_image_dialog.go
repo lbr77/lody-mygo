@@ -268,19 +268,21 @@ func (st *shareImage) shareTrack(c *ui.Context, p *palette, key string, options 
 		for _, o := range options {
 			id := o.id
 			on := id == selected
+			// Its ink, raised fill, shadow and opacity all move over 120ms
+			// on ease.standard, as Lody's segment.
 			seg := ui.ButtonBase(c.Key(o.id)).Width(w).Height(28).Radius(8).Center().Label(o.label).Role(ui.RoleRadio).Checked(on).
-				Disabled(disabled).Transition(colorFade)
+				Disabled(disabled)
 			if !disabled {
 				seg.Cursor(ui.CursorPointer)
-			} else {
-				seg.Opacity(0.45)
 			}
+			seg.Opacity(seg.AnimateWith("dim", map[bool]float32{true: 0.45, false: 1}[disabled], durFast, easeStandard))
 			ink := p.Secondary
 			if on || seg.Hovered() && !disabled {
 				ink = p.Text
 			}
-			if on {
-				raisedLook(seg, p, raised)
+			ink = seg.AnimateColor("ink", ink, ui.Animation{Duration: durFast, Ease: easeStandard})
+			if k := seg.AnimateWith("on", b2f(on), durFast, easeStandard); k > 0 {
+				raisedLookK(seg, p, raised, k)
 			}
 			seg.Children(func() {
 				t := ui.Text(c, o.label).FontSize(sizeSub).FontWeight(500).LetterSpacing(-0.13).TextColor(ink).SingleLine()
@@ -300,14 +302,18 @@ func (st *shareImage) shareTrack(c *ui.Context, p *palette, key string, options 
 
 // raisedLook stands a fill on the surface: the raised sheen over it, and
 // the raised shadow under it.
-func raisedLook(e ui.Element, p *palette, fill ui.Color) {
+func raisedLook(e ui.Element, p *palette, fill ui.Color) { raisedLookK(e, p, fill, 1) }
+
+// raisedLookK is raisedLook k of the way in: its fill, sheen and shadow
+// at k of their strength, for one fading in or out.
+func raisedLookK(e ui.Element, p *palette, fill ui.Color, k float32) {
 	if p.Dark {
-		e.Gradient(fill.Mix(ui.Hex("#FFFFFF"), 0.04), fill, 180).InsetShadow(0, 1, 0, 0, ui.RGBA(255, 255, 255, 0.08)).
-			Shadow(0, 0, 0, 0.5, ui.RGBA(0, 0, 0, 0.7)).Shadow(0, 1, 2, 0, ui.RGBA(0, 0, 0, 0.5))
+		e.Gradient(fill.Mix(ui.Hex("#FFFFFF"), 0.04).Alpha(k), fill.Alpha(k), 180).InsetShadow(0, 1, 0, 0, ui.RGBA(255, 255, 255, 0.08*k)).
+			Shadow(0, 0, 0, 0.5, ui.RGBA(0, 0, 0, 0.7*k)).Shadow(0, 1, 2, 0, ui.RGBA(0, 0, 0, 0.5*k))
 		return
 	}
-	e.Gradient(fill, fill.Mix(ui.Hex("#1C1C1C"), 0.03), 180).Shadow(0, 0, 0, 0.5, ui.RGBA(28, 28, 28, 0.16)).
-		Shadow(0, 1, 1, 0, ui.RGBA(28, 28, 28, 0.06)).Shadow(0, 2, 4, -1, ui.RGBA(28, 28, 28, 0.07))
+	e.Gradient(fill.Alpha(k), fill.Mix(ui.Hex("#1C1C1C"), 0.03).Alpha(k), 180).Shadow(0, 0, 0, 0.5, ui.RGBA(28, 28, 28, 0.16*k)).
+		Shadow(0, 1, 1, 0, ui.RGBA(28, 28, 28, 0.06*k)).Shadow(0, 2, 4, -1, ui.RGBA(28, 28, 28, 0.07*k))
 }
 
 var iconSlash = lucide(`<path d="M22 2 2 22"/>`)
@@ -320,24 +326,29 @@ func shareSwatch(c *ui.Context, p *palette, backdrop string, on, disabled bool) 
 		"none": locales.ShareImgBackdropNone(), "lody": locales.ShareImgBackdropLody(), "welcome": locales.ShareImgBackdropWelcome(),
 		"aurora": locales.ShareImgBackdropAurora(), "ocean": locales.ShareImgBackdropOcean(), "sunset": locales.ShareImgBackdropSunset(),
 	}[backdrop]
+	// Its ring and its opacity move over 120ms on ease.standard, as Lody's
+	// swatch's box-shadow and opacity.
 	b := ui.ButtonBase(c.Key("swatch/"+backdrop)).Size(28, 28).Radius(8).Shrink(0).Background(raisedGround(p)).Label(label).
-		Role(ui.RoleRadio).Checked(on).Disabled(disabled).Transition(colorFade)
+		Role(ui.RoleRadio).Checked(on).Disabled(disabled)
 	lodyTooltip(c, p, b, label)
 	accent := p.Primary
+	ring := accent.Alpha(0)
 	switch {
 	case on:
-		b.Shadow(0, 0, 0, 2, accent)
+		ring = accent
 	case b.Hovered() && !disabled:
-		b.Shadow(0, 0, 0, 2, accent.Alpha(0.4))
+		ring = accent.Alpha(0.4)
+	}
+	if ring = b.AnimateColor("ring", ring, ui.Animation{Duration: durFast, Ease: easeStandard}); ring.A > 0 {
+		b.Shadow(0, 0, 0, 2, ring)
 	}
 	if p.Dark {
 		b.InsetShadow(0, 1, 0, 0, ui.RGBA(255, 255, 255, 0.08)).Shadow(0, 0, 0, 0.5, ui.RGBA(0, 0, 0, 0.7)).Shadow(0, 1, 2, 0, ui.RGBA(0, 0, 0, 0.5))
 	} else {
 		b.Shadow(0, 0, 0, 0.5, ui.RGBA(28, 28, 28, 0.16)).Shadow(0, 1, 1, 0, ui.RGBA(28, 28, 28, 0.06)).Shadow(0, 2, 4, -1, ui.RGBA(28, 28, 28, 0.07))
 	}
-	if disabled {
-		b.Opacity(0.45)
-	} else {
+	b.Opacity(b.AnimateWith("dim", map[bool]float32{true: 0.45, false: 1}[disabled], durFast, easeStandard))
+	if !disabled {
 		b.Cursor(ui.CursorPointer)
 	}
 	if backdrop != "none" {
@@ -416,6 +427,9 @@ func lodyButton(c *ui.Context, p *palette, variant, key string, icon *ui.SVG, la
 	}
 	hovered := b.Hovered() && enabled
 	pressed := b.Pressed() && enabled
+	// Its fill, ink, shadow, press and opacity all move over 120ms on
+	// ease.standard, as @lody/ui's Button transitions them.
+	motion := ui.Animation{Duration: durFast, Ease: easeStandard}
 	ink := p.Text
 	switch variant {
 	case "primary":
@@ -423,6 +437,7 @@ func lodyButton(c *ui.Context, p *palette, variant, key string, icon *ui.SVG, la
 		if hovered {
 			fill = fill.Mix(p.Canvas, 0.12)
 		}
+		fill = b.AnimateColor("fill", fill, motion)
 		ink = p.Canvas
 		switch {
 		case pressed:
@@ -440,6 +455,7 @@ func lodyButton(c *ui.Context, p *palette, variant, key string, icon *ui.SVG, la
 		if hovered {
 			fill = fill.Mix(p.Text, 0.04)
 		}
+		fill = b.AnimateColor("fill", fill, motion)
 		if pressed {
 			b.Background(fill).Shadow(0, 0, 0, 0.5, p.Text.Alpha(0.14)).InsetShadow(0, 1, 1, 0, p.Text.Alpha(0.14))
 		} else {
@@ -452,11 +468,14 @@ func lodyButton(c *ui.Context, p *palette, variant, key string, icon *ui.SVG, la
 			ink = p.Text
 		}
 	}
+	ink = b.AnimateColor("ink", ink, motion)
+	b.Opacity(b.AnimateWith("dim", map[bool]float32{true: 1, false: 0.45}[enabled], durFast, easeStandard))
 	if enabled {
 		b.Cursor(ui.CursorPointer)
-		pressable(b, 0.97)
-	} else {
-		b.Opacity(0.45)
+		// Only the filled variants sink as they are pressed; a ghost stays.
+		if variant != "ghost" {
+			pressable(b, 0.97)
+		}
 	}
 	b.Children(func() {
 		switch {

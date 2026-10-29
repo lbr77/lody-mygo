@@ -262,17 +262,25 @@ func (a *App) terminalDock(c *ui.Context, p *palette, sess *catalog.Session) {
 					a.terminalTab(c.Key(tab.id), p, ts, tab, tab == shown)
 				}
 				if local && a.term.client != nil {
-					add := ui.ButtonBase(c).Size(20, 20).Radius(5).Center().Cursor(ui.CursorPointer).Label(locales.TerminalNew()).Tooltip(locales.TerminalNew()).
-						Disabled(len(ts.tabs) >= localterm.MaxPerSession).Transition(colorFade)
-					pressable(add, 0.9)
-					if add.Hovered() {
-						add.Background(p.Hover)
+					// New terminal is a bare glyph, inking on hover at once, as
+					// Lody's.
+					limited := len(ts.tabs) >= localterm.MaxPerSession
+					add := ui.ButtonBase(c).Size(20, 20).Radius(5).Center().Label(locales.TerminalNew()).Disabled(limited)
+					tip(c, p, add, locales.TerminalNew())
+					ink := p.Secondary
+					if limited {
+						add.Opacity(0.4)
+					} else {
+						add.Cursor(ui.CursorPointer)
+						if add.Hovered() {
+							ink = p.Text
+						}
 					}
 					add.OnClick(func() { a.newTerminal(sess.ID, ts) })
-					add.Children(func() { ui.Icon(c, iconPlus).Size(13, 13).TextColor(p.Secondary) })
+					add.Children(func() { ui.Icon(c, iconPlus).Size(13, 13).TextColor(ink) })
 				}
 				if err := firstNonEmpty(ts.err, a.term.err); err != "" && local {
-					ui.Text(c, err).FontSize(sizeCaption).TextColor(p.Danger).SingleLine().MinWidth(0).Shrink(1).Tooltip(err)
+					tip(c, p, ui.Text(c, err).FontSize(sizeCaption).TextColor(p.Danger).SingleLine().MinWidth(0).Shrink(1), err)
 				}
 			})
 			iconButton(c, p, iconChevronDown, locales.TerminalHide(), p.Hover).Size(24, 24).OnClick(func() { a.term.open = false })
@@ -306,11 +314,14 @@ func (a *App) terminalDock(c *ui.Context, p *palette, sess *catalog.Session) {
 
 func (a *App) terminalTab(c *ui.Context, p *palette, ts *termSession, tab *termTab, active bool) {
 	title := firstNonEmpty(tab.title, "shell")
-	row := ui.Row(c).Height(32).Gap(4).AlignItems(ui.Center).Cursor(ui.CursorPointer).Label(title).Shrink(1).MinWidth(0).Transition(colorFade)
+	// The tab's colors and ink fade over 150ms, as Lody's transition-colors.
+	row := ui.Row(c).Height(32).Gap(4).AlignItems(ui.Center).Cursor(ui.CursorPointer).Label(title).Shrink(1).MinWidth(0).Transition(twFade)
+	hovered := row.Hovered()
 	ink := p.Tertiary
-	if active || row.Hovered() {
+	if active || hovered {
 		ink = p.Text
 	}
+	ink = row.AnimateColor("ink", ink, ui.Animation{Duration: 150 * time.Millisecond, Ease: twEase})
 	if active {
 		row.BorderWidth(0, 0, 1.5, 0).BorderColor(p.Text)
 	}
@@ -319,13 +330,20 @@ func (a *App) terminalTab(c *ui.Context, p *palette, ts *termSession, tab *termT
 	row.Children(func() {
 		ui.Icon(c, iconSquareTerminal).Size(12, 12).TextColor(ink).Opacity(0.8)
 		ui.Text(c, title).FontSize(11).TextColor(ink).SingleLine().MinWidth(0).MaxWidth(160)
-		x := ui.ButtonBase(c).Size(16, 16).Radius(4).Center().Cursor(ui.CursorPointer).Label(locales.TerminalClose(title)).Transition(colorFade)
-		if x.Hovered() {
-			x.Background(p.Hover)
+		// Close fades over 150ms, as Lody's transition-opacity: the shown
+		// tab's rests at 0.7 and comes up under the pointer; another's
+		// shows only while its tab has the pointer.
+		x := ui.ButtonBase(c).Size(16, 16).Radius(4).Center().Cursor(ui.CursorPointer).Label(locales.TerminalClose(title))
+		shown := float32(0)
+		switch {
+		case x.Hovered():
+			shown = 1
+		case active:
+			shown = 0.7
+		case hovered:
+			shown = 1
 		}
-		if !active && !row.Hovered() {
-			x.Opacity(0)
-		}
+		x.Opacity(x.AnimateWith("shown", shown, 150*time.Millisecond, twEase))
 		x.OnClick(func() { a.closeTerminal(ts, tab) })
 		x.Children(func() { ui.Icon(c, iconX).Size(10, 10).TextColor(ink) })
 	})

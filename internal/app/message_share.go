@@ -120,12 +120,13 @@ func (a *App) messageActions(c *ui.Context, p *palette, e session.Entry) {
 		return
 	}
 	entry := e
-	iconButton(c, p, iconMore, locales.MsgShareActions(), p.Hover).Size(24, 24).Menu(func(m *ui.Menu) {
-		if m.Item(locales.MsgShareCopyMessage()).Chosen() {
+	more := iconButton(c, p, iconMore, locales.MsgShareActions(), p.Hover).Size(24, 24)
+	lodyMenuButton(c, p, more, &a.rowMenu("message/"+e.ID).menuState, 200, 290, 28, func(m *lodyMenu) {
+		if m.item("copy-message", iconCopy, locales.MsgShareCopyMessage(), menuItem{}) {
 			writeClipboard(strings.Join(parts, "\n\n"))
 			a.toast("success", locales.MsgShareCopied())
 		}
-		if m.Item(locales.MsgShareGenerateImage()).Chosen() {
+		if m.item("generate-image", iconImage, locales.MsgShareGenerateImage(), menuItem{}) {
 			a.openMessageShare(entry)
 		}
 	})

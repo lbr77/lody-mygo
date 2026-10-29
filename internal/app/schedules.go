@@ -426,7 +426,13 @@ func (a *App) schedulesPage(c *ui.Context, p *palette) {
 			ui.Icon(c, iconSearch).Size(14, 14).TextColor(p.Secondary)
 			ui.TextInputBase(c, &st.query).Placeholder(locales.SchedSearch()).Label(locales.SchedSearch()).FontSize(sizeFoot).TextColor(p.Text).Grow(1).MinWidth(0)
 		})
-		newBtn := ui.ButtonBase(c).Height(28).Padding(0, 10).Radius(8).Gap(6).Background(p.Text).Cursor(ui.CursorPointer).Label(locales.SchedNew()).OnClick(a.newSchedule)
+		// Lody's primary button: its fill lifts 12% toward the label on
+		// hover, over 120ms, and it sinks a pixel while held.
+		newBtn := ui.ButtonBase(c).Height(28).Padding(0, 10).Radius(8).Gap(6).Background(p.Text).Cursor(ui.CursorPointer).Label(locales.SchedNew()).
+			OnClick(a.newSchedule).Transition(colorFade)
+		if newBtn.Hovered() {
+			newBtn.Background(p.Text.Mix(p.Canvas, 0.12))
+		}
 		pressable(newBtn, 0.97)
 		newBtn.Children(func() {
 			ui.Icon(c, iconPlus).Size(14, 14).TextColor(p.Canvas)
@@ -444,11 +450,12 @@ func (a *App) schedulesPage(c *ui.Context, p *palette) {
 		switch {
 		case !st.ready:
 			ui.Column(c).FillWidth().Margin(18, 0, 0, 0).Radius(12).Border(0.5, p.Border).Background(p.Popover).Children(func() {
+				// Lody's Skeleton lines, a body line high, breathing every 1.6s.
 				for i := 0; i < 3; i++ {
-					ui.Row(c.Key(i)).FillWidth().Padding(16).Children(func() {
-						ui.Box(c).Width(192).Height(10).Radius(5).Background(p.Text.Alpha(0.07))
+					ui.Row(c.Key(i)).FillWidth().Padding(16).Gap(12).AlignItems(ui.Center).Children(func() {
+						skeleton(c, p, "lead", 20).Width(192)
 						ui.Spacer(c)
-						ui.Box(c).Width(96).Height(10).Radius(5).Background(p.Text.Alpha(0.07))
+						skeleton(c, p, "trail", 20).Width(96)
 					})
 				}
 			})
@@ -549,14 +556,19 @@ func lastAt(e schedEntry) int64 {
 // schedFilters is the toolbar: project and status filters, and the sort.
 func (a *App) schedFilters(c *ui.Context, p *palette, entries []schedEntry) {
 	st := &a.sched
-	pill := func(key string, icon *ui.SVG, label string, active bool, menu func(m *ui.Menu)) {
+	// Each is Lody's FilterMenu: a small button, secondary while it
+	// filters (and so sinking a pixel as it is pressed) and ghost while not,
+	// opening its radio rows below its start.
+	pill := func(key string, icon *ui.SVG, label string, active bool, menu func(m *lodyMenu)) {
 		b := ui.ButtonBase(c.Key(key)).Height(26).Padding(0, 9).Radius(13).Gap(5).Border(1, p.Border).Cursor(ui.CursorPointer).Label(label).Transition(colorFade)
+		st := &a.rowMenu("sched-filter/" + key).menuState
 		if active {
 			b.Background(p.Text.Alpha(0.07))
-		} else if b.Hovered() {
+			pressable(b, 0.97)
+		} else if b.Hovered() || st.open {
 			b.Background(p.Hover)
 		}
-		b.Menu(menu)
+		lodyMenuButtonStart(c, p, b, st, 200, 290, 32, menu)
 		b.Children(func() {
 			ui.Icon(c, icon).Size(13, 13).TextColor(p.Secondary)
 			ui.Text(c, label).FontSize(sizeFoot).TextColor(p.Text).SingleLine()
@@ -585,16 +597,16 @@ func (a *App) schedFilters(c *ui.Context, p *palette, entries []schedEntry) {
 		case st.project != "":
 			projectLabel = st.project
 		}
-		pill("project", iconFolder, projectLabel, st.project != "", func(m *ui.Menu) {
-			if m.Item(fmt.Sprintf("%s  %d", locales.SchedAllProjects(), len(entries))).Radio(st.project == "").Chosen() {
+		pill("project", iconFolder, projectLabel, st.project != "", func(m *lodyMenu) {
+			if m.radio("all", locales.SchedAllProjects(), st.project == "", strconv.Itoa(len(entries))) {
 				st.project = ""
 			}
 			for _, n := range sorted {
-				if m.Item(fmt.Sprintf("%s  %d", n, names[n])).Radio(st.project == n).Chosen() {
+				if m.radio("project:"+n, n, st.project == n, strconv.Itoa(names[n])) {
 					st.project = n
 				}
 			}
-			if m.Item(fmt.Sprintf("%s  %d", locales.SchedNoProject(), none)).Radio(st.project == "\x00none").Chosen() {
+			if m.radio("none", locales.SchedNoProject(), st.project == "\x00none", strconv.Itoa(none)) {
 				st.project = "\x00none"
 			}
 		})
@@ -606,7 +618,7 @@ func (a *App) schedFilters(c *ui.Context, p *palette, entries []schedEntry) {
 				statusLabel = o.label
 			}
 		}
-		pill("status", iconList, statusLabel, st.status != "", func(m *ui.Menu) {
+		pill("status", iconList, statusLabel, st.status != "", func(m *lodyMenu) {
 			for _, o := range statuses {
 				n := 0
 				for _, e := range entries {
@@ -614,7 +626,7 @@ func (a *App) schedFilters(c *ui.Context, p *palette, entries []schedEntry) {
 						n++
 					}
 				}
-				if m.Item(fmt.Sprintf("%s  %d", o.label, n)).Radio(st.status == o.id).Chosen() {
+				if m.radio("status:"+o.id, o.label, st.status == o.id, strconv.Itoa(n)) {
 					st.status = o.id
 				}
 			}
@@ -627,9 +639,9 @@ func (a *App) schedFilters(c *ui.Context, p *palette, entries []schedEntry) {
 				sortLabel = o.label
 			}
 		}
-		pill("sort", iconArrowUpDown, sortLabel, false, func(m *ui.Menu) {
+		pill("sort", iconArrowUpDown, sortLabel, false, func(m *lodyMenu) {
 			for _, o := range sorts {
-				if m.Item(o.label).Radio(firstNonEmpty(st.sort, "next") == o.id).Chosen() {
+				if m.radio("sort:"+o.id, o.label, firstNonEmpty(st.sort, "next") == o.id, "") {
 					st.sort = o.id
 				}
 			}
@@ -716,17 +728,6 @@ func (a *App) schedActions(row schedule.Row, rt *schedule.Runtime) []schedAction
 	return out
 }
 
-func schedMenu(m *ui.Menu, actions []schedAction) {
-	for _, act := range actions {
-		if act.danger {
-			m.Separator()
-		}
-		if m.Item(act.label).Chosen() {
-			act.run()
-		}
-	}
-}
-
 // canRunSchedules reports whether a machine's CLI runs schedules.
 func (a *App) canRunSchedules(machine string) bool {
 	caps, ok := a.catalog.MachineCaps[machine]
@@ -745,15 +746,16 @@ func (a *App) schedRow(c *ui.Context, p *palette, e schedEntry) {
 	case row.Trigger.Kind == "manual":
 		primary = "run"
 	}
+	// The row's fill fades over 150ms on CSS's ease, as Lody's row style.
 	r := ui.Row(c.Key(row.ScheduleID)).FillWidth().MinHeight(58).Padding(8, 10, 8, 16).Gap(16).AlignItems(ui.Center).Cursor(ui.CursorPointer).
-		Label(row.Title).Transition(colorFade).OnClick(func() { a.openSchedule(row.ScheduleID) })
+		Label(row.Title).Transition(ui.ElementTransition{Colors: true, Duration: 150 * time.Millisecond, Ease: cssEase}).OnClick(func() { a.openSchedule(row.ScheduleID) })
 	hovered := r.Hovered()
 	if a.sched.modal && a.sched.open == row.ScheduleID {
 		r.Background(p.Text.Alpha(0.07))
 	} else if hovered {
 		r.Background(p.Text.Alpha(0.04))
 	}
-	r.ContextMenu(func(m *ui.Menu) { schedMenu(m, actions) })
+	lodyContextMenu(c, p, r, a.rowMenu("sched-row/"+row.ScheduleID), 32, func(m *lodyMenu) { schedMenuRows(m, actions) })
 	r.Children(func() {
 		ui.Column(c).Grow(1).MinWidth(0).Gap(1).Children(func() {
 			name := ui.Text(c, row.Title).FontSize(sizeSub).FontWeight(500).TextColor(p.Text).SingleLine()
@@ -770,7 +772,7 @@ func (a *App) schedRow(c *ui.Context, p *palette, e schedEntry) {
 				ui.Text(c, firstNonEmpty(a.agentName(row.MachineID, row.AgentConfigID), row.AgentConfigID)).FontSize(sizeCaption).TextColor(p.Secondary).SingleLine().MinWidth(0)
 				sep()
 				if !a.presence.IsOnline(row.MachineID) {
-					ui.Row(c).Gap(4).AlignItems(ui.Center).Shrink(0).Tooltip(locales.SchedMachineOffline(a.machineLabel(row.MachineID))).Children(func() {
+					tip(c, p, ui.Row(c.Key("offline")), locales.SchedMachineOffline(a.machineLabel(row.MachineID))).Gap(4).AlignItems(ui.Center).Shrink(0).Children(func() {
 						ui.Icon(c, iconCloudOff).Size(14, 14).TextColor(p.Warning)
 						ui.Text(c, locales.SchedMachineOffline(a.machineLabel(row.MachineID))).FontSize(sizeCaption).TextColor(p.Warning).SingleLine()
 					})
@@ -786,12 +788,13 @@ func (a *App) schedRow(c *ui.Context, p *palette, e schedEntry) {
 				if act.key != primary {
 					continue
 				}
-				b := iconButton(c.Key("primary"), p, act.icon, act.label, p.Hover).Tooltip(act.label).OnClick(act.run)
+				b := iconButton(c.Key("primary"), p, act.icon, act.label, p.Hover).OnClick(act.run)
 				if !hovered {
 					b.Opacity(0)
 				}
 			}
-			iconButton(c.Key("more"), p, iconMore, locales.SchedMore(), p.Hover).Menu(func(m *ui.Menu) { schedMenu(m, actions) })
+			more := iconButton(c.Key("more"), p, iconMore, locales.SchedMore(), p.Hover)
+			lodyMenuButton(c, p, more, &a.rowMenu("sched-more/"+row.ScheduleID).menuState, 200, 290, 32, func(m *lodyMenu) { schedMenuRows(m, actions) })
 		})
 	})
 }
@@ -812,8 +815,9 @@ func (a *App) schedDestination(c *ui.Context, p *palette, e schedEntry) {
 		chat = schedule.OwnSessionID(row.ScheduleID, epoch)
 	}
 	if s := a.catalog.Session(chat); s != nil {
-		b := ui.ButtonBase(c).Height(26).Padding(0, 8).Margin(0, 0, 0, -8).Radius(6).Gap(6).MinWidth(0).Cursor(ui.CursorPointer).
-			Label(locales.SchedOpenChat(s.Title)).Tooltip(locales.SchedOpenChat(s.Title)).OnClick(func() { a.closeSchedule(); a.open(chat) })
+		b := ui.ButtonBase(c.Key("chat")).Height(26).Padding(0, 8).Margin(0, 0, 0, -8).Radius(6).Gap(6).MinWidth(0).Cursor(ui.CursorPointer).
+			Label(locales.SchedOpenChat(s.Title)).OnClick(func() { a.closeSchedule(); a.open(chat) }).Transition(colorFade)
+		lodyTooltip(c, p, b, locales.SchedOpenChat(s.Title))
 		if b.Hovered() {
 			b.Background(p.Hover)
 		}
@@ -1250,7 +1254,8 @@ func (a *App) schedHeader(c *ui.Context, p *palette, f *schedForm, row *schedule
 					rest = append(rest, act)
 				}
 				if len(rest) > 0 {
-					iconButton(c.Key("more"), p, iconMore, locales.SchedMore(), p.Hover).Menu(func(m *ui.Menu) { schedMenu(m, rest) })
+					more := iconButton(c.Key("more"), p, iconMore, locales.SchedMore(), p.Hover)
+					lodyMenuButton(c, p, more, &a.rowMenu("sched-detail-more").menuState, 200, 290, 32, func(m *lodyMenu) { schedMenuRows(m, rest) })
 				}
 			}
 			iconButton(c.Key("close"), p, iconX, locales.Close(), p.Hover).OnClick(a.closeSchedule)
@@ -1267,11 +1272,11 @@ func propertyRow(c *ui.Context, p *palette, key, label string, control func()) u
 }
 
 // revealRow is a row that comes and goes with what is chosen: it grows
-// in and out over 180ms, easing out, as Lody's Reveal — but not while the
-// form first shows (initial={false}).
+// in and out over 180ms on framer's easeOut, as Lody's Reveal — but not
+// while the form first shows (initial={false}).
 func revealRow(row ui.Element, f *schedForm) {
 	if f.shown {
-		row.ClipY().Transition(ui.ElementTransition{Colors: true, Size: true, Duration: durRegular, Ease: ui.EaseOut, Enter: &ui.Motion{Collapse: true}, Exit: &ui.Motion{Collapse: true}})
+		row.ClipY().Transition(ui.ElementTransition{Colors: true, Size: true, Duration: durRegular, Ease: cssEaseOut, Enter: &ui.Motion{Collapse: true}, Exit: &ui.Motion{Collapse: true}})
 	}
 }
 
@@ -1279,7 +1284,7 @@ func revealRow(row ui.Element, f *schedForm) {
 func (a *App) selectButton(c *ui.Context, p *palette, key, label string, options []option, current string, pick func(string)) {
 	open := a.popover(key)
 	b := ui.ButtonBase(c.Key(key)).Height(28).Padding(0, 8).Radius(8).Gap(6).Border(1, p.Border).Background(p.Canvas).Cursor(ui.CursorPointer).
-		Label(label).OnClick(func() { *open = !*open }).Transition(colorFade)
+		Label(label).OnClick(func() { *open = !*open }).Transition(twFade)
 	if b.Hovered() || *open {
 		b.Background(p.Hover)
 	}
@@ -1480,7 +1485,7 @@ func (a *App) schedFormView(c *ui.Context, p *palette, f *schedForm, row *schedu
 					if name := a.catalog.MachineNames[f.machine]; name != "" {
 						clock = locales.SchedMachineClock(name)
 					}
-					ui.Text(c, clock).FontSize(sizeFoot).TextColor(p.Secondary).Tooltip(tz).Shrink(0)
+					tip(c, p, ui.Text(c.Key("clock"), clock), tz).FontSize(sizeFoot).TextColor(p.Secondary).Shrink(0)
 				}
 			})
 		})
@@ -1552,7 +1557,7 @@ func (a *App) schedMessageView(c *ui.Context, p *palette, f *schedForm, row sche
 
 // issueMark is an exclamation mark beside the field it is about.
 func issueMark(c *ui.Context, p *palette, message string) {
-	ui.Icon(c, iconCircleAlert).Size(15, 15).TextColor(p.Warning).Tooltip(message).Label(message).Shrink(0)
+	tip(c, p, ui.Icon(c, iconCircleAlert), message).Size(15, 15).TextColor(p.Warning).Label(message).Shrink(0)
 }
 
 // schedRecurrence is the rule's rows: what repeats, and its step, days
@@ -1711,22 +1716,24 @@ func toggleInt(set []int, v int) []int {
 	return out
 }
 
-// dayToggle is a day's round toggle.
+// dayToggle is a day's round toggle. Its fill and ink fade over 150ms, as
+// Lody's transition-colors; it names its day to a screen reader, without a
+// tooltip, as Lody's aria-label.
 func dayToggle(c *ui.Context, p *palette, short, long string, on bool, toggle func()) {
-	b := ui.ButtonBase(c).Size(28, 28).Radius(14).Center().Cursor(ui.CursorPointer).Label(long).Tooltip(long).OnClick(toggle).Transition(colorFade)
+	b := ui.ButtonBase(c).Size(28, 28).Radius(14).Center().Cursor(ui.CursorPointer).Label(long).OnClick(toggle).Transition(twFade)
+	ink := p.Secondary
 	switch {
 	case on:
 		b.Background(p.Text)
+		ink = p.Canvas
 	case b.Hovered():
 		b.Background(p.Hover)
+		ink = p.Text
 	default:
 		b.Border(1, p.Border)
 	}
+	ink = b.AnimateColor("ink", ink, ui.Animation{Duration: 150 * time.Millisecond, Ease: twEase})
 	b.Children(func() {
-		ink := p.Text
-		if on {
-			ink = p.Canvas
-		}
 		ui.Text(c, short).FontSize(sizeFoot).FontWeight(500).TextColor(ink)
 	})
 }

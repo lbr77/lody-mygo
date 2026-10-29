@@ -177,22 +177,29 @@ func (a *App) fileCard(c *ui.Context, p *palette, sessionID string, it session.I
 			if hovered {
 				card.Background(tray.Mix(p.Text, 0.04))
 			}
-			if main.Pressed() {
-				card.Scale(0.99, 0.99)
-			}
 		}
+		// Pressed, the card sinks to .99 over 120ms on ease.standard, its
+		// transform transitioned as its fill.
+		press := float32(1)
+		if live && main.Pressed() {
+			press = 0.99
+		}
+		card.AnimatePose(ui.Pose{Scale: press}, ui.Animation{Duration: durFast, Ease: easeStandard})
 		main.Children(func() {
 			fileSheet(c, p, fileKind(it.FileName, it.MimeType), live && hovered, !live)
 			ui.Column(c).Grow(1).MinWidth(0).Children(func() {
 				ui.Text(c, name).FontSize(sizeSub).FontWeight(500).TextColor(p.Text).SingleLine()
-				ui.Text(c, subtitle).FontSize(sizeFoot).TextColor(p.Secondary).FontFeatures("tnum").SingleLine().Tooltip(subtitle)
+				tip(c, p, ui.Text(c, subtitle).FontSize(sizeFoot).TextColor(p.Secondary).FontFeatures("tnum").SingleLine(), subtitle)
 			})
-			chip := ui.Box(c.Key("action")).Size(28, 28).Radius(5).Center().Shrink(0).Transition(colorFade)
+			// The action chip's ink and well fade over 120ms on CSS's ease,
+			// as Lody's (a duration, no curve of its own).
+			chip := ui.Box(c.Key("action")).Size(28, 28).Radius(5).Center().Shrink(0).Transition(chipFade)
 			ink := p.Secondary
 			if hovered {
 				ink = p.Text
 				chip.Background(wellGround(p))
 			}
+			ink = chip.AnimateColor("ink", ink, chipInk)
 			chip.Children(func() {
 				switch {
 				case state == "pending" || state == "downloadable" && downloading:
@@ -210,12 +217,14 @@ func (a *App) fileCard(c *ui.Context, p *palette, sessionID string, it session.I
 			// An HTML page's preview has no control for its source: it
 			// downloads beside it.
 			dl := ui.ButtonBase(c.Key("download")).Size(28, 28).Radius(5).Center().Shrink(0).AlignSelf(ui.Center).Margin(0, 6, 0, 0).
-				Label(locales.FileDownloadAction()).Tooltip(locales.FileDownloadAction()).Disabled(downloading).Transition(colorFade)
+				Label(locales.FileDownloadAction()).Disabled(downloading).Transition(chipFade)
+			tip(c, p, dl, locales.FileDownloadAction())
 			ink := p.Secondary
 			if dl.Hovered() && !downloading {
 				ink = p.Text
 				dl.Background(wellGround(p))
 			}
+			ink = dl.AnimateColor("ink", ink, chipInk)
 			if downloading {
 				dl.Opacity(0.6)
 			} else {
@@ -231,6 +240,13 @@ func (a *App) fileCard(c *ui.Context, p *palette, sessionID string, it session.I
 		}
 	})
 }
+
+// chipFade and chipInk fade a file card's action chip: 120ms on CSS's
+// ease, as Lody's transition with a duration and no curve.
+var (
+	chipFade = ui.ElementTransition{Colors: true, Duration: durFast, Ease: cssEase}
+	chipInk  = ui.Animation{Duration: durFast, Ease: cssEase}
+)
 
 // isHTMLFile is whether a file is an HTML page.
 func isHTMLFile(it session.Item) bool {

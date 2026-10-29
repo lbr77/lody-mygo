@@ -31,6 +31,8 @@ func blocks(items []session.Item) []block {
 		switch {
 		case it.Type == "subagent_task":
 			continue // the task card shows these
+		case it.Type == "plan":
+			continue // the plan bar at the turn's head shows the latest
 		case it.Type == "text":
 			out = append(out, block{text: true, items: []session.Item{it}, key: it.ID})
 		case it.Type == "system_notice":
@@ -92,6 +94,10 @@ func (a *App) assistantMessage(c *ui.Context, p *palette, e session.Entry) {
 			// Before el, which places the blocks a group folds.
 			prevText, first = b.text, false
 			ui.Column(c.Key("b/"+b.key)).FillWidth().Margin(top, 0, 0, 0).Children(el)
+		}
+		// The agent's plan leads the turn, as Lody's plan row.
+		if plan := lastPlan(e.Items); len(plan) > 0 {
+			place(block{key: "plan-bar"}, func() { a.planBar(c, p, e.ID+"/plan-bar", plan) })
 		}
 		tasks := collectTasks(e.Items)
 		taskCard := func() {
@@ -178,19 +184,23 @@ func disclosure(c *ui.Context, p *palette, label string, open, live bool, toggle
 // orange warning lody-ios puts on a group a step of which failed or waits
 // on a permission.
 func disclosureMarked(c *ui.Context, p *palette, label string, open, live, attention bool, toggle func()) float32 {
-	head := ui.Row(c).MinHeight(24).Gap(6).AlignItems(ui.Center).Cursor(ui.CursorPointer).Label(label).OnClick(toggle)
+	head := ui.Row(c).MinHeight(24).Gap(6).AlignItems(ui.Center).Cursor(ui.CursorPointer).Label(label)
+	// Lody's chevron turns over 200ms on CSS's ease-out only as it is
+	// clicked: opened or closed otherwise, it is already where it goes.
+	turnTime := time.Millisecond
+	if head.Clicked() {
+		toggle()
+		open, turnTime = !open, 200*time.Millisecond
+	}
 	// The body shows at once, as Lody's CollapsibleCard renders it.
 	shown := b2f(open)
 	hovered := head.Hovered()
-	// Lody's chevron turns over 200ms easing out, and fades in with the
-	// pointer over 150ms.
-	turn := head.AnimateWith("chevron", b2f(open), 200*time.Millisecond, ui.EaseOut)
-	reveal := head.AnimateWith("reveal", b2f(hovered), 150*time.Millisecond, easeStandard)
+	turn := head.AnimateWith("chevron", b2f(open), turnTime, cssEaseOut)
+	// It fades in with the pointer over 150ms, Tailwind's
+	// transition-opacity; the label keeps its ink.
+	reveal := head.AnimateWith("reveal", b2f(hovered), 150*time.Millisecond, twEase)
 	head.Children(func() {
 		ink := p.Secondary
-		if hovered {
-			ink = p.Text
-		}
 		if attention {
 			ui.Icon(c, iconTriangleAlert).Size(12, 12).TextColor(p.Warning).Shrink(0)
 		}
@@ -281,21 +291,7 @@ func (a *App) activity(c *ui.Context, p *palette, e session.Entry, b block, live
 func (a *App) step(c *ui.Context, p *palette, key string, it session.Item) {
 	switch it.Type {
 	case "plan":
-		ui.Column(c).Padding(4, 0).Gap(4).Children(func() {
-			for _, pe := range it.Plan {
-				mark, ink := "○", p.Secondary
-				switch pe.Status {
-				case "completed":
-					mark, ink = "✓", p.Success
-				case "in_progress":
-					mark, ink = "◐", p.Primary
-				}
-				ui.Row(c).Gap(8).Children(func() {
-					ui.Text(c, mark).FontSize(sizeSub).TextColor(ink)
-					ui.Text(c, pe.Content).FontSize(sizeSub).TextColor(p.Text).MinWidth(0)
-				})
-			}
-		})
+		a.planBar(c, p, key, it.Plan)
 	case "subagent_task":
 		sa := it.Subagent
 		ui.Row(c).MinHeight(24).Padding(2, 4).Gap(6).AlignItems(ui.Center).Children(func() {
@@ -314,22 +310,30 @@ func (a *App) step(c *ui.Context, p *palette, key string, it session.Item) {
 		goalMarker(c, p, it)
 	case "tool_call":
 		open := a.expanded[key]
-		row := ui.Row(c).MinHeight(24).Padding(2, 4).Gap(8).AlignItems(ui.Center).Radius(5)
+		title := firstNonEmpty(it.Title, it.Path, it.Kind)
+		verb, rest := toolVerbParts(it, title)
+		row := ui.Row(c).MinHeight(24).Padding(2, 4).Gap(6).AlignItems(ui.Center).Radius(5).Label(strings.TrimSpace(verb + " " + rest))
 		shown := b2f(open)
-		hovered := false
 		if it.HasDetail {
-			row.Cursor(ui.CursorPointer).Label(locales.ShowDetails()).OnClick(func() { a.expanded[key] = !a.expanded[key] })
-			hovered = row.Hovered()
+			row.Cursor(ui.CursorPointer).OnClick(func() { a.expanded[key] = !a.expanded[key] })
 		}
+		// As Lody's step, the title brightens under the pointer over 150ms
+		// (Tailwind's transition-colors), with no chevron; its verb, a
+		// shade under the ink, shimmers while the step runs, and a step
+		// without one spins Lody's loader instead.
+		inks := map[bool]ui.Color{true: p.Text, false: p.Secondary}
+		ink := row.AnimateColor("ink", inks[row.Hovered()], ui.Animation{Duration: 150 * time.Millisecond, Ease: twEase})
 		running := it.Status == "pending" || it.Status == "in_progress"
 		row.Children(func() {
-			title := firstNonEmpty(it.Title, it.Path, it.Kind)
-			ink := p.Secondary
-			if hovered {
-				ink = p.Text
-			}
-			shimmerIf(c, p, running, func() {
-				ui.Text(c, strings.TrimSpace(toolVerb(it)+" "+title)).FontSize(sizeSub).TextColor(ink).SingleLine().MinWidth(0).Shrink(1)
+			ui.Row(c).MinWidth(0).Shrink(1).Gap(4).AlignItems(ui.Center).Children(func() {
+				if verb != "" {
+					shimmerIf(c, p, running, func() {
+						ui.Text(c, verb).FontSize(sizeSub).TextColor(p.Text.Alpha(0.9)).SingleLine().Shrink(0)
+					})
+				}
+				if rest != "" {
+					ui.Text(c, rest).FontSize(sizeSub).TextColor(ink).SingleLine().MinWidth(0).Shrink(1)
+				}
 			})
 			if it.Added > 0 || it.Removed > 0 {
 				ui.Text(c, fmt.Sprintf("+%d", it.Added)).FontSize(sizeFoot).Font(fontMono).TextColor(p.DiffAdd).Shrink(0)
@@ -338,8 +342,8 @@ func (a *App) step(c *ui.Context, p *palette, key string, it session.Item) {
 			if it.Status == "failed" {
 				ui.Icon(c, iconCircleAlert).Size(12, 12).TextColor(p.Danger)
 			}
-			if hovered {
-				ui.Icon(c, iconChevronRight).Size(13, 13).TextColor(ink).Rotate(90 * shown)
+			if running && verb == "" {
+				loader(c, p)
 			}
 		})
 		unfold(c, shown, open, func() { a.toolDetail(c, p, key, it) })
@@ -362,6 +366,26 @@ var toolVerbs = map[string]struct {
 	"execute": {[2]string{"Running", "Ran"}, locales.VerbRunning, locales.VerbRan},
 	"fetch":   {[2]string{"Fetching", "Fetched"}, locales.VerbFetching, locales.VerbFetched},
 	"think":   {[2]string{"Thinking", "Thought"}, locales.VerbThinking, locales.VerbThought},
+}
+
+// toolVerbParts splits a step's sentence into its verb, in the tense of
+// its status, and what it acted on: the verb is the one toolVerb adds, or
+// the one the title starts with; none for a step whose words carry no
+// tense.
+func toolVerbParts(it session.Item, title string) (verb, rest string) {
+	if v := toolVerb(it); v != "" {
+		return v, title
+	}
+	if forms, ok := toolVerbs[it.Kind]; ok {
+		low := strings.ToLower(title)
+		for _, w := range forms.english {
+			n := len(w)
+			if strings.HasPrefix(low, strings.ToLower(w)) && (len(title) == n || strings.ContainsRune(" :(", rune(title[n]))) {
+				return title[:n], strings.TrimSpace(title[n:])
+			}
+		}
+	}
+	return "", title
 }
 
 // toolVerb names what a tool call does, in the tense of its status.
@@ -437,8 +461,11 @@ func (a *App) editedFiles(c *ui.Context, p *palette, e session.Entry) {
 	key := e.ID + "/files"
 	shown := diffs
 	more := 0
-	if len(diffs) > 4 && !a.expanded[key] {
-		shown, more = diffs[:4], len(diffs)-4
+	if len(diffs) > 4 {
+		more = len(diffs) - 4
+		if !a.expanded[key] {
+			shown = diffs[:4]
+		}
 	}
 	ui.Column(c).FillWidth().Radius(8).Border(1, p.Border).Background(p.Canvas).Clip().Children(func() {
 		if len(diffs) > 1 {
@@ -458,10 +485,12 @@ func (a *App) editedFiles(c *ui.Context, p *palette, e session.Entry) {
 		for _, d := range shown {
 			dir, file := path.Split(d.Path)
 			full := d.Path
+			// A row fills under the pointer over 150ms, Tailwind's
+			// transition-colors.
 			row := ui.Row(c.Key(d.Path)).Height(height).Padding(0, 10).Gap(6).AlignItems(ui.Center).Cursor(ui.CursorPointer).
-				Label(d.Path).Transition(colorFade).OnClick(func() { a.openTurnDiff(e.ID, full) })
+				Label(d.Path).Transition(twFade).OnClick(func() { a.openTurnDiff(e.ID, full) })
 			if row.Hovered() {
-				row.Background(p.Hover)
+				row.Background(p.Hover.Alpha(0.45))
 			}
 			row.Children(func() {
 				ui.Text(c, file).FontSize(sizeSub).FontWeight(500).TextColor(p.Text).SingleLine().Shrink(0).MaxWidth(320)
@@ -470,10 +499,26 @@ func (a *App) editedFiles(c *ui.Context, p *palette, e session.Entry) {
 			})
 		}
 		if more > 0 {
-			row := ui.Row(c).Height(32).Padding(0, 10).AlignItems(ui.Center).Cursor(ui.CursorPointer).
-				Label(locales.EditedFilesShowMore(more)).OnClick(func() { a.expanded[key] = true })
+			// Show more and Show less, as Lody's: the chevron turns over
+			// 150ms as the list opens, and the fill and ink brighten under
+			// the pointer over 150ms, Tailwind's default curve for both.
+			open := a.expanded[key]
+			label := locales.EditedFilesShowMore(more)
+			if open {
+				label = locales.ShowLess()
+			}
+			row := ui.Row(c.Key("show-more")).Height(32).Padding(0, 10).Gap(4).AlignItems(ui.Center).Justify(ui.Center).
+				BorderWidth(1, 0, 0, 0).BorderColor(p.Border.Alpha(0.7)).Cursor(ui.CursorPointer).Label(label).Transition(twFade).
+				OnClick(func() { a.expanded[key] = !a.expanded[key] })
+			hovered := row.Hovered()
+			if hovered {
+				row.Background(p.Hover.Alpha(0.45))
+			}
+			ink := row.AnimateColor("ink", map[bool]ui.Color{true: p.Text, false: p.Secondary}[hovered], ui.Animation{Duration: 150 * time.Millisecond, Ease: twEase})
+			turn := row.AnimateWith("turn", b2f(open), 150*time.Millisecond, twEase)
 			row.Children(func() {
-				ui.Text(c, locales.EditedFilesShowMore(more)).FontSize(sizeSub).TextColor(p.Secondary)
+				ui.Icon(c, iconChevronDown).Size(12, 12).TextColor(ink).Rotate(180 * turn)
+				ui.Text(c, label).FontSize(sizeFoot).FontWeight(500).TextColor(ink)
 			})
 		}
 	})
@@ -488,15 +533,24 @@ func diffCounts(c *ui.Context, p *palette, add, del int) {
 // it took.
 func (a *App) turnFooter(c *ui.Context, p *palette, e session.Entry, hovered bool) {
 	row := ui.Row(c).Height(24).Gap(4).AlignItems(ui.Center)
-	// The reply's meta row fades in with the pointer, over 150ms.
-	row.Opacity(row.AnimateWith("shown", b2f(hovered), 150*time.Millisecond, easeStandard))
+	// The reply's meta row fades in with the pointer over 150ms, as
+	// Tailwind's transition-opacity.
+	row.Opacity(row.AnimateWith("shown", b2f(hovered), 150*time.Millisecond, twEase))
 	row.Children(func() {
-		iconButton(c, p, iconCopy, locales.Copy(), p.Hover).Size(24, 24).OnClick(func() {
+		// Copied, the button wears a check for 1.2s, as Lody's.
+		cm := &a.chatMotion
+		icon, label := iconCopy, locales.Copy()
+		if cm.copiedTurn == e.ID && time.Since(cm.copiedAt) < 1200*time.Millisecond {
+			icon, label = iconCheck, locales.PlanCopied()
+			c.After(1200*time.Millisecond - time.Since(cm.copiedAt))
+		}
+		iconButton(c, p, icon, label, p.Hover).Size(24, 24).OnClick(func() {
 			var parts []string
 			for _, b := range blocks(e.Items)[answerStart(blocks(e.Items)):] {
 				parts = append(parts, b.items[0].Text)
 			}
 			mygo.Clipboard.WriteText(strings.Join(parts, "\n\n"))
+			cm.copiedTurn, cm.copiedAt = e.ID, time.Now()
 		})
 		a.messageActions(c, p, e)
 		if a.forkable(e) {

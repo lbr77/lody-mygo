@@ -24,6 +24,10 @@ type draftTab struct {
 type tabGroup struct {
 	drafts []draftTab
 	closed map[string]bool
+	// closing is when a tab was last closed with the pointer: for a while
+	// after, as Lody's strip in its close mode, the tabs that follow slide
+	// into the room it left, and one opening grows in.
+	closing time.Time
 }
 
 // tabRoot is the session whose tabs a session sits among: its parent,
@@ -193,7 +197,25 @@ func (a *App) tabStrip(c *ui.Context, p *palette, sess *catalog.Session) {
 	root := a.tabRoot(sess)
 	tabs := a.orderedTabs(root)
 	solo := len(tabs) == 1
-	ui.Row(c.Key("tabs")).Gap(2).AlignItems(ui.Center).MinWidth(0).Shrink(1).Children(func() {
+	// The tabs move only in Lody's close mode, a pointer close arming it:
+	// those after a closed tab slide into its room, and a tab opening grows
+	// from nothing, over 200ms; otherwise the strip lays out at once.
+	var g *tabGroup
+	if root != nil {
+		g = a.tabGroupFor(root.ID)
+	}
+	slot := ui.ElementTransition{Colors: true, Duration: 200 * time.Millisecond, Ease: twEase}
+	if g != nil && !g.closing.IsZero() {
+		if left := tabCloseMode - time.Since(g.closing); left > 0 {
+			slot = ui.ElementTransition{Position: true, Size: true, Duration: 200 * time.Millisecond, Ease: twEase, Enter: &ui.Motion{Collapse: true, Opacity: 1}}
+			c.After(left)
+		}
+	}
+	rootKey := ""
+	if root != nil {
+		rootKey = root.ID
+	}
+	ui.Row(c.Key("tabs/" + rootKey)).Gap(2).AlignItems(ui.Center).MinWidth(0).Shrink(1).Children(func() {
 		for _, id := range tabs {
 			tabID := id
 			active := tabID == a.activeTab()
@@ -201,53 +223,78 @@ func (a *App) tabStrip(c *ui.Context, p *palette, sess *catalog.Session) {
 			if s != nil {
 				title = firstNonEmpty(s.Title, locales.UntitledSession())
 			}
-			tab := ui.Row(c.Key("tab/"+tabID)).Height(32).Radius(10).Padding(0, 6, 0, 12).Gap(6).Border(1, ui.Transparent).AlignItems(ui.Center).
-				MinWidth(0).Shrink(1).MaxWidth(240).Cursor(ui.CursorPointer).Label(title).Transition(tabFade)
-			hovered := tab.Hovered()
-			ink := p.Secondary
-			switch {
-			case solo:
-				ink = p.Text
-			case active:
-				tab.Background(p.Canvas).Border(1, p.Border)
-				ink = p.Text
-			case hovered:
-				tab.Background(p.Hover)
-				ink = p.Text
-			}
-			tab.OnClick(func() { a.showTab(root, tabID) })
-			tab.Children(func() {
-				ui.Box(c).Size(12, 12).Center().Shrink(0).Children(func() {
-					switch {
-					case s == nil:
-						ui.Icon(c, iconSquarePen).Size(12, 12).TextColor(ink)
-					case s.Waiting():
-						ui.Icon(c, iconHand).Size(12, 12).TextColor(p.Warning)
-					case s.Working():
-						spinner(c).Size(12, 12)
-					case s.Unread() && !active:
-						ui.Box(c).Size(8, 8).Radius(4).Background(p.Primary)
-					default:
-						ui.Icon(c, iconBot).Size(12, 12).TextColor(ink).Opacity(0.6)
-					}
-				})
-				ui.Text(c, title).FontSize(12.6).TextColor(ink).SingleLine().MinWidth(0).Shrink(1)
-				if tabID != root.ID {
-					// Close shows with the pointer, as Lody's.
-					x := ui.ButtonBase(c.Key("close")).Size(18, 18).Radius(4).Center().Cursor(ui.CursorPointer).Label(locales.TabClose()).Tooltip(locales.TabClose()).
-						OnClick(func() { a.closeTab(root, tabID) })
-					if !hovered && !active {
-						x.Opacity(0)
-					} else if x.Hovered() {
-						x.Background(p.Text.Alpha(0.1))
-					}
-					x.Children(func() { ui.Icon(c, iconX).Size(11, 11).TextColor(ink) })
-				} else {
-					ui.Box(c).Width(6)
-				}
+			ui.Row(c.Key("slot/" + tabID)).MinWidth(0).Shrink(1).AlignItems(ui.Center).Transition(slot).Children(func() {
+				a.sessionTab(c, p, root, g, tabID, title, s, active, solo)
 			})
 		}
-		iconButton(c, p, iconPlus, locales.TabNew(), p.Hover).Disabled(root == nil || root.Archived).OnClick(a.newTab)
+		ui.Row(c.Key("slot/new")).Shrink(0).Transition(slot).Children(func() {
+			iconButton(c, p, iconPlus, locales.TabNew(), p.Hover).Disabled(root == nil || root.Archived).OnClick(a.newTab)
+		})
+	})
+}
+
+// tabCloseMode is how long a pointer close keeps the strip's tabs moving.
+const tabCloseMode = 1500 * time.Millisecond
+
+// sessionTab is one tab of the strip: its colors and ink fade over 150ms
+// as Lody's transition-colors, and its close shows with the pointer,
+// fading in over 150ms; a draft's shows while it is the tab shown.
+func (a *App) sessionTab(c *ui.Context, p *palette, root *catalog.Session, g *tabGroup, tabID, title string, s *catalog.Session, active, solo bool) {
+	tab := ui.Row(c.Key("tab/"+tabID)).Height(32).Radius(10).Padding(0, 6, 0, 12).Gap(6).Border(1, ui.Transparent).AlignItems(ui.Center).
+		MinWidth(0).Shrink(1).MaxWidth(240).Cursor(ui.CursorPointer).Label(title).Transition(twFade)
+	hovered := tab.Hovered()
+	ink := p.Secondary
+	switch {
+	case solo:
+		ink = p.Text
+	case active:
+		tab.Background(p.Canvas).Border(1, p.Border)
+		ink = p.Text
+	case hovered:
+		tab.Background(p.Hover)
+		ink = p.Text
+	}
+	ink = tab.AnimateColor("ink", ink, ui.Animation{Duration: 150 * time.Millisecond, Ease: twEase})
+	tab.OnClick(func() { a.showTab(root, tabID) })
+	tab.Children(func() {
+		ui.Box(c).Size(12, 12).Center().Shrink(0).Children(func() {
+			switch {
+			case s == nil:
+				ui.Icon(c, iconSquarePen).Size(12, 12).TextColor(ink)
+			case s.Waiting():
+				ui.Icon(c, iconHand).Size(12, 12).TextColor(p.Warning)
+			case s.Working():
+				spinner(c).Size(12, 12)
+			case s.Unread() && !active:
+				ui.Box(c).Size(8, 8).Radius(4).Background(p.Primary)
+			default:
+				ui.Icon(c, iconBot).Size(12, 12).TextColor(ink).Opacity(0.6)
+			}
+		})
+		ui.Text(c, title).FontSize(12.6).TextColor(ink).SingleLine().MinWidth(0).Shrink(1)
+		if root == nil || tabID == root.ID || solo {
+			ui.Box(c).Width(6)
+			return
+		}
+		// Close shows with the pointer, as Lody's; a draft's, while it
+		// is the tab shown. Its opacity, fill and ink fade over 150ms.
+		x := ui.ButtonBase(c.Key("close")).Size(18, 18).Radius(4).Center().Cursor(ui.CursorPointer).Label(locales.TabClose()).Transition(twFade).
+			OnClick(func() {
+				if g != nil {
+					g.closing = time.Now()
+				}
+				a.closeTab(root, tabID)
+			})
+		tip(c, p, x, locales.TabClose())
+		xInk := ink
+		if x.Hovered() {
+			x.Background(p.Text.Alpha(0.1))
+			xInk = p.Text
+		}
+		shown := hovered || active && s == nil
+		x.Opacity(x.AnimateWith("shown", b2f(shown), 150*time.Millisecond, twEase))
+		xInk = x.AnimateColor("ink", xInk, ui.Animation{Duration: 150 * time.Millisecond, Ease: twEase})
+		x.Children(func() { ui.Icon(c, iconX).Size(11, 11).TextColor(xInk) })
 	})
 }
 
@@ -260,12 +307,17 @@ func (a *App) draftView(c *ui.Context, p *palette, root *catalog.Session, d *dra
 				for _, s := range []string{locales.TabSuggestReview(), locales.TabSuggestSummarize(), locales.TabSuggestSimplify()} {
 					text := s
 					b := ui.ButtonBase(c.Key(s)).Height(30).Padding(0, 12).Radius(8).Gap(8).AlignItems(ui.Center).Border(1, p.Border.Alpha(0.4)).
-						Cursor(ui.CursorPointer).Label(s).Transition(colorFade)
+						Cursor(ui.CursorPointer).Label(s).Transition(twFade)
+					// Its border, fill and ink fade over 150ms, as Lody's
+					// transition-colors.
+					ink := p.Secondary
 					if b.Hovered() {
 						b.Background(p.Hover).Border(1, p.Border)
+						ink = p.Text
 					}
+					ink = b.AnimateColor("ink", ink, ui.Animation{Duration: 150 * time.Millisecond, Ease: twEase})
 					b.OnClick(func() { a.draft = text })
-					b.Children(func() { ui.Text(c, text).FontSize(sizeFoot).TextColor(p.Secondary) })
+					b.Children(func() { ui.Text(c, text).FontSize(sizeFoot).TextColor(ink) })
 				}
 			})
 		})

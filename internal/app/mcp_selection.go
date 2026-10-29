@@ -99,7 +99,8 @@ func (a *App) setMCPSelection(sessionID string, ids []string) {
 
 // plusMenu is the composer's "+": add attachments, and choose the MCP
 // servers, on a second level that slides in from the right as the first
-// slides back from the left, 8px over 150ms.
+// slides back from the left, 8px over 150ms on CSS's ease, as Lody's
+// animate-in.
 func (a *App) plusMenu(c *ui.Context, p *palette, sessionID string) {
 	open := a.popover("plus")
 	b := iconButton(c, p, iconPlus, locales.AttachMenu(), p.Text.Alpha(0.06)).OnClick(func() {
@@ -126,7 +127,7 @@ func (a *App) plusMenu(c *ui.Context, p *palette, sessionID string) {
 		if level == "mcp" {
 			dir = 8
 		}
-		if k := panel.Keyframes("in", []ui.Keyframe{{Value: 0}, {At: 150 * time.Millisecond, Value: 1, Ease: easeStandard}}); k < 1 {
+		if k := panel.Keyframes("in", []ui.Keyframe{{Value: 0}, {At: 150 * time.Millisecond, Value: 1, Ease: cssEase}}); k < 1 {
 			panel.Translate(dir*(1-k), 0).Opacity(k)
 		}
 		panel.Children(func() {
@@ -185,7 +186,7 @@ func (a *App) plusMenu(c *ui.Context, p *palette, sessionID string) {
 				reason := a.scheduleSendReason(a.catalog.Session(sessionID))
 				sched := menuRow(c.Key("schedule"), p, locales.SmMenu()).Disabled(reason != "")
 				if reason != "" {
-					sched.Opacity(0.5).Tooltip(reason)
+					tip(c, p, sched.Opacity(0.5), reason)
 				}
 				sched.OnClick(func() {
 					*open = false

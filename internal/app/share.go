@@ -494,9 +494,23 @@ func (a *App) shareDialogView(c *ui.Context, p *palette) {
 			iconButton(c, p, iconX, locales.Close(), p.Hover).OnClick(func() { open = false })
 		})
 		step := a.shareStep(job, d)
-		body := ui.Column(c.Key("share-step-"+step)).FillWidth().Padding(4, 20, 8, 20).Gap(12).
-			Transition(ui.ElementTransition{Duration: durRegular, Ease: easeLody, Enter: &ui.Motion{X: 4}})
-		body.Children(func() { a.shareBody(c, p, job, d, step) })
+		// Lody's StepTransition: the body's height follows what it holds
+		// over 300ms, easing out, clipped on the way, and each step arrives
+		// from 4px to the right as it fades in.
+		frame := ui.Column(c.Key("share-height")).FillWidth().Shrink(0).ClipY()
+		var inner ui.Element
+		frame.Children(func() {
+			inner = ui.Column(c.Key("share-inner")).FillWidth().Shrink(0).Children(func() {
+				body := ui.Column(c.Key("share-step-"+step)).FillWidth().Padding(4, 20, 8, 20).Gap(12).
+					Transition(ui.ElementTransition{Duration: durRegular, Ease: easeLody, Enter: &ui.Motion{X: 4}})
+				body.Children(func() { a.shareBody(c, p, job, d, step) })
+			})
+		})
+		// The height the content had in the last frame: none as the dialog
+		// first lays it out, which shows at its height.
+		if h := inner.Bounds().H; h > 0 {
+			frame.Height(frame.AnimateWith("height", h, 300*time.Millisecond, cssEaseOut))
+		}
 		ui.Row(c).FillWidth().Padding(8, 20, 16, 20).Gap(8).AlignItems(ui.Center).Children(func() { a.shareFooter(c, p, job, d, step) })
 	})
 	if !open && !job.busy {
@@ -676,7 +690,8 @@ func (a *App) shareFooter(c *ui.Context, p *palette, job *shareJob, d *shareDial
 		ui.Spacer(c)
 		ghostButton(c, p, locales.Cancel()).OnClick(func() { d.confirming = "" })
 		ok := !job.busy && entry != nil && d.confirmRev == entry.Revision
-		b := ghostButton(c, p, locales.ShareConfirm()).Border(1, p.Danger.Alpha(0.6))
+		// The destructive action sinks a pixel while held, as Lody's.
+		b := pressable(ghostButton(c, p, locales.ShareConfirm()).Border(1, p.Danger.Alpha(0.6)), 0.97)
 		if !ok {
 			b.Disabled(true).Opacity(0.45)
 		}
@@ -702,14 +717,14 @@ func (a *App) shareFooter(c *ui.Context, p *palette, job *shareJob, d *shareDial
 	revoke()
 	ui.Spacer(c)
 	if link := a.shareLink(entry); active && link != "" {
-		ghostButton(c, p, locales.ShareCopy()).Border(1, p.Border).OnClick(func() {
+		pressable(ghostButton(c, p, locales.ShareCopy()).Border(1, p.Border), 0.97).OnClick(func() {
 			mygo.Clipboard.WriteText(link)
 			job.notice = locales.ShareCopied()
 		})
 	}
 	canPublish := entry == nil || entry.CanManage || entry.Status == "revoked"
 	if !canPublish {
-		ghostButton(c, p, locales.Close()).Border(1, p.Border).OnClick(func() { d.open = false })
+		pressable(ghostButton(c, p, locales.Close()).Border(1, p.Border), 0.97).OnClick(func() { d.open = false })
 		return
 	}
 	if !active {
@@ -722,9 +737,7 @@ func (a *App) shareFooter(c *ui.Context, p *palette, job *shareJob, d *shareDial
 	case active:
 		label = locales.ShareUpdate()
 	}
-	if job.busy {
-		spinner(c).Size(14, 14)
-	}
+	// Busy, Lody's buttons only disable: no spinner turns beside them.
 	primaryButton(c, p, label, !job.busy && a.canCapture(job)).OnClick(func() { a.publishShare(job) })
 }
 

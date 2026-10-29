@@ -2,6 +2,7 @@ package app
 
 import (
 	"strings"
+	"time"
 	"unicode"
 	"unicode/utf8"
 
@@ -297,7 +298,11 @@ func (a *App) revealFind() {
 		for _, key := range r.folds {
 			a.expanded[key] = true
 		}
-		a.chatList.ScrollIntoView(r.entry)
+		// A message the list has not built is brought near at once; the
+		// block then glides to the top (findRing).
+		if first, last := a.chatList.Visible(); r.entry < first || r.entry > last {
+			a.chatList.ScrollTo(r.entry, ui.Start)
+		}
 	}
 }
 
@@ -353,9 +358,19 @@ func (a *App) findRing(p *palette, id string, e ui.Element) {
 		return
 	}
 	e.Radius(6).Shadow(0, 0, 0, 1, p.Primary.Alpha(0.25))
-	if a.find.reveal > 0 {
-		e.ScrollIntoView()
+	if a.find.reveal == 0 {
+		return
 	}
+	// As Lody's search, the block holding the result glides to the top
+	// over 360ms, easing out as a cubic, from where it was laid out last;
+	// one not laid out yet comes into view at once.
+	st := a.chatMotion.scroll
+	b := e.Bounds()
+	if st == nil || b.H == 0 {
+		e.ScrollIntoView()
+		return
+	}
+	st.ScrollTo(0, max(0, st.Y+b.Y-a.outline.top-chatPadTop), chatGlide)
 }
 
 // findBar floats over the conversation's top end: the field, the count,
@@ -375,7 +390,7 @@ func (a *App) findBar(c *ui.Context, p *palette) {
 	}
 	bar := ui.Row(c.Key("find")).Absolute().Top(16).Right(16).Width(min(360, w-32)).Height(36).Radius(10).Border(0.5, border).
 		Background(p.Canvas.Alpha(0.95)).Padding(0, 4, 0, 10).Gap(2).AlignItems(ui.Center).Shadow(0, 4, 12, -4, ui.RGBA(15, 23, 42, 0.16)).
-		Transition(colorFade)
+		Transition(twFade) // Tailwind's transition-colors, as Lody's search surface
 	bar.Children(func() {
 		ink := p.Secondary.Alpha(0.8)
 		switch {
@@ -384,6 +399,8 @@ func (a *App) findBar(c *ui.Context, p *palette) {
 		case hasQuery:
 			ink = p.Text
 		}
+		// The glass's ink fades with it, over 150ms.
+		ink = bar.AnimateColor("icon", ink, ui.Animation{Duration: 150 * time.Millisecond, Ease: twEase})
 		ui.Icon(c, iconSearch).Size(14, 14).TextColor(ink).Shrink(0)
 		in := ui.TextInputBase(c.Key("find-query"), &f.query).FontSize(13).TextColor(p.Text).Placeholder(locales.FindInSession()).
 			Label(locales.FindInSession()).Grow(1).MinWidth(0).Padding(0, 6).

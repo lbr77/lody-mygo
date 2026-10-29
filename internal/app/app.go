@@ -80,6 +80,7 @@ type App struct {
 	outline      outlineRail               // the conversation's outline rail
 	access       accessPanel               // the header's access panel
 	hmenu        menuState                 // the header's session menu
+	chatMotion   chatMotion                // what the conversation's motion keeps between frames
 	menus        map[string]*contextMenu   // drawn menus by key: rows' context menus and ⋯
 	booting      bool                      // the boot screen showed, and fades out over the app
 	titleSwipe   titleSwipe                // a sidebar title moved by a sideways scroll

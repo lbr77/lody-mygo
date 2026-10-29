@@ -1,6 +1,7 @@
 package app
 
 import (
+	"fmt"
 	"math"
 	"regexp"
 	"slices"
@@ -635,8 +636,8 @@ func (a *App) registerMermaid(o *markdown.Options) {
 			return
 		}
 		frame := ui.Column(c).AlignSelf(ui.Stretch).Padding(12).Radius(o.Theme.CodeBlockRadius).Border(1, o.Theme.CodeBlockBorder).Label("Mermaid\n" + src)
-		frame.ContextMenu(func(m *ui.Menu) {
-			if m.Item(locales.Copy()).Chosen() {
+		lodyContextMenu(c, framePalette, frame, a.rowMenu(fmt.Sprintf("mermaid/%x", frame.ID())), 28, func(m *lodyMenu) {
+			if m.item("copy", iconCopy, locales.Copy(), menuItem{}) {
 				writeClipboard(src)
 			}
 		})

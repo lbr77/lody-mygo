@@ -489,7 +489,16 @@ func (a *App) mentionPanel(c *ui.Context, p *palette, box, input ui.Element) {
 		}
 		panel := ui.Column(c.Key("mentions")).AttachTo(box, ui.AnchorTopStart, ui.AnchorBottomStart).Margin(6, 0, 0, 0).
 			Width(width).Radius(12).Border(0.5, p.CardRim).Background(p.Popover).KeepFocus().Clip().
-			Shadow(0, 12, 32, -8, ui.RGBA(0, 0, 0, 0.18)).Transition(popAbove)
+			Shadow(0, 12, 32, -8, ui.RGBA(0, 0, 0, 0.18))
+		// It rises 4px into place from the side it landed on as it fades
+		// in, and closes at once, as Lody's mention menu.
+		away := float32(-4)
+		if pb, bb := panel.Bounds(), box.Bounds(); pb.H > 0 && pb.Y >= bb.Y+bb.H-1 {
+			away = 4 // it landed below the box
+		}
+		if k := panel.Keyframes("in", []ui.Keyframe{{Value: 0}, {At: popTime, Value: 1, Ease: easeStandard}}); k < 1 {
+			panel.Translate(0, away*(1-k)).Opacity(k)
+		}
 		panel.Children(func() {
 			list := ui.Scroll(c).MaxHeight(320).Padding(4).Gap(1)
 			if k := list.Keyframes("level", []ui.Keyframe{{Value: 0}, {At: popTime, Value: 1, Ease: easeStandard}}, ui.KeyframeOptions{Run: m.levelRun}); m.levelRun > 1 && k < 1 {

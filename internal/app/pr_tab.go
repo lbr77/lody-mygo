@@ -249,30 +249,35 @@ func (a *App) prHeader(c *ui.Context, p *palette, s *catalog.Session, st *prPane
 			})
 			ui.Spacer(c)
 			if st.loading {
-				spinner(c).Size(13, 13)
+				loader(c, p).Size(13, 13)
 			}
 			iconButton(c, p, iconRefresh, locales.PrTabRefresh(), p.Hover).OnClick(func() { a.loadPR(s, st) })
 			iconButton(c, p, iconExternal, locales.PrTabOpenOnGitHub(), p.Hover).OnClick(func() { openExternal(pr.HTMLURL) })
-			iconButton(c, p, iconMore, locales.PrTabMoreActions(), p.Hover).Menu(func(m *ui.Menu) {
-				if m.Item(locales.PrTabCopyBranch()).Chosen() {
+			// More actions is a drawn menu, as Lody's: the branch to copy,
+			// then what changes the pull request, closing it in the
+			// destructive ink.
+			more := iconButton(c.Key("pr-more"), p, iconMore, locales.PrTabMoreActions(), p.Hover)
+			lodyMenuButton(c, p, more, &a.rowMenu("pr-more/"+s.ID).menuState, 200, 290, 32, func(m *lodyMenu) {
+				if m.item("copy-branch", iconCopy, locales.PrTabCopyBranch(), menuItem{}) {
 					mygo.Clipboard.WriteText(pr.Head.Ref)
 				}
+				m.sep()
 				switch {
 				case status == "open" || status == "draft":
-					if m.Item(locales.PrTabCloseAction()).Disabled(st.blocked).Chosen() {
+					if m.item("close", iconGitPRClosed, locales.PrTabCloseAction(), menuItem{disabled: st.blocked, destructive: true}) {
 						a.prAct(s, st, "close", func(ctx context.Context, gh *github.Client) error {
 							return gh.SetState(ctx, st.repo, st.number, "closed")
 						}, locales.PrTabCloseError())
 					}
 				case status == "closed":
-					if m.Item(locales.PrTabReopenAction()).Disabled(st.blocked).Chosen() {
+					if m.item("reopen", iconGitPRArrow, locales.PrTabReopenAction(), menuItem{disabled: st.blocked}) {
 						a.prAct(s, st, "reopen", func(ctx context.Context, gh *github.Client) error {
 							return gh.SetState(ctx, st.repo, st.number, "open")
 						}, locales.PrTabReopenError())
 					}
 				}
 				if status == "merged" || status == "closed" {
-					if m.Item(locales.PrTabDeleteBranch()).Disabled(st.blocked).Chosen() {
+					if m.item("delete-branch", iconTrash, locales.PrTabDeleteBranch(), menuItem{disabled: st.blocked}) {
 						a.prAct(s, st, "delete", func(ctx context.Context, gh *github.Client) error { return gh.DeleteBranch(ctx, st.repo, pr.Head.Ref) }, locales.PrTabDeleteBranchError())
 					}
 				}
@@ -284,12 +289,22 @@ func (a *App) prHeader(c *ui.Context, p *palette, s *catalog.Session, st *prPane
 			ui.Text(c, pr.User.Login).FontSize(sizeFoot).FontWeight(500).TextColor(p.Text)
 			ui.Text(c, locales.PrTabOpened(prAgo(pr.CreatedAt))).FontSize(sizeFoot).TextColor(p.Secondary)
 			ui.Text(c, "·").FontSize(sizeFoot).TextColor(p.Tertiary)
-			branch := func(ref string) {
-				ui.Text(c, ref).Font(fontMono).FontSize(sizeCaption).TextColor(p.Text).Padding(1, 6).Radius(5).Background(p.Text.Alpha(0.06)).SingleLine().MaxWidth(180)
+			// A branch chip copies its name; its fill deepens from 6% to 10%
+			// under the pointer over 120ms, as Lody's.
+			branch := func(key, ref string, ink ui.Color, copied string) {
+				chip := ui.ButtonBase(c.Key("branch-"+key)).Padding(1, 6).Radius(5).Cursor(ui.CursorPointer).Label(ref).Transition(colorFade).
+					Background(p.Text.Alpha(0.06)).MaxWidth(180).OnClick(func() {
+					mygo.Clipboard.WriteText(ref)
+					a.toast("success", copied)
+				})
+				if chip.Hovered() {
+					chip.Background(p.Text.Alpha(0.10))
+				}
+				chip.Children(func() { ui.Text(c, ref).Font(fontMono).FontSize(sizeCaption).TextColor(ink).SingleLine().MinWidth(0) })
 			}
-			branch(pr.Head.Ref)
+			branch("head", pr.Head.Ref, p.Text, locales.CmdBranchCopied())
 			ui.Icon(c, iconArrowRight).Size(12, 12).TextColor(p.Tertiary)
-			branch(pr.Base.Ref)
+			branch("base", pr.Base.Ref, p.Secondary, locales.HmBaseBranchCopied())
 		})
 		ui.Row(c).Gap(10).Children(func() {
 			ui.Text(c, locales.PrTabCommitsSummary(pr.Commits)).FontSize(sizeCaption).TextColor(p.Secondary)
@@ -324,7 +339,7 @@ func (a *App) prConversation(c *ui.Context, p *palette, s *catalog.Session, st *
 		if strings.TrimSpace(pr.Body) == "" {
 			ui.Text(c, locales.PrTabNoDescription()).FontSize(sizeFoot).TextColor(p.Tertiary)
 		} else {
-			markdown.View(c.Key("pr-body"), pr.Body, &a.md)
+			a.prDescription(c, p, st, pr.Body)
 		}
 	})
 	a.prChecks(c, p, st)
@@ -379,7 +394,7 @@ func (a *App) prConversation(c *ui.Context, p *palette, s *catalog.Session, st *
 		area(c, p, &st.draft, locales.PrTabComposerPlaceholder(), locales.PrTabComposerPlaceholder(), 3).Disabled(st.blocked)
 		ui.Row(c).FillWidth().Justify(ui.End).Gap(8).AlignItems(ui.Center).Children(func() {
 			if st.busy == "comment" {
-				spinner(c).Size(13, 13)
+				loader(c, p).Size(13, 13)
 			}
 			body := strings.TrimSpace(st.draft)
 			primaryButton(c, p, locales.PrTabComposerSubmit(), body != "" && st.busy == "" && !st.blocked).OnClick(func() {
@@ -424,26 +439,37 @@ func (a *App) prChecks(c *ui.Context, p *palette, st *prPanel) {
 	case running > 0:
 		verdict, mark, ink = locales.PrTabChecksRunning(), markInfo, p.Warning
 	}
-	open := st.open["checks"]
-	ui.Column(c.Key("checks")).FillWidth().Gap(6).Padding(12).Radius(10).Border(1, p.Border).Children(func() {
-		head := ui.ButtonBase(c.Key("head")).FillWidth().Gap(8).AlignItems(ui.Center).Cursor(ui.CursorPointer).Label(verdict).OnClick(func() { st.open["checks"] = !open })
+	// The runs show at first while something needs a look, as Lody's,
+	// and fold away once all is green.
+	open, set := st.open["checks"]
+	if !set {
+		open = failed > 0 || running > 0
+	}
+	ui.Column(c.Key("checks")).FillWidth().Radius(10).Border(1, p.Border).Clip().Children(func() {
+		// The toggle fills 4% under the pointer over 120ms, and its chevron
+		// turns over 120ms, both on ease.standard.
+		head := ui.ButtonBase(c.Key("head")).FillWidth().Padding(10, 12).Gap(8).AlignItems(ui.Center).Cursor(ui.CursorPointer).Label(verdict).
+			Transition(colorFade).OnClick(func() { st.open["checks"] = !open })
+		if head.Hovered() {
+			head.Background(p.Text.Alpha(0.04))
+		}
 		head.Children(func() {
 			ui.Icon(c, mark).Size(15, 15).TextColor(ink)
 			ui.Text(c, verdict).FontSize(sizeFoot).FontWeight(600).TextColor(p.Text).Grow(1)
 			ui.Text(c, locales.PrTabChecksCount(len(st.checks))).FontSize(sizeCaption).TextColor(p.Secondary)
-			ui.Icon(c, iconChevronDown).Size(12, 12).TextColor(p.Secondary).Rotate(map[bool]float32{true: 180, false: 0}[open])
+			turnChevron(ui.Icon(c.Key("chevron"), iconChevronDown).Size(14, 14).TextColor(p.Secondary), 180, open, durFast, easeStandard)
 		})
 		if !open {
 			return
 		}
 		for _, r := range st.checks {
 			run := r
-			row := ui.ButtonBase(c.Key(fmt.Sprint(r.ID, r.Name))).FillWidth().Height(26).Gap(8).AlignItems(ui.Center).Cursor(ui.CursorPointer).
-				Label(r.Name).Tooltip(locales.PrTabOpenCheck()).OnClick(func() { openExternal(run.HTMLURL) })
+			row := ui.Row(c.Key(fmt.Sprint(r.ID, r.Name))).FillWidth().MinHeight(28).Padding(6, 12).Gap(8).AlignItems(ui.Center).
+				BorderWidth(1, 0, 0, 0).BorderColor(p.Border).Label(r.Name)
 			row.Children(func() {
 				switch {
 				case run.Running():
-					spinner(c).Size(12, 12)
+					loader(c, p).Size(12, 12).TextColor(p.Warning)
 				case run.Failed():
 					ui.Icon(c, iconX).Size(12, 12).TextColor(p.Danger)
 				case run.Conclusion == "success":
@@ -452,6 +478,20 @@ func (a *App) prChecks(c *ui.Context, p *palette, st *prPanel) {
 					ui.Icon(c, iconDot).Size(12, 12).TextColor(p.Tertiary)
 				}
 				ui.Text(c, run.Name).FontSize(sizeFoot).TextColor(p.Text).SingleLine().Grow(1).MinWidth(0)
+				if run.HTMLURL == "" {
+					return
+				}
+				// The link to the run inks from the tertiary to the label's
+				// over 120ms, as Lody's.
+				link := ui.ButtonBase(c.Key("open")).Size(16, 16).Radius(4).Center().Shrink(0).Cursor(ui.CursorPointer).Label(locales.PrTabOpenCheck()).
+					OnClick(func() { openExternal(run.HTMLURL) })
+				tip(c, p, link, locales.PrTabOpenCheck())
+				linkInk := p.Tertiary
+				if link.Hovered() {
+					linkInk = p.Text
+				}
+				linkInk = link.AnimateColor("ink", linkInk, ui.Animation{Duration: durFast, Ease: easeStandard})
+				link.Children(func() { ui.Icon(c, iconExternal).Size(13, 13).TextColor(linkInk) })
 			})
 		}
 	})
@@ -484,7 +524,7 @@ func (a *App) prMergeBox(c *ui.Context, p *palette, s *catalog.Session, st *prPa
 		ui.Column(c).FillWidth().Gap(8).Children(func() {
 			if pr.Draft {
 				if st.busy == "ready" {
-					spinner(c).Size(13, 13)
+					loader(c, p).Size(13, 13)
 				}
 				primaryButton(c, p, locales.PrTabReadyForReview(), st.busy == "" && !st.blocked).OnClick(func() {
 					a.prAct(s, st, "ready", func(ctx context.Context, gh *github.Client) error { return gh.ReadyForReview(ctx, pr.NodeID) }, locales.PrTabReadyForReviewError())
@@ -521,15 +561,14 @@ func (a *App) prChanges(c *ui.Context, p *palette, st *prPanel) {
 			file := f
 			open := st.open["file/"+f.Filename]
 			ui.Column(c.Key(f.Filename)).FillWidth().Children(func() {
+				// The header doesn't fill under the pointer; its chevron turns
+				// down to up over 150ms on CSS's ease, as Lody's.
 				head := ui.ButtonBase(c.Key("head")).FillWidth().MinHeight(34).Padding(6, 10).Gap(8).AlignItems(ui.Center).Cursor(ui.CursorPointer).
-					Label(file.Filename).Transition(colorFade).OnClick(func() { st.open["file/"+file.Filename] = !open })
-				if head.Hovered() {
-					head.Background(p.Hover)
-				}
+					Label(file.Filename).OnClick(func() { st.open["file/"+file.Filename] = !open })
 				head.Children(func() {
-					ui.Icon(c, iconChevronRight).Size(12, 12).TextColor(p.Tertiary).Rotate(map[bool]float32{true: 90, false: 0}[open])
+					turnChevron(ui.Icon(c.Key("chevron"), iconChevronDown).Size(14, 14).TextColor(p.Tertiary), 180, open, 150*time.Millisecond, cssEase)
 					ui.Column(c).Grow(1).MinWidth(0).Children(func() {
-						ui.Text(c, file.Filename).Font(fontMono).FontSize(sizeCaption).TextColor(p.Text).SingleLine().Tooltip(file.Filename)
+						tip(c, p, ui.Text(c, file.Filename).Font(fontMono).FontSize(sizeCaption).TextColor(p.Text).SingleLine(), file.Filename)
 						if file.PreviousFilename != "" {
 							ui.Text(c, locales.PrTabFileRenamed(file.PreviousFilename)).FontSize(sizeCaption).TextColor(p.Tertiary).SingleLine()
 						}
@@ -562,5 +601,47 @@ func (a *App) prChanges(c *ui.Context, p *palette, st *prPanel) {
 				})
 			})
 		}
+	})
+}
+
+// prDescriptionFold is the height a long description folds to, as Lody's:
+// 22 lines of its type; it folds only when that hides a quarter more.
+const prDescriptionFold = 22 * sizeBody
+
+// prDescription is the pull request's description: a long one folds under
+// a fading edge, with Show more turning its chevron over 120ms to unfold
+// it, as Lody's.
+func (a *App) prDescription(c *ui.Context, p *palette, st *prPanel, body string) {
+	expanded := st.open["description"]
+	var inner ui.Element
+	clip := ui.Column(c.Key("pr-description")).FillWidth()
+	clip.Children(func() {
+		inner = ui.Column(c.Key("content")).FillWidth().Shrink(0).Children(func() {
+			markdown.View(c.Key("pr-body"), body, &a.md)
+		})
+		if overflows := inner.Bounds().H > prDescriptionFold*1.25; overflows && !expanded {
+			ui.Box(c.Key("fade")).Absolute().Left(0).Right(0).Bottom(0).Height(72).PassThrough().
+				Gradient(p.Canvas.Alpha(0), p.Canvas, 180)
+		}
+	})
+	overflows := inner.Bounds().H > prDescriptionFold*1.25
+	if !overflows {
+		return
+	}
+	if !expanded {
+		clip.ClipY().Height(prDescriptionFold)
+	}
+	label := locales.ShowMore()
+	if expanded {
+		label = locales.ShowLess()
+	}
+	b := ui.ButtonBase(c.Key("pr-description-toggle")).Height(24).Padding(0, 8).Radius(6).Gap(4).AlignItems(ui.Center).AlignSelf(ui.Start).
+		Cursor(ui.CursorPointer).Label(label).Transition(colorFade).OnClick(func() { st.open["description"] = !expanded })
+	if b.Hovered() {
+		b.Background(p.Text.Alpha(0.06))
+	}
+	b.Children(func() {
+		turnChevron(ui.Icon(c.Key("chevron"), iconChevronDown).Size(12, 12).TextColor(p.Secondary), 180, expanded, durFast, easeStandard)
+		ui.Text(c, label).FontSize(sizeFoot).FontWeight(500).TextColor(p.Secondary)
 	})
 }

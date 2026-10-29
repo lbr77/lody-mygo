@@ -26,7 +26,8 @@ func (a *App) mainView(c *ui.Context, p *palette) {
 	a.membershipSync(c)
 	a.bindCommands(c)
 	defer func() { a.surf, a.surfNext = a.surfNext, surface{} }()
-	shell := ui.Row(c.Key("main")).Fill().AlignItems(ui.Stretch).Background(p.Ground).Transition(windowIn)
+	// No fade of its own: Lody's boot shell fades out over it (bootOut).
+	shell := ui.Row(c.Key("main")).Fill().AlignItems(ui.Stretch).Background(p.Ground)
 	// The sidebar slides in and out as it shows and hides; the card grows
 	// into its room.
 	a.sideOut = shell.AnimateTo("sidebar", b2f(!a.sidebarHidden), slideSpring)
@@ -153,6 +154,11 @@ func (a *App) sessionSplit(c *ui.Context, p *palette, k float32) {
 	}, func() {
 		panel := ui.Column(c.Key("panel")).Fill().MinWidth(0).ClipX()
 		panel.Children(func() {
+			// Closing, the panel's content is hidden at once, as Lody's
+			// visibility: hidden, while its room shrinks away.
+			if !a.panelOpen {
+				return
+			}
 			inner := ui.Column(c).Fill().MinWidth(0)
 			if k < 1 {
 				inner.Translate(panel.Bounds().W*(1-k), 0)
@@ -173,14 +179,17 @@ func (a *App) sessionMain(c *ui.Context, p *palette) {
 		a.activeDraft = ""
 	}
 	a.goalBanner(c, p)
-	// The terminal dock grows into its height over 200ms, easing out, and
-	// shrinks away the same way.
+	// The terminal dock grows into its height over 200ms on Tailwind's
+	// ease-out, its content at full height and clipped, as Lody's; closing,
+	// its content goes at once and its room shrinks away the same way.
 	host := ui.Column(c.Key("term-split")).Grow(1).MinHeight(0).FillWidth()
-	k := host.AnimateWith("dock", b2f(a.term.open && sess != nil && a.localMachine() != ""), 200*time.Millisecond, ui.EaseOut)
-	host.Children(func() { a.sessionDock(c, p, sess, k) })
+	open := a.term.open && sess != nil && a.localMachine() != ""
+	k := host.AnimateWith("dock", b2f(open), 200*time.Millisecond, twEaseOut)
+	hostH := host.Bounds().H
+	host.Children(func() { a.sessionDock(c, p, sess, k, open, hostH) })
 }
 
-func (a *App) sessionDock(c *ui.Context, p *palette, sess *catalog.Session, k float32) {
+func (a *App) sessionDock(c *ui.Context, p *palette, sess *catalog.Session, k float32, open bool, hostH float32) {
 	if k <= 0 || sess == nil || a.localMachine() == "" {
 		a.conversation(c, p, sess)
 		return
@@ -200,7 +209,21 @@ func (a *App) sessionDock(c *ui.Context, p *palette, sess *catalog.Session, k fl
 	ui.SplitVerticalPercent(c, percent, func() {
 		ui.Column(c).Fill().MinHeight(0).Children(func() { a.conversation(c, p, sess) })
 	}, func() {
-		ui.Column(c).Fill().MinHeight(0).Children(func() { a.terminalDock(c, p, sess) })
+		pane := ui.Column(c).Fill().MinHeight(0).ClipY()
+		if !open {
+			return
+		}
+		pane.Children(func() {
+			inner := ui.Column(c).FillWidth().MinHeight(0)
+			if k < 1 && hostH > 0 {
+				// The dock's content keeps its full height as its room
+				// grows, clipped below.
+				inner.Height(hostH * (100 - a.term.percent) / 100).Shrink(0)
+			} else {
+				inner.Grow(1)
+			}
+			inner.Children(func() { a.terminalDock(c, p, sess) })
+		})
 	}).Grow(1).MinHeight(0).FillWidth()
 }
 
@@ -208,15 +231,15 @@ func (a *App) sessionDock(c *ui.Context, p *palette, sess *catalog.Session, k fl
 func (a *App) conversation(c *ui.Context, p *palette, sess *catalog.Session) {
 	v := a.view
 	if v == nil || (v.Status != "live" && len(v.Entries) == 0) {
-		// The spinner fades in only for a slow load, so that switching to
-		// a session that loads at once shows no flash of it.
-		ui.Column(c.Key("loading")).Grow(1).Center().Gap(10).Transition(lateIn).Children(func() {
-			spinner(c).Size(18, 18)
-			msg := locales.LoadingConversation()
-			if v != nil && v.Reason != "" {
-				msg = locales.Reconnecting(v.Reason)
-			}
-			ui.Text(c, msg).FontSize(sizeSub).TextColor(p.Secondary)
+		// Lody's conversation skeleton: shape, not text, breathing every
+		// 1.6s where the exchange will be.
+		ui.Column(c.Key("loading")).Grow(1).MinHeight(0).ClipY().Padding(chatPadTop, 0, 24, 0).Label(locales.LoadingConversation()).Children(func() {
+			a.column(c, "skeleton", func() {
+				if v != nil && v.Reason != "" {
+					ui.Text(c, locales.Reconnecting(v.Reason)).FontSize(sizeSub).TextColor(p.Secondary).Margin(0, 0, 16, 0)
+				}
+				conversationSkeleton(c, p)
+			})
 		})
 		a.bottom(c, p, sess, nil)
 		return
@@ -248,9 +271,13 @@ func (a *App) conversation(c *ui.Context, p *palette, sess *catalog.Session) {
 	}
 	// Following the end would carry a search away from its result.
 	a.chatList.FollowEnd = !a.find.open
-	// What arrives glides up from below over 360ms, easing out as a cubic,
-	// as Lody scrolls to a message sent.
-	a.chatList.FollowAnimation = &chatGlide
+	// A message just sent glides up from below over 360ms, easing out as a
+	// cubic, as Lody scrolls to a message sent; a reply streaming in is
+	// followed at once.
+	a.chatList.FollowAnimation = nil
+	if a.sendGlide(entries) {
+		a.chatList.FollowAnimation = &chatGlide
+	}
 	// Keyed by session, so that each conversation fades in as it opens.
 	ui.Box(c.Key("chat-frame/" + a.selected)).FillWidth().Grow(1).MinHeight(0).Children(func() {
 		list := ui.List(c.Key("chat/"+a.selected), &a.chatList, len(entries)+1, func(i int) {
@@ -260,7 +287,10 @@ func (a *App) conversation(c *ui.Context, p *palette, sess *catalog.Session) {
 			}
 			// Where each row was, for the outline's reader position.
 			a.outline.tops[i] = a.entry(c, p, entries, i).Bounds().Y
-		}).Fill().Padding(chatPadTop, 0, 24, 0).FontFeatures(a.ligatureFeatures()...).Children(func() {
+		})
+		// Tracked, so that a search can glide its result into view.
+		list.TrackScroll(a.chatMotion.chatScroll(a.selected, list.Bounds().H == 0))
+		list.Fill().Padding(chatPadTop, 0, 24, 0).FontFeatures(a.ligatureFeatures()...).Children(func() {
 			ui.Text(c, locales.SendToStart()).FontSize(sizeSub).TextColor(p.Secondary).Margin(ui.Auto)
 		})
 		a.outline.top = list.Bounds().Y
@@ -272,6 +302,52 @@ func (a *App) conversation(c *ui.Context, p *palette, sess *catalog.Session) {
 	}
 	a.outlineRail(c, p, entries)
 	a.findBar(c, p)
+}
+
+// sendGlide reports whether the conversation glides to its end in this
+// frame: for 360ms from when the message being sent shows in it.
+func (a *App) sendGlide(entries []session.Entry) bool {
+	cm := &a.chatMotion
+	last := ""
+	for i := len(entries) - 1; i >= 0; i-- {
+		if entries[i].Role == "user" {
+			last = a.selected + "/" + entries[i].ID
+			break
+		}
+	}
+	if last != cm.lastUser {
+		// A message the user is sending, not one opened with the chat.
+		if cm.lastUser != "" && strings.HasPrefix(cm.lastUser, a.selected+"/") && a.sending && a.sendingID == a.selected {
+			cm.glideUntil = time.Now().Add(chatGlide.Duration)
+		}
+		cm.lastUser = last
+	}
+	return time.Now().Before(cm.glideUntil)
+}
+
+// conversationSkeleton is Lody's ConversationSkeleton: three exchanges'
+// shapes, each a user bubble at the end over the lines of a reply.
+func conversationSkeleton(c *ui.Context, p *palette) {
+	turns := []struct {
+		bubble float32
+		lines  []float32
+	}{
+		{40, []float32{92, 80, 60}},
+		{33, []float32{100, 83, 67, 50}},
+		{50, []float32{92, 75}},
+	}
+	ui.Column(c.Key("conversation-skeleton")).FillWidth().Gap(24).Padding(8, 0).Children(func() {
+		for i, t := range turns {
+			ui.Column(c.Key(i)).FillWidth().Gap(12).Children(func() {
+				skeleton(c, p, fmt.Sprintf("bubble-%d", i), 36).WidthPercent(t.bubble).Radius(10).AlignSelf(ui.End)
+				ui.Column(c).FillWidth().Gap(8).Children(func() {
+					for j, w := range t.lines {
+						skeleton(c, p, fmt.Sprintf("line-%d-%d", i, j), 14).WidthPercent(w).Radius(5)
+					}
+				})
+			})
+		}
+	})
 }
 
 // chatEdges is what Lody lays over the conversation's edges: a fade into
@@ -299,7 +375,7 @@ func (a *App) chatEdges(c *ui.Context, p *palette, v *session.View, n int) {
 		a.column(c, "to-latest-col", func() {
 			ui.Row(c).FillWidth().Justify(ui.End).Children(func() {
 				b := ui.ButtonBase(c.Key("scroll-latest")).Size(32, 32).Radius(16).Center().Border(0.5, p.Border).Cursor(ui.CursorPointer).
-					Label(locales.ScrollToLatest()).Tooltip(locales.ScrollToLatest()).Transition(colorFade).OnClick(a.chatList.ScrollToEnd)
+					Label(locales.ScrollToLatest()).Transition(colorFade).OnClick(a.chatList.ScrollToEnd)
 				if p.Dark {
 					b.Background(p.Hover)
 				} else {
@@ -309,7 +385,7 @@ func (a *App) chatEdges(c *ui.Context, p *palette, v *session.View, n int) {
 				working := v != nil && v.Working
 				b.Children(func() {
 					if working && !b.Hovered() {
-						spinner(c).Size(16, 16)
+						loader(c, p)
 						return
 					}
 					ui.Icon(c, iconArrowDown).Size(16, 16).TextColor(p.Text)
@@ -409,7 +485,11 @@ func (a *App) userMessage(c *ui.Context, p *palette, e session.Entry, firstQueue
 	editable := a.editableEntry()
 	canEdit := editable != nil && editable.ID == e.ID
 	editing := canEdit && a.msgEdit.id == e.ID
-	ui.Row(c).FillWidth().Gap(8).AlignItems(ui.Start).Justify(ui.End).Children(func() {
+	outer := ui.Row(c).FillWidth().Gap(8).AlignItems(ui.Start).Justify(ui.End)
+	// Lody's Loader2 turns beside the bubble while the message is still on
+	// its way, once that has taken 500ms, where the row is 520 wide.
+	sending := !editing && a.sendingShown(e) && outer.Bounds().W >= 520
+	outer.Children(func() {
 		col := ui.Column(c).AlignItems(ui.End).Gap(4).Shrink(1).MinWidth(0).MaxWidth(560)
 		hovered := col.Hovered()
 		col.Children(func() {
@@ -458,6 +538,9 @@ func (a *App) userMessage(c *ui.Context, p *palette, e session.Entry, firstQueue
 				}
 				a.findRing(p, e.ID+"/user", bubble)
 				bubble.Children(func() {
+					if sending {
+						sendingSpinner(c, p)
+					}
 					body := a.userBody(c, p, e, text)
 					if !a.shareImg.picking(a.selected) {
 						body.Selectable()
@@ -483,8 +566,9 @@ func (a *App) userMessage(c *ui.Context, p *palette, e session.Entry, firstQueue
 				entry := e
 				b := iconButton(c, p, iconPencil, locales.EditMessage(), p.Hover).Size(24, 24).
 					Transition(colorFade).OnClick(func() { a.startEdit(entry) })
-				// The message's actions fade in with the pointer, over 150ms.
-				b.Opacity(b.AnimateWith("shown", b2f(hovered), 150*time.Millisecond, easeStandard))
+				// The message's actions fade in with the pointer over 150ms,
+				// as Tailwind's transition-opacity.
+				b.Opacity(b.AnimateWith("shown", b2f(hovered), 150*time.Millisecond, twEase))
 			}
 		})
 		ui.Box(c).Margin(28, 0, 0, 0).Children(func() {
@@ -504,6 +588,29 @@ func (a *App) userMessage(c *ui.Context, p *palette, e session.Entry, firstQueue
 	})
 }
 
+// sendingShown reports whether e is the message on its way: the
+// conversation's last from the user while its send is not done.
+func (a *App) sendingShown(e session.Entry) bool {
+	if !a.sending || a.sendingID != a.selected || a.view == nil || e.Status != "pending" {
+		return false
+	}
+	for i := len(a.view.Entries) - 1; i >= 0; i-- {
+		if u := a.view.Entries[i]; u.Role == "user" {
+			return u.ID == e.ID
+		}
+	}
+	return false
+}
+
+// sendingSpinner is the loader left of a message's bubble, level with its
+// last line: it shows only once the send has taken 500ms, as Lody's
+// useIsMessageSendingVisible, so a quick send shows none.
+func sendingSpinner(c *ui.Context, p *palette) {
+	box := ui.Box(c.Key("sending")).Absolute().Left(-22).Bottom(13).Size(16, 16)
+	late := box.Keyframes("late", []ui.Keyframe{{Value: 0}, {At: 500 * time.Millisecond, Value: 0}, {At: 501 * time.Millisecond, Value: 1}})
+	box.Opacity(late).Children(func() { loader(c, p) })
+}
+
 // queuedActions give a queued message to the running turn: Steer when its
 // agent takes steering, Send now by interrupting it.
 func (a *App) queuedActions(c *ui.Context, p *palette, e session.Entry, first bool) {
@@ -513,10 +620,10 @@ func (a *App) queuedActions(c *ui.Context, p *palette, e session.Entry, first bo
 	}
 	ui.Row(c).Gap(4).Children(func() {
 		if a.steerable(sess) {
-			ghostButton(c, p, locales.Steer()).Tooltip(locales.QueuedSteerTooltip()).OnClick(func() { a.steerQueued(e.ID, false) })
+			tip(c, p, ghostButton(c, p, locales.Steer()), locales.QueuedSteerTooltip()).OnClick(func() { a.steerQueued(e.ID, false) })
 		}
 		if first {
-			ghostButton(c, p, locales.QueuedSendNow()).Tooltip(locales.QueuedSendNowTooltip()).OnClick(func() { a.steerQueued(e.ID, true) })
+			tip(c, p, ghostButton(c, p, locales.QueuedSendNow()), locales.QueuedSendNowTooltip()).OnClick(func() { a.steerQueued(e.ID, true) })
 		}
 	})
 }

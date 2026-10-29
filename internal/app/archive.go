@@ -71,20 +71,13 @@ func (a *App) archiveView(c *ui.Context, p *palette) {
 			return
 		}
 		for _, g := range a.archiveGroups(sessions) {
+			folded := a.popover("archive-fold/" + g.id)
 			ui.Column(c.Key("g/" + g.id)).FillWidth().Gap(10).Children(func() {
-				ui.Row(c).Gap(8).AlignItems(ui.Center).Padding(0, 10).Children(func() {
-					icon := iconFolder
-					if g.id == "" {
-						icon = iconMessage
-					}
-					ui.Icon(c, icon).Size(16, 16).TextColor(p.Secondary)
-					ui.Text(c, g.name).FontSize(sizeSub).FontWeight(600).TextColor(p.Text).SingleLine().Shrink(0)
-					if g.path != "" {
-						ui.Text(c, g.path).FontSize(sizeSub).TextColor(p.Tertiary).SingleLine().MinWidth(0).Shrink(1)
-					}
-					ui.Spacer(c)
-					ui.Text(c, fmt.Sprintf("(%d)", len(g.sessions))).FontSize(sizeFoot).TextColor(p.Tertiary)
-				})
+				a.archiveGroupHeader(c, p, g, folded)
+				// A folded group's rows go at once, as Lody's.
+				if *folded {
+					return
+				}
 				archiveCard(c, p, func() {
 					for _, s := range g.sessions {
 						a.archivedRow(c.Key(s.ID), p, s)
@@ -94,6 +87,37 @@ func (a *App) archiveView(c *ui.Context, p *palette) {
 		}
 	})
 	a.deleteDialog(c, p)
+}
+
+// archiveGroupHeader is a group's header, as Lody's: a button that folds
+// the group, its fill fading in under the pointer over 120ms. At rest it
+// shows the group's kind; the pointer crossfades that for the fold chevron,
+// which turns a quarter back while the group is folded, each over 120ms.
+func (a *App) archiveGroupHeader(c *ui.Context, p *palette, g archiveGroup, folded *bool) {
+	h := ui.ButtonBase(c.Key("header")).FillWidth().Height(32).Padding(0, 8).Gap(8).Radius(6).AlignItems(ui.Center).
+		Cursor(ui.CursorPointer).Label(g.name).Transition(colorFade).OnClick(func() { *folded = !*folded })
+	hovered := h.Hovered()
+	if hovered {
+		h.Background(p.Hover)
+	}
+	fade := h.AnimateWith("hover", b2f(hovered), durFast, easeStandard)
+	turn := h.AnimateWith("fold", b2f(*folded), durFast, easeStandard)
+	h.Children(func() {
+		ui.Box(c.Key("glyph")).Size(20, 20).Shrink(0).Children(func() {
+			icon := iconFolder
+			if g.id == "" {
+				icon = iconMessage
+			}
+			ui.Icon(c.Key("kind"), icon).Size(16, 16).Absolute().Left(2).Top(2).TextColor(p.Tertiary).Opacity(1 - fade)
+			ui.Icon(c.Key("fold"), iconChevronDown).Size(16, 16).Absolute().Left(2).Top(2).TextColor(p.Tertiary).Opacity(fade).Rotate(-90 * turn)
+		})
+		ui.Text(c, g.name).FontSize(sizeSub).FontWeight(600).TextColor(p.Text).SingleLine().Shrink(0)
+		if g.path != "" {
+			ui.Text(c, g.path).FontSize(sizeSub).TextColor(p.Tertiary).SingleLine().MinWidth(0).Shrink(1)
+		}
+		ui.Spacer(c)
+		ui.Text(c, fmt.Sprintf("(%d)", len(g.sessions))).FontSize(sizeFoot).TextColor(p.Tertiary)
+	})
 }
 
 func archiveCard(c *ui.Context, p *palette, rows func()) {
@@ -197,8 +221,9 @@ func (a *App) archivedRow(c *ui.Context, p *palette, s catalog.Session) {
 				})
 			}
 		})
-		// Restore and delete show while the row is hovered.
-		ui.Row(c).Width(52).Shrink(0).Gap(4).Opacity(map[bool]float32{true: 1, false: 0}[hovered]).Children(func() {
+		// Restore and delete fade in over 120ms while the row is hovered.
+		actions := ui.Row(c.Key("actions")).Width(52).Shrink(0).Gap(4)
+		actions.Opacity(actions.AnimateWith("reveal", b2f(hovered), durFast, easeStandard)).Children(func() {
 			id := s.ID
 			restore := iconButton(c, p, iconUndo, locales.ArchiveRestore(), p.Text.Alpha(0.08)).Size(24, 24).Disabled(!hovered)
 			restore.OnClick(func() {
@@ -230,8 +255,14 @@ func (a *App) deleteDialog(c *ui.Context, p *palette) {
 		}
 		ui.Text(c, description).FontSize(sizeSub).LineHeight(1.45).TextColor(p.Secondary)
 		ui.Row(c).Gap(8).Justify(ui.End).Padding(8, 0, 0, 0).Children(func() {
-			ghostButton(c, p, locales.Cancel()).Border(1, p.Border).OnClick(func() { a.deleteOpen = false })
-			b := ui.ButtonBase(c).Height(28).Padding(0, 12).Radius(8).Background(p.Danger).Cursor(ui.CursorPointer).Label(locales.ArchiveDelete())
+			// Lody's dialog buttons: the secondary and the destructive sink a
+			// pixel while held, their fills fading over 120ms.
+			pressable(ghostButton(c, p, locales.Cancel()).Border(1, p.Border), 0.97).OnClick(func() { a.deleteOpen = false })
+			b := ui.ButtonBase(c).Height(28).Padding(0, 12).Radius(8).Background(p.Danger).Cursor(ui.CursorPointer).Label(locales.ArchiveDelete()).Transition(colorFade)
+			if b.Hovered() {
+				b.Background(p.Danger.Mix(p.Text, 0.1))
+			}
+			pressable(b, 0.97)
 			b.OnClick(func() {
 				a.deleteOpen = false
 				id := s.ID

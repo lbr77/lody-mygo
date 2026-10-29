@@ -173,19 +173,22 @@ func (a *App) taskPanel(c *ui.Context, p *palette, e session.Entry, tasks []*ses
 		if running == 0 {
 			head.Cursor(ui.CursorPointer).Label(label).OnClick(func() { a.expanded[key] = !a.expanded[key] })
 		}
+		// As Lody's, the chevron turns 90° over 150ms on CSS's ease as the
+		// card opens, and the header's ink brightens under the pointer.
+		turn := head.AnimateWith("chevron", b2f(expanded), 150*time.Millisecond, cssEase)
+		ink := p.Secondary
+		if running == 0 && head.Hovered() {
+			ink = p.Text
+		}
 		head.Children(func() {
 			ui.Box(c).Size(14, 14).Center().Shrink(0).Children(func() {
 				if running > 0 {
 					spinner(c).Size(13, 13)
 					return
 				}
-				icon := iconChevronRight
-				if expanded {
-					icon = iconChevronDown
-				}
-				ui.Icon(c, icon).Size(13, 13).TextColor(p.Secondary)
+				ui.Icon(c, iconChevronRight).Size(14, 14).TextColor(ink).Rotate(90 * turn)
 			})
-			ui.Text(c, label).FontSize(sizeSub).TextColor(p.Secondary).SingleLine()
+			ui.Text(c, label).FontSize(sizeSub).TextColor(ink).SingleLine()
 		})
 		if !expanded {
 			return
@@ -207,7 +210,7 @@ func (a *App) taskPanel(c *ui.Context, p *palette, e session.Entry, tasks []*ses
 
 func (a *App) taskRow(c *ui.Context, p *palette, e session.Entry, t *session.Subagent, depth int) {
 	row := ui.Column(c).FillWidth().Padding(7, 12, 7, 12+float32(depth)*18).Gap(2).Cursor(ui.CursorPointer).
-		Label(taskActor(t) + " · " + t.Description).Transition(colorFade)
+		Label(taskActor(t) + " · " + t.Description).Transition(ui.ElementTransition{Colors: true, Duration: durFast, Ease: cssEase}) // 120ms, CSS's ease
 	if row.Hovered() {
 		row.Background(p.Hover)
 	}

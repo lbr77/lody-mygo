@@ -43,6 +43,8 @@ type inspectState struct {
 	// on this machine.
 	changed    map[string]bool
 	indexAsked bool
+	// The cards folded shut in Changes, by key.
+	folded map[string]bool
 }
 
 type dirListing struct {
@@ -318,8 +320,10 @@ func (a *App) fileBrowser(c *ui.Context, p *palette, in *inspectState, s collab.
 				})
 				return
 			}
+			// The row fills under the pointer at once, as Lody's tree's.
 			row := ui.Row(c.Key(r.path)).Height(24).Padding(0, 8, 0, indent).Radius(6).Gap(4).AlignItems(ui.Center).Cursor(ui.CursorPointer).
-				Label(r.path).Tooltip(r.path).Transition(colorFade)
+				Label(r.path)
+			tip(c, p, row, r.path)
 			if row.Hovered() {
 				row.Background(p.Hover)
 			}
@@ -334,11 +338,10 @@ func (a *App) fileBrowser(c *ui.Context, p *palette, in *inspectState, s collab.
 			row.Children(func() {
 				ui.Box(c).Size(14, 14).Center().Shrink(0).Children(func() {
 					if r.dir {
-						icon := iconChevronRight
-						if in.open[r.path] {
-							icon = iconChevronDown
-						}
-						ui.Icon(c, icon).Size(12, 12).TextColor(p.Tertiary)
+						// The chevron turns down over 200ms as the folder
+						// opens, as Lody's transition-transform.
+						chevron := ui.Icon(c.Key("chevron"), iconChevronRight).Size(12, 12).TextColor(p.Tertiary)
+						chevron.Rotate(chevron.AnimateWith("open", 90*b2f(in.open[r.path]), 200*time.Millisecond, twEase))
 					}
 				})
 				icon := iconFile
@@ -407,8 +410,8 @@ func (a *App) fileView(c *ui.Context, p *palette, in *inspectState, s collab.Ses
 	markdownFile := strings.EqualFold(path.Ext(in.file), ".md") || strings.EqualFold(path.Ext(in.file), ".markdown")
 	htmlFile := strings.EqualFold(path.Ext(in.file), ".html") || strings.EqualFold(path.Ext(in.file), ".htm")
 	ui.Row(c).Shrink(0).Height(36).Padding(0, 8).Gap(6).AlignItems(ui.Center).BorderWidth(0, 0, 1, 0).BorderColor(p.Border).Children(func() {
-		iconButton(c, p, iconChevronLeft, locales.NavBack(), p.Hover).OnClick(func() { in.file = "" })
-		ui.Text(c, in.file).Font(fontMono).FontSize(sizeFoot).TextColor(p.Text).SingleLine().Grow(1).MinWidth(0).Tooltip(in.file)
+		fileToolButton(c, p, iconChevronLeft, locales.NavBack()).OnClick(func() { in.file = "" })
+		tip(c, p, ui.Text(c, in.file).Font(fontMono).FontSize(sizeFoot).TextColor(p.Text).SingleLine().Grow(1).MinWidth(0), in.file)
 		if markdownFile && fp != nil && fp.text != "" {
 			label := locales.PanelSource()
 			if fp.asText {
@@ -436,11 +439,11 @@ func (a *App) fileView(c *ui.Context, p *palette, in *inspectState, s collab.Ses
 			// is red, unsaved edits amber.
 			switch {
 			case fp.saving:
-				pulse(ui.Box(c.Key("saving")).Size(6, 6).Radius(3).Background(p.Primary).Tooltip(locales.WorktreeSaving()))
+				savingDot(c, p)
 			case fp.conflict != nil:
 				ui.Box(c.Key("conflict")).Size(6, 6).Radius(3).Background(p.Danger)
 			case fp.code != nil && fp.code.Buffer.Modified():
-				ui.Box(c.Key("dirty")).Size(6, 6).Radius(3).Background(p.Warning).Tooltip(locales.FileUnsaved())
+				tip(c, p, ui.Box(c.Key("dirty")).Size(6, 6).Radius(3).Background(p.Warning), locales.FileUnsaved())
 			}
 			if fp.code != nil && fp.code.Buffer.Modified() {
 				ui.Text(c, locales.FileUnsaved()).FontSize(sizeCaption).TextColor(p.Warning)
@@ -450,18 +453,18 @@ func (a *App) fileView(c *ui.Context, p *palette, in *inspectState, s collab.Ses
 			primaryButton(c, p, locales.Save(), modified && !fp.saving && fp.conflict == nil).OnClick(func() { a.saveFile(fp, s) })
 		case fp.editable() && s.ID != "" && !(markdownFile && !fp.asText):
 			if fp.opening {
-				spinner(c).Size(12, 12)
+				loader(c, p).Size(14, 14)
 			}
-			iconButton(c, p, iconPencil, locales.EditFile(), p.Hover).OnClick(func() { a.editFile(fp, s) })
+			fileToolButton(c, p, iconPencil, locales.EditFile()).OnClick(func() { a.editFile(fp, s) })
 		}
-		iconButton(c, p, iconCopy, locales.Copy(), p.Hover).OnClick(func() { mygo.Clipboard.WriteText(in.file) })
+		fileToolButton(c, p, iconCopy, locales.Copy()).OnClick(func() { mygo.Clipboard.WriteText(in.file) })
 	})
 	if fp != nil && fp.saveErr != "" {
 		ui.Text(c, fp.saveErr).FontSize(sizeFoot).TextColor(p.Danger).Padding(6, 12).Selectable()
 	}
 	switch {
 	case fp == nil || fp.loading:
-		panelStatus(c, p, true, locales.Loading(), "")
+		panelLoading(c, p, locales.Loading())
 	case fp.err != "":
 		panelStatus(c, p, false, locales.PanelCantOpen(), fp.err)
 	case fp.image != nil:
@@ -624,7 +627,7 @@ func (a *App) editBanner(c *ui.Context, p *palette, fp *filePreview, s collab.Se
 			ui.Text(c, locales.SaveConflictTitle()).FontSize(sizeSub).FontWeight(600).TextColor(p.Text)
 			ui.Text(c, locales.SaveConflictDetail(cf.Reason)).FontSize(sizeFoot).TextColor(p.Secondary)
 			ui.Row(c).Wrap().Gap(8).Children(func() {
-				ghostButton(c, p, locales.FileReload()).Border(1, p.Border).Tooltip(locales.SaveConflictDiscardHint()).OnClick(func() {
+				tip(c, p, ghostButton(c, p, locales.FileReload()).Border(1, p.Border), locales.SaveConflictDiscardHint()).OnClick(func() {
 					fp.conflict = nil
 					if cf.HasText {
 						fp.base = &collab.File{Path: fp.path, Digest: cf.DiskDigest, Text: cf.DiskText, Format: fp.base.Format}
@@ -636,7 +639,7 @@ func (a *App) editBanner(c *ui.Context, p *palette, fp *filePreview, s collab.Se
 					a.editFile(fp, s)
 				})
 				if cf.HasText {
-					ghostButton(c, p, locales.SaveConflictMarkers()).Border(1, p.Border).Tooltip(locales.SaveConflictMarkersHint()).OnClick(func() {
+					tip(c, p, ghostButton(c, p, locales.SaveConflictMarkers()).Border(1, p.Border), locales.SaveConflictMarkersHint()).OnClick(func() {
 						mine := fp.code.Buffer.String()
 						fp.conflict = nil
 						fp.base = &collab.File{Path: fp.path, Digest: cf.DiskDigest, Text: cf.DiskText, Format: fp.base.Format}
@@ -712,7 +715,7 @@ func (a *App) htmlPreview(c *ui.Context, p *palette, fp *filePreview) {
 	}
 	switch {
 	case fp.webMaking:
-		panelStatus(c, p, true, locales.Loading(), "")
+		panelLoading(c, p, locales.Loading())
 	case fp.web == nil:
 		panelStatus(c, p, false, locales.PreviewNoWebView(), fp.webErr)
 	default:

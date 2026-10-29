@@ -65,7 +65,8 @@ func (a *App) contextChips(c *ui.Context, p *palette, sess *catalog.Session, v *
 	}
 	chip := func(key string, icon *ui.SVG, label, help string, ink ui.Color) ui.Element {
 		b := ui.ButtonBase(c.Key(key)).Height(32).Padding(0, 12).Radius(16).Gap(6).AlignItems(ui.Center).Border(1, p.Border).
-			Background(p.Composer).Cursor(ui.CursorPointer).Label(help).Tooltip(help).Transition(colorFade)
+			Background(p.Composer).Cursor(ui.CursorPointer).Label(help).Transition(colorFade)
+		tip(c, p, b, help)
 		pressable(b, 0.96)
 		if b.Hovered() {
 			b.Background(p.Hover)
@@ -89,8 +90,8 @@ func (a *App) contextChips(c *ui.Context, p *palette, sess *catalog.Session, v *
 			in.openPanel(tabPreview)
 			a.panelOpen = true
 		})
-		b.ContextMenu(func(m *ui.Menu) {
-			if m.Item(locales.ChipCopyLink()).Chosen() {
+		lodyContextMenu(c, p, b, a.rowMenu("chip/preview/"+sess.ID), 28, func(m *lodyMenu) {
+			if m.item("copy-link", iconLink, locales.ChipCopyLink(), menuItem{}) {
 				if url := firstNonEmpty(ps.url, v.Preview.PublicURL); url != "" {
 					writeClipboard(url)
 					a.toast("success", locales.ChipCopied())
@@ -103,7 +104,7 @@ func (a *App) contextChips(c *ui.Context, p *palette, sess *catalog.Session, v *
 					a.panelOpen = true
 				}
 			}
-			if (active || ps.url != "") && m.Item(locales.ChipStopSharing()).Chosen() {
+			if (active || ps.url != "") && m.item("stop-sharing", iconCircleStop, locales.ChipStopSharing(), menuItem{}) {
 				a.stopPreview(s, ps)
 				a.toast("success", locales.ChipStopped())
 			}

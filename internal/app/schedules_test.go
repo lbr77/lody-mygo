@@ -88,6 +88,53 @@ func TestSchedulesPage(t *testing.T) {
 	}
 }
 
+// A schedule's row opens Lody's drawn menus: its ⋯ and its context menu
+// list the same actions, and a filter opens its radio rows.
+func TestScheduleRowMenus(t *testing.T) {
+	a := schedFixture()
+	tt := snap(t, a, "schedules", false, nil)
+	open := func(click func() error) {
+		t.Helper()
+		if err := click(); err != nil {
+			t.Fatal(err)
+		}
+		tt.Frame()
+		tt.Advance(300 * time.Millisecond)
+		tt.Frame()
+	}
+	open(func() error { return tt.RightClick("Daily summary") })
+	snapFrame(t, tt, "schedule-row-menu")
+	for _, want := range []string{"Open", "Pause", "Delete"} {
+		if !tt.HasText(want) {
+			t.Fatalf("context menu: missing %q in %q", want, tt.Texts())
+		}
+	}
+	if !a.rowMenu("sched-row/s1").open {
+		t.Fatal("the row's context menu did not open")
+	}
+	// Choosing a row closes the menu (opening the schedule needs its store,
+	// which the fixture has none of).
+	open(func() error { return tt.Click("Open") })
+	if a.rowMenu("sched-row/s1").open {
+		t.Fatal("the context menu stayed open")
+	}
+
+	// The sort filter's rows, the chosen one marked.
+	open(func() error { return tt.Click("Next run") })
+	snapFrame(t, tt, "schedule-sort-menu")
+	open(func() error { return tt.Click("Last run") })
+	if a.sched.sort != "recent" {
+		t.Fatalf("sort: %q", a.sched.sort)
+	}
+
+	// Loading, the list holds three rows of breathing skeleton lines.
+	a.sched.ready = false
+	tt.Frame()
+	tt.Advance(800 * time.Millisecond)
+	tt.Frame()
+	snapFrame(t, tt, "schedules-loading")
+}
+
 func TestScheduleDetail(t *testing.T) {
 	a := schedFixture()
 	a.catalog.Sessions = append(a.catalog.Sessions,

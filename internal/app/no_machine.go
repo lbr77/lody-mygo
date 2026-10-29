@@ -36,8 +36,9 @@ func (a *App) noMachineHint(c *ui.Context, p *palette) {
 	if starting {
 		title, message = locales.DaemonStartingTitle(), locales.DaemonStartingMessage()
 	}
+	// The card is simply there, as Lody's landing shows it.
 	card := ui.Row(c.Key("no-machine")).MaxWidth(560).Gap(16).Padding(16).Radius(12).AlignItems(ui.Center).Background(p.Popover).
-		Border(0.5, p.CardRim).Transition(pageIn)
+		Border(0.5, p.CardRim)
 	if !p.Dark {
 		card.Shadow(0, 1, 3, 0, ui.RGBA(0, 0, 0, 0.06))
 	}
@@ -73,7 +74,8 @@ func plugArt(c *ui.Context, p *palette, seated bool) {
 	var reach, lamp float32
 	if seated {
 		reach = 1
-		ease := ui.EaseInOut
+		// Each half of the breath eases in and out, as CSS's ease-in-out.
+		ease := cssEaseInOut
 		lamp = art.Keyframes("breathe", []ui.Keyframe{{Value: 0.35}, {At: 900 * time.Millisecond, Value: 1, Ease: ease}, {At: 1800 * time.Millisecond, Value: 0.35, Ease: ease}}, loop)
 	} else {
 		ms := func(f float64) time.Duration { return time.Duration(f * 3600 * float64(time.Millisecond)) }

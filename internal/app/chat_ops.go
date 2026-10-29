@@ -107,11 +107,18 @@ func editFailed(err error) string {
 // messageEditor replaces the bubble while the message is rewritten.
 func (a *App) messageEditor(c *ui.Context, p *palette) {
 	ed := &a.msgEdit
-	ui.Column(c).FillWidth().MinWidth(320).Gap(8).Padding(10, 12).Radius(14).Background(p.UserBubble).Border(1, p.Border).Children(func() {
+	// Its edge darkens while the field has the focus, over Tailwind's
+	// 150ms, as Lody's editor card.
+	card := ui.Column(c.Key("msg-editor")).FillWidth().MinWidth(320).Gap(8).Padding(10, 12).Radius(14).Background(p.UserBubble).Transition(twFade)
+	edge := p.Border
+	if card.FocusWithin() {
+		edge = p.Text.Alpha(0.25)
+	}
+	card.Border(1, edge).Children(func() {
 		area(c, p, &ed.text, "", locales.EditMessage(), 3).AutoFocus()
 		ui.Row(c).FillWidth().Gap(8).Justify(ui.End).AlignItems(ui.Center).Children(func() {
 			if ed.busy {
-				spinner(c).Size(13, 13)
+				spinner(c).Size(14, 14)
 			}
 			ghostButton(c, p, locales.Cancel()).Border(1, p.Border).OnClick(func() {
 				if !ed.busy {
@@ -149,22 +156,26 @@ func (a *App) forkButton(c *ui.Context, p *palette, e session.Entry) {
 		return
 	}
 	if f, ok := a.forks[sess.ID]; ok && f.turn == e.ID {
-		ui.Box(c).Size(24, 24).Center().Children(func() { spinner(c).Size(12, 12) })
+		// Lody's components' Loader2, turning in the button's place.
+		ui.Box(c).Size(24, 24).Center().Children(func() { loader(c, p).Size(14, 14) })
 		return
 	}
 	turn := e.ID
 	worktree := sess.ProjectID != ""
+	// Lody's fork destinations, opening above the button from its start:
+	// a new tab, a new worktree where the chat has a project, and the
+	// conversation copied as context.
 	b := iconButton(c, p, iconGitFork, locales.ForkSession(), p.Hover).Size(24, 24)
-	if !worktree {
-		b.OnClick(func() { a.fork(turn, false, false, "") })
-		return
-	}
-	b.Menu(func(m *ui.Menu) {
-		if m.Item(locales.ForkNewTab()).Chosen() {
+	lodyMenuAbove(c, p, b, &a.rowMenu("fork/"+e.ID).menuState, false, 6, 200, 290, 28, func(m *lodyMenu) {
+		if m.item("fork-tab", iconFolder, locales.ForkNewTab(), menuItem{tip: locales.ForkNewTabHint()}) {
 			a.fork(turn, false, false, "")
 		}
-		if m.Item(locales.ForkNewWorktree()).Chosen() {
+		if worktree && m.item("fork-worktree", iconWorktree, locales.ForkNewWorktree(), menuItem{tip: locales.ForkNewWorktreeHint()}) {
 			a.fork(turn, true, false, "")
+		}
+		m.sep()
+		if m.item("copy-context", iconCopy, locales.HmCopyContext(), menuItem{disabled: a.view == nil}) {
+			a.copyConversation(a.selected)
 		}
 	})
 }
@@ -300,12 +311,13 @@ func (a *App) goalBanner(c *ui.Context, p *palette) {
 	ink := map[string]ui.Color{"info": p.Primary, "warning": p.Warning, "success": p.Success, "muted": p.Secondary}[tone]
 	key := a.selected + "/goal"
 	open := a.expanded[key]
-	ui.Column(c).FillWidth().Padding(10, 16).Gap(6).Background(ink.Alpha(0.08)).BorderWidth(0, 0, 1, 0).BorderColor(ink.Alpha(0.3)).Children(func() {
+	// Dim at rest so the banner yields to the conversation, lifting to full
+	// under the pointer over Tailwind's 150ms, as Lody's.
+	banner := ui.Column(c.Key("goal-banner")).FillWidth().Padding(10, 16).Gap(6).Background(ink.Alpha(0.08)).BorderWidth(0, 0, 1, 0).BorderColor(ink.Alpha(0.3))
+	banner.Opacity(0.75 + 0.25*banner.AnimateWith("lift", b2f(banner.Hovered()), 150*time.Millisecond, twEase))
+	banner.Children(func() {
 		ui.Row(c).FillWidth().Gap(8).AlignItems(ui.Center).Children(func() {
-			icon := ui.Icon(c.Key("goal-icon"), iconTarget).Size(14, 14).TextColor(ink)
-			if tone == "info" {
-				pulse(icon)
-			}
+			ui.Icon(c.Key("goal-icon"), iconTarget).Size(14, 14).TextColor(ink)
 			ui.Text(c, "Goal").FontSize(sizeFoot).FontWeight(600).TextColor(p.Text)
 			ui.Text(c, label).FontSize(sizeCaption).FontWeight(500).TextColor(ink).Padding(1, 7).Radius(9).Background(ink.Alpha(0.12))
 			var metrics []string
@@ -319,11 +331,11 @@ func (a *App) goalBanner(c *ui.Context, p *palette) {
 			}
 			ui.Text(c, strings.Join(metrics, " · ")).FontSize(sizeCaption).TextColor(p.Secondary).Grow(1).SingleLine()
 			commands := a.goalCommands()
+			// @lody/ui's secondary buttons, a pending one turning its spinner
+			// in its icon's place.
 			button := func(cmd, text string, icon *ui.SVG) {
-				b := outlineButton(c, p, icon, text)
-				if a.goalPending != "" {
-					b.Disabled(true).Opacity(0.5)
-				} else {
+				b := lodyButton(c, p, "secondary", "goal-"+cmd, icon, text, a.goalPending == "", a.goalPending == cmd)
+				if a.goalPending == "" {
 					b.OnClick(func() { a.goalCommand(cmd) })
 				}
 			}
@@ -334,9 +346,6 @@ func (a *App) goalBanner(c *ui.Context, p *palette) {
 					}
 				}
 				return false
-			}
-			if a.goalPending != "" {
-				spinner(c).Size(12, 12)
 			}
 			if g.Status == "active" && has("pause") {
 				button("pause", locales.GoalPause(), iconPause)
@@ -357,12 +366,42 @@ func (a *App) goalBanner(c *ui.Context, p *palette) {
 				})
 			}
 		})
-		objective := ui.Text(c, strings.TrimSpace(g.Objective)).FontSize(sizeSub).LineHeight(1.45).TextColor(p.Text).Selectable().
-			Cursor(ui.CursorPointer).OnClick(func() { a.expanded[key] = !a.expanded[key] })
-		if !open {
-			objective.MaxLines(1)
-		}
+		a.goalObjective(c, p, key, strings.TrimSpace(g.Objective), open)
 	})
+}
+
+// goalObjective is the banner's objective: one line, which a click opens
+// to the whole of it where it is cut, the row filling under the pointer
+// and its chevron turning over Tailwind's 150ms, as Lody's.
+func (a *App) goalObjective(c *ui.Context, p *palette, key, objective string, open bool) {
+	row := ui.Row(c.Key("goal-objective")).FillWidth().Gap(8).Padding(2, 4).Margin(0, -4).Radius(2).AlignItems(ui.Start)
+	var text ui.Element
+	var natural float32
+	row.Children(func() {
+		text = ui.Text(c, objective).FontSize(sizeSub).LineHeight(1.45).TextColor(p.Text).Grow(1).MinWidth(0)
+		if !open {
+			text.MaxLines(1)
+		}
+		// The line as long as it is, unseen, to tell whether one line cuts it.
+		probe := ui.Row(c.Key("probe")).Absolute().Left(0).Top(0).Width(1 << 14).Height(0).ClipY().Invisible()
+		probe.Children(func() {
+			natural = ui.Text(c, objective).FontSize(sizeSub).LineHeight(1.45).NoWrap().Shrink(0).Bounds().W
+		})
+		expandable := open || natural > text.Bounds().W+0.5 && text.Bounds().W > 0
+		if !expandable {
+			return
+		}
+		turn := ui.Icon(c.Key("chevron"), iconChevronDown).Size(14, 14).Shrink(0).Margin(2, 0, 0, 0).TextColor(p.Secondary)
+		turn.Rotate(180 * turn.AnimateWith("turn", b2f(open), 150*time.Millisecond, twEase))
+	})
+	if !open && !(natural > text.Bounds().W+0.5 && text.Bounds().W > 0) {
+		row.Label(locales.GoalObjective())
+		return
+	}
+	row.Cursor(ui.CursorPointer).Transition(twFade).OnClick(func() { a.expanded[key] = !a.expanded[key] })
+	if row.Hovered() {
+		row.Background(p.Canvas.Alpha(0.4))
+	}
 }
 
 // tokensCompact writes a token count as 12.4K or 1.2M.
@@ -394,7 +433,11 @@ func goalMarker(c *ui.Context, p *palette, it session.Item) {
 	label, tone := goalStatus(it.Goal.Status)
 	ink := map[string]ui.Color{"info": p.Primary, "warning": p.Warning, "success": p.Success, "muted": p.Secondary}[tone]
 	ui.Row(c).MinHeight(24).Padding(2, 4).Gap(8).AlignItems(ui.Center).Children(func() {
-		ui.Icon(c, iconTarget).Size(13, 13).TextColor(ink)
+		// An active goal's mark breathes, as Lody's inline goal block.
+		mark := ui.Icon(c.Key("goal-mark"), iconTarget).Size(13, 13).TextColor(ink)
+		if it.Goal.Status == "active" {
+			pulse(mark)
+		}
 		ui.Text(c, label).FontSize(sizeSub).TextColor(ink).Shrink(0)
 		ui.Text(c, strings.TrimSpace(it.Goal.Objective)).FontSize(sizeSub).TextColor(p.Secondary).SingleLine().MinWidth(0)
 	})

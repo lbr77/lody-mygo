@@ -196,7 +196,7 @@ func (a *App) systemNotice(c *ui.Context, p *palette, e session.Entry, it sessio
 			dashedRule(c, p)
 			ui.Row(c).Gap(4).MinWidth(0).AlignItems(ui.Center).Shrink(1).Children(func() {
 				ui.Text(c, locales.NoticeForkOrigin()).FontSize(sizeFoot).TextColor(p.Secondary.Alpha(0.75)).Shrink(0)
-				link := ui.ButtonBase(c).Cursor(ui.CursorPointer).Label(title).Tooltip(title).MinWidth(0).OnClick(func() { a.open(source) })
+				link := tip(c, p, ui.ButtonBase(c).Cursor(ui.CursorPointer).Label(title).MinWidth(0).OnClick(func() { a.open(source) }), title)
 				link.Children(func() {
 					ink := p.Secondary
 					if link.Hovered() {
@@ -215,7 +215,7 @@ func (a *App) systemNotice(c *ui.Context, p *palette, e session.Entry, it sessio
 		if meta["truncated"] == true {
 			msg += " " + locales.NoticeResumeTruncated()
 		}
-		ui.Row(c).FillWidth().Gap(12).AlignItems(ui.Center).Padding(16, 0).Tooltip(locales.NoticeResumeTooltip()).Children(func() {
+		tip(c, p, ui.Row(c).FillWidth().Gap(12).AlignItems(ui.Center).Padding(16, 0), locales.NoticeResumeTooltip()).Children(func() {
 			ui.Box(c).Grow(1).Height(1).Background(p.Border)
 			ui.Text(c, msg).FontSize(sizeFoot).TextColor(p.Secondary).Shrink(1)
 			ui.Box(c).Grow(1).Height(1).Background(p.Border)
@@ -310,7 +310,8 @@ func latestCapacityFailure(v *session.View) string {
 const capacityPrompt = "Continue working from where you left off. The previous turn stopped because the selected model was at capacity."
 
 // capRetry is a chat's capacity retries: the first click allows three
-// automatic ones, each 5s after a failure, which a click stops.
+// automatic ones, 5s after a failure and twice as long each time after,
+// which a click stops.
 type capRetry struct {
 	auto      bool
 	attempts  int
@@ -323,6 +324,7 @@ type capRetry struct {
 const (
 	capFirstDelay = 5 * time.Second
 	capMaxAuto    = 3
+	capTick       = 250 * time.Millisecond // how often the countdown is read
 )
 
 func (a *App) capState() *capRetry {
@@ -344,17 +346,22 @@ func (a *App) capacityRetryButton(c *ui.Context, p *palette, notice string) {
 	}
 	exhausted := st.auto && st.attempts >= capMaxAuto
 	counting := st.auto && !exhausted && !st.pending && !st.handled[notice]
+	// The countdown, as Lody's: 5s·2ⁿ after n automatic retries, the time
+	// left read every 250ms.
+	delay := capFirstDelay << st.attempts
 	var left time.Duration
 	if counting {
 		if st.countFor != notice {
-			st.countFor, st.countFrom = notice, time.Now()
+			st.countFor, st.countFrom = notice, c.Now()
 		}
-		left = capFirstDelay - time.Since(st.countFrom)
-		if left <= 0 {
+		since := c.Now().Sub(st.countFrom)
+		if since >= delay {
 			counting = false
 			a.capacityRetry(notice, true)
 		} else {
-			c.After(100 * time.Millisecond)
+			tick := since / capTick * capTick
+			left = delay - tick
+			c.After(min(tick+capTick, delay) - since)
 		}
 	}
 	label := locales.NoticeRetryAndEnableAuto()
@@ -369,14 +376,20 @@ func (a *App) capacityRetryButton(c *ui.Context, p *palette, notice string) {
 		label = locales.NoticeRetryNow()
 	}
 	b := ui.ButtonBase(c.Key("cap-retry")).Height(28).Padding(0, 10).Radius(14).Background(p.Secondary.Alpha(0.04)).Cursor(ui.CursorPointer).
-		Disabled(st.pending).Clip().Transition(colorFade)
-	if b.Hovered() {
-		b.Background(p.Secondary.Alpha(0.07))
-		if counting {
-			label = locales.NoticeStopAutoRetry()
-		}
+		Disabled(st.pending).Clip().Transition(twFade)
+	if st.pending {
+		b.Opacity(0.5)
 	}
-	b.Label(label).OnClick(func() {
+	hovered := b.Hovered() && !st.pending
+	if hovered {
+		b.Background(p.Secondary.Alpha(0.07))
+	}
+	// Counting down, a click stops it, and the button says so.
+	name := label
+	if counting {
+		name = locales.NoticeStopAutoRetry()
+	}
+	b.Label(name).OnClick(func() {
 		if counting {
 			st.auto, st.countFor = false, ""
 			return
@@ -386,10 +399,27 @@ func (a *App) capacityRetryButton(c *ui.Context, p *palette, notice string) {
 	})
 	b.Children(func() {
 		if counting {
-			ratio := float32(left) / float32(capFirstDelay)
-			ui.Box(c).Absolute().Left(0).Top(0).Bottom(0).WidthPercent(ratio * 100).Background(p.Secondary.Alpha(0.08))
+			// What is left drains away, each reading eased in linearly over
+			// 300ms.
+			ratio := float32(left) / float32(delay)
+			ui.Box(c.Key("drain")).Absolute().Left(0).Top(0).Bottom(0).WidthPercent(ratio * 100).Background(p.Secondary.Alpha(0.08)).
+				Transition(ui.ElementTransition{Size: true, Duration: 300 * time.Millisecond, Ease: ui.Linear})
 		}
-		ui.Text(c, label).FontSize(sizeFoot).TextColor(p.Text.Alpha(0.8))
+		if !counting {
+			ui.Text(c, label).FontSize(sizeFoot).TextColor(p.Text.Alpha(0.8))
+			return
+		}
+		// The countdown and Stop share one cell, the pill as wide as the
+		// wider, the pointer choosing which shows.
+		ui.Grid(c.Key("labels")).ColumnTracks(ui.FitContent()).Children(func() {
+			count := ui.Text(c.Key("count"), label).FontSize(sizeFoot).FontFeatures("tnum").TextColor(p.Text.Alpha(0.8)).ColumnStart(1).RowStart(1)
+			stop := ui.Text(c.Key("stop"), locales.NoticeStopAutoRetry()).FontSize(sizeFoot).TextColor(p.Text.Alpha(0.8)).ColumnStart(1).RowStart(1)
+			if hovered {
+				count.Invisible()
+			} else {
+				stop.Invisible()
+			}
+		})
 	})
 }
 

@@ -218,8 +218,8 @@ func (a *App) composerBox(c *ui.Context, p *palette, o composerOptions) {
 		if o.above != nil {
 			o.above()
 		}
-		box := ui.Column(c.Key("composer")).FillWidth().Radius(16).Border(1, p.ComposerBorder).Background(p.Composer).Padding(8, 10).Gap(4).
-			Transition(ui.ElementTransition{Size: true, Duration: 420 * time.Millisecond, Ease: easeSheet})
+		// It takes the height of its text at once, as Lody's.
+		box := ui.Column(c.Key("composer")).FillWidth().Radius(16).Border(1, p.ComposerBorder).Background(p.Composer).Padding(8, 10).Gap(4)
 		if full {
 			box.Grow(1).MinHeight(0)
 		}
@@ -279,11 +279,13 @@ func (a *App) composerBox(c *ui.Context, p *palette, o composerOptions) {
 					a.focusComposer = false
 					a.composerFocus.Focus(c)
 				}
-				if empty && !input.Focused() {
-					// The shortcut that focuses the box, while it waits.
+				if empty {
+					// The shortcut that focuses the box, while it waits: half
+					// there, fading out over 150ms while the box has the focus.
 					input.Padding(2, 64, 2, 4)
-					ui.Text(c, "⌘L").FontSize(sizeCaption).TextColor(p.Secondary).Padding(1, 5).Radius(5).Border(1, p.Border).
-						Opacity(0.5).Absolute().Top(2).Right(2)
+					hint := ui.Text(c.Key("focus-hint"), "⌘L").FontSize(sizeCaption).TextColor(p.Secondary).Padding(1, 5).Radius(5).Border(1, p.Border).
+						Absolute().Top(2).Right(2).PassThrough()
+					hint.Opacity(0.5 * (1 - hint.AnimateWith("focus", b2f(input.Focused()), 150*time.Millisecond, twEase)))
 				}
 			})
 			ui.Row(c).Gap(4).AlignItems(ui.Center).Padding(2, 0, 0, 0).Children(func() {
@@ -345,16 +347,19 @@ func (a *App) composerBox(c *ui.Context, p *palette, o composerOptions) {
 
 // sendDisc is the round ink button; without an icon it is Stop's rounded
 // square.
+// Lody's transition-all moves its fill, its press and its dimming over
+// Tailwind's 150ms; it tints to 90% under the pointer.
 func sendDisc(c *ui.Context, p *palette, icon *ui.SVG, label string, enabled bool, size float32) ui.Element {
-	b := ui.ButtonBase(c).Size(size, size).Radius(size / 2).Background(p.Text).Cursor(ui.CursorPointer).Label(label).Tooltip(label).Disabled(!enabled).Transition(colorFade)
-	pressable(b, 0.9)
+	b := ui.ButtonBase(c.Key("send-disc")).Size(size, size).Radius(size / 2).Background(p.Text).Cursor(ui.CursorPointer).Label(label).Disabled(!enabled).Transition(twFade)
+	twPress(b)
 	if !p.Dark {
 		b.Shadow(0, 1, 2, 0, ui.RGBA(0, 0, 0, 0.08))
 	}
-	if !enabled {
-		b.Opacity(0.45)
-	} else if b.Pressed() {
-		b.Background(p.Text.Alpha(0.8))
+	if enabled && b.Hovered() {
+		b.Background(p.Text.Alpha(0.9))
+	}
+	if dim := b.AnimateTo("dim", b2f(!enabled), twMotion); dim > 0 {
+		b.Opacity(1 - 0.55*dim)
 	}
 	b.Children(func() {
 		if icon == nil {
@@ -458,7 +463,8 @@ func (a *App) modeButton(c *ui.Context, p *palette, key string, modes []catalog.
 	icon, warning, auto := modeFace(current)
 	open := a.popover(key)
 	b := ui.ButtonBase(c.Key(key)).Height(28).MinWidth(28).Padding(0, 6).Radius(8).Cursor(ui.CursorPointer).
-		Label(locales.PermissionMode(name)).Tooltip(name).OnClick(func() { *open = !*open }).Transition(colorFade)
+		Label(locales.PermissionMode(name)).OnClick(func() { *open = !*open }).Transition(colorFade)
+	tip(c, p, b, name)
 	if b.Hovered() || *open {
 		b.Background(p.Text.Alpha(0.06))
 	}
@@ -535,10 +541,12 @@ func (a *App) permissionCard(c *ui.Context, p *palette, e session.Entry, it sess
 			allow = append(allow, o)
 		}
 	}
-	// The card comes up 8px as it fades in, over 320ms, as Lody's
-	// question cards arrive.
-	card := ui.Column(c.Key("ask/"+it.Permission.RequestID)).FillWidth().Padding(12).Gap(8).Radius(14).Border(1, p.ComposerBorder).Background(p.Composer).
-		Transition(ui.ElementTransition{Duration: durSlow, Ease: easeStandard, Enter: &ui.Motion{Y: 8}})
+	// A question card comes up 8px as it fades in, over 320ms, as Lody's
+	// question cards arrive; a permission request is there at once.
+	card := ui.Column(c.Key("ask/"+it.Permission.RequestID)).FillWidth().Padding(12).Gap(8).Radius(14).Border(1, p.ComposerBorder).Background(p.Composer)
+	if it.Permission.Question {
+		card.Transition(ui.ElementTransition{Duration: durSlow, Ease: easeStandard, Enter: &ui.Motion{Y: 8}})
+	}
 	if !p.Dark {
 		card.Shadow(0, 10, 28, -14, ui.RGBA(0, 0, 0, 0.16))
 	}
@@ -546,7 +554,6 @@ func (a *App) permissionCard(c *ui.Context, p *palette, e session.Entry, it sess
 		ui.Row(c).Gap(8).AlignItems(ui.Start).Children(func() {
 			ui.Text(c, question).FontSize(sizeBody).LineHeight(20.0 / 14).FontWeight(600).TextColor(p.Strong).Grow(1).MinWidth(0)
 			stop := ui.ButtonBase(c).Height(24).Padding(0, 6).Radius(6).Gap(4).Cursor(ui.CursorPointer).Label(locales.StopAgent()).OnClick(a.stop).Transition(colorFade)
-			pressable(stop, 0.96)
 			if stop.Hovered() {
 				stop.Background(p.Text.Alpha(0.06))
 			}
@@ -596,17 +603,23 @@ func (a *App) choiceButton(c *ui.Context, p *palette, label string, suggested bo
 			return
 		}
 		ui.Box(c).Width(1).Background(ink.Alpha(0.2))
-		chevron := ui.ButtonBase(c).Width(24).Cursor(ui.CursorPointer).Label(locales.MoreOptions()).Transition(colorFade)
+		chevron := ui.ButtonBase(c.Key("more")).Width(24).Cursor(ui.CursorPointer).Label(locales.MoreOptions()).Transition(colorFade)
 		if chevron.Hovered() {
 			chevron.Background(ink.Alpha(0.08))
 		}
-		chevron.Menu(func(m *ui.Menu) {
+		// The other answers of its kind, in Lody's menu above the button,
+		// its end on the button's.
+		st := &a.rowMenu("answers/" + label).menuState
+		lodyMenuAbove(c, p, chevron, st, true, 4, 160, 290, 28, func(m *lodyMenu) {
 			for _, o := range more {
-				if m.Item(o.Name).Chosen() {
+				if m.item(o.ID, nil, o.Name, menuItem{}) {
 					chooseMore[0](o)
 				}
 			}
 		})
+		if st.open {
+			chevron.Background(ink.Alpha(0.08))
+		}
 		chevron.Children(func() { ui.Icon(c, iconChevronDown).Size(14, 14).TextColor(ink) })
 	})
 }

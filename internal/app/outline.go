@@ -50,8 +50,9 @@ const (
 // tickWidths are a round's resting widths by its weight, lightest first.
 var tickWidths = [4]float32{10, 13, 16, 20}
 
-// tickEase is the ticks' 150ms ease-out as they swell and the bar moves.
-var tickEase = ui.ElementTransition{Size: true, Position: true, Colors: true, Duration: 150 * time.Millisecond, Ease: ui.EaseOut}
+// tickEase is the ticks' 150ms Tailwind ease-out as they swell and the bar
+// moves.
+var tickEase = ui.ElementTransition{Size: true, Position: true, Colors: true, Duration: 150 * time.Millisecond, Ease: twEaseOut}
 
 // outlineRound is a round of the conversation.
 type outlineRound struct {

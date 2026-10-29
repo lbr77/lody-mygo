@@ -2,6 +2,8 @@ package app
 
 import (
 	"context"
+	"fmt"
+	"slices"
 	"strings"
 	"time"
 
@@ -26,6 +28,7 @@ type planState struct {
 	pending   string          // the plan being implemented
 	copied    string          // the plan just copied
 	copiedAt  time.Time
+	over      map[string]bool // plans taller than their clamp, as last laid out
 }
 
 // latestPlan is the key of the last completed, latest proposed plan of
@@ -74,18 +77,24 @@ func (a *App) planPanel(c *ui.Context, p *palette, e session.Entry, it session.I
 		over := false
 		header := ui.Row(c).FillWidth().Height(36).Padding(0, 6, 0, 12).Gap(8).AlignItems(ui.Center).Background(p.Text.Alpha(0.025))
 		header.Children(func() {
-			toggle := ui.ButtonBase(c.Key("toggle")).Grow(1).MinWidth(0).Height(28).Gap(8).AlignItems(ui.Center).Label(locales.PlanTitle())
+			// As Lody's, the chevron is there only while there is more to
+			// show, or the plan is open, turning over 200ms on Tailwind's
+			// default curve; a plan that fits wears its file mark.
+			folds := a.plan.over[key] || open
+			toggle := ui.ButtonBase(c.Key("toggle")).Grow(1).MinWidth(0).Height(28).Gap(8).AlignItems(ui.Center).Label(locales.PlanTitle()).Disabled(!folds)
 			toggle.Children(func() {
-				switch {
-				case streaming:
-					spinner(c).Size(14, 14)
-				default:
-					turn := toggle.AnimateWith("turn", b2f(open), 200*time.Millisecond, ui.EaseOut)
+				turn := toggle.AnimateWith("turn", b2f(open), 200*time.Millisecond, twEase)
+				if folds {
 					ui.Icon(c, iconChevronRight).Size(14, 14).TextColor(p.Secondary).Rotate(90 * turn)
+				} else {
+					ui.Icon(c, iconFileText).Size(14, 14).TextColor(p.Secondary)
 				}
 				ui.Text(c, locales.PlanTitle()).FontSize(sizeSub).FontWeight(500).TextColor(p.Text).SingleLine()
 			})
-			toggle.Cursor(ui.CursorPointer).OnClick(func() {
+			if folds {
+				toggle.Cursor(ui.CursorPointer)
+			}
+			toggle.OnClick(func() {
 				if a.plan.open == nil {
 					a.plan.open = map[string]bool{}
 				}
@@ -111,6 +120,13 @@ func (a *App) planPanel(c *ui.Context, p *palette, e session.Entry, it session.I
 			body = ui.Column(c.Key("body")).FillWidth().Padding(10, 14)
 			body.Children(func() { markdown.View(c.Key(it.ID), a.findMarkdown(e.ID+"/"+it.ID, it.Text), &a.md) })
 			over = body.Bounds().H > planClamp+1
+			if a.plan.over == nil {
+				a.plan.over = map[string]bool{}
+			}
+			if a.plan.over[key] != over {
+				a.plan.over[key] = over
+				a.redraw()
+			}
 			if !open && over {
 				// The body fades out where it is cut.
 				ui.Box(c.Key("fade")).Absolute().Left(0).Right(0).Bottom(0).Height(40).Draw(func(pt *ui.Painter, r ui.Rect) {
@@ -239,4 +255,97 @@ func (a *App) implementPlan(key string) {
 			a.plan.dismissed[key] = true
 		})
 	}()
+}
+
+// planBar is Lody's SessionPlanBar, at the head of a turn whose agent keeps
+// a plan: the step under way, or next, and how many are done, over the
+// list of steps, which folds open over 180ms on ease.standard as its
+// chevron turns over 150ms on Tailwind's default curve.
+func (a *App) planBar(c *ui.Context, p *palette, key string, entries []session.PlanEntry) {
+	if len(entries) == 0 {
+		return
+	}
+	open := a.expanded[key]
+	summary := entries[len(entries)-1]
+	for _, want := range []string{"in_progress", "pending"} {
+		if i := slices.IndexFunc(entries, func(e session.PlanEntry) bool { return e.Status == want }); i >= 0 {
+			summary = entries[i]
+			break
+		}
+	}
+	done := 0
+	for _, e := range entries {
+		if e.Status == "completed" {
+			done++
+		}
+	}
+	ui.Column(c.Key("plan-bar")).FillWidth().Radius(8).Border(1, p.Border).Background(p.Hover.Alpha(0.3)).Padding(8, 12).Children(func() {
+		label := planStatusLabel(summary.Status) + ": " + summary.Content
+		trigger := ui.ButtonBase(c.Key("trigger")).FillWidth().Gap(12).AlignItems(ui.Center).Justify(ui.SpaceBetween).
+			Cursor(ui.CursorPointer).Label(label).OnClick(func() { a.expanded[key] = !a.expanded[key] })
+		k := trigger.AnimateWith("open", b2f(open), durRegular, easeStandard)
+		turn := trigger.AnimateWith("turn", b2f(open), 150*time.Millisecond, twEase)
+		trigger.Children(func() {
+			ui.Row(c).MinWidth(0).Shrink(1).Gap(8).AlignItems(ui.Center).Children(func() {
+				planStatusIcon(c, p, summary.Status)
+				ui.Text(c, label).FontSize(sizeBody).FontWeight(500).TextColor(p.Text).SingleLine().MinWidth(0)
+			})
+			ui.Row(c).Gap(8).AlignItems(ui.Center).Shrink(0).Children(func() {
+				ui.Text(c, fmt.Sprintf("%d/%d", done, len(entries))).FontSize(sizeFoot).TextColor(p.Secondary)
+				ui.Icon(c, iconChevronRight).Size(16, 16).TextColor(p.Text).Rotate(90 * turn)
+			})
+		})
+		// The panel's margin is outside the height that animates.
+		if open || k > 0 {
+			ui.Box(c.Key("gap")).Height(8).Shrink(0)
+		}
+		heightReveal(c, k, open, func() {
+			ui.Column(c).FillWidth().Gap(4).Padding(8, 0, 0, 0).BorderWidth(1, 0, 0, 0).BorderColor(p.Border.Alpha(0.6)).Children(func() {
+				for i, pe := range entries {
+					row := ui.Row(c.Key(i)).FillWidth().Gap(8).AlignItems(ui.Start).Radius(6).Padding(4, 6)
+					if row.Hovered() {
+						row.Background(p.Hover)
+					}
+					row.Children(func() {
+						planStatusIcon(c, p, pe.Status).Margin(2, 0, 0, 0)
+						ui.Text(c, pe.Content).FontSize(sizeBody).TextColor(p.Text).Grow(1).MinWidth(0)
+					})
+				}
+			})
+		})
+	})
+}
+
+// planStatusIcon is a plan step's mark: done, under way, or to do.
+func planStatusIcon(c *ui.Context, p *palette, status string) ui.Element {
+	switch status {
+	case "completed":
+		return ui.Icon(c, iconCircleCheck).Size(16, 16).Shrink(0).TextColor(p.Success)
+	case "in_progress":
+		return ui.Icon(c, iconInProgress).Size(16, 16).Shrink(0).TextColor(p.Primary)
+	}
+	return ui.Icon(c, iconCircle).Size(16, 16).Shrink(0).TextColor(p.Secondary)
+}
+
+// planStatusLabel names a plan step's status.
+// TODO(strings): Lody says "In progress" (进行中) and "Pending" (待执行);
+// Running and Pending stand in until those are in the catalog.
+func planStatusLabel(status string) string {
+	switch status {
+	case "completed":
+		return locales.TaskCompleted()
+	case "in_progress":
+		return locales.TaskRunning()
+	}
+	return locales.TaskPending()
+}
+
+// lastPlan is the turn's latest plan: the steps of its last plan update.
+func lastPlan(items []session.Item) []session.PlanEntry {
+	for i := len(items) - 1; i >= 0; i-- {
+		if items[i].Type == "plan" {
+			return items[i].Plan
+		}
+	}
+	return nil
 }

@@ -178,7 +178,8 @@ func (a *App) publishedShare(id string) bool {
 
 // headerPill is a status pill of the conversation header, as Lody's.
 func headerPill(c *ui.Context, p *palette, key string, icon *ui.SVG, label string, open bool) ui.Element {
-	b := ui.ButtonBase(c.Key(key)).Height(28).Padding(0, 8).Gap(6).Radius(6).AlignItems(ui.Center).Shrink(0).Transition(colorFade)
+	// Tailwind's transition-colors: the fill and the ink fade over 150ms.
+	b := ui.ButtonBase(c.Key(key)).Height(28).Padding(0, 8).Gap(6).Radius(6).AlignItems(ui.Center).Shrink(0).Transition(twFade)
 	ink := p.Text.Alpha(0.8)
 	switch {
 	case open:
@@ -188,6 +189,7 @@ func headerPill(c *ui.Context, p *palette, key string, icon *ui.SVG, label strin
 		b.Background(p.Text.Alpha(0.05))
 		ink = p.Text
 	}
+	ink = b.AnimateColor("ink", ink, ui.Animation{Duration: 150 * time.Millisecond, Ease: twEase})
 	b.Children(func() {
 		ui.Icon(c, icon).Size(14, 14).TextColor(ink)
 		ui.Text(c, label).FontSize(11.2).FontWeight(500).TextColor(ink).SingleLine()

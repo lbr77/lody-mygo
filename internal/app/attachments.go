@@ -149,7 +149,7 @@ func (a *App) attachmentChips(c *ui.Context, p *palette) {
 				}
 				continue
 			}
-			chip := ui.Row(c.Key(f.Path)).Height(44).Padding(0, 28, 0, 10).Radius(10).Gap(8).AlignItems(ui.Center).Background(p.Text.Alpha(0.05)).MaxWidth(240)
+			chip := ui.Row(c.Key(f.Path)).Height(44).Padding(0, 32, 0, 10).Radius(10).Gap(8).AlignItems(ui.Center).Background(p.Text.Alpha(0.05)).MaxWidth(240)
 			if uploading {
 				chip.Clip() // the bar keeps to the chip's corners
 			}
@@ -178,7 +178,7 @@ func (a *App) attachmentChips(c *ui.Context, p *palette) {
 func (a *App) imagePeek(c *ui.Context, p *palette, thumb ui.Element, open *bool, bm *ui.Bitmap, name string) {
 	w, h := bm.Size()
 	scale := min(1, 480/float32(max(w, 1)), 360/float32(max(h, 1)))
-	ui.Popover(c, thumb, open, func() {
+	pop := ui.Popover(c, thumb, open, func() {
 		ui.Column(c).Gap(6).Padding(6).Children(func() {
 			ui.Image(c, bm).Size(float32(w)*scale, float32(h)*scale).Radius(9).Fit(ui.Contain)
 			ui.Row(c).FillWidth().Gap(8).Padding(0, 4, 2, 4).AlignItems(ui.Baseline).Children(func() {
@@ -186,14 +186,30 @@ func (a *App) imagePeek(c *ui.Context, p *palette, thumb ui.Element, open *bool,
 				ui.Text(c, fmt.Sprintf("%d × %d", w, h)).FontSize(sizeCaption).TextColor(p.Secondary).FontFeatures("tnum").Shrink(0)
 			})
 		})
-	}).AttachTo(thumb, ui.AnchorTopStart, ui.AnchorBottomStart).Margin(0, 0, 8, 0).TransformOrigin(0, 1).
-		Transition(ui.ElementTransition{Animation: &peekSpring, Enter: &ui.Motion{Scale: 0.35}, Exit: &ui.Motion{Scale: 0.92}})
+	}).AttachTo(thumb, ui.AnchorTopStart, ui.AnchorBottomStart).Margin(0, 0, 8, 0).TransformOrigin(0, 1)
+	peekIn(pop)
 }
 
+// removeButton is @lody/ui's mini secondary icon button in an
+// attachment's corner: raised, tinting 4% under the pointer, sinking a
+// pixel and flush while pressed, over 120ms.
 func removeButton(c *ui.Context, p *palette, name string, remove func()) {
-	b := ui.ButtonBase(c).Size(18, 18).Radius(9).Background(p.Text.Alpha(0.7)).Cursor(ui.CursorPointer).
-		Label(locales.AttachRemove(name)).OnClick(remove).Absolute().Top(4).Right(4)
-	b.Children(func() { ui.Icon(c, iconX).Size(10, 10).TextColor(p.Canvas) })
+	b := ui.ButtonBase(c.Key("remove")).Size(24, 24).Radius(6).Shrink(0).AlignItems(ui.Center).Justify(ui.Center).Cursor(ui.CursorPointer).
+		Label(locales.AttachRemove(name)).OnClick(remove).Absolute().Top(4).Right(4).Transition(colorFade)
+	fill := raisedGround(p)
+	if p.Dark {
+		fill = p.Popover
+	}
+	if b.Hovered() {
+		fill = fill.Mix(p.Text, 0.04)
+	}
+	if b.Pressed() {
+		b.Background(fill).Shadow(0, 0, 0, 0.5, p.Text.Alpha(0.14)).InsetShadow(0, 1, 1, 0, p.Text.Alpha(0.14))
+	} else {
+		raisedLook(b, p, fill)
+	}
+	pressable(b, 0.97)
+	b.Children(func() { ui.Icon(c, iconX).Size(12, 12).TextColor(p.Text) })
 }
 
 func byteSize(n int64) string {
@@ -312,11 +328,11 @@ func (a *App) sessionImage(c *ui.Context, p *palette, sessionID string, it sessi
 	ui.Box(c.Key(key)).Size(size, size).Radius(12).Clip().Background(p.Text.Alpha(0.05)).Label(firstNonEmpty(it.FileName, locales.Image())).Children(func() {
 		switch {
 		case img != nil && img.bitmap != nil:
-			// An image fades in as it arrives, over 180ms.
-			ui.Image(c.Key("bitmap"), img.bitmap).Size(size, size).Fit(ui.Cover).
-				Transition(ui.ElementTransition{Duration: durRegular, Ease: easeStandard, Enter: &ui.Motion{}})
+			// Shown as it arrives, without a fade, as Lody's.
+			ui.Image(c.Key("bitmap"), img.bitmap).Size(size, size).Fit(ui.Cover)
 		case img != nil && img.loading:
-			ui.Box(c).Size(size, size).Center().Children(func() { spinner(c).Size(14, 14) })
+			// Its room breathes while it comes, as @lody/ui's skeleton.
+			skeleton(c, p, key, size).Width(size).Radius(0)
 		default:
 			ui.Box(c).Size(size, size).Center().Children(func() { ui.Icon(c, iconImage).Size(20, 20).TextColor(p.Secondary) })
 		}

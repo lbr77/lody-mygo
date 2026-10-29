@@ -321,7 +321,10 @@ func (a *App) paletteView(c *ui.Context, p *palette) {
 }
 
 func (a *App) paletteRow(c *ui.Context, p *palette, r paletteResult, active bool, width float32) {
-	row := ui.Row(c).FillWidth().Height(36).Padding(0, 8).Radius(10).Gap(10).AlignItems(ui.Center).Label(r.title).Transition(colorFade)
+	// Its fill fades over 120ms on CSS's default ease, as Lody's row style
+	// (a duration, no curve); the glyph's ink changes at once.
+	row := ui.Row(c).FillWidth().Height(36).Padding(0, 8).Radius(10).Gap(10).AlignItems(ui.Center).Label(r.title).
+		Transition(ui.ElementTransition{Colors: true, Duration: durFast, Ease: cssEase})
 	if active {
 		row.Background(p.Text.Alpha(0.07))
 		if a.palette.reveal {
