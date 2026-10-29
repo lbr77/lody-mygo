@@ -1493,5 +1493,7 @@
         "type": "String"
       }
     }
-  }
+  },
+  "memoryEdit": "Edit memory",
+  "avatarChange": "Change"
 }

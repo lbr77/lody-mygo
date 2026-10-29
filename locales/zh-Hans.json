@@ -685,5 +685,7 @@
   "machineUpgrade": "更新到 v{version} 并重启",
   "machineUpgradeTitle": "将 {name} 上的 Lody 更新到 v{version}？",
   "machineLifecycleRefused": "机器拒绝了请求。",
-  "machineLifecycleStarted": "{name} 正在重启。"
+  "machineLifecycleStarted": "{name} 正在重启。",
+  "memoryEdit": "编辑记忆体",
+  "avatarChange": "更换"
 }

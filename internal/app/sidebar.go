@@ -1,6 +1,7 @@
 package app
 
 import (
+	"github.com/lbr77/lody-mygo/internal/cloud"
 	"github.com/lbr77/lody-mygo/locales"
 	"math"
 	"sort"
@@ -465,7 +466,7 @@ func (a *App) footer(c *ui.Context, p *palette) {
 		}
 		switcher.OnClick(func() { a.workspacesOpen = !a.workspacesOpen })
 		switcher.Children(func() {
-			workspaceTile(c, name, 16)
+			a.workspaceIcon(c, ws, name, 16)
 			ui.Text(c, name).FontSize(sizeSub).TextColor(p.SideRow).SingleLine().MinWidth(0)
 			if !a.syncState.Live && a.sync != nil {
 				label, color := locales.ConnectionSyncing(), p.SideMuted
@@ -571,7 +572,8 @@ func (a *App) workspaceMenu(c *ui.Context, p *palette) {
 					}
 				}
 				item.Children(func() {
-					workspaceTile(c, w.Name, 18)
+					ws := w
+					a.workspaceIcon(c, &ws, w.Name, 18)
 					ui.Text(c, w.Name).FontSize(sizeSub).TextColor(p.Text).SingleLine().Grow(1).MinWidth(0)
 					if w.ID == a.workspaceID {
 						ui.Icon(c, iconCheck).Size(14, 14).TextColor(p.Text)
@@ -645,4 +647,17 @@ func (a *App) sidebarHandle(c *ui.Context, p *palette) {
 			ui.Box(c).Width(2).Fill().Margin(0, 2).Background(p.Primary.Alpha(0.6))
 		})
 	}
+}
+
+// workspaceIcon is a workspace's logo, or its lettered tile without one.
+func (a *App) workspaceIcon(c *ui.Context, ws *cloud.Workspace, name string, size float32) {
+	if ws != nil && ws.Logo != "" {
+		if img := a.urlImage(ws.Logo); img.bitmap != nil {
+			ui.Box(c).Size(size, size).Shrink(0).Radius(size / 4).Clip().Children(func() {
+				ui.Image(c, img.bitmap).Size(size, size).Fit(ui.Cover)
+			})
+			return
+		}
+	}
+	workspaceTile(c, name, size)
 }

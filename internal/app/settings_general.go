@@ -129,7 +129,14 @@ func (a *App) generalPage(c *ui.Context, p *palette) {
 			}
 		})
 	})
-	settingRow(c, p, locales.WorkspaceIcon(), "", func() { workspaceTile(c, ws.Name, 32) })
+	settingRow(c, p, locales.WorkspaceIcon(), "", func() {
+		ui.Row(c).Gap(10).AlignItems(ui.Center).Children(func() {
+			if admin {
+				ghostButton(c, p, locales.AvatarChange()).Border(1, p.Border).OnClick(func() { a.pickAvatar("workspace") })
+			}
+			a.workspaceIcon(c, ws, ws.Name, 32)
+		})
+	})
 	divider(c, p)
 	ui.Row(c).FillWidth().AlignItems(ui.Center).Children(func() {
 		settingsHeading(c, p, locales.SettingsMembers())

@@ -122,6 +122,7 @@ type App struct {
 	toggles         map[string]bool     // cloud switches flipped, until they settle
 	settingsError   string
 	settingsNotice  string // what a settings action did
+	avatarBusy      bool
 	usageRange      string
 	usageCost       bool // the usage charts show cost rather than tokens
 	editingName     bool

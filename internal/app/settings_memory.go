@@ -36,6 +36,7 @@ type memoryInventory struct {
 
 type memoryForm struct {
 	open        bool
+	editing     *catalog.Memory // the memory the form edits, if any
 	importing   bool
 	name        string
 	id          string
@@ -101,6 +102,9 @@ func (a *App) memoryPage(c *ui.Context, p *palette) {
 							detail += " · " + mem.Description
 						}
 						ui.Text(c, detail).FontSize(sizeFoot).TextColor(p.Secondary).SingleLine()
+					})
+					iconButton(c, p, iconPenLine, locales.MemoryEdit(), p.Hover).OnClick(func() {
+						a.memoryForm = memoryForm{open: true, editing: &mem, name: mem.Name, id: mem.MemoryID, idEdited: true, description: mem.Description, picked: map[string]bool{}}
 					})
 					iconButton(c, p, iconTrash, locales.MemoryRemove(), p.Hover).OnClick(func() {
 						a.streamWrite(mem.MachineID, func(f *flock.Flock) error {
@@ -174,11 +178,17 @@ func (a *App) memoryDialog(c *ui.Context, p *palette, machine string) {
 				})
 			})
 			ui.Column(c).Grow(1).MinWidth(0).Children(func() {
-				sheetHeader(c, p, locales.MemoryAdd(), locales.MemoryAddLead(), func() { f.open = false })
+				title, lead := locales.MemoryAdd(), locales.MemoryAddLead()
+				if f.editing != nil {
+					title, lead = locales.MemoryEdit(), ""
+				}
+				sheetHeader(c, p, title, lead, func() { f.open = false })
 				ui.Scroll(c).Grow(1).MinHeight(0).Padding(8, 20).Gap(14).Children(func() {
-					picked := map[bool]int{false: 0, true: 1}[f.importing]
-					ui.Segmented(c, &picked, locales.MemoryCreate(), locales.MemoryImport()).Label(locales.MemoryAdd())
-					f.importing = picked == 1
+					if f.editing == nil {
+						picked := map[bool]int{false: 0, true: 1}[f.importing]
+						ui.Segmented(c, &picked, locales.MemoryCreate(), locales.MemoryImport()).Label(locales.MemoryAdd())
+						f.importing = picked == 1
+					}
 					if f.importing {
 						a.memoryImportList(c, p, machine)
 					} else {
@@ -204,6 +214,10 @@ func (a *App) memoryDialog(c *ui.Context, p *palette, machine string) {
 						return
 					}
 					ok := strings.TrimSpace(f.name) != "" && memoryID.MatchString(strings.TrimSpace(f.id)) && !f.busy
+					if f.editing != nil {
+						primaryButton(c, p, locales.Save(), ok).OnClick(func() { a.updateMemory(machine) })
+						return
+					}
 					primaryButton(c, p, locales.MemoryCreateButton(), ok).OnClick(func() { a.createMemory(machine) })
 				})
 			})
@@ -227,7 +241,7 @@ func (a *App) memoryCreateForm(c *ui.Context, p *palette) {
 		ui.Column(c).Grow(1).Basis(0).Children(func() {
 			field(c, p, "Agent ID", "", func() {
 				before := f.id
-				input(c, p, &f.id, "", "Agent ID").Font(fontMono)
+				input(c, p, &f.id, "", "Agent ID").Font(fontMono).Disabled(f.editing != nil)
 				if f.id != before {
 					f.idEdited = true
 				}
@@ -315,4 +329,50 @@ func (a *App) importMemories(machine string) {
 		}
 	}
 	f.open = false
+}
+
+// updateMemory changes a memory on the machine's provider, then its name
+// and description in Lody, as Lody's pencil does.
+func (a *App) updateMemory(machine string) {
+	f := &a.memoryForm
+	mem := *f.editing
+	input := map[string]any{"id": mem.MemoryID, "name": strings.TrimSpace(f.name), "description": strings.TrimSpace(f.description), "role": strings.TrimSpace(f.role)}
+	f.busy, f.err = true, ""
+	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 70*time.Second)
+		defer cancel()
+		inv, err := a.memoryRPC(ctx, machine, map[string]any{"action": "update", "providerId": mem.ProviderID, "input": input})
+		a.update(func() {
+			f.busy = false
+			if err == nil && inv.Status != "ready" {
+				err = fmt.Errorf("%s", memoryStatus(inv))
+			}
+			if err != nil {
+				f.err = err.Error()
+				return
+			}
+			f.open = false
+			name, desc := input["name"].(string), input["description"].(string)
+			a.streamWrite(machine, func(fl *flock.Flock) error {
+				key := []any{"memory", mem.ProviderID, mem.MemoryID}
+				v, ok, err := fl.Get(key)
+				if err != nil || !ok {
+					return err
+				}
+				row, _ := v.(map[string]any)
+				next := map[string]any{}
+				for k, x := range row {
+					next[k] = x
+				}
+				next["name"] = name
+				if desc != "" {
+					next["description"] = desc
+				} else {
+					delete(next, "description")
+				}
+				return fl.Put(key, next)
+			}, nil)
+			a.refetchKey("memory/" + machine)
+		})
+	}()
 }

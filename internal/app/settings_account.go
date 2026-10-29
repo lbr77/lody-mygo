@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -49,7 +50,15 @@ func (a *App) accountPage(c *ui.Context, p *palette) {
 	settingsHeading(c, p, locales.SettingsProfile())
 	settingRow(c, p, locales.SettingsEmail(), "", func() { valueText(c, p, u.Email) })
 	settingRow(c, p, locales.SettingsUsername(), "", func() { a.nameEditor(c, p) })
-	settingRow(c, p, locales.SettingsAvatar(), "", func() { a.accountAvatar(c, p, 32) })
+	settingRow(c, p, locales.SettingsAvatar(), "", func() {
+		ui.Row(c).Gap(10).AlignItems(ui.Center).Children(func() {
+			if a.avatarBusy {
+				ui.Spinner(c).Size(14, 14)
+			}
+			ghostButton(c, p, locales.AvatarChange()).Border(1, p.Border).OnClick(func() { a.pickAvatar("user") })
+			a.accountAvatar(c, p, 32)
+		})
+	})
 	settingRow(c, p, locales.SettingsLinkedAccounts(), "", func() { a.linkedAccounts(c, p) })
 	divider(c, p)
 	ui.Row(c).FillWidth().AlignItems(ui.Center).Children(func() {
@@ -812,4 +821,46 @@ func (a *App) passwordDialog(c *ui.Context, p *palette) {
 			})
 		})
 	})
+}
+
+// pickAvatar chooses a picture and makes it the user's ("user") or the
+// workspace's ("workspace"), as Lody's avatar editor does: cropped
+// square, uploaded, then set as the image or the logo.
+func (a *App) pickAvatar(kind string) {
+	win, api, token, ws := a.win, a.api, a.tokenNow(), a.workspaceID
+	go func() {
+		paths, err := mygo.Dialog.Open(mygo.OpenDialogOptions{Parent: win, Title: locales.AvatarChange(), Filters: []mygo.FileFilter{{Name: "Images", Extensions: []string{"png", "jpg", "jpeg", "gif", "webp"}}}})
+		if err != nil || len(paths) == 0 {
+			return
+		}
+		a.update(func() { a.avatarBusy = true })
+		err = func() error {
+			data, err := os.ReadFile(paths[0])
+			if err != nil {
+				return err
+			}
+			img, contentType, err := cloud.AvatarImage(data)
+			if err != nil {
+				return err
+			}
+			ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+			defer cancel()
+			url, err := api.UploadAvatar(ctx, token, ws, kind, img, contentType)
+			if err != nil {
+				return err
+			}
+			if kind == "workspace" {
+				return api.Call(ctx, token, "/api/auth/organization/update", map[string]any{"organizationId": ws, "data": map[string]any{"logo": url}}, nil)
+			}
+			return api.Call(ctx, token, "/api/auth/update-user", map[string]any{"image": url}, nil)
+		}()
+		a.update(func() {
+			a.avatarBusy = false
+			if err != nil {
+				a.settingsError = err.Error()
+				return
+			}
+			go a.refreshAccount()
+		})
+	}()
 }

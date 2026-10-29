@@ -6918,3 +6918,23 @@ func MachineLifecycleStarted(name string) string {
 func (msgs Messages) MachineLifecycleStarted(name string) string {
 	return Catalog.Format(msgs.locale, "machineLifecycleStarted", map[string]any{"name": name})
 }
+
+// MemoryEdit says "Edit memory"
+// in the language the app shows.
+func MemoryEdit() string { return In(i18n.Locale()).MemoryEdit() }
+
+// MemoryEdit says "Edit memory"
+// in the language of msgs.
+func (msgs Messages) MemoryEdit() string {
+	return Catalog.Format(msgs.locale, "memoryEdit", nil)
+}
+
+// AvatarChange says "Change"
+// in the language the app shows.
+func AvatarChange() string { return In(i18n.Locale()).AvatarChange() }
+
+// AvatarChange says "Change"
+// in the language of msgs.
+func (msgs Messages) AvatarChange() string {
+	return Catalog.Format(msgs.locale, "avatarChange", nil)
+}
