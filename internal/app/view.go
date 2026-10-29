@@ -36,6 +36,8 @@ func (a *App) render(c *ui.Context) {
 	// The overlay layer stays built while nothing is in it, so that what
 	// leaves it, as a dialog closing, fades out rather than vanishing.
 	ui.Overlay(c, func() {})
+	// A lody:// link waiting opens as soon as what it names is here.
+	a.followLink()
 	switch a.phase {
 	case phaseLoading:
 		a.booting = true

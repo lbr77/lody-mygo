@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"math"
+	"regexp"
 	"sort"
 	"strings"
 	"time"
@@ -15,18 +16,40 @@ import (
 )
 
 // AI usage, as Lody's page shows it: the totals of a range, its "skyline"
-// of buckets beside a donut of the models, and the split by model and by
-// member, from usage:getWorkspaceUsageTimeline.
+// of buckets beside a donut of what its tokens were, and the split by
+// model and by member, from usage:getWorkspaceUsageTimeline. As Lody's
+// iOS app, it also asks usage:getWorkspaceUsageSummary for the range,
+// whose totals stand in where the timeline's fail or lack the split.
+
+// usageBreakdown is the split of a range's tokens by type, which not
+// every deployment reports.
+type usageBreakdown struct {
+	InputTokens              float64 `json:"inputTokens"`
+	OutputTokens             float64 `json:"outputTokens"`
+	CacheReadInputTokens     float64 `json:"cacheReadInputTokens"`
+	CacheCreationInputTokens float64 `json:"cacheCreationInputTokens"`
+	ReasoningOutputTokens    float64 `json:"reasoningOutputTokens"`
+}
+
+// usageTotals are a range's totals.
+type usageTotals struct {
+	Tokens    float64         `json:"tokens"`
+	CostUSD   float64         `json:"costUSD"`
+	Breakdown *usageBreakdown `json:"breakdown"`
+}
+
+// usageSummary is a range's totals, as usage:getWorkspaceUsageSummary
+// returns them.
+type usageSummary struct {
+	Totals usageTotals `json:"totals"`
+}
 
 type usageTimeline struct {
-	StartMs      float64 `json:"startMs"`
-	EndMs        float64 `json:"endMs"`
-	BucketSizeMs float64 `json:"bucketSizeMs"`
-	Totals       struct {
-		Tokens  float64 `json:"tokens"`
-		CostUSD float64 `json:"costUSD"`
-	} `json:"totals"`
-	Users map[string]struct {
+	StartMs      float64     `json:"startMs"`
+	EndMs        float64     `json:"endMs"`
+	BucketSizeMs float64     `json:"bucketSizeMs"`
+	Totals       usageTotals `json:"totals"`
+	Users        map[string]struct {
 		Name  string `json:"name"`
 		Email string `json:"email"`
 	} `json:"users"`
@@ -224,20 +247,25 @@ func (a *App) usagePage(c *ui.Context, p *palette) {
 	}
 	rng := a.usageRange
 	f := a.usageTimelineFetch(rng)
-	if !pending(c, p, f) {
-		a.motion.rng = ""
-		return
-	}
+	summary, _ := a.usageSummaryFetch(rng).value.(*usageSummary)
 	t, _ := f.value.(*usageTimeline)
-	if t == nil {
+	if f.loading || f.err != "" || t == nil {
+		// The summary's totals while the timeline loads, or where it
+		// failed.
+		if summary != nil {
+			a.usageBigStats(c, p, summary.Totals)
+		}
+		pending(c, p, f)
 		a.motion.rng = ""
 		return
 	}
-	ui.Row(c).FillWidth().Gap(12).Margin(4, 0).Children(func() {
-		a.bigStat(c, p, "Token", t.Totals.Tokens, formatCount)
-		a.bigStat(c, p, locales.UsageCostUSD(), t.Totals.CostUSD, formatUSD)
-	})
+	a.usageBigStats(c, p, t.Totals)
 	cost := a.usageCost
+	breakdown := t.Totals.Breakdown
+	if breakdown == nil && summary != nil {
+		breakdown = summary.Totals.Breakdown
+	}
+	ringCaption, rings := usageRings(t, breakdown)
 	models := usageSplit(t.Buckets, false)
 	people := usageSplit(t.Buckets, true)
 	hourly := rng == "day" || rng == "week"
@@ -261,7 +289,7 @@ func (a *App) usagePage(c *ui.Context, p *palette) {
 			frame.Children(func() {
 				if hourly {
 					ui.Column(c.Key("rings")).Width(170).Shrink(0).Transition(usageViewFade(150 * time.Millisecond)).Children(func() {
-						a.usageDonut(c, p, models, cost, t, settle)
+						a.usageDonut(c, p, ringCaption, rings, cost, t, settle)
 					})
 				}
 				view := ui.Column(c.Key(map[bool]string{true: "hourly", false: "skyline"}[hourly])).Grow(1).MinWidth(0).Gap(16).
@@ -560,12 +588,81 @@ func smallStat(c *ui.Context, p *palette, label, value, note string) {
 	})
 }
 
-// usageDonut is the models' shares around the range's total. As Lody's,
-// it shows settled as the card first does; afterwards each slice goes
-// from the length it had to its new one over 850ms, 60ms after the one
-// before, a new slice from nothing, while where it starts moves at once.
-// settle says the card is showing for the first time.
-func (a *App) usageDonut(c *ui.Context, p *palette, parts []usagePart, cost bool, t *usageTimeline, settle bool) {
+// ringSegment is a slice of the usage donut: what it is, and its share of
+// the ring.
+type ringSegment struct {
+	key, label string
+	share      float64
+}
+
+// stripRecommended is a model's name without Lody's "(recommended)".
+var stripRecommended = regexp.MustCompile(`(?i)\s*\(recommended\)`)
+
+// usageRings is what the donut shows of a range and its caption, as
+// Lody's: the range's tokens by type, cache, input, output and reasoning,
+// where it reports the split; else by model, the four largest and the
+// rest as Other, for an empty ring would read as a broken panel. Either
+// way the slices share the tokens, whichever metric the card shows.
+func usageRings(t *usageTimeline, b *usageBreakdown) (string, []ringSegment) {
+	type row struct {
+		key, label string
+		tokens     float64
+	}
+	shares := func(rows []row) []ringSegment {
+		total := 0.0
+		for _, r := range rows {
+			total += r.tokens
+		}
+		out := make([]ringSegment, 0, len(rows))
+		for _, r := range rows {
+			share := 0.0
+			if total > 0 {
+				share = r.tokens / total
+			}
+			out = append(out, ringSegment{r.key, r.label, share})
+		}
+		return out
+	}
+	if b != nil {
+		var rows []row
+		for _, r := range []row{
+			{"cache", locales.UsageCache(), b.CacheReadInputTokens + b.CacheCreationInputTokens},
+			{"input", locales.UsageInput(), b.InputTokens},
+			{"output", locales.UsageOutput(), b.OutputTokens},
+			{"reasoning", locales.UsageReasoning(), b.ReasoningOutputTokens},
+		} {
+			if r.tokens > 0 {
+				rows = append(rows, r)
+			}
+		}
+		if len(rows) > 0 {
+			return locales.UsageBreakdownTitle(), shares(rows)
+		}
+	}
+	var rows []row
+	for _, m := range usageSplit(t.Buckets, false) {
+		switch {
+		case m.tokens <= 0:
+		case len(rows) < 4:
+			rows = append(rows, row{m.key, stripRecommended.ReplaceAllString(m.key, ""), m.tokens})
+		default:
+			if len(rows) == 4 {
+				rows = append(rows, row{key: "__other__", label: locales.UsageOther()})
+			}
+			rows[4].tokens += m.tokens
+		}
+	}
+	return locales.UsageByModel(), shares(rows)
+}
+
+// usageDonut is the range's total in a ring of segs, captioned. As
+// Lody's, it shows settled as the card first does; afterwards each slice
+// goes from the length it had to its new one over 850ms, 60ms after the
+// one before, a new slice from nothing, while where it starts moves at
+// once: from the models to the tokens' types, as a range gains the split,
+// the new slices sweep in. settle says the card is showing for the first
+// time.
+func (a *App) usageDonut(c *ui.Context, p *palette, caption string, segs []ringSegment, cost bool, t *usageTimeline, settle bool) {
 	total := t.Totals.Tokens
 	if cost {
 		total = t.Totals.CostUSD
@@ -578,11 +675,8 @@ func (a *App) usageDonut(c *ui.Context, p *palette, parts []usagePart, cost bool
 		}
 		var slices []slice
 		from := 0.0
-		for i, s := range parts {
-			share := 0.0
-			if total > 0 {
-				share = s.value(cost) / total
-			}
+		for i, s := range segs {
+			share := s.share
 			// A hairline between slices, as Lody's donut has.
 			gap := math.Min(0.003, share/4)
 			key := "slice/" + s.key
@@ -619,18 +713,28 @@ func (a *App) usageDonut(c *ui.Context, p *palette, parts []usagePart, cost bool
 				ui.Text(c, map[bool]string{false: "TOKEN", true: "USD"}[cost]).FontSize(sizeCaption).TextColor(p.Tertiary)
 			})
 		})
-		ui.Text(c, locales.UsageByModel()).FontSize(sizeCaption).TextColor(p.Secondary)
-		for i, s := range parts[:min(len(parts), 4)] {
-			share := 0.0
-			if total > 0 {
-				share = s.value(cost) / total * 100
+		// The caption in small capitals, then the slices two to a row.
+		ui.Column(c.Key("legend")).FillWidth().Gap(4).Children(func() {
+			ui.Text(c.Key("caption/"+caption), strings.ToUpper(caption)).FontSize(10).LetterSpacing(0.8).TextColor(p.Secondary.Alpha(0.8)).
+				SingleLine().FillWidth().Margin(0, 0, 2, 0)
+			for r := 0; r < len(segs); r += 2 {
+				ui.Row(c.Key(r)).FillWidth().Gap(12).Children(func() {
+					for i := r; i < r+2; i++ {
+						cell := ui.Row(c.Key(i)).Grow(1).Basis(0).MinWidth(0).Gap(4).AlignItems(ui.Center)
+						if i >= len(segs) {
+							cell.Children(func() {})
+							continue
+						}
+						s := segs[i]
+						cell.Children(func() {
+							ui.Box(c).Size(6, 6).Radius(3).Background(usagePalette(p, i)).Shrink(0)
+							ui.Text(c, s.label).FontSize(sizeCaption).TextColor(p.Secondary).SingleLine().Grow(1).MinWidth(0)
+							ui.Text(c, fmt.Sprintf("%.0f%%", math.Round(s.share*100))).FontSize(sizeCaption).TextColor(p.Tertiary).FontFeatures("tnum").Shrink(0)
+						})
+					}
+				})
 			}
-			ui.Row(c.Key(s.key)).Gap(6).AlignItems(ui.Center).Children(func() {
-				ui.Box(c).Size(6, 6).Radius(3).Background(usagePalette(p, i)).Shrink(0)
-				ui.Text(c, s.key).FontSize(sizeCaption).TextColor(p.Secondary).SingleLine().Grow(1).MinWidth(0)
-				ui.Text(c, fmt.Sprintf("%.0f%%", share)).FontSize(sizeCaption).TextColor(p.Tertiary).Shrink(0)
-			})
-		}
+		})
 	})
 }
 
@@ -933,6 +1037,25 @@ func (a *App) usageTimelineFetch(rng string) *fetched {
 		}
 		err := convex.Query(ctx, "usage:getWorkspaceUsageTimeline", args, &out)
 		return &out, err
+	})
+}
+
+// usageSummaryFetch is a range's totals, as Lody's iOS app asks for them
+// beside its timeline.
+func (a *App) usageSummaryFetch(rng string) *fetched {
+	convex, ws := a.convex, a.workspaceID
+	return a.fetch("usage-summary/"+rng, func(ctx context.Context) (any, error) {
+		var out *usageSummary
+		err := convex.Query(ctx, "usage:getWorkspaceUsageSummary", map[string]any{"workspaceId": ws, "range": rng}, &out)
+		return out, err
+	})
+}
+
+// usageBigStats are a range's two totals: its tokens and their cost.
+func (a *App) usageBigStats(c *ui.Context, p *palette, totals usageTotals) {
+	ui.Row(c.Key("usage-totals")).FillWidth().Gap(12).Margin(4, 0).Children(func() {
+		a.bigStat(c, p, "Token", totals.Tokens, formatCount)
+		a.bigStat(c, p, locales.UsageCostUSD(), totals.CostUSD, formatUSD)
 	})
 }
 

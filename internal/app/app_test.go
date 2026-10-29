@@ -785,7 +785,7 @@ func TestCloudSettings(t *testing.T) {
 	var limit *memberLimit
 	seed("member-limit", `{"memberLimit":null,"canInvite":true,"isPaid":true,"memberCount":2.0,"pendingInvitationCount":0}`, &limit)
 	a.fetches[a.workspaceID+"|member-limit"].value = limit
-	seed("shares", `[{"shareId":"sh1","publisherUserId":"u2","status":"active","revision":3,"title":"Flock port","createdAt":1798761600000,"totalBytes":2048,"conversationCount":2.0,"canRevoke":true}]`, &[]publishedShare{})
+	seed("shares", `{"page":[{"shareId":"sh1","publisherUserId":"u2","status":"active","revision":3,"title":"Flock port","createdAt":1798761600000,"totalBytes":2048,"conversationCount":2.0,"canRevoke":true}],"isDone":true,"continueCursor":"c1"}`, &sharesPage{})
 
 	check := func(tab string, want ...string) *ui.Tester {
 		t.Helper()

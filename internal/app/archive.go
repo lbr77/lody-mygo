@@ -105,7 +105,6 @@ func (a *App) archiveView(c *ui.Context, p *palette) {
 			})
 		}
 	})
-	a.deleteDialog(c, p)
 	a.bulkDeleteDialog(c, p)
 }
 
@@ -277,6 +276,42 @@ func (a *App) archivedRow(c *ui.Context, p *palette, s catalog.Session) {
 			del.OnClick(func() { a.deleting, a.deleteOpen = &sess, true })
 		})
 	})
+}
+
+// deletionBlocked reports whether a session can't go for good yet, as
+// Lody's iOS app asks: while it or a child tab of it that isn't archived
+// is anything but idle, pending, completed or failed.
+func (a *App) deletionBlocked(s catalog.Session) bool {
+	busy := func(t catalog.Session) bool {
+		switch t.Status {
+		case "", "idle", "pending", "completed", "error":
+			return false
+		}
+		return !t.Archived
+	}
+	if busy(s) {
+		return true
+	}
+	for _, t := range a.catalog.Sessions {
+		if t.ParentSessionID == s.ID && t.ID != s.ID && busy(t) {
+			return true
+		}
+	}
+	return false
+}
+
+// deleteItem is a menu's Delete session for one that isn't archived, as
+// Lody's iOS app offers it beside Archive: disabled, saying why, while it
+// or a child tab runs, and asking first, as deleting an archived one does.
+func (a *App) deleteItem(m *lodyMenu, s catalog.Session) {
+	busy := a.deletionBlocked(s)
+	why := ""
+	if busy {
+		why = locales.SessionDeleteBusy()
+	}
+	if m.item("delete", iconTrash, locales.SessionsDeleteSession(), menuItem{destructive: true, disabled: busy, tip: why}) {
+		a.deleting, a.deleteOpen = &s, true
+	}
 }
 
 // deleteDialog confirms deleting a session for good.

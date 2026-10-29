@@ -155,6 +155,7 @@ func (a *App) settingsPage(c *ui.Context, p *palette) {
 		a.rolesPage(c, p)
 	case "about":
 		settingsTitle(c, p, locales.SettingsAbout())
+		a.linkDefaultRow(c, p)
 		settingRow(c, p, "Lody Native "+clientVersion(), locales.SettingsAboutDescription(), nil)
 		divider(c, p)
 		for _, link := range []struct{ label, url string }{

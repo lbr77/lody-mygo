@@ -290,6 +290,9 @@ type App struct {
 	pings            map[string]*pingState // machines' round trips
 	sidebarWidth     float32               // as dragged; 0 is the default
 	revoking         string                // the share whose revoke awaits confirmation
+	sharePages       sharePaging           // the published shares' pages in settings
+	link             *linkTarget           // a lody:// link waiting until it can open
+	linkDefault      linkDefault           // whether lody:// links open in this app
 	taskOpen         bool                  // a task's dialog
 	taskEntry        string                // the turn and task it shows
 	taskID           string
