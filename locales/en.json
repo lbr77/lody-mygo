@@ -726,8 +726,6 @@
   "billingEnds": "Ends on",
   "billingInvoices": "Invoices",
   "billingNoInvoices": "No invoices yet.",
-  "gitHubHelp": "Repositories the workspace's GitHub app can reach. Lody works only in those turned on.",
-  "gitHubNone": "GitHub isn't connected to this workspace.",
   "gitHubPrivate": "Private",
   "settingsShares": "Sharing",
   "sharesHelp": "Static copies you have published. Admins see every share in the workspace.",
@@ -851,5 +849,252 @@
   "billingPayment": "Payment method",
   "billingPaymentHelp": "Change the card future payments are charged to, on Stripe.",
   "billingChangePayment": "Change payment method",
-  "billingCancel": "Cancel subscription"
+  "billingCancel": "Cancel subscription",
+  "projectChats": "{n, plural, one {# chat} other {# chats}}",
+  "@projectChats": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "projectNewChat": "New chat here",
+  "projectCopyPath": "Copy path",
+  "actionDelete": "Delete",
+  "save": "Save",
+  "mcpLead": "The MCP servers this workspace shares; each session chooses which to load.",
+  "mcpAdd": "Add server",
+  "mcpNone": "No MCP servers yet. Add one to share it with every session.",
+  "mcpToolsLocal": "Tools load on the machine running Lody's desktop app.",
+  "mcpLoadTools": "Load tools",
+  "mcpDefault": "Default",
+  "mcpDelete": "Delete {name}",
+  "@mcpDelete": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "mcpDeleteTitle": "Delete {name}?",
+  "@mcpDeleteTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "mcpDeleteBody": "Sessions that load it lose its tools from their next turn.",
+  "mcpAddTitle": "Add MCP server",
+  "mcpEditTitle": "Edit MCP server",
+  "mcpDialogLead": "This connection is shared with the workspace. Once saved, machines run the command or connect to the URL to read its tools. Save only configurations you trust.",
+  "mcpBasics": "Basics",
+  "mcpName": "Server name",
+  "mcpNamePlaceholder": "e.g. Workspace files",
+  "mcpNameTaken": "A server named {name} already exists.",
+  "@mcpNameTaken": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "mcpTransport": "Transport",
+  "mcpDescription": "Description",
+  "mcpDescriptionHint": "Optional. Sessions see it when choosing servers.",
+  "mcpConnection": "Connection",
+  "mcpConnectionHint": "Values may use {example} for the target machine's environment.",
+  "@mcpConnectionHint": {
+    "placeholders": {
+      "example": {
+        "type": "String"
+      }
+    }
+  },
+  "mcpCommand": "Command",
+  "mcpArgs": "Arguments",
+  "mcpAddArg": "Add argument",
+  "mcpRemoveArg": "Remove argument",
+  "mcpEnv": "Environment variables",
+  "mcpEnvHint": "One KEY=value a line.",
+  "mcpHeaders": "Headers",
+  "mcpHeadersHint": "One Name: value a line.",
+  "mcpBadLine": "Line {n} has no separator.",
+  "@mcpBadLine": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "workspaceCurrent": "Current workspace",
+  "workspaceRename": "Rename workspace",
+  "workspaceIcon": "Workspace icon",
+  "workspaceInvite": "Invite members",
+  "workspaceDanger": "Danger zone",
+  "workspaceTransfer": "Transfer ownership",
+  "workspaceTransferButton": "Transfer",
+  "workspaceTransferHelp": "Make another member the owner; you become an admin.",
+  "workspaceTransferNoOne": "Invite other members to the workspace first.",
+  "workspaceDelete": "Delete workspace",
+  "workspaceDeleteHelp": "Permanently delete this workspace and all its data. This can't be undone.",
+  "workspaceDeleteTitle": "Delete {name}?",
+  "@workspaceDeleteTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "workspaceDeletePaying": "This workspace still has a subscription. Cancel it on lody.ai first; the workspace can be deleted once it won't renew.",
+  "workspaceLeave": "Leave workspace",
+  "workspaceLeaveHelp": "You lose access to its chats and machines.",
+  "workspaceLeaveTitle": "Leave {name}?",
+  "@workspaceLeaveTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "memberMakeAdmin": "Make admin",
+  "memberMakeMember": "Make member",
+  "memberRemove": "Remove member",
+  "memberRemoveTitle": "Remove {name}?",
+  "@memberRemoveTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "memberRemoveBody": "They lose access to the workspace.",
+  "invitationPending": "Invited as {role}",
+  "@invitationPending": {
+    "placeholders": {
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "invitationCopy": "Copy invitation link",
+  "invitationCancel": "Cancel invitation",
+  "joinTitle": "Open join link",
+  "joinHelp": "Others can ask to join through the link; only you approve them.",
+  "joinDays": "{n} days",
+  "@joinDays": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "joinCreate": "Create link",
+  "joinRotate": "Regenerate",
+  "joinDisable": "Disable",
+  "joinExpires": "Expires {date}",
+  "@joinExpires": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "joinNoRequests": "No requests waiting for approval.",
+  "joinReject": "Reject",
+  "joinApprove": "Approve on lody.ai",
+  "inviteLead": "They get an email with a link to join.",
+  "inviteEmail": "Email",
+  "inviteRole": "Role",
+  "inviteSend": "Send invitation",
+  "inviteLimit": "The workspace has reached its member limit. Add seats on lody.ai.",
+  "transferLead": "Choose the new owner, then type the workspace's name.",
+  "typeName": "Type {name} to confirm",
+  "@typeName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "gitHubNotInstalled": "Not installed",
+  "gitHubEnabledOf": "{enabled} of {total} repositories enabled",
+  "@gitHubEnabledOf": {
+    "placeholders": {
+      "enabled": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "gitHubPersonal": "Act as yourself",
+  "gitHubPersonalHelp": "Create PRs, comments and merges as you.",
+  "gitHubNone": "No repositories authorized yet. Install the GitHub App to start.",
+  "gitHubInstall": "Install GitHub App",
+  "gitHubMissing": "Repository missing? Configure the app on GitHub",
+  "tokenCreate": "Create token",
+  "tokenNone": "No tokens yet.",
+  "tokenCreated": "created {date}",
+  "@tokenCreated": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "tokenUsed": "last used {date}",
+  "@tokenUsed": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "tokenUnnamed": "CLI token",
+  "tokenRevoke": "Revoke token",
+  "tokenRevokeTitle": "Revoke this token?",
+  "tokenRevokeBody": "Machines signed in with it stop working until they sign in again.",
+  "tokenLead": "Sign the Lody CLI in on a server or in CI with it.",
+  "tokenNote": "Note",
+  "tokenNotePlaceholder": "e.g. build server",
+  "tokenOnce": "Copy it now: it won't be shown again.",
+  "done": "Done",
+  "passwordTitle": "Password",
+  "passwordSetHelp": "Set a password to sign in with your email.",
+  "passwordSet": "Set up password sign-in",
+  "passwordSent": "We emailed {email} a link to set your password.",
+  "@passwordSent": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "passwordChange": "Change password",
+  "passwordChangeHelp": "Change it on lody.ai.",
+  "machineThis": "This Mac",
+  "machinesRename": "Edit machine name",
+  "machinesRevoke": "Revoke machine access",
+  "machinesRevokeTitle": "Revoke access for {name}?",
+  "@machinesRevokeTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "machinesRevokeBody": "The machine is signed out of every workspace and must sign in again.",
+  "machinesRemove": "Remove from workspace",
+  "machinesRemoveTitle": "Remove {name} from the workspace?",
+  "@machinesRemoveTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "machinesRemoveBody": "If its Lody CLI connects again, the machine comes back.",
+  "machinesRemoveOnline": "Only an offline machine can be removed."
 }

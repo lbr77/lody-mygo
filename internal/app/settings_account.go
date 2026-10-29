@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/egoist/mygo"
 	"github.com/egoist/mygo/ui"
 
 	"github.com/lbr77/lody-mygo/internal/catalog"
@@ -57,7 +58,10 @@ func (a *App) accountPage(c *ui.Context, p *palette) {
 	})
 	a.myMachines(c, p)
 	divider(c, p)
+	a.cliTokens(c, p)
+	divider(c, p)
 	settingsHeading(c, p, locales.SettingsSignIn())
+	a.passwordRow(c, p)
 	settingRow(c, p, locales.SignOut(), locales.SettingsSignOutDescription(), func() {
 		ghostButton(c, p, locales.SettingsSignOutButton()).Border(1, p.Border).OnClick(func() {
 			a.settingsOpen = false
@@ -124,7 +128,12 @@ func (a *App) linkedAccounts(c *ui.Context, p *palette) {
 			if !linked[pr.id] {
 				ink, label = p.Text.Alpha(0.25), locales.SettingsNotLinked(pr.name)
 			}
-			ui.Icon(c.Key(pr.id), pr.icon).Size(20, 20).TextColor(ink).Tooltip(label).Label(label)
+			icon := ui.Box(c.Key(pr.id)).Size(22, 22).Center().Tooltip(label).Label(label)
+			if !linked[pr.id] {
+				// Linking needs the provider's page, which lody.ai opens.
+				icon.Cursor(ui.CursorPointer).OnClick(func() { a.webSettings("account") })
+			}
+			icon.Children(func() { ui.Icon(c, pr.icon).Size(20, 20).TextColor(ink) })
 		}
 	})
 }
@@ -173,6 +182,9 @@ func (a *App) visibleMachines() map[string]visibleMachine {
 // and how many agents and folders it has.
 func (a *App) machineFacts(id string, m visibleMachine, known bool) []string {
 	var facts []string
+	if id == a.localMachine() {
+		facts = append(facts, locales.MachineThis())
+	}
 	if a.presence.Live {
 		facts = append(facts, map[bool]string{true: locales.Online(), false: locales.Offline()}[a.presence.IsOnline(id)])
 	}
@@ -283,15 +295,17 @@ func (a *App) machineCard(c *ui.Context, p *palette, id string, machines map[str
 			}
 			ui.Box(c).Size(8, 8).Radius(4).Background(dot).Shrink(0)
 			ui.Text(c, a.machineName(id)).FontSize(sizeSub).FontWeight(500).TextColor(p.Text).SingleLine().Grow(1).MinWidth(0)
-			if known {
-				if m.SharedWithTeam {
-					pill(c, p, iconUsers, locales.MachineShared())
-				} else {
-					pill(c, p, iconLock, locales.MachinePrivate())
-				}
+			if id == a.localMachine() {
+				pill(c, p, nil, locales.MachineThis())
+			}
+			if known && !m.SharedWithTeam {
+				pill(c, p, iconLock, locales.MachinePrivate())
 			}
 			if os := a.catalog.MachineOS[id]; os != "" {
 				pill(c, p, iconLaptop, os)
+			}
+			if v := a.catalog.MachineCLI[id]; v != "" {
+				pill(c, p, nil, "v"+v)
 			}
 			ui.Row(c).Gap(4).AlignItems(ui.Center).Shrink(0).Children(func() {
 				ui.Icon(c, iconFolder).Size(12, 12).TextColor(p.Secondary)
@@ -314,15 +328,8 @@ func (a *App) machineCard(c *ui.Context, p *palette, id string, machines map[str
 			return
 		}
 		ui.Column(c).FillWidth().Padding(4, 14, 14, 14).Gap(14).Children(func() {
-			if mine && known {
-				ui.Row(c).FillWidth().Gap(10).AlignItems(ui.Center).Children(func() {
-					ui.Spacer(c)
-					ui.Text(c, locales.MachinesShareSwitch()).FontSize(sizeFoot).TextColor(p.Secondary)
-					if on, flipped := a.toggle(c, key, m.SharedWithTeam, locales.MachinesShareSwitch(), false); flipped {
-						a.cloudCall("mutation", "machines:setMachineSharedWithTeam",
-							map[string]any{"workspaceId": ws, "machineId": id, "sharedWithTeam": on}, nil, "machines", key, nil)
-					}
-				})
+			if mine {
+				a.machineActions(c, p, id, m, known)
 			}
 			ui.Column(c).FillWidth().Gap(8).Children(func() {
 				ui.Row(c).Gap(6).AlignItems(ui.Center).Children(func() {
@@ -384,4 +391,236 @@ func agentIcon(agentType string) *ui.SVG {
 		return iconSquareTerminal
 	}
 	return iconBot
+}
+
+type cliKey struct {
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	KeyPreview  string `json:"keyPreview"`
+	KeyStart    string `json:"keyStart"`
+	Note        string `json:"note"`
+	Source      string `json:"source"`
+	CreatedAt   any    `json:"createdAt"`
+	LastRequest any    `json:"lastRequest"`
+}
+
+type tokenForm struct {
+	open    bool
+	note    string
+	created string // the key just made, shown once
+	err     string
+}
+
+// stampDay writes a time the backend sends as ms or as an ISO string.
+func stampDay(v any) string {
+	switch t := v.(type) {
+	case float64:
+		return formatDay(t)
+	case string:
+		if parsed, err := time.Parse(time.RFC3339, t); err == nil {
+			return formatDay(float64(parsed.UnixMilli()))
+		}
+	}
+	return ""
+}
+
+// cliTokens are the keys the Lody CLI signs in with.
+func (a *App) cliTokens(c *ui.Context, p *palette) {
+	api, token := a.api, a.tokenNow()
+	f := a.fetch("cli-keys", func(ctx context.Context) (any, error) {
+		var out struct {
+			Records []cliKey `json:"records"`
+		}
+		err := api.Call(ctx, token, "/api/cli/api-key/list", map[string]any{}, &out)
+		return out.Records, err
+	})
+	ui.Row(c).FillWidth().AlignItems(ui.Center).Children(func() {
+		settingsHeading(c, p, "CLI Token")
+		ui.Spacer(c)
+		ghostButton(c, p, locales.TokenCreate()).OnClick(func() { a.tokens = tokenForm{open: true} })
+	})
+	keys, _ := f.value.([]cliKey)
+	switch {
+	case f.loading:
+		pending(c, p, f)
+	case len(keys) == 0:
+		ui.Text(c, locales.TokenNone()).FontSize(sizeFoot).TextColor(p.Secondary)
+	}
+	for _, k := range keys {
+		key := k
+		facts := []string{firstNonEmpty(k.KeyPreview, k.KeyStart+"…")}
+		if k.Source != "" {
+			facts = append(facts, k.Source)
+		}
+		if d := stampDay(k.CreatedAt); d != "" {
+			facts = append(facts, locales.TokenCreated(d))
+		}
+		if d := stampDay(k.LastRequest); d != "" {
+			facts = append(facts, locales.TokenUsed(d))
+		}
+		settingRow(c.Key(k.ID), p, firstNonEmpty(k.Note, k.Name, locales.TokenUnnamed()), strings.Join(facts, " · "), func() {
+			iconButton(c, p, iconTrash, locales.TokenRevoke(), p.Hover).OnClick(func() {
+				a.confirm(locales.TokenRevokeTitle(), locales.TokenRevokeBody(), locales.TokenRevoke(), func() {
+					a.authCall("/api/cli/api-key/revoke", map[string]any{"keyId": key.ID}, "cli-keys", nil)
+				})
+			})
+		})
+	}
+	a.tokenDialog(c, p)
+}
+
+func (a *App) tokenDialog(c *ui.Context, p *palette) {
+	t := &a.tokens
+	if !t.open {
+		return
+	}
+	sheet(c, p, &t.open, 460, func() {
+		sheetHeader(c, p, locales.TokenCreate(), locales.TokenLead(), func() { t.open = false })
+		ui.Column(c).FillWidth().Padding(8, 20).Gap(12).Children(func() {
+			if t.created != "" {
+				ui.Text(c, locales.TokenOnce()).FontSize(sizeFoot).TextColor(p.Warning)
+				ui.Row(c).FillWidth().Padding(8, 10).Radius(8).Gap(8).AlignItems(ui.Center).Background(p.Text.Alpha(0.05)).Children(func() {
+					ui.Text(c, t.created).Font(fontMono).FontSize(sizeFoot).TextColor(p.Text).Grow(1).MinWidth(0).Selectable()
+					created := t.created
+					iconButton(c, p, iconCopy, locales.Copy(), p.Hover).OnClick(func() { mygo.Clipboard.WriteText(created) })
+				})
+				return
+			}
+			field(c, p, locales.TokenNote(), "", func() { input(c, p, &t.note, locales.TokenNotePlaceholder(), locales.TokenNote()).AutoFocus() })
+			if t.err != "" {
+				ui.Text(c, t.err).FontSize(sizeFoot).TextColor(p.Danger)
+			}
+		})
+		ui.Row(c).FillWidth().Padding(12, 20, 16, 20).Gap(8).Justify(ui.End).Children(func() {
+			if t.created != "" {
+				primaryButton(c, p, locales.Done(), true).OnClick(func() { t.open = false })
+				return
+			}
+			ghostButton(c, p, locales.Cancel()).Border(1, p.Border).OnClick(func() { t.open = false })
+			primaryButton(c, p, locales.TokenCreate(), true).OnClick(func() {
+				api, token, note := a.api, a.tokenNow(), strings.TrimSpace(t.note)
+				if len([]rune(note)) > 160 {
+					note = string([]rune(note)[:160])
+				}
+				go func() {
+					ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+					defer cancel()
+					var out struct {
+						APIKey string `json:"apiKey"`
+					}
+					err := api.Call(ctx, token, "/api/cli/api-key/create", map[string]any{"note": note, "source": "manual"}, &out)
+					a.update(func() {
+						if err != nil {
+							t.err = err.Error()
+							return
+						}
+						t.created = out.APIKey
+						a.refetchKey("cli-keys")
+					})
+				}()
+			})
+		})
+	})
+}
+
+// passwordRow sets up email sign-in, or changes the password on lody.ai.
+func (a *App) passwordRow(c *ui.Context, p *palette) {
+	api, token := a.api, a.tokenNow()
+	f := a.fetch("accounts", func(ctx context.Context) (any, error) { return api.LinkedAccounts(ctx, token) })
+	hasPassword := false
+	if list, ok := f.value.([]cloud.LinkedAccount); ok {
+		for _, acc := range list {
+			hasPassword = hasPassword || acc.ProviderID == "credential"
+		}
+	}
+	if hasPassword {
+		settingRow(c, p, locales.PasswordTitle(), locales.PasswordChangeHelp(), func() {
+			outlineButton(c, p, iconExternal, locales.PasswordChange()).OnClick(func() { a.webSettings("account") })
+		})
+		return
+	}
+	desc := locales.PasswordSetHelp()
+	if a.passwordNotice != "" {
+		desc = a.passwordNotice
+	}
+	settingRow(c, p, locales.PasswordTitle(), desc, func() {
+		ghostButton(c, p, locales.PasswordSet()).Border(1, p.Border).OnClick(func() {
+			email := a.account.User.Email
+			a.authCall("/api/auth/request-password-reset", map[string]any{"email": email, "redirectTo": "https://lody.ai/reset-password"}, "", func(err error) {
+				if err != nil {
+					a.settingsError = err.Error()
+					return
+				}
+				a.passwordNotice = locales.PasswordSent(email)
+			})
+		})
+	})
+}
+
+// machineActions are what a machine's owner may do with it: name it,
+// share it, sign it out, or take it out of the workspace while offline.
+func (a *App) machineActions(c *ui.Context, p *palette, id string, m visibleMachine, known bool) {
+	ws := a.workspaceID
+	key := "machine/" + id
+	convex := a.convex
+	cf := a.fetch("credentials/"+id, func(ctx context.Context) (any, error) {
+		var out struct {
+			RevocableCount float64 `json:"revocableCount"`
+		}
+		err := convex.Query(ctx, "machineCredentials:getMachineCredentialState", map[string]any{"workspaceId": ws, "machineId": id}, &out)
+		return out.RevocableCount, err
+	})
+	ui.Row(c).FillWidth().Gap(10).AlignItems(ui.Center).Children(func() {
+		if a.renamingMachine == id {
+			save := func() {
+				name := strings.TrimSpace(a.machineDraft)
+				a.renamingMachine = ""
+				if name == "" || name == a.machineName(id) {
+					return
+				}
+				a.catalogAction(locales.MachinesRename(), func(ctx context.Context, sync *catalog.Sync) error { return sync.RenameMachine(ctx, id, name) })
+			}
+			ui.TextInput(c, &a.machineDraft).Width(220).FontSize(sizeSub).AutoFocus().Label(locales.MachinesRename()).OnSubmit(save)
+		} else {
+			b := ui.ButtonBase(c).Height(28).Padding(0, 8).Radius(8).Gap(6).AlignItems(ui.Center).Cursor(ui.CursorPointer).Label(locales.MachinesRename()).
+				OnClick(func() { a.renamingMachine, a.machineDraft = id, a.machineName(id) })
+			if b.Hovered() {
+				b.Background(p.Hover)
+			}
+			b.Children(func() {
+				ui.Icon(c, iconPenLine).Size(14, 14).TextColor(p.Secondary)
+				ui.Text(c, locales.MachinesRename()).FontSize(sizeFoot).TextColor(p.Text)
+			})
+		}
+		ui.Spacer(c)
+		if known {
+			ui.Text(c, locales.MachinesShareSwitch()).FontSize(sizeFoot).TextColor(p.Secondary)
+			if on, flipped := a.toggle(c, key, m.SharedWithTeam, locales.MachinesShareSwitch(), false); flipped {
+				a.cloudCall("mutation", "machines:setMachineSharedWithTeam",
+					map[string]any{"workspaceId": ws, "machineId": id, "sharedWithTeam": on}, nil, "machines", key, nil)
+			}
+		}
+		if n, _ := cf.value.(float64); n > 0 {
+			iconButton(c, p, iconUnplug, locales.MachinesRevoke(), p.Hover).OnClick(func() {
+				a.confirm(locales.MachinesRevokeTitle(a.machineName(id)), locales.MachinesRevokeBody(), locales.MachinesRevoke(), func() {
+					a.cloudCall("mutation", "machineCredentials:revokeMachineCredentials", map[string]any{"workspaceId": ws, "machineId": id}, nil, "credentials/"+id, "", nil)
+				})
+			})
+		}
+		offline := !a.presence.IsOnline(id)
+		remove := ui.ButtonBase(c).Height(28).Padding(0, 8).Radius(8).Gap(6).AlignItems(ui.Center).Label(locales.MachinesRemove()).Disabled(!offline)
+		if offline {
+			remove.Cursor(ui.CursorPointer).OnClick(func() {
+				a.confirm(locales.MachinesRemoveTitle(a.machineName(id)), locales.MachinesRemoveBody(), locales.MachinesRemove(), func() {
+					a.catalogAction(locales.MachinesRemove(), func(ctx context.Context, sync *catalog.Sync) error { return sync.RemoveMachine(ctx, id) })
+				})
+			})
+		} else {
+			remove.Opacity(0.5).Tooltip(locales.MachinesRemoveOnline())
+		}
+		remove.Children(func() {
+			ui.Icon(c, iconLogOutAlt).Size(14, 14).TextColor(p.Danger)
+			ui.Text(c, locales.MachinesRemove()).FontSize(sizeFoot).TextColor(p.Danger)
+		})
+	})
 }

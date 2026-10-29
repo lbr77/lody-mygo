@@ -3,10 +3,11 @@ package app
 import (
 	"context"
 	"fmt"
-	"sort"
+	"net/url"
 	"strings"
 	"time"
 
+	"github.com/egoist/mygo"
 	"github.com/egoist/mygo/ui"
 
 	"github.com/lbr77/lody-mygo/internal/cloud"
@@ -174,45 +175,6 @@ func roleLabel(role string) string {
 	return locales.RoleMember()
 }
 
-// membersSection lists the workspace's members on its General page.
-func (a *App) membersSection(c *ui.Context, p *palette) {
-	settingsHeading(c, p, locales.SettingsMembers())
-	_, f := a.members()
-	if !pending(c, p, f) {
-		return
-	}
-	list, _ := f.value.([]cloud.Member)
-	sorted := append([]cloud.Member(nil), list...)
-	rank := map[string]int{"owner": 0, "admin": 1}
-	sort.SliceStable(sorted, func(i, j int) bool {
-		ri, ok := rank[sorted[i].Role]
-		if !ok {
-			ri = 2
-		}
-		rj, ok := rank[sorted[j].Role]
-		if !ok {
-			rj = 2
-		}
-		return ri < rj
-	})
-	for _, m := range sorted {
-		name := firstNonEmpty(m.User.Name, m.User.Email)
-		if a.account != nil && m.UserID == a.account.User.ID {
-			name += " (" + locales.SettingsYou() + ")"
-		}
-		ui.Row(c.Key(m.ID)).FillWidth().MinHeight(44).Gap(12).AlignItems(ui.Center).Children(func() {
-			avatar(c, p, firstNonEmpty(m.User.Name, m.User.Email), 28, 14)
-			ui.Column(c).Grow(1).MinWidth(0).Children(func() {
-				ui.Text(c, name).FontSize(sizeBody).TextColor(p.Text).SingleLine()
-				if m.User.Email != "" {
-					ui.Text(c, m.User.Email).FontSize(sizeFoot).TextColor(p.Secondary).SingleLine()
-				}
-			})
-			ui.Text(c, roleLabel(m.Role)).FontSize(sizeFoot).TextColor(p.Secondary)
-		})
-	}
-}
-
 type visibleMachine struct {
 	MachineID      string  `json:"machineId"`
 	OwnerUserID    string  `json:"ownerUserId"`
@@ -230,40 +192,112 @@ type workspaceRepo struct {
 	Enabled      bool   `json:"enabled"`
 }
 
-// githubPage lists the repositories the workspace's GitHub app reaches,
-// and which of them Lody works in.
+// githubPage is the workspace's GitHub: its app and the repositories it
+// reaches, and whether Lody acts as the user. Installing the app and
+// authorizing the user happen in the browser, as Lody's desktop app does.
 func (a *App) githubPage(c *ui.Context, p *palette) {
 	settingsTitle(c, p, "GitHub")
-	ui.Text(c, locales.GitHubHelp()).FontSize(sizeFoot).TextColor(p.Secondary)
 	convex, ws := a.convex, a.workspaceID
 	f := a.fetch("github", func(ctx context.Context) (any, error) {
 		var out *[]workspaceRepo
 		err := convex.Query(ctx, "github:listWorkspaceReposWithStatus", map[string]any{"workspaceId": ws}, &out)
 		return out, err
 	})
+	pf := a.fetch("github-personal", func(ctx context.Context) (any, error) {
+		var out *githubPersonal
+		err := convex.Query(ctx, "github:getPersonalOperationSettings", map[string]any{"workspaceId": ws}, &out)
+		return out, err
+	})
 	a.settingsErrorLine(c, p)
-	if !pending(c, p, f) {
-		return
+	var repos []workspaceRepo
+	if r, _ := f.value.(*[]workspaceRepo); r != nil {
+		repos = *r
 	}
-	repos, _ := f.value.(*[]workspaceRepo)
-	if repos == nil || len(*repos) == 0 {
-		ui.Text(c, locales.GitHubNone()).FontSize(sizeFoot).TextColor(p.Tertiary)
-		return
-	}
-	for _, r := range *repos {
-		repo := r
-		desc := ""
-		if r.Private {
-			desc = locales.GitHubPrivate()
+	enabled := 0
+	for _, r := range repos {
+		if r.Enabled {
+			enabled++
 		}
-		settingRow(c.Key(r.RepoFullName), p, r.RepoFullName, desc, func() {
-			key := "repo/" + repo.RepoFullName
-			if on, flipped := a.toggle(c, key, repo.Enabled, repo.RepoFullName, false); flipped {
-				a.cloudCall("mutation", "github:setRepoEnabled",
-					map[string]any{"workspaceId": ws, "repoFullName": repo.RepoFullName, "enabled": on}, nil, "github", key, nil)
+	}
+	status := locales.GitHubNotInstalled()
+	if len(repos) > 0 {
+		status = locales.GitHubEnabledOf(enabled, len(repos))
+	}
+	install := func() {
+		slug := ""
+		if w := a.workspace(); w != nil {
+			slug = w.Slug
+		}
+		var out struct {
+			State string `json:"state"`
+		}
+		a.cloudCall("action", "github:createGitHubInstallState", map[string]any{"workspaceId": ws, "workspaceSlug": slug, "returnTarget": "web"}, &out, "", "", func() {
+			if out.State != "" {
+				mygo.Shell.OpenExternal("https://github.com/apps/lodyai/installations/new?state=" + url.QueryEscape(out.State))
 			}
 		})
 	}
+	settingRow(c, p, "GitHub App", status, func() {
+		outlineButton(c, p, iconExternal, locales.SettingsManage()).OnClick(install)
+	})
+	personal, _ := pf.value.(*githubPersonal)
+	desc := locales.GitHubPersonalHelp()
+	if personal != nil && personal.Authorization.State == "authorized" && personal.Authorization.Profile != nil && personal.Authorization.Profile.Login != "" {
+		desc += " · @" + personal.Authorization.Profile.Login
+	}
+	settingRow(c, p, locales.GitHubPersonal(), desc, func() {
+		on := personal != nil && personal.Enabled
+		key := "github-personal"
+		if v, flipped := a.toggle(c, key, on, locales.GitHubPersonal(), personal == nil); flipped {
+			if v && personal.Authorization.State != "authorized" {
+				// Authorizing needs GitHub's page, on lody.ai.
+				delete(a.toggles, key)
+				a.webSettings("github")
+				return
+			}
+			a.cloudCall("mutation", "github:setPersonalOperationPreference", map[string]any{"workspaceId": ws, "enabled": v}, nil, "github-personal", key, nil)
+		}
+	})
+	if !pending(c, p, f) {
+		return
+	}
+	if len(repos) == 0 {
+		ui.Row(c).FillWidth().Padding(10, 10, 10, 16).Radius(10).Border(1, p.Border).Gap(12).AlignItems(ui.Center).Children(func() {
+			ui.Text(c, locales.GitHubNone()).FontSize(sizeFoot).TextColor(p.Secondary).Grow(1)
+			outlineButton(c, p, nil, locales.GitHubInstall()).OnClick(install)
+		})
+		return
+	}
+	card(c, p, func() {
+		for _, r := range repos {
+			repo := r
+			ui.Row(c.Key(r.RepoFullName)).FillWidth().MinHeight(44).Padding(6, 14).Gap(10).AlignItems(ui.Center).Children(func() {
+				ui.Icon(c, iconBrandGitHub).Size(15, 15).TextColor(p.Secondary)
+				ui.Text(c, repo.RepoFullName).FontSize(sizeSub).TextColor(p.Text).SingleLine().Grow(1).MinWidth(0)
+				if repo.Private {
+					pill(c, p, iconLock, locales.GitHubPrivate())
+				}
+				key := "repo/" + repo.RepoFullName
+				if on, flipped := a.toggle(c, key, repo.Enabled, repo.RepoFullName, false); flipped {
+					a.cloudCall("mutation", "github:setRepoEnabled",
+						map[string]any{"workspaceId": ws, "repoFullName": repo.RepoFullName, "enabled": on}, nil, "github", key, nil)
+				}
+			})
+		}
+	})
+	ui.Row(c).Gap(4).Children(func() {
+		webLink(c, p, locales.GitHubMissing(), func() { mygo.Shell.OpenExternal("https://github.com/settings/installations") })
+	})
+}
+
+type githubPersonal struct {
+	Enabled       bool `json:"enabled"`
+	Authorization struct {
+		State   string `json:"state"`
+		Profile *struct {
+			Login string `json:"login"`
+		} `json:"profile"`
+	} `json:"authorization"`
 }
 
 type publishedShare struct {

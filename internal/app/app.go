@@ -77,67 +77,74 @@ type App struct {
 		machine, agent, project string
 	}
 
-	sidebarHidden  bool
-	collapsed      map[string]bool
-	expanded       map[string]bool // activity groups in the conversation
-	workspacesOpen bool
-	sessionList    ui.ListState
-	chatList       ui.ListState
-	pickers        map[string]*bool
-	dither         dither
-	renaming       string // session whose title is being edited
-	renameText     string
-	notice         string // a failed background action, shown in the sidebar
-	showArchived   bool
-	models         map[string]string // model chosen per session
-	composerFocus  ui.Handle
-	history        []string // sessions shown, for Back and Forward
-	histPos        int
-	searchOpen     bool
-	searchText     string
-	showAll        map[string]bool   // projects listing every session
-	appearance     string            // System, Light or Dark
-	busyBehavior   string            // queue or steer, for messages sent while the agent works
-	modes          map[string]string // permission mode chosen per session; "" for New chat
-	attachments    []pendingFile     // the composer's
-	attachDrafts   map[string][]pendingFile
-	images         map[string]*remoteImage
-	uploading      string // upload progress while sending
-	settingsOpen   bool
-	settingsTab    string
-	archiveGroup   string // "project" or "flat"
-	archiveSort    string // "newest", "oldest" or "title"
-	archiveFilter  string // "", "chats" or a project id
-	deleting       *catalog.Session
-	deleteOpen     bool
-	panelOpen      bool    // the inspector beside the conversation
-	panelPercent   float32 // the conversation's share of the width
-	panelFile      string  // the file whose edits the panel shows
-	inspect        *inspectState
-	term           termDock // the terminal dock under the conversation
-	previews       map[string]*previewState
-	convex         *cloud.Convex
-	fetches        map[string]*fetched // what the settings asked the cloud for
-	offline        bool                // fetch nothing from the cloud, as in tests
-	toggles        map[string]bool     // cloud switches flipped, until they settle
-	settingsError  string
-	usageRange     string
-	usageCost      bool // the usage charts show cost rather than tokens
-	editingName    bool
-	nameDraft      string
-	agentsMachine  string // the machine whose agents Settings shows
-	revoking       string // the share whose revoke awaits confirmation
-	taskOpen       bool   // a task's dialog
-	taskEntry      string // the turn and task it shows
-	taskID         string
-	page           string // "archive", or "" for chats
-	archiveSearch  string
-	mention        mentionState // the composer's mention panel
-	mentionSources map[string]*mentionSource
-	diffs          map[string]*editor.DiffState // tool diffs of the open session
-	md             markdown.Options
-	mdMuted        markdown.Options
-	mdDark         bool
+	sidebarHidden   bool
+	collapsed       map[string]bool
+	expanded        map[string]bool // activity groups in the conversation
+	workspacesOpen  bool
+	sessionList     ui.ListState
+	chatList        ui.ListState
+	pickers         map[string]*bool
+	dither          dither
+	renaming        string // session whose title is being edited
+	renameText      string
+	notice          string // a failed background action, shown in the sidebar
+	showArchived    bool
+	models          map[string]string // model chosen per session
+	composerFocus   ui.Handle
+	history         []string // sessions shown, for Back and Forward
+	histPos         int
+	searchOpen      bool
+	searchText      string
+	showAll         map[string]bool   // projects listing every session
+	appearance      string            // System, Light or Dark
+	busyBehavior    string            // queue or steer, for messages sent while the agent works
+	modes           map[string]string // permission mode chosen per session; "" for New chat
+	attachments     []pendingFile     // the composer's
+	attachDrafts    map[string][]pendingFile
+	images          map[string]*remoteImage
+	uploading       string // upload progress while sending
+	settingsOpen    bool
+	settingsTab     string
+	archiveGroup    string // "project" or "flat"
+	archiveSort     string // "newest", "oldest" or "title"
+	archiveFilter   string // "", "chats" or a project id
+	deleting        *catalog.Session
+	deleteOpen      bool
+	panelOpen       bool    // the inspector beside the conversation
+	panelPercent    float32 // the conversation's share of the width
+	panelFile       string  // the file whose edits the panel shows
+	inspect         *inspectState
+	term            termDock // the terminal dock under the conversation
+	previews        map[string]*previewState
+	convex          *cloud.Convex
+	fetches         map[string]*fetched // what the settings asked the cloud for
+	offline         bool                // fetch nothing from the cloud, as in tests
+	toggles         map[string]bool     // cloud switches flipped, until they settle
+	settingsError   string
+	usageRange      string
+	usageCost       bool // the usage charts show cost rather than tokens
+	editingName     bool
+	nameDraft       string
+	agentsMachine   string // the machine whose agents Settings shows
+	confirming      confirmation
+	mcp             mcpForm
+	general         generalForm
+	tokens          tokenForm
+	passwordNotice  string
+	renamingMachine string
+	machineDraft    string
+	revoking        string // the share whose revoke awaits confirmation
+	taskOpen        bool   // a task's dialog
+	taskEntry       string // the turn and task it shows
+	taskID          string
+	page            string // "archive", or "" for chats
+	archiveSearch   string
+	mention         mentionState // the composer's mention panel
+	mentionSources  map[string]*mentionSource
+	diffs           map[string]*editor.DiffState // tool diffs of the open session
+	md              markdown.Options
+	mdMuted         markdown.Options
+	mdDark          bool
 }
 
 // New returns the app. Run it with Start once the window exists.

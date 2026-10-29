@@ -3313,26 +3313,6 @@ func (msgs Messages) BillingNoInvoices() string {
 	return Catalog.Format(msgs.locale, "billingNoInvoices", nil)
 }
 
-// GitHubHelp says "Repositories the workspace's GitHub app can reach. Lody works only in those turned on."
-// in the language the app shows.
-func GitHubHelp() string { return In(i18n.Locale()).GitHubHelp() }
-
-// GitHubHelp says "Repositories the workspace's GitHub app can reach. Lody works only in those turned on."
-// in the language of msgs.
-func (msgs Messages) GitHubHelp() string {
-	return Catalog.Format(msgs.locale, "gitHubHelp", nil)
-}
-
-// GitHubNone says "GitHub isn't connected to this workspace."
-// in the language the app shows.
-func GitHubNone() string { return In(i18n.Locale()).GitHubNone() }
-
-// GitHubNone says "GitHub isn't connected to this workspace."
-// in the language of msgs.
-func (msgs Messages) GitHubNone() string {
-	return Catalog.Format(msgs.locale, "gitHubNone", nil)
-}
-
 // GitHubPrivate says "Private"
 // in the language the app shows.
 func GitHubPrivate() string { return In(i18n.Locale()).GitHubPrivate() }
@@ -4123,4 +4103,1116 @@ func BillingCancel() string { return In(i18n.Locale()).BillingCancel() }
 // in the language of msgs.
 func (msgs Messages) BillingCancel() string {
 	return Catalog.Format(msgs.locale, "billingCancel", nil)
+}
+
+// ProjectChats says "{n, plural, one {# chat} other {# chats}}"
+// in the language the app shows.
+func ProjectChats(n int) string { return In(i18n.Locale()).ProjectChats(n) }
+
+// ProjectChats says "{n, plural, one {# chat} other {# chats}}"
+// in the language of msgs.
+func (msgs Messages) ProjectChats(n int) string {
+	return Catalog.Format(msgs.locale, "projectChats", map[string]any{"n": n})
+}
+
+// ProjectNewChat says "New chat here"
+// in the language the app shows.
+func ProjectNewChat() string { return In(i18n.Locale()).ProjectNewChat() }
+
+// ProjectNewChat says "New chat here"
+// in the language of msgs.
+func (msgs Messages) ProjectNewChat() string {
+	return Catalog.Format(msgs.locale, "projectNewChat", nil)
+}
+
+// ProjectCopyPath says "Copy path"
+// in the language the app shows.
+func ProjectCopyPath() string { return In(i18n.Locale()).ProjectCopyPath() }
+
+// ProjectCopyPath says "Copy path"
+// in the language of msgs.
+func (msgs Messages) ProjectCopyPath() string {
+	return Catalog.Format(msgs.locale, "projectCopyPath", nil)
+}
+
+// ActionDelete says "Delete"
+// in the language the app shows.
+func ActionDelete() string { return In(i18n.Locale()).ActionDelete() }
+
+// ActionDelete says "Delete"
+// in the language of msgs.
+func (msgs Messages) ActionDelete() string {
+	return Catalog.Format(msgs.locale, "actionDelete", nil)
+}
+
+// Save says "Save"
+// in the language the app shows.
+func Save() string { return In(i18n.Locale()).Save() }
+
+// Save says "Save"
+// in the language of msgs.
+func (msgs Messages) Save() string {
+	return Catalog.Format(msgs.locale, "save", nil)
+}
+
+// McpLead says "The MCP servers this workspace shares; each session chooses which to load."
+// in the language the app shows.
+func McpLead() string { return In(i18n.Locale()).McpLead() }
+
+// McpLead says "The MCP servers this workspace shares; each session chooses which to load."
+// in the language of msgs.
+func (msgs Messages) McpLead() string {
+	return Catalog.Format(msgs.locale, "mcpLead", nil)
+}
+
+// McpAdd says "Add server"
+// in the language the app shows.
+func McpAdd() string { return In(i18n.Locale()).McpAdd() }
+
+// McpAdd says "Add server"
+// in the language of msgs.
+func (msgs Messages) McpAdd() string {
+	return Catalog.Format(msgs.locale, "mcpAdd", nil)
+}
+
+// McpNone says "No MCP servers yet. Add one to share it with every session."
+// in the language the app shows.
+func McpNone() string { return In(i18n.Locale()).McpNone() }
+
+// McpNone says "No MCP servers yet. Add one to share it with every session."
+// in the language of msgs.
+func (msgs Messages) McpNone() string {
+	return Catalog.Format(msgs.locale, "mcpNone", nil)
+}
+
+// McpToolsLocal says "Tools load on the machine running Lody's desktop app."
+// in the language the app shows.
+func McpToolsLocal() string { return In(i18n.Locale()).McpToolsLocal() }
+
+// McpToolsLocal says "Tools load on the machine running Lody's desktop app."
+// in the language of msgs.
+func (msgs Messages) McpToolsLocal() string {
+	return Catalog.Format(msgs.locale, "mcpToolsLocal", nil)
+}
+
+// McpLoadTools says "Load tools"
+// in the language the app shows.
+func McpLoadTools() string { return In(i18n.Locale()).McpLoadTools() }
+
+// McpLoadTools says "Load tools"
+// in the language of msgs.
+func (msgs Messages) McpLoadTools() string {
+	return Catalog.Format(msgs.locale, "mcpLoadTools", nil)
+}
+
+// McpDefault says "Default"
+// in the language the app shows.
+func McpDefault() string { return In(i18n.Locale()).McpDefault() }
+
+// McpDefault says "Default"
+// in the language of msgs.
+func (msgs Messages) McpDefault() string {
+	return Catalog.Format(msgs.locale, "mcpDefault", nil)
+}
+
+// McpDelete says "Delete {name}"
+// in the language the app shows.
+func McpDelete(name string) string { return In(i18n.Locale()).McpDelete(name) }
+
+// McpDelete says "Delete {name}"
+// in the language of msgs.
+func (msgs Messages) McpDelete(name string) string {
+	return Catalog.Format(msgs.locale, "mcpDelete", map[string]any{"name": name})
+}
+
+// McpDeleteTitle says "Delete {name}?"
+// in the language the app shows.
+func McpDeleteTitle(name string) string { return In(i18n.Locale()).McpDeleteTitle(name) }
+
+// McpDeleteTitle says "Delete {name}?"
+// in the language of msgs.
+func (msgs Messages) McpDeleteTitle(name string) string {
+	return Catalog.Format(msgs.locale, "mcpDeleteTitle", map[string]any{"name": name})
+}
+
+// McpDeleteBody says "Sessions that load it lose its tools from their next turn."
+// in the language the app shows.
+func McpDeleteBody() string { return In(i18n.Locale()).McpDeleteBody() }
+
+// McpDeleteBody says "Sessions that load it lose its tools from their next turn."
+// in the language of msgs.
+func (msgs Messages) McpDeleteBody() string {
+	return Catalog.Format(msgs.locale, "mcpDeleteBody", nil)
+}
+
+// McpAddTitle says "Add MCP server"
+// in the language the app shows.
+func McpAddTitle() string { return In(i18n.Locale()).McpAddTitle() }
+
+// McpAddTitle says "Add MCP server"
+// in the language of msgs.
+func (msgs Messages) McpAddTitle() string {
+	return Catalog.Format(msgs.locale, "mcpAddTitle", nil)
+}
+
+// McpEditTitle says "Edit MCP server"
+// in the language the app shows.
+func McpEditTitle() string { return In(i18n.Locale()).McpEditTitle() }
+
+// McpEditTitle says "Edit MCP server"
+// in the language of msgs.
+func (msgs Messages) McpEditTitle() string {
+	return Catalog.Format(msgs.locale, "mcpEditTitle", nil)
+}
+
+// McpDialogLead says "This connection is shared with the workspace. Once saved, machines run the command or connect to the URL to read its …"
+// in the language the app shows.
+func McpDialogLead() string { return In(i18n.Locale()).McpDialogLead() }
+
+// McpDialogLead says "This connection is shared with the workspace. Once saved, machines run the command or connect to the URL to read its …"
+// in the language of msgs.
+func (msgs Messages) McpDialogLead() string {
+	return Catalog.Format(msgs.locale, "mcpDialogLead", nil)
+}
+
+// McpBasics says "Basics"
+// in the language the app shows.
+func McpBasics() string { return In(i18n.Locale()).McpBasics() }
+
+// McpBasics says "Basics"
+// in the language of msgs.
+func (msgs Messages) McpBasics() string {
+	return Catalog.Format(msgs.locale, "mcpBasics", nil)
+}
+
+// McpName says "Server name"
+// in the language the app shows.
+func McpName() string { return In(i18n.Locale()).McpName() }
+
+// McpName says "Server name"
+// in the language of msgs.
+func (msgs Messages) McpName() string {
+	return Catalog.Format(msgs.locale, "mcpName", nil)
+}
+
+// McpNamePlaceholder says "e.g. Workspace files"
+// in the language the app shows.
+func McpNamePlaceholder() string { return In(i18n.Locale()).McpNamePlaceholder() }
+
+// McpNamePlaceholder says "e.g. Workspace files"
+// in the language of msgs.
+func (msgs Messages) McpNamePlaceholder() string {
+	return Catalog.Format(msgs.locale, "mcpNamePlaceholder", nil)
+}
+
+// McpNameTaken says "A server named {name} already exists."
+// in the language the app shows.
+func McpNameTaken(name string) string { return In(i18n.Locale()).McpNameTaken(name) }
+
+// McpNameTaken says "A server named {name} already exists."
+// in the language of msgs.
+func (msgs Messages) McpNameTaken(name string) string {
+	return Catalog.Format(msgs.locale, "mcpNameTaken", map[string]any{"name": name})
+}
+
+// McpTransport says "Transport"
+// in the language the app shows.
+func McpTransport() string { return In(i18n.Locale()).McpTransport() }
+
+// McpTransport says "Transport"
+// in the language of msgs.
+func (msgs Messages) McpTransport() string {
+	return Catalog.Format(msgs.locale, "mcpTransport", nil)
+}
+
+// McpDescription says "Description"
+// in the language the app shows.
+func McpDescription() string { return In(i18n.Locale()).McpDescription() }
+
+// McpDescription says "Description"
+// in the language of msgs.
+func (msgs Messages) McpDescription() string {
+	return Catalog.Format(msgs.locale, "mcpDescription", nil)
+}
+
+// McpDescriptionHint says "Optional. Sessions see it when choosing servers."
+// in the language the app shows.
+func McpDescriptionHint() string { return In(i18n.Locale()).McpDescriptionHint() }
+
+// McpDescriptionHint says "Optional. Sessions see it when choosing servers."
+// in the language of msgs.
+func (msgs Messages) McpDescriptionHint() string {
+	return Catalog.Format(msgs.locale, "mcpDescriptionHint", nil)
+}
+
+// McpConnection says "Connection"
+// in the language the app shows.
+func McpConnection() string { return In(i18n.Locale()).McpConnection() }
+
+// McpConnection says "Connection"
+// in the language of msgs.
+func (msgs Messages) McpConnection() string {
+	return Catalog.Format(msgs.locale, "mcpConnection", nil)
+}
+
+// McpConnectionHint says "Values may use {example} for the target machine's environment."
+// in the language the app shows.
+func McpConnectionHint(example string) string { return In(i18n.Locale()).McpConnectionHint(example) }
+
+// McpConnectionHint says "Values may use {example} for the target machine's environment."
+// in the language of msgs.
+func (msgs Messages) McpConnectionHint(example string) string {
+	return Catalog.Format(msgs.locale, "mcpConnectionHint", map[string]any{"example": example})
+}
+
+// McpCommand says "Command"
+// in the language the app shows.
+func McpCommand() string { return In(i18n.Locale()).McpCommand() }
+
+// McpCommand says "Command"
+// in the language of msgs.
+func (msgs Messages) McpCommand() string {
+	return Catalog.Format(msgs.locale, "mcpCommand", nil)
+}
+
+// McpArgs says "Arguments"
+// in the language the app shows.
+func McpArgs() string { return In(i18n.Locale()).McpArgs() }
+
+// McpArgs says "Arguments"
+// in the language of msgs.
+func (msgs Messages) McpArgs() string {
+	return Catalog.Format(msgs.locale, "mcpArgs", nil)
+}
+
+// McpAddArg says "Add argument"
+// in the language the app shows.
+func McpAddArg() string { return In(i18n.Locale()).McpAddArg() }
+
+// McpAddArg says "Add argument"
+// in the language of msgs.
+func (msgs Messages) McpAddArg() string {
+	return Catalog.Format(msgs.locale, "mcpAddArg", nil)
+}
+
+// McpRemoveArg says "Remove argument"
+// in the language the app shows.
+func McpRemoveArg() string { return In(i18n.Locale()).McpRemoveArg() }
+
+// McpRemoveArg says "Remove argument"
+// in the language of msgs.
+func (msgs Messages) McpRemoveArg() string {
+	return Catalog.Format(msgs.locale, "mcpRemoveArg", nil)
+}
+
+// McpEnv says "Environment variables"
+// in the language the app shows.
+func McpEnv() string { return In(i18n.Locale()).McpEnv() }
+
+// McpEnv says "Environment variables"
+// in the language of msgs.
+func (msgs Messages) McpEnv() string {
+	return Catalog.Format(msgs.locale, "mcpEnv", nil)
+}
+
+// McpEnvHint says "One KEY=value a line."
+// in the language the app shows.
+func McpEnvHint() string { return In(i18n.Locale()).McpEnvHint() }
+
+// McpEnvHint says "One KEY=value a line."
+// in the language of msgs.
+func (msgs Messages) McpEnvHint() string {
+	return Catalog.Format(msgs.locale, "mcpEnvHint", nil)
+}
+
+// McpHeaders says "Headers"
+// in the language the app shows.
+func McpHeaders() string { return In(i18n.Locale()).McpHeaders() }
+
+// McpHeaders says "Headers"
+// in the language of msgs.
+func (msgs Messages) McpHeaders() string {
+	return Catalog.Format(msgs.locale, "mcpHeaders", nil)
+}
+
+// McpHeadersHint says "One Name: value a line."
+// in the language the app shows.
+func McpHeadersHint() string { return In(i18n.Locale()).McpHeadersHint() }
+
+// McpHeadersHint says "One Name: value a line."
+// in the language of msgs.
+func (msgs Messages) McpHeadersHint() string {
+	return Catalog.Format(msgs.locale, "mcpHeadersHint", nil)
+}
+
+// McpBadLine says "Line {n} has no separator."
+// in the language the app shows.
+func McpBadLine(n int) string { return In(i18n.Locale()).McpBadLine(n) }
+
+// McpBadLine says "Line {n} has no separator."
+// in the language of msgs.
+func (msgs Messages) McpBadLine(n int) string {
+	return Catalog.Format(msgs.locale, "mcpBadLine", map[string]any{"n": n})
+}
+
+// WorkspaceCurrent says "Current workspace"
+// in the language the app shows.
+func WorkspaceCurrent() string { return In(i18n.Locale()).WorkspaceCurrent() }
+
+// WorkspaceCurrent says "Current workspace"
+// in the language of msgs.
+func (msgs Messages) WorkspaceCurrent() string {
+	return Catalog.Format(msgs.locale, "workspaceCurrent", nil)
+}
+
+// WorkspaceRename says "Rename workspace"
+// in the language the app shows.
+func WorkspaceRename() string { return In(i18n.Locale()).WorkspaceRename() }
+
+// WorkspaceRename says "Rename workspace"
+// in the language of msgs.
+func (msgs Messages) WorkspaceRename() string {
+	return Catalog.Format(msgs.locale, "workspaceRename", nil)
+}
+
+// WorkspaceIcon says "Workspace icon"
+// in the language the app shows.
+func WorkspaceIcon() string { return In(i18n.Locale()).WorkspaceIcon() }
+
+// WorkspaceIcon says "Workspace icon"
+// in the language of msgs.
+func (msgs Messages) WorkspaceIcon() string {
+	return Catalog.Format(msgs.locale, "workspaceIcon", nil)
+}
+
+// WorkspaceInvite says "Invite members"
+// in the language the app shows.
+func WorkspaceInvite() string { return In(i18n.Locale()).WorkspaceInvite() }
+
+// WorkspaceInvite says "Invite members"
+// in the language of msgs.
+func (msgs Messages) WorkspaceInvite() string {
+	return Catalog.Format(msgs.locale, "workspaceInvite", nil)
+}
+
+// WorkspaceDanger says "Danger zone"
+// in the language the app shows.
+func WorkspaceDanger() string { return In(i18n.Locale()).WorkspaceDanger() }
+
+// WorkspaceDanger says "Danger zone"
+// in the language of msgs.
+func (msgs Messages) WorkspaceDanger() string {
+	return Catalog.Format(msgs.locale, "workspaceDanger", nil)
+}
+
+// WorkspaceTransfer says "Transfer ownership"
+// in the language the app shows.
+func WorkspaceTransfer() string { return In(i18n.Locale()).WorkspaceTransfer() }
+
+// WorkspaceTransfer says "Transfer ownership"
+// in the language of msgs.
+func (msgs Messages) WorkspaceTransfer() string {
+	return Catalog.Format(msgs.locale, "workspaceTransfer", nil)
+}
+
+// WorkspaceTransferButton says "Transfer"
+// in the language the app shows.
+func WorkspaceTransferButton() string { return In(i18n.Locale()).WorkspaceTransferButton() }
+
+// WorkspaceTransferButton says "Transfer"
+// in the language of msgs.
+func (msgs Messages) WorkspaceTransferButton() string {
+	return Catalog.Format(msgs.locale, "workspaceTransferButton", nil)
+}
+
+// WorkspaceTransferHelp says "Make another member the owner; you become an admin."
+// in the language the app shows.
+func WorkspaceTransferHelp() string { return In(i18n.Locale()).WorkspaceTransferHelp() }
+
+// WorkspaceTransferHelp says "Make another member the owner; you become an admin."
+// in the language of msgs.
+func (msgs Messages) WorkspaceTransferHelp() string {
+	return Catalog.Format(msgs.locale, "workspaceTransferHelp", nil)
+}
+
+// WorkspaceTransferNoOne says "Invite other members to the workspace first."
+// in the language the app shows.
+func WorkspaceTransferNoOne() string { return In(i18n.Locale()).WorkspaceTransferNoOne() }
+
+// WorkspaceTransferNoOne says "Invite other members to the workspace first."
+// in the language of msgs.
+func (msgs Messages) WorkspaceTransferNoOne() string {
+	return Catalog.Format(msgs.locale, "workspaceTransferNoOne", nil)
+}
+
+// WorkspaceDelete says "Delete workspace"
+// in the language the app shows.
+func WorkspaceDelete() string { return In(i18n.Locale()).WorkspaceDelete() }
+
+// WorkspaceDelete says "Delete workspace"
+// in the language of msgs.
+func (msgs Messages) WorkspaceDelete() string {
+	return Catalog.Format(msgs.locale, "workspaceDelete", nil)
+}
+
+// WorkspaceDeleteHelp says "Permanently delete this workspace and all its data. This can't be undone."
+// in the language the app shows.
+func WorkspaceDeleteHelp() string { return In(i18n.Locale()).WorkspaceDeleteHelp() }
+
+// WorkspaceDeleteHelp says "Permanently delete this workspace and all its data. This can't be undone."
+// in the language of msgs.
+func (msgs Messages) WorkspaceDeleteHelp() string {
+	return Catalog.Format(msgs.locale, "workspaceDeleteHelp", nil)
+}
+
+// WorkspaceDeleteTitle says "Delete {name}?"
+// in the language the app shows.
+func WorkspaceDeleteTitle(name string) string { return In(i18n.Locale()).WorkspaceDeleteTitle(name) }
+
+// WorkspaceDeleteTitle says "Delete {name}?"
+// in the language of msgs.
+func (msgs Messages) WorkspaceDeleteTitle(name string) string {
+	return Catalog.Format(msgs.locale, "workspaceDeleteTitle", map[string]any{"name": name})
+}
+
+// WorkspaceDeletePaying says "This workspace still has a subscription. Cancel it on lody.ai first; the workspace can be deleted once it won't renew."
+// in the language the app shows.
+func WorkspaceDeletePaying() string { return In(i18n.Locale()).WorkspaceDeletePaying() }
+
+// WorkspaceDeletePaying says "This workspace still has a subscription. Cancel it on lody.ai first; the workspace can be deleted once it won't renew."
+// in the language of msgs.
+func (msgs Messages) WorkspaceDeletePaying() string {
+	return Catalog.Format(msgs.locale, "workspaceDeletePaying", nil)
+}
+
+// WorkspaceLeave says "Leave workspace"
+// in the language the app shows.
+func WorkspaceLeave() string { return In(i18n.Locale()).WorkspaceLeave() }
+
+// WorkspaceLeave says "Leave workspace"
+// in the language of msgs.
+func (msgs Messages) WorkspaceLeave() string {
+	return Catalog.Format(msgs.locale, "workspaceLeave", nil)
+}
+
+// WorkspaceLeaveHelp says "You lose access to its chats and machines."
+// in the language the app shows.
+func WorkspaceLeaveHelp() string { return In(i18n.Locale()).WorkspaceLeaveHelp() }
+
+// WorkspaceLeaveHelp says "You lose access to its chats and machines."
+// in the language of msgs.
+func (msgs Messages) WorkspaceLeaveHelp() string {
+	return Catalog.Format(msgs.locale, "workspaceLeaveHelp", nil)
+}
+
+// WorkspaceLeaveTitle says "Leave {name}?"
+// in the language the app shows.
+func WorkspaceLeaveTitle(name string) string { return In(i18n.Locale()).WorkspaceLeaveTitle(name) }
+
+// WorkspaceLeaveTitle says "Leave {name}?"
+// in the language of msgs.
+func (msgs Messages) WorkspaceLeaveTitle(name string) string {
+	return Catalog.Format(msgs.locale, "workspaceLeaveTitle", map[string]any{"name": name})
+}
+
+// MemberMakeAdmin says "Make admin"
+// in the language the app shows.
+func MemberMakeAdmin() string { return In(i18n.Locale()).MemberMakeAdmin() }
+
+// MemberMakeAdmin says "Make admin"
+// in the language of msgs.
+func (msgs Messages) MemberMakeAdmin() string {
+	return Catalog.Format(msgs.locale, "memberMakeAdmin", nil)
+}
+
+// MemberMakeMember says "Make member"
+// in the language the app shows.
+func MemberMakeMember() string { return In(i18n.Locale()).MemberMakeMember() }
+
+// MemberMakeMember says "Make member"
+// in the language of msgs.
+func (msgs Messages) MemberMakeMember() string {
+	return Catalog.Format(msgs.locale, "memberMakeMember", nil)
+}
+
+// MemberRemove says "Remove member"
+// in the language the app shows.
+func MemberRemove() string { return In(i18n.Locale()).MemberRemove() }
+
+// MemberRemove says "Remove member"
+// in the language of msgs.
+func (msgs Messages) MemberRemove() string {
+	return Catalog.Format(msgs.locale, "memberRemove", nil)
+}
+
+// MemberRemoveTitle says "Remove {name}?"
+// in the language the app shows.
+func MemberRemoveTitle(name string) string { return In(i18n.Locale()).MemberRemoveTitle(name) }
+
+// MemberRemoveTitle says "Remove {name}?"
+// in the language of msgs.
+func (msgs Messages) MemberRemoveTitle(name string) string {
+	return Catalog.Format(msgs.locale, "memberRemoveTitle", map[string]any{"name": name})
+}
+
+// MemberRemoveBody says "They lose access to the workspace."
+// in the language the app shows.
+func MemberRemoveBody() string { return In(i18n.Locale()).MemberRemoveBody() }
+
+// MemberRemoveBody says "They lose access to the workspace."
+// in the language of msgs.
+func (msgs Messages) MemberRemoveBody() string {
+	return Catalog.Format(msgs.locale, "memberRemoveBody", nil)
+}
+
+// InvitationPending says "Invited as {role}"
+// in the language the app shows.
+func InvitationPending(role string) string { return In(i18n.Locale()).InvitationPending(role) }
+
+// InvitationPending says "Invited as {role}"
+// in the language of msgs.
+func (msgs Messages) InvitationPending(role string) string {
+	return Catalog.Format(msgs.locale, "invitationPending", map[string]any{"role": role})
+}
+
+// InvitationCopy says "Copy invitation link"
+// in the language the app shows.
+func InvitationCopy() string { return In(i18n.Locale()).InvitationCopy() }
+
+// InvitationCopy says "Copy invitation link"
+// in the language of msgs.
+func (msgs Messages) InvitationCopy() string {
+	return Catalog.Format(msgs.locale, "invitationCopy", nil)
+}
+
+// InvitationCancel says "Cancel invitation"
+// in the language the app shows.
+func InvitationCancel() string { return In(i18n.Locale()).InvitationCancel() }
+
+// InvitationCancel says "Cancel invitation"
+// in the language of msgs.
+func (msgs Messages) InvitationCancel() string {
+	return Catalog.Format(msgs.locale, "invitationCancel", nil)
+}
+
+// JoinTitle says "Open join link"
+// in the language the app shows.
+func JoinTitle() string { return In(i18n.Locale()).JoinTitle() }
+
+// JoinTitle says "Open join link"
+// in the language of msgs.
+func (msgs Messages) JoinTitle() string {
+	return Catalog.Format(msgs.locale, "joinTitle", nil)
+}
+
+// JoinHelp says "Others can ask to join through the link; only you approve them."
+// in the language the app shows.
+func JoinHelp() string { return In(i18n.Locale()).JoinHelp() }
+
+// JoinHelp says "Others can ask to join through the link; only you approve them."
+// in the language of msgs.
+func (msgs Messages) JoinHelp() string {
+	return Catalog.Format(msgs.locale, "joinHelp", nil)
+}
+
+// JoinDays says "{n} days"
+// in the language the app shows.
+func JoinDays(n int) string { return In(i18n.Locale()).JoinDays(n) }
+
+// JoinDays says "{n} days"
+// in the language of msgs.
+func (msgs Messages) JoinDays(n int) string {
+	return Catalog.Format(msgs.locale, "joinDays", map[string]any{"n": n})
+}
+
+// JoinCreate says "Create link"
+// in the language the app shows.
+func JoinCreate() string { return In(i18n.Locale()).JoinCreate() }
+
+// JoinCreate says "Create link"
+// in the language of msgs.
+func (msgs Messages) JoinCreate() string {
+	return Catalog.Format(msgs.locale, "joinCreate", nil)
+}
+
+// JoinRotate says "Regenerate"
+// in the language the app shows.
+func JoinRotate() string { return In(i18n.Locale()).JoinRotate() }
+
+// JoinRotate says "Regenerate"
+// in the language of msgs.
+func (msgs Messages) JoinRotate() string {
+	return Catalog.Format(msgs.locale, "joinRotate", nil)
+}
+
+// JoinDisable says "Disable"
+// in the language the app shows.
+func JoinDisable() string { return In(i18n.Locale()).JoinDisable() }
+
+// JoinDisable says "Disable"
+// in the language of msgs.
+func (msgs Messages) JoinDisable() string {
+	return Catalog.Format(msgs.locale, "joinDisable", nil)
+}
+
+// JoinExpires says "Expires {date}"
+// in the language the app shows.
+func JoinExpires(date string) string { return In(i18n.Locale()).JoinExpires(date) }
+
+// JoinExpires says "Expires {date}"
+// in the language of msgs.
+func (msgs Messages) JoinExpires(date string) string {
+	return Catalog.Format(msgs.locale, "joinExpires", map[string]any{"date": date})
+}
+
+// JoinNoRequests says "No requests waiting for approval."
+// in the language the app shows.
+func JoinNoRequests() string { return In(i18n.Locale()).JoinNoRequests() }
+
+// JoinNoRequests says "No requests waiting for approval."
+// in the language of msgs.
+func (msgs Messages) JoinNoRequests() string {
+	return Catalog.Format(msgs.locale, "joinNoRequests", nil)
+}
+
+// JoinReject says "Reject"
+// in the language the app shows.
+func JoinReject() string { return In(i18n.Locale()).JoinReject() }
+
+// JoinReject says "Reject"
+// in the language of msgs.
+func (msgs Messages) JoinReject() string {
+	return Catalog.Format(msgs.locale, "joinReject", nil)
+}
+
+// JoinApprove says "Approve on lody.ai"
+// in the language the app shows.
+func JoinApprove() string { return In(i18n.Locale()).JoinApprove() }
+
+// JoinApprove says "Approve on lody.ai"
+// in the language of msgs.
+func (msgs Messages) JoinApprove() string {
+	return Catalog.Format(msgs.locale, "joinApprove", nil)
+}
+
+// InviteLead says "They get an email with a link to join."
+// in the language the app shows.
+func InviteLead() string { return In(i18n.Locale()).InviteLead() }
+
+// InviteLead says "They get an email with a link to join."
+// in the language of msgs.
+func (msgs Messages) InviteLead() string {
+	return Catalog.Format(msgs.locale, "inviteLead", nil)
+}
+
+// InviteEmail says "Email"
+// in the language the app shows.
+func InviteEmail() string { return In(i18n.Locale()).InviteEmail() }
+
+// InviteEmail says "Email"
+// in the language of msgs.
+func (msgs Messages) InviteEmail() string {
+	return Catalog.Format(msgs.locale, "inviteEmail", nil)
+}
+
+// InviteRole says "Role"
+// in the language the app shows.
+func InviteRole() string { return In(i18n.Locale()).InviteRole() }
+
+// InviteRole says "Role"
+// in the language of msgs.
+func (msgs Messages) InviteRole() string {
+	return Catalog.Format(msgs.locale, "inviteRole", nil)
+}
+
+// InviteSend says "Send invitation"
+// in the language the app shows.
+func InviteSend() string { return In(i18n.Locale()).InviteSend() }
+
+// InviteSend says "Send invitation"
+// in the language of msgs.
+func (msgs Messages) InviteSend() string {
+	return Catalog.Format(msgs.locale, "inviteSend", nil)
+}
+
+// InviteLimit says "The workspace has reached its member limit. Add seats on lody.ai."
+// in the language the app shows.
+func InviteLimit() string { return In(i18n.Locale()).InviteLimit() }
+
+// InviteLimit says "The workspace has reached its member limit. Add seats on lody.ai."
+// in the language of msgs.
+func (msgs Messages) InviteLimit() string {
+	return Catalog.Format(msgs.locale, "inviteLimit", nil)
+}
+
+// TransferLead says "Choose the new owner, then type the workspace's name."
+// in the language the app shows.
+func TransferLead() string { return In(i18n.Locale()).TransferLead() }
+
+// TransferLead says "Choose the new owner, then type the workspace's name."
+// in the language of msgs.
+func (msgs Messages) TransferLead() string {
+	return Catalog.Format(msgs.locale, "transferLead", nil)
+}
+
+// TypeName says "Type {name} to confirm"
+// in the language the app shows.
+func TypeName(name string) string { return In(i18n.Locale()).TypeName(name) }
+
+// TypeName says "Type {name} to confirm"
+// in the language of msgs.
+func (msgs Messages) TypeName(name string) string {
+	return Catalog.Format(msgs.locale, "typeName", map[string]any{"name": name})
+}
+
+// GitHubNotInstalled says "Not installed"
+// in the language the app shows.
+func GitHubNotInstalled() string { return In(i18n.Locale()).GitHubNotInstalled() }
+
+// GitHubNotInstalled says "Not installed"
+// in the language of msgs.
+func (msgs Messages) GitHubNotInstalled() string {
+	return Catalog.Format(msgs.locale, "gitHubNotInstalled", nil)
+}
+
+// GitHubEnabledOf says "{enabled} of {total} repositories enabled"
+// in the language the app shows.
+func GitHubEnabledOf(enabled int, total int) string {
+	return In(i18n.Locale()).GitHubEnabledOf(enabled, total)
+}
+
+// GitHubEnabledOf says "{enabled} of {total} repositories enabled"
+// in the language of msgs.
+func (msgs Messages) GitHubEnabledOf(enabled int, total int) string {
+	return Catalog.Format(msgs.locale, "gitHubEnabledOf", map[string]any{"enabled": enabled, "total": total})
+}
+
+// GitHubPersonal says "Act as yourself"
+// in the language the app shows.
+func GitHubPersonal() string { return In(i18n.Locale()).GitHubPersonal() }
+
+// GitHubPersonal says "Act as yourself"
+// in the language of msgs.
+func (msgs Messages) GitHubPersonal() string {
+	return Catalog.Format(msgs.locale, "gitHubPersonal", nil)
+}
+
+// GitHubPersonalHelp says "Create PRs, comments and merges as you."
+// in the language the app shows.
+func GitHubPersonalHelp() string { return In(i18n.Locale()).GitHubPersonalHelp() }
+
+// GitHubPersonalHelp says "Create PRs, comments and merges as you."
+// in the language of msgs.
+func (msgs Messages) GitHubPersonalHelp() string {
+	return Catalog.Format(msgs.locale, "gitHubPersonalHelp", nil)
+}
+
+// GitHubNone says "No repositories authorized yet. Install the GitHub App to start."
+// in the language the app shows.
+func GitHubNone() string { return In(i18n.Locale()).GitHubNone() }
+
+// GitHubNone says "No repositories authorized yet. Install the GitHub App to start."
+// in the language of msgs.
+func (msgs Messages) GitHubNone() string {
+	return Catalog.Format(msgs.locale, "gitHubNone", nil)
+}
+
+// GitHubInstall says "Install GitHub App"
+// in the language the app shows.
+func GitHubInstall() string { return In(i18n.Locale()).GitHubInstall() }
+
+// GitHubInstall says "Install GitHub App"
+// in the language of msgs.
+func (msgs Messages) GitHubInstall() string {
+	return Catalog.Format(msgs.locale, "gitHubInstall", nil)
+}
+
+// GitHubMissing says "Repository missing? Configure the app on GitHub"
+// in the language the app shows.
+func GitHubMissing() string { return In(i18n.Locale()).GitHubMissing() }
+
+// GitHubMissing says "Repository missing? Configure the app on GitHub"
+// in the language of msgs.
+func (msgs Messages) GitHubMissing() string {
+	return Catalog.Format(msgs.locale, "gitHubMissing", nil)
+}
+
+// TokenCreate says "Create token"
+// in the language the app shows.
+func TokenCreate() string { return In(i18n.Locale()).TokenCreate() }
+
+// TokenCreate says "Create token"
+// in the language of msgs.
+func (msgs Messages) TokenCreate() string {
+	return Catalog.Format(msgs.locale, "tokenCreate", nil)
+}
+
+// TokenNone says "No tokens yet."
+// in the language the app shows.
+func TokenNone() string { return In(i18n.Locale()).TokenNone() }
+
+// TokenNone says "No tokens yet."
+// in the language of msgs.
+func (msgs Messages) TokenNone() string {
+	return Catalog.Format(msgs.locale, "tokenNone", nil)
+}
+
+// TokenCreated says "created {date}"
+// in the language the app shows.
+func TokenCreated(date string) string { return In(i18n.Locale()).TokenCreated(date) }
+
+// TokenCreated says "created {date}"
+// in the language of msgs.
+func (msgs Messages) TokenCreated(date string) string {
+	return Catalog.Format(msgs.locale, "tokenCreated", map[string]any{"date": date})
+}
+
+// TokenUsed says "last used {date}"
+// in the language the app shows.
+func TokenUsed(date string) string { return In(i18n.Locale()).TokenUsed(date) }
+
+// TokenUsed says "last used {date}"
+// in the language of msgs.
+func (msgs Messages) TokenUsed(date string) string {
+	return Catalog.Format(msgs.locale, "tokenUsed", map[string]any{"date": date})
+}
+
+// TokenUnnamed says "CLI token"
+// in the language the app shows.
+func TokenUnnamed() string { return In(i18n.Locale()).TokenUnnamed() }
+
+// TokenUnnamed says "CLI token"
+// in the language of msgs.
+func (msgs Messages) TokenUnnamed() string {
+	return Catalog.Format(msgs.locale, "tokenUnnamed", nil)
+}
+
+// TokenRevoke says "Revoke token"
+// in the language the app shows.
+func TokenRevoke() string { return In(i18n.Locale()).TokenRevoke() }
+
+// TokenRevoke says "Revoke token"
+// in the language of msgs.
+func (msgs Messages) TokenRevoke() string {
+	return Catalog.Format(msgs.locale, "tokenRevoke", nil)
+}
+
+// TokenRevokeTitle says "Revoke this token?"
+// in the language the app shows.
+func TokenRevokeTitle() string { return In(i18n.Locale()).TokenRevokeTitle() }
+
+// TokenRevokeTitle says "Revoke this token?"
+// in the language of msgs.
+func (msgs Messages) TokenRevokeTitle() string {
+	return Catalog.Format(msgs.locale, "tokenRevokeTitle", nil)
+}
+
+// TokenRevokeBody says "Machines signed in with it stop working until they sign in again."
+// in the language the app shows.
+func TokenRevokeBody() string { return In(i18n.Locale()).TokenRevokeBody() }
+
+// TokenRevokeBody says "Machines signed in with it stop working until they sign in again."
+// in the language of msgs.
+func (msgs Messages) TokenRevokeBody() string {
+	return Catalog.Format(msgs.locale, "tokenRevokeBody", nil)
+}
+
+// TokenLead says "Sign the Lody CLI in on a server or in CI with it."
+// in the language the app shows.
+func TokenLead() string { return In(i18n.Locale()).TokenLead() }
+
+// TokenLead says "Sign the Lody CLI in on a server or in CI with it."
+// in the language of msgs.
+func (msgs Messages) TokenLead() string {
+	return Catalog.Format(msgs.locale, "tokenLead", nil)
+}
+
+// TokenNote says "Note"
+// in the language the app shows.
+func TokenNote() string { return In(i18n.Locale()).TokenNote() }
+
+// TokenNote says "Note"
+// in the language of msgs.
+func (msgs Messages) TokenNote() string {
+	return Catalog.Format(msgs.locale, "tokenNote", nil)
+}
+
+// TokenNotePlaceholder says "e.g. build server"
+// in the language the app shows.
+func TokenNotePlaceholder() string { return In(i18n.Locale()).TokenNotePlaceholder() }
+
+// TokenNotePlaceholder says "e.g. build server"
+// in the language of msgs.
+func (msgs Messages) TokenNotePlaceholder() string {
+	return Catalog.Format(msgs.locale, "tokenNotePlaceholder", nil)
+}
+
+// TokenOnce says "Copy it now: it won't be shown again."
+// in the language the app shows.
+func TokenOnce() string { return In(i18n.Locale()).TokenOnce() }
+
+// TokenOnce says "Copy it now: it won't be shown again."
+// in the language of msgs.
+func (msgs Messages) TokenOnce() string {
+	return Catalog.Format(msgs.locale, "tokenOnce", nil)
+}
+
+// Done says "Done"
+// in the language the app shows.
+func Done() string { return In(i18n.Locale()).Done() }
+
+// Done says "Done"
+// in the language of msgs.
+func (msgs Messages) Done() string {
+	return Catalog.Format(msgs.locale, "done", nil)
+}
+
+// PasswordTitle says "Password"
+// in the language the app shows.
+func PasswordTitle() string { return In(i18n.Locale()).PasswordTitle() }
+
+// PasswordTitle says "Password"
+// in the language of msgs.
+func (msgs Messages) PasswordTitle() string {
+	return Catalog.Format(msgs.locale, "passwordTitle", nil)
+}
+
+// PasswordSetHelp says "Set a password to sign in with your email."
+// in the language the app shows.
+func PasswordSetHelp() string { return In(i18n.Locale()).PasswordSetHelp() }
+
+// PasswordSetHelp says "Set a password to sign in with your email."
+// in the language of msgs.
+func (msgs Messages) PasswordSetHelp() string {
+	return Catalog.Format(msgs.locale, "passwordSetHelp", nil)
+}
+
+// PasswordSet says "Set up password sign-in"
+// in the language the app shows.
+func PasswordSet() string { return In(i18n.Locale()).PasswordSet() }
+
+// PasswordSet says "Set up password sign-in"
+// in the language of msgs.
+func (msgs Messages) PasswordSet() string {
+	return Catalog.Format(msgs.locale, "passwordSet", nil)
+}
+
+// PasswordSent says "We emailed {email} a link to set your password."
+// in the language the app shows.
+func PasswordSent(email string) string { return In(i18n.Locale()).PasswordSent(email) }
+
+// PasswordSent says "We emailed {email} a link to set your password."
+// in the language of msgs.
+func (msgs Messages) PasswordSent(email string) string {
+	return Catalog.Format(msgs.locale, "passwordSent", map[string]any{"email": email})
+}
+
+// PasswordChange says "Change password"
+// in the language the app shows.
+func PasswordChange() string { return In(i18n.Locale()).PasswordChange() }
+
+// PasswordChange says "Change password"
+// in the language of msgs.
+func (msgs Messages) PasswordChange() string {
+	return Catalog.Format(msgs.locale, "passwordChange", nil)
+}
+
+// PasswordChangeHelp says "Change it on lody.ai."
+// in the language the app shows.
+func PasswordChangeHelp() string { return In(i18n.Locale()).PasswordChangeHelp() }
+
+// PasswordChangeHelp says "Change it on lody.ai."
+// in the language of msgs.
+func (msgs Messages) PasswordChangeHelp() string {
+	return Catalog.Format(msgs.locale, "passwordChangeHelp", nil)
+}
+
+// MachineThis says "This Mac"
+// in the language the app shows.
+func MachineThis() string { return In(i18n.Locale()).MachineThis() }
+
+// MachineThis says "This Mac"
+// in the language of msgs.
+func (msgs Messages) MachineThis() string {
+	return Catalog.Format(msgs.locale, "machineThis", nil)
+}
+
+// MachinesRename says "Edit machine name"
+// in the language the app shows.
+func MachinesRename() string { return In(i18n.Locale()).MachinesRename() }
+
+// MachinesRename says "Edit machine name"
+// in the language of msgs.
+func (msgs Messages) MachinesRename() string {
+	return Catalog.Format(msgs.locale, "machinesRename", nil)
+}
+
+// MachinesRevoke says "Revoke machine access"
+// in the language the app shows.
+func MachinesRevoke() string { return In(i18n.Locale()).MachinesRevoke() }
+
+// MachinesRevoke says "Revoke machine access"
+// in the language of msgs.
+func (msgs Messages) MachinesRevoke() string {
+	return Catalog.Format(msgs.locale, "machinesRevoke", nil)
+}
+
+// MachinesRevokeTitle says "Revoke access for {name}?"
+// in the language the app shows.
+func MachinesRevokeTitle(name string) string { return In(i18n.Locale()).MachinesRevokeTitle(name) }
+
+// MachinesRevokeTitle says "Revoke access for {name}?"
+// in the language of msgs.
+func (msgs Messages) MachinesRevokeTitle(name string) string {
+	return Catalog.Format(msgs.locale, "machinesRevokeTitle", map[string]any{"name": name})
+}
+
+// MachinesRevokeBody says "The machine is signed out of every workspace and must sign in again."
+// in the language the app shows.
+func MachinesRevokeBody() string { return In(i18n.Locale()).MachinesRevokeBody() }
+
+// MachinesRevokeBody says "The machine is signed out of every workspace and must sign in again."
+// in the language of msgs.
+func (msgs Messages) MachinesRevokeBody() string {
+	return Catalog.Format(msgs.locale, "machinesRevokeBody", nil)
+}
+
+// MachinesRemove says "Remove from workspace"
+// in the language the app shows.
+func MachinesRemove() string { return In(i18n.Locale()).MachinesRemove() }
+
+// MachinesRemove says "Remove from workspace"
+// in the language of msgs.
+func (msgs Messages) MachinesRemove() string {
+	return Catalog.Format(msgs.locale, "machinesRemove", nil)
+}
+
+// MachinesRemoveTitle says "Remove {name} from the workspace?"
+// in the language the app shows.
+func MachinesRemoveTitle(name string) string { return In(i18n.Locale()).MachinesRemoveTitle(name) }
+
+// MachinesRemoveTitle says "Remove {name} from the workspace?"
+// in the language of msgs.
+func (msgs Messages) MachinesRemoveTitle(name string) string {
+	return Catalog.Format(msgs.locale, "machinesRemoveTitle", map[string]any{"name": name})
+}
+
+// MachinesRemoveBody says "If its Lody CLI connects again, the machine comes back."
+// in the language the app shows.
+func MachinesRemoveBody() string { return In(i18n.Locale()).MachinesRemoveBody() }
+
+// MachinesRemoveBody says "If its Lody CLI connects again, the machine comes back."
+// in the language of msgs.
+func (msgs Messages) MachinesRemoveBody() string {
+	return Catalog.Format(msgs.locale, "machinesRemoveBody", nil)
+}
+
+// MachinesRemoveOnline says "Only an offline machine can be removed."
+// in the language the app shows.
+func MachinesRemoveOnline() string { return In(i18n.Locale()).MachinesRemoveOnline() }
+
+// MachinesRemoveOnline says "Only an offline machine can be removed."
+// in the language of msgs.
+func (msgs Messages) MachinesRemoveOnline() string {
+	return Catalog.Format(msgs.locale, "machinesRemoveOnline", nil)
 }

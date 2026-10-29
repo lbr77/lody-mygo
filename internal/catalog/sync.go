@@ -57,6 +57,7 @@ func (s *Sync) Start() {
 	s.watchers = map[string]context.CancelFunc{}
 	s.unhealthy = map[string]string{}
 	s.watch("meta")
+	s.watch(workspaceMode)
 }
 
 func (s *Sync) Stop() {
@@ -127,7 +128,11 @@ var errLimit = errors.New("catalog: replica exceeds its limit")
 // follow bootstraps a replica and tails it until an error.
 func (s *Sync) follow(ctx context.Context, mode string, failures *int) error {
 	name := "meta"
-	if mode != "meta" {
+	switch mode {
+	case "meta":
+	case workspaceMode:
+		name = "wf:workspace"
+	default:
 		name = "mf:" + mode
 	}
 	client, err := s.Conn.Stream(ctx, name)
@@ -239,11 +244,10 @@ func (s *Sync) settle(mode string, rep *replica) error {
 	s.mu.Lock()
 	if mode == "meta" {
 		s.meta = rep
-		s.partial[mode] = projectMeta(rows)
 	} else {
 		s.machines[mode] = rep
-		s.partial[mode] = projectMachine(rows, mode)
 	}
+	s.partial[mode] = project(mode, rows)
 	delete(s.unhealthy, mode)
 	s.mu.Unlock()
 	s.publish()
@@ -257,7 +261,7 @@ func (s *Sync) publish() {
 		s.mu.Unlock()
 		return
 	}
-	listed := map[string]bool{"meta": true}
+	listed := map[string]bool{"meta": true, workspaceMode: true}
 	for _, id := range meta.MachineIDs {
 		listed[id] = true
 		if _, watching := s.watchers[id]; !watching {
@@ -338,11 +342,7 @@ func (s *Sync) writeTo(ctx context.Context, rep *replica, mode string, edit func
 	rep.mu.Unlock()
 	if err == nil {
 		s.mu.Lock()
-		if mode == "meta" {
-			s.partial[mode] = projectMeta(rows)
-		} else {
-			s.partial[mode] = projectMachine(rows, mode)
-		}
+		s.partial[mode] = project(mode, rows)
 		s.mu.Unlock()
 		s.publish()
 	}
@@ -576,5 +576,20 @@ func (s *Sync) CreateSession(ctx context.Context, n NewSession) error {
 			return err
 		}
 		return f.Put([]any{"m", room(n.ID)}, meta)
+	})
+}
+
+// RenameMachine names a machine.
+func (s *Sync) RenameMachine(ctx context.Context, machineID, name string) error {
+	return s.Write(ctx, func(f *flock.Flock) error {
+		return f.Put([]any{"m", "machine-" + machineID, "name"}, name)
+	})
+}
+
+// RemoveMachine takes a machine out of the workspace; it registers again
+// if its CLI connects.
+func (s *Sync) RemoveMachine(ctx context.Context, machineID string) error {
+	return s.Write(ctx, func(f *flock.Flock) error {
+		return f.Put([]any{"e", "machine-" + machineID}, false)
 	})
 }

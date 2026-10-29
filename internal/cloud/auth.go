@@ -309,3 +309,9 @@ func (a *API) LinkedAccounts(ctx context.Context, token string) ([]LinkedAccount
 	err := a.call(ctx, token, "/api/auth/list-accounts", nil, &out)
 	return out, err
 }
+
+// Call calls a backend endpoint as the signed-in user: a POST of body, or
+// a GET without one, decoding the answer into out.
+func (a *API) Call(ctx context.Context, token, path string, body, out any) error {
+	return a.call(ctx, token, path, body, out)
+}

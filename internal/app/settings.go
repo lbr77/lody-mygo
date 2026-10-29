@@ -58,7 +58,10 @@ func (a *App) settingsDialog(c *ui.Context, p *palette) {
 			a.settingsNav(c, p)
 			ui.Box(c).Grow(1).MinWidth(0).Children(func() {
 				ui.Scroll(c).Fill().Padding(36, 56, 40, 56).Children(func() {
-					ui.Column(c).FillWidth().MaxWidth(728).Gap(12).Children(func() { a.settingsPage(c, p) })
+					ui.Column(c).FillWidth().MaxWidth(728).Gap(12).Children(func() {
+						a.settingsPage(c, p)
+						a.confirmDialog(c, p)
+					})
 				})
 				iconButton(c, p, iconX, locales.Close(), p.Hover).Absolute().Top(12).Right(12).OnClick(func() { a.settingsOpen = false })
 			})
@@ -163,7 +166,7 @@ func (a *App) settingsPage(c *ui.Context, p *palette) {
 			})
 		}
 	case "general":
-		a.workspacePage(c, p)
+		a.generalPage(c, p)
 	case "agents":
 		a.agentsPage(c, p)
 	case "projects":
@@ -178,6 +181,8 @@ func (a *App) settingsPage(c *ui.Context, p *palette) {
 		a.sharesPage(c, p)
 	case "billing":
 		a.billingPage(c, p)
+	case "mcp":
+		a.mcpPage(c, p)
 	case "about":
 		settingsTitle(c, p, locales.SettingsAbout())
 		settingRow(c, p, "Lody Native "+appVersion, locales.SettingsAboutDescription(), nil)
@@ -226,46 +231,6 @@ func valueText(c *ui.Context, p *palette, s string) {
 	ui.Text(c, s).FontSize(sizeBody).TextColor(p.Secondary).Selectable()
 }
 
-func (a *App) workspacePage(c *ui.Context, p *palette) {
-	settingsTitle(c, p, locales.SettingsGeneral())
-	ws := a.workspace()
-	if ws == nil {
-		return
-	}
-	settingRow(c, p, locales.SettingsWorkspace(), "", func() {
-		ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
-			workspaceTile(c, ws.Name, 20)
-			valueText(c, p, ws.Name)
-		})
-	})
-	if ws.Slug != "" {
-		settingRow(c, p, locales.SettingsSlug(), "", func() { valueText(c, p, ws.Slug) })
-	}
-	settingRow(c, p, locales.SettingsWorkspaceID(), "", func() {
-		ui.Row(c).Gap(6).AlignItems(ui.Center).Children(func() {
-			ui.Text(c, ws.ID).Font(fontMono).FontSize(sizeFoot).TextColor(p.Secondary).Selectable()
-			iconButton(c, p, iconCopy, locales.Copy(), p.Hover).Size(24, 24).OnClick(func() { mygo.Clipboard.WriteText(ws.ID) })
-		})
-	})
-	divider(c, p)
-	a.membersSection(c, p)
-	divider(c, p)
-	settingsHeading(c, p, locales.SettingsWorkspaces())
-	for _, w := range a.account.Workspaces {
-		id := w.ID
-		settingRow(c.Key(w.ID), p, w.Name, "", func() {
-			if id == a.workspaceID {
-				ui.Text(c, locales.SettingsCurrent()).FontSize(sizeFoot).TextColor(p.Secondary)
-				return
-			}
-			ghostButton(c, p, locales.SettingsSwitch()).Border(1, p.Border).OnClick(func() {
-				a.settingsOpen = false
-				a.connect(id)
-			})
-		})
-	}
-}
-
 func (a *App) agentsPage(c *ui.Context, p *palette) {
 	settingsTitle(c, p, locales.SettingsAgents())
 	ui.Text(c, locales.SettingsAgentsHelp()).FontSize(sizeFoot).TextColor(p.Secondary)
@@ -292,23 +257,63 @@ func (a *App) agentsPage(c *ui.Context, p *palette) {
 	}
 }
 
+// projectsPage lists each machine's folders, as Lody's: the folder, the
+// end of its path, and how many chats it has.
 func (a *App) projectsPage(c *ui.Context, p *palette) {
 	settingsTitle(c, p, locales.SettingsProjects())
-	ui.Text(c, locales.SettingsProjectsHelp()).FontSize(sizeFoot).TextColor(p.Secondary)
-	for _, machine := range a.catalog.MachineIDs {
-		settingsHeading(c.Key(machine), p, a.machineName(machine))
-		shown := 0
-		for _, pr := range a.catalog.Projects {
-			if pr.MachineID != machine || !strings.Contains(pr.ID, ":local:") {
-				continue
-			}
-			shown++
-			settingRow(c.Key(pr.ID), p, pr.Name, pr.RootPath, nil)
-		}
-		if shown == 0 {
-			ui.Text(c, locales.SettingsNoProjects()).FontSize(sizeFoot).TextColor(p.Tertiary)
+	chats := map[string]int{}
+	for _, s := range a.catalog.Sessions {
+		if !s.Archived {
+			chats[s.ProjectID]++
 		}
 	}
+	for _, machine := range a.catalog.MachineIDs {
+		projects := a.machineProjects(machine)
+		ui.Column(c.Key(machine)).FillWidth().Gap(2).Margin(8, 0, 4, 0).Children(func() {
+			ui.Text(c, a.machineName(machine)).FontSize(sizeBody).FontWeight(500).TextColor(p.Strong)
+			ui.Text(c, map[bool]string{true: locales.Online(), false: locales.Offline()}[a.presence.IsOnline(machine)]).FontSize(sizeFoot).TextColor(p.Secondary)
+		})
+		ui.Column(c.Key(machine+"/list")).FillWidth().Radius(10).Border(1, p.Border).Clip().Dividers(1, p.Border).Children(func() {
+			if len(projects) == 0 {
+				ui.Text(c, locales.SettingsNoProjects()).FontSize(sizeFoot).TextColor(p.Secondary).Padding(12, 16)
+				return
+			}
+			for _, pr := range projects {
+				project := pr
+				ui.Row(c.Key(pr.ID)).FillWidth().MinHeight(54).Padding(8, 8, 8, 16).Gap(10).AlignItems(ui.Center).Children(func() {
+					ui.Column(c).Grow(1).MinWidth(0).Gap(2).Children(func() {
+						ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
+							ui.Icon(c, iconFolder).Size(16, 16).TextColor(p.Secondary)
+							ui.Text(c, project.Name).FontSize(sizeBody).TextColor(p.Text).SingleLine()
+						})
+						ui.Text(c, pathTail(project.RootPath, 2)).Font(fontMono).FontSize(sizeCaption).TextColor(p.Secondary).SingleLine().Tooltip(project.RootPath)
+					})
+					if n := chats[project.ID]; n > 0 {
+						ui.Text(c, locales.ProjectChats(n)).FontSize(sizeFoot).TextColor(p.Tertiary)
+					}
+					iconButton(c, p, iconMore, locales.MoreActions(), p.Hover).Menu(func(m *ui.Menu) {
+						if m.Item(locales.ProjectNewChat()).Chosen() {
+							a.settingsOpen = false
+							a.newChat.machine, a.newChat.project = project.MachineID, project.ID
+							a.open("")
+						}
+						if m.Item(locales.ProjectCopyPath()).Chosen() {
+							mygo.Clipboard.WriteText(project.RootPath)
+						}
+					})
+				})
+			}
+		})
+	}
+}
+
+// pathTail is the last n folders of a path.
+func pathTail(p string, n int) string {
+	parts := strings.Split(strings.Trim(p, "/"), "/")
+	if len(parts) > n {
+		parts = parts[len(parts)-n:]
+	}
+	return strings.Join(parts, "/")
 }
 
 // accountAvatar is the signed-in user's picture, or the stand-in.

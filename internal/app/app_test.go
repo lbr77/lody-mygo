@@ -756,12 +756,14 @@ func TestCloudSettings(t *testing.T) {
 		return tt
 	}
 	check("general", "Members", "Ada Lovelace (You)", "Grace Hopper", "Owner", "Member")
-	check("account", "My machines", "Studio", "Manage")
+	seed("cli-keys", `[{"id":"k1","note":"build server","keyPreview":"lody_ab…","source":"manual","createdAt":1798804800000.0}]`, &[]cliKey{})
+	seed("accounts", `[{"id":"a1","providerId":"github","accountId":"1"}]`, &[]cloud.LinkedAccount{})
+	check("account", "My machines", "Studio", "Manage", "CLI Token", "build server", "Set up password sign-in")
 	a.expanded["machine/m1"] = true
-	check("machines", "Studio", "Shared", "Connected folders", "lody-mygo", "Connected agents", "Claude Code")
+	check("machines", "Studio", "Edit machine name", "Share machine", "Remove from workspace", "Connected folders", "lody-mygo", "Connected agents", "Claude Code")
 	check("ai-usage", "1.5M", "$12.34", "Usage skyline", "By model", "claude-opus-5-5", "gpt-5", "By member", "Ada Lovelace", "Grace Hopper", "Longest streak")
 	check("billing", "Plus", "Monthly", "Switch to yearly", "Renews on", "Jan 1, 2027", "Team members", "2 / 2")
-	check("github", "lbr77/lody-mygo", "Private")
+	check("github", "GitHub App", "1 of 1 repositories enabled", "Act as yourself", "lbr77/lody-mygo", "Private")
 	tt := check("shares", "Flock port", "Revoke")
 	if err := tt.Click("Revoke"); err != nil {
 		t.Fatal(err)

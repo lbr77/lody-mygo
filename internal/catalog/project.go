@@ -130,8 +130,13 @@ type Catalog struct {
 	MachineIDs   []string                 `json:"machineIds"`
 	MachineNames map[string]string        `json:"machineNames,omitempty"`
 	MachineOS    map[string]string        `json:"machineOs,omitempty"`
-	Agents       map[string][]AgentConfig `json:"agents,omitempty"` // by machine
+	MachineCLI   map[string]string        `json:"machineCli,omitempty"` // the Lody CLI's version
+	Agents       map[string][]AgentConfig `json:"agents,omitempty"`     // by machine
 	Capabilities map[string]Capability    `json:"capabilities,omitempty"`
+	MCPServers   []MCPServer              `json:"-"`
+	Roles        []AgentRole              `json:"-"`
+	Memories     map[string][]Memory      `json:"-"` // by machine
+	Removing     map[string]bool          `json:"-"` // projects their machines are removing
 }
 
 // Session returns the session with id.
@@ -193,6 +198,25 @@ func projectMachine(rows []flock.Row, machineID string) Catalog {
 		id := text(row.Key[1])
 		value := object(row.Value)
 		switch row.Key[0] {
+		case "memory":
+			if len(row.Key) != 3 || value == nil {
+				continue
+			}
+			m := Memory{ProviderID: id, MemoryID: text(row.Key[2]), MachineID: text(value["machineId"]), Name: strings.TrimSpace(text(value["name"])), Description: text(value["description"])}
+			if m.MemoryID == "" || m.Name == "" || text(value["providerId"]) != m.ProviderID || text(value["memoryId"]) != m.MemoryID || m.MachineID != machineID {
+				continue
+			}
+			if c.Memories == nil {
+				c.Memories = map[string][]Memory{}
+			}
+			c.Memories[machineID] = append(c.Memories[machineID], m)
+		case "cmd":
+			if id == "deleteLocalProject" && len(row.Key) == 3 && text(object(row.Value)["status"]) != "completed" {
+				if c.Removing == nil {
+					c.Removing = map[string]bool{}
+				}
+				c.Removing[machineID+":local:"+text(row.Key[2])] = true
+			}
 		case "localProject":
 			if id == "" {
 				continue
@@ -255,6 +279,7 @@ func projectMeta(rows []flock.Row) Catalog {
 	var c Catalog
 	c.MachineNames = map[string]string{}
 	c.MachineOS = map[string]string{}
+	c.MachineCLI = map[string]string{}
 	active := map[string]bool{}
 	metadata := map[string]map[string]any{}
 	var order []string
@@ -301,6 +326,9 @@ func projectMeta(rows []flock.Row) Catalog {
 			}
 			if os := text(value["os"]); os != "" {
 				c.MachineOS[machineID] = os
+			}
+			if v := text(value["cliVersion"]); v != "" {
+				c.MachineCLI[machineID] = v
 			}
 			local := object(value["localProjects"])
 			keys := make([]string, 0, len(local))
@@ -418,6 +446,7 @@ func merge(meta Catalog, machines map[string]Catalog) Catalog {
 		MachineIDs:   meta.MachineIDs,
 		MachineNames: meta.MachineNames,
 		MachineOS:    meta.MachineOS,
+		MachineCLI:   meta.MachineCLI,
 		Agents:       map[string][]AgentConfig{},
 		Capabilities: map[string]Capability{},
 	}
@@ -447,6 +476,23 @@ func merge(meta Catalog, machines map[string]Catalog) Catalog {
 	}
 	for _, id := range order {
 		out.Projects = append(out.Projects, projects[id])
+	}
+	ws := machines[workspaceMode]
+	out.MCPServers, out.Roles = ws.MCPServers, ws.Roles
+	for _, id := range meta.MachineIDs {
+		m := machines[id]
+		for _, mem := range m.Memories[id] {
+			if out.Memories == nil {
+				out.Memories = map[string][]Memory{}
+			}
+			out.Memories[id] = append(out.Memories[id], mem)
+		}
+		for p := range m.Removing {
+			if out.Removing == nil {
+				out.Removing = map[string]bool{}
+			}
+			out.Removing[p] = true
+		}
 	}
 	sort.SliceStable(out.Projects, func(i, j int) bool {
 		return strings.ToLower(out.Projects[i].Name) < strings.ToLower(out.Projects[j].Name)

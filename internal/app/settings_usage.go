@@ -225,7 +225,11 @@ func (a *App) usagePage(c *ui.Context, p *palette) {
 	convex, ws, rng := a.convex, a.workspaceID, a.usageRange
 	f := a.fetch("usage/"+rng, func(ctx context.Context) (any, error) {
 		var out usageTimeline
-		err := convex.Query(ctx, "usage:getWorkspaceUsageTimeline", map[string]any{"workspaceId": ws, "range": rng}, &out)
+		args := map[string]any{"workspaceId": ws, "range": rng}
+		if rng == "day" || rng == "week" {
+			args["granularity"] = "hour" // as Lody asks; the server picks for longer ranges
+		}
+		err := convex.Query(ctx, "usage:getWorkspaceUsageTimeline", args, &out)
 		return &out, err
 	})
 	if !pending(c, p, f) {
@@ -255,7 +259,7 @@ func (a *App) usagePage(c *ui.Context, p *palette) {
 			})
 			ui.Row(c).FillWidth().Gap(24).AlignItems(ui.Start).Children(func() {
 				usageDonut(c, p, models, cost, t)
-				usageSkyline(c, p, t, cost, rng == "day")
+				usageSkyline(c, p, t, cost, t.BucketSizeMs > 0 && t.BucketSizeMs < 86400000)
 			})
 		})
 		stats := usageStatsOf(t.Buckets, cost)
@@ -281,7 +285,7 @@ func (a *App) usagePage(c *ui.Context, p *palette) {
 				smallStat(c, p, locales.UsageStatAverage(), fmtv(stats.average), "")
 				peakAt := ""
 				if stats.peak > 0 {
-					peakAt = bucketTime(stats.peakAt, rng == "day")
+					peakAt = bucketTime(stats.peakAt, t.BucketSizeMs > 0 && t.BucketSizeMs < 86400000)
 				}
 				smallStat(c, p, locales.UsageStatPeak(), fmtv(stats.peak), peakAt)
 				smallStat(c, p, locales.UsageStatActive(), fmt.Sprint(stats.active), locales.UsageStatCurrent(stats.current))
