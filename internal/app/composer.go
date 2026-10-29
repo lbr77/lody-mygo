@@ -27,12 +27,17 @@ func (a *App) bottom(c *ui.Context, p *palette, sess *catalog.Session, v *sessio
 	if sess != nil && !a.presence.IsOnline(sess.MachineID) {
 		hint = a.machineName(sess.MachineID) + " is offline. Messages wait until it reconnects."
 	}
+	busyLabel := "Queue"
+	if sess != nil && a.busyBehavior == "steer" && a.steerable(sess) {
+		busyLabel = "Steer"
+	}
 	a.composerBox(c, p, composerOptions{
-		hint:    hint,
-		canSend: ready && !a.sending,
-		working: working,
-		onSend:  a.send,
-		onStop:  a.stop,
+		hint:      hint,
+		busyLabel: busyLabel,
+		canSend:   ready && !a.sending,
+		working:   working,
+		onSend:    a.send,
+		onStop:    a.stop,
 		above: func() {
 			if sess != nil {
 				a.infoBar(c, p, sess)
@@ -50,6 +55,11 @@ func (a *App) bottom(c *ui.Context, p *palette, sess *catalog.Session, v *sessio
 				current = sess.LastModel.ModelID
 			}
 			a.runConfig(c, p, "model/"+sess.ID, sess.AgentConfigID, current, sess.LastModel, func(id string) { a.models[sess.ID] = id })
+			mode := a.modes[sess.ID]
+			if mode == "" && v != nil {
+				mode = v.ModeID
+			}
+			a.modeButton(c, p, "mode/"+sess.ID, a.catalog.ModesFor(sess.AgentConfigID, sess.AgentType), mode, func(id string) { a.modes[sess.ID] = id })
 		},
 	})
 }
@@ -121,6 +131,7 @@ func (a *App) infoBar(c *ui.Context, p *palette, s *catalog.Session) {
 
 type composerOptions struct {
 	hint        string
+	busyLabel   string // the send button's label while the agent works
 	placeholder string
 	canSend     bool
 	working     bool
@@ -151,14 +162,19 @@ func (a *App) composerBox(c *ui.Context, p *palette, o composerOptions) {
 		if !p.Dark {
 			box.Shadow(0, 10, 28, -14, ui.RGBA(0, 0, 0, 0.16))
 		}
+		if dropped := box.DroppedFiles(); len(dropped) > 0 {
+			a.addFiles(dropped)
+		}
+		hasFiles := len(a.attachments) > 0
 		box.Children(func() {
+			a.attachmentChips(c, p)
 			ui.Box(c).FillWidth().Children(func() {
-				empty := strings.TrimSpace(a.draft) == ""
+				empty := strings.TrimSpace(a.draft) == "" && !hasFiles
 				input := ui.TextAreaBase(c, &a.draft).Lines(2, 10).Placeholder(o.placeholder).FontSize(sizeBody).LineHeight(24.0/14).
 					TextColor(p.Reading).Padding(2, 4).FillWidth().AutoFocus().Label("Message").Bind(&a.composerFocus).
 					OnTextKey(func(k ui.TextKey) bool {
 						if k.Key == ui.KeyEnter && k.Mods&ui.Shift == 0 {
-							if o.canSend && strings.TrimSpace(k.Text()) != "" {
+							if o.canSend && (strings.TrimSpace(k.Text()) != "" || len(a.attachments) > 0) {
 								a.draft = k.Text()
 								o.onSend()
 								k.SetText(a.draft)
@@ -174,21 +190,30 @@ func (a *App) composerBox(c *ui.Context, p *palette, o composerOptions) {
 						Opacity(0.5).Absolute().Top(2).Right(2)
 				}
 			})
-			ui.Row(c).Gap(6).AlignItems(ui.Center).Padding(2, 0, 0, 0).Children(func() {
+			ui.Row(c).Gap(4).AlignItems(ui.Center).Padding(2, 0, 0, 0).Children(func() {
+				iconButton(c, p, iconPlus, "Attach files", p.Text.Alpha(0.06)).OnClick(a.pickFiles)
 				if o.footer != nil {
 					o.footer()
 				}
 				ui.Spacer(c)
 				if a.sending {
-					ui.Spinner(c).Size(14, 14)
+					if a.uploading != "" {
+						ui.Text(c, a.uploading).FontSize(sizeFoot).TextColor(p.Secondary).Shrink(0)
+					} else {
+						ui.Spinner(c).Size(14, 14)
+					}
 				}
-				if o.working && strings.TrimSpace(a.draft) == "" && o.onStop != nil {
+				empty := strings.TrimSpace(a.draft) == "" && !hasFiles
+				if o.working && empty && o.onStop != nil {
 					sendDisc(c, p, nil, "Stop", true, o.sendSize).OnClick(o.onStop)
 					return
 				}
-				empty := strings.TrimSpace(a.draft) == ""
-				sendDisc(c, p, iconArrowUp, "Send", o.canSend && !empty, o.sendSize).OnClick(func() {
-					if o.canSend && strings.TrimSpace(a.draft) != "" {
+				label := "Send"
+				if o.working {
+					label = o.busyLabel
+				}
+				sendDisc(c, p, iconArrowUp, label, o.canSend && !empty, o.sendSize).OnClick(func() {
+					if o.canSend && (strings.TrimSpace(a.draft) != "" || len(a.attachments) > 0) {
 						o.onSend()
 					}
 				})
@@ -276,7 +301,64 @@ func (a *App) picker(c *ui.Context, p *palette, key string, icon *ui.SVG, label 
 		}
 		ui.Text(c, label).FontSize(sizeSub).FontWeight(550).TextColor(ink).SingleLine().MaxWidth(220)
 	})
-	a.optionList(c, p, b, open, options, pick)
+	a.optionList(c, p, b, open, options, "", pick)
+}
+
+// modeFace is how a permission mode shows on its button, as Lody classifies
+// modes: an icon by what it allows, amber for those that skip approval,
+// "Auto" for those a reviewing model approves.
+func modeFace(id string) (icon *ui.SVG, warning, auto bool) {
+	switch id {
+	case "read-only":
+		return iconEye, false, false
+	case "agent-auto-review", "auto":
+		return nil, false, true
+	case "agent-full-access", "danger-full-access", "bypassPermissions", "yolo", "always-approve":
+		return iconShieldAlert, true, false
+	case "acceptEdits":
+		return iconPenLine, false, false
+	case "plan":
+		return iconCompass, false, false
+	case "dontAsk":
+		return iconShieldOff, true, false
+	}
+	return iconShield, false, false
+}
+
+// modeButton picks the agent's permission mode.
+func (a *App) modeButton(c *ui.Context, p *palette, key string, modes []catalog.Mode, current string, pick func(string)) {
+	if len(modes) == 0 {
+		return
+	}
+	name := "Default"
+	for _, m := range modes {
+		if m.ID == current {
+			name = m.Name
+		}
+	}
+	icon, warning, auto := modeFace(current)
+	open := a.popover(key)
+	b := ui.ButtonBase(c.Key(key)).Height(28).MinWidth(28).Padding(0, 6).Radius(8).Cursor(ui.CursorPointer).
+		Label("Permission mode: " + name).Tooltip(name).OnClick(func() { *open = !*open })
+	if b.Hovered() || *open {
+		b.Background(p.Text.Alpha(0.06))
+	}
+	ink := p.Secondary
+	if warning {
+		ink = p.Warning
+	}
+	b.Children(func() {
+		if auto {
+			ui.Text(c, "Auto").FontSize(sizeCaption).FontWeight(500).TextColor(ink)
+			return
+		}
+		ui.Icon(c, icon).Size(16, 16).TextColor(ink)
+	})
+	var options []option
+	for _, m := range modes {
+		options = append(options, option{m.ID, m.Name})
+	}
+	a.optionList(c, p, b, open, options, current, pick)
 }
 
 // popover returns the open state of a popover, made on first use.
@@ -292,7 +374,7 @@ func (a *App) popover(key string) *bool {
 	return open
 }
 
-func (a *App) optionList(c *ui.Context, p *palette, anchor ui.Element, open *bool, options []option, pick func(string)) {
+func (a *App) optionList(c *ui.Context, p *palette, anchor ui.Element, open *bool, options []option, selected string, pick func(string)) {
 	ui.Popover(c, anchor, open, func() {
 		// Long lists, as an agent's models, scroll within the popover.
 		ui.Scroll(c).MinWidth(200).MaxHeight(320).Gap(1).Children(func() {
@@ -304,6 +386,9 @@ func (a *App) optionList(c *ui.Context, p *palette, anchor ui.Element, open *boo
 				}
 				row.Children(func() {
 					ui.Text(c, o.label).FontSize(sizeSub).TextColor(p.Text).SingleLine().Grow(1).MinWidth(0)
+					if selected != "" && o.id == selected {
+						ui.Icon(c, iconCheck).Size(14, 14).TextColor(p.Text)
+					}
 				})
 			}
 		})

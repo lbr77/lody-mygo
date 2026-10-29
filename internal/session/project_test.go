@@ -10,7 +10,7 @@ import (
 func TestAppendAndProject(t *testing.T) {
 	r := &Replica{doc: loro.NewLoroDoc()}
 	cfg := inputConfig(nil, Turn{CLIType: "builtin", AgentType: "claude", ModelID: "opus"}, "hello")
-	if err := r.appendUserTurn("u1", "user-1", "2026-10-29T00:00:00.000Z", cfg); err != nil {
+	if err := r.appendUserTurn("u1", "user-1", "2026-10-29T00:00:00.000Z", cfg, "pending"); err != nil {
 		t.Fatal(err)
 	}
 

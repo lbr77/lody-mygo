@@ -144,20 +144,6 @@ func (a *App) sideRows() []sideRow {
 	if len(chats) > 0 && section("chats", "Chats", "") {
 		addSessions("chats", chats, false, 0)
 	}
-	if a.showArchived {
-		var archived []*catalog.Session
-		for i := range sessions {
-			if sessions[i].Archived && sessions[i].ParentSessionID == "" {
-				archived = append(archived, &sessions[i])
-			}
-		}
-		if section("archived", "Archived", "") {
-			if len(archived) == 0 {
-				rows = append(rows, sideRow{kind: rowNote, key: "n:archived", label: "No archived chats"})
-			}
-			addSessions("archived", archived, false, 0)
-		}
-	}
 	return rows
 }
 
@@ -178,7 +164,7 @@ func (a *App) sidebar(c *ui.Context, p *palette) {
 			forward.OnClick(a.goForward)
 		})
 		ui.Column(c).Padding(0, 6).Gap(1).Shrink(0).Children(func() {
-			if navRow(c, p, iconNewChat, "New chat", a.selected == "").Clicked() {
+			if navRow(c, p, iconNewChat, "New chat", a.selected == "" && a.page == "").Clicked() {
 				a.open("")
 			}
 			search := navRow(c, p, iconSearch, "Search", a.searchOpen).OnClick(func() {
@@ -498,27 +484,17 @@ func (a *App) footer(c *ui.Context, p *palette) {
 				}
 			}
 		})
-		archive := iconButton(c, p, iconArchive, "Archived chats", p.SideHover).OnClick(func() { a.showArchived = !a.showArchived })
-		if a.showArchived {
-			archive.Background(p.SideSelect)
-		}
-		iconButton(c, p, iconSettings, "Settings", p.SideHover).Menu(func(m *ui.Menu) {
-			if a.account != nil {
-				m.Item(a.account.User.Email).Disabled(true)
-				m.Separator()
-			}
-			m.Submenu("Appearance", func(m *ui.Menu) {
-				for _, choice := range []string{"System", "Light", "Dark"} {
-					if m.Item(choice).Radio(a.appearance == choice || a.appearance == "" && choice == "System").Chosen() {
-						a.setAppearance(choice)
-					}
-				}
-			})
-			m.Separator()
-			if m.Item("Sign Out").Chosen() {
-				a.signOut()
+		archive := iconButton(c, p, iconArchive, "Archived chats", p.SideHover).OnClick(func() {
+			if a.page == "archive" {
+				a.page = ""
+			} else {
+				a.page = "archive"
 			}
 		})
+		if a.page == "archive" {
+			archive.Background(p.SideSelect)
+		}
+		iconButton(c, p, iconSettings, "Settings", p.SideHover).OnClick(func() { a.settingsOpen = true })
 	})
 }
 

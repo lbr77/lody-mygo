@@ -34,13 +34,17 @@ func (a *App) mainView(c *ui.Context, p *palette) {
 			card.Shadow(0, 1, 2, 0, ui.RGBA(0, 0, 0, 0.03))
 		}
 		card.Children(func() {
-			if a.selected == "" {
+			switch {
+			case a.page == "archive":
+				a.archiveView(c, p)
+			case a.selected == "":
 				a.homeView(c, p)
-			} else {
+			default:
 				a.sessionView(c, p)
 			}
 		})
 	})
+	a.settingsDialog(c, p)
 }
 
 // tabBar is the 44px bar over the conversation: the session's tab, New
@@ -148,24 +152,63 @@ func (a *App) entry(c *ui.Context, p *palette, entries []session.Entry, i int) {
 			top = 16
 		}
 	}
+	// Queued messages follow each other closely, the first able to
+	// interrupt the running turn.
+	firstQueued := e.Queued && (i == 0 || !entries[i-1].Queued)
+	if e.Queued && i > 0 && entries[i-1].Queued {
+		top = 12
+	}
 	column(c, e.ID, func() {
 		if e.Role == "user" {
-			a.userMessage(c, p, e)
+			a.userMessage(c, p, e, firstQueued)
 		} else {
 			a.assistantMessage(c, p, e)
 		}
 	}).Padding(top, 0, 0, 0)
 }
 
+// deliveryLabel is what a user message's meta line says of its delivery,
+// empty for an ordinary delivered message.
+func deliveryLabel(e session.Entry) string {
+	switch {
+	case e.Steer && e.SteerMode == "interrupt" && e.Queued:
+		return "Sending next"
+	case e.Queued:
+		return "Queued"
+	case e.Steer && e.SteerState == "unknown":
+		return "Steer unconfirmed"
+	case e.Steer && (e.Status == "pending_apply" || e.SteerState == "confirming"):
+		return "Steering…"
+	case e.Steer:
+		return "Steered"
+	}
+	return ""
+}
+
 // userMessage is the user's bubble on the right, its avatar beside its
-// first line and the delivery mark and time above it.
-func (a *App) userMessage(c *ui.Context, p *palette, e session.Entry) {
+// first line, the delivery mark and time above it, and its attachments.
+func (a *App) userMessage(c *ui.Context, p *palette, e session.Entry, firstQueued bool) {
+	var images, files []session.Item
+	for _, it := range e.Items {
+		switch it.Type {
+		case "image":
+			images = append(images, it)
+		case "image_group":
+			images = append(images, it.Images...)
+		case "file":
+			files = append(files, it)
+		}
+	}
 	ui.Row(c).FillWidth().Gap(8).AlignItems(ui.Start).Justify(ui.End).Children(func() {
 		ui.Column(c).AlignItems(ui.End).Gap(4).Shrink(1).MinWidth(0).MaxWidth(560).Children(func() {
 			ui.Row(c).Gap(4).AlignItems(ui.Center).Children(func() {
+				label := deliveryLabel(e)
 				switch {
-				case e.Queued:
-					ui.Text(c, "Queued").FontSize(sizeCaption).TextColor(p.Secondary)
+				case label != "":
+					if e.Steer {
+						ui.Icon(c, iconSteer).Size(13, 13).TextColor(p.Secondary)
+					}
+					ui.Text(c, label).FontSize(sizeCaption).TextColor(p.Secondary)
 				case e.Status == "pending":
 					ui.Icon(c, iconCircle).Size(14, 14).TextColor(p.Secondary)
 				default:
@@ -173,10 +216,49 @@ func (a *App) userMessage(c *ui.Context, p *palette, e session.Entry) {
 				}
 				ui.Text(c, conversationTime(e.Timestamp, time.Now())).FontSize(sizeCaption).TextColor(p.Secondary)
 			})
-			ui.Text(c, e.Text()).Selectable().FontSize(sizeBody).LineHeight(24.0/14).TextColor(p.Reading).
-				Padding(12, 16).Radius(14).Background(p.UserBubble).MinWidth(0)
+			if len(images) > 0 {
+				ui.Row(c).Wrap().Gap(6).Justify(ui.End).Children(func() {
+					size := float32(160)
+					if len(images) > 1 {
+						size = 112
+					}
+					for _, img := range images {
+						a.sessionImage(c, p, a.selected, img, size)
+					}
+				})
+			}
+			for _, f := range files {
+				fileChip(c, p, f)
+			}
+			if text := e.Text(); text != "" {
+				bubble := ui.Text(c, text).Selectable().FontSize(sizeBody).LineHeight(24.0/14).TextColor(p.Reading).
+					Padding(12, 16).Radius(14).Background(p.UserBubble).MinWidth(0)
+				if e.Queued {
+					bubble.Opacity(0.7)
+				}
+			}
+			if e.Queued && a.view != nil && a.view.Working {
+				a.queuedActions(c, p, e, firstQueued)
+			}
 		})
 		userAvatar(c, p).Margin(28, 0, 0, 0)
+	})
+}
+
+// queuedActions give a queued message to the running turn: Steer when its
+// agent takes steering, Send now by interrupting it.
+func (a *App) queuedActions(c *ui.Context, p *palette, e session.Entry, first bool) {
+	sess := a.catalog.Session(a.selected)
+	if sess == nil || e.SteerMode == "interrupt" {
+		return
+	}
+	ui.Row(c).Gap(4).Children(func() {
+		if a.steerable(sess) {
+			ghostButton(c, p, "Steer").Tooltip("Give this message to the running turn").OnClick(func() { a.steerQueued(e.ID, false) })
+		}
+		if first {
+			ghostButton(c, p, "Send now").Tooltip("Stop the running turn and send this next").OnClick(func() { a.steerQueued(e.ID, true) })
+		}
 	})
 }
 

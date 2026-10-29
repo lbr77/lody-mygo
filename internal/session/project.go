@@ -31,6 +31,13 @@ type Item struct {
 	Plan     []PlanEntry // plan
 	Subagent *Subagent   // subagent_task
 	FileName string      // file, image
+
+	// image and file
+	ImageID, FileID  string
+	StorageSessionID string // the session the attachment was uploaded to
+	MimeType         string
+	SizeBytes        int64
+	Images           []Item // image_group
 }
 
 type Permission struct {
@@ -64,6 +71,11 @@ type Entry struct {
 	UserTurnID string
 	Model      string
 	Items      []Item
+	// A steer is a message given to a running turn: SteerMode is native or
+	// interrupt, SteerState confirming, accepted or unknown.
+	Steer      bool
+	SteerMode  string
+	SteerState string
 	FileDiffs  []FileDiff
 	StartedAt  float64
 	EndedAt    float64
@@ -93,6 +105,7 @@ type View struct {
 	Working      bool
 	AwaitingUser bool
 	ModelID      string // of the last user turn
+	ModeID       string // the permission mode of the last user turn
 }
 
 func str(v any) string {
@@ -177,8 +190,23 @@ func summarizeItem(raw map[string]any, identity string) Item {
 		it.Status = str(raw["status"])
 	case "file":
 		it.FileName = str(raw["fileName"])
+		it.FileID = str(raw["fileId"])
+		it.StorageSessionID = str(raw["storageSessionId"])
+		it.MimeType = str(raw["mimeType"])
+		it.SizeBytes = int64(num(raw["sizeBytes"]))
 	case "image":
 		it.FileName = str(raw["fileName"])
+		it.ImageID = str(raw["imageId"])
+		it.StorageSessionID = str(raw["storageSessionId"])
+		it.MimeType = str(raw["mimeType"])
+	case "image_group":
+		for i, img := range list(raw["images"]) {
+			if m := obj(img); m != nil && str(m["imageId"]) != "" {
+				it.Images = append(it.Images, summarizeItem(map[string]any{
+					"type": "image", "imageId": m["imageId"], "fileName": m["fileName"], "storageSessionId": m["storageSessionId"],
+				}, fmt.Sprintf("%s/%d", identity, i)))
+			}
+		}
 	case "tool_call":
 		if id := str(raw["toolCallId"]); id != "" {
 			it.ID = id
@@ -334,6 +362,8 @@ func project(doc *loro.LoroDoc, status, reason string) *View {
 		if role == "user" {
 			if cfg := obj(e["inputConfig"]); cfg != nil {
 				view.ModelID = str(cfg["modelId"])
+				view.ModeID = str(cfg["modeId"])
+				entry.Steer = str(cfg["_lodyDeliveryKind"]) == "steer"
 			}
 		}
 		entries = append(entries, entry)
@@ -372,6 +402,9 @@ func project(doc *loro.LoroDoc, status, reason string) *View {
 		}
 		cfg := obj(item["acpSessionConfig"])
 		entry := Entry{ID: turnID, Role: "user", Status: "queued", Queued: true, Timestamp: str(item["timestamp"])}
+		if str(cfg["_lodySteerMode"]) == "interrupt" {
+			entry.Status, entry.Steer, entry.SteerMode = "pending_apply", true, "interrupt"
+		}
 		blocks := list(cfg["inputBlocks"])
 		if len(blocks) == 0 {
 			blocks = []any{map[string]any{"type": "text", "text": str(item["task"])}}

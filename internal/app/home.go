@@ -51,9 +51,11 @@ func (a *App) homeView(c *ui.Context, p *palette) {
 			a.picker(c, p, "agent", iconBot, agentLabel, a.agentOptions(), func(id string) {
 				a.newChat.agent = id
 				delete(a.models, "")
+				delete(a.modes, "")
 			})
 			if agent != nil {
 				a.runConfig(c, p, "model/new", agent.ID, a.models[""], nil, func(id string) { a.models[""] = id })
+				a.modeButton(c, p, "mode/new", a.catalog.ModesFor(agent.ID, agent.AgentType), a.modes[""], func(id string) { a.modes[""] = id })
 			}
 		},
 	})
@@ -84,7 +86,7 @@ func (a *App) homeTargets(c *ui.Context, p *palette) {
 				offlinePill(c, p)
 			}
 		})
-		a.optionList(c, p, machine, open, a.machineOptions(), func(id string) {
+		a.optionList(c, p, machine, open, a.machineOptions(), a.newChat.machine, func(id string) {
 			a.newChat.machine, a.newChat.project = id, ""
 			a.pickNewChatDefaults()
 		})
@@ -103,7 +105,7 @@ func (a *App) homeTargets(c *ui.Context, p *palette) {
 			ui.Icon(c, iconFolderOpen).Size(16, 16).TextColor(p.Text.Alpha(0.8))
 			ui.Text(c, label).FontSize(12.6).TextColor(p.Text.Alpha(0.8)).SingleLine().MaxWidth(240)
 		})
-		a.optionList(c, p, project, openProject, a.projectOptions(), func(id string) { a.newChat.project = id })
+		a.optionList(c, p, project, openProject, a.projectOptions(), a.newChat.project, func(id string) { a.newChat.project = id })
 	})
 }
 

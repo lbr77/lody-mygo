@@ -228,3 +228,98 @@ func TestToolDetail(t *testing.T) {
 		t.Fatalf("diff not shown: %q", tt.Texts())
 	}
 }
+
+func TestAttachmentChips(t *testing.T) {
+	a := fixture()
+	dir := t.TempDir()
+	img := filepath.Join(dir, "screenshot.png")
+	notes := filepath.Join(dir, "notes.md")
+	os.WriteFile(img, []byte("not really a png"), 0o600)
+	os.WriteFile(notes, []byte("# notes"), 0o600)
+	a.view.Working = false
+	a.view.Entries = a.view.Entries[:2]
+	a.addFiles([]string{img, notes, filepath.Join(dir, "missing.txt")})
+	if len(a.attachments) != 2 || !a.attachments[0].Image || a.attachments[1].Image {
+		t.Fatalf("attachments = %+v", a.attachments)
+	}
+	if a.sendError == "" {
+		t.Fatal("a missing file should be reported")
+	}
+	tt := snap(t, a, "attachments", false, nil)
+	for _, want := range []string{"notes.md", "Remove screenshot.png", "Attach files"} {
+		if !tt.HasText(want) {
+			t.Errorf("missing %q in %q", want, tt.Texts())
+		}
+	}
+	if err := tt.Click("Remove notes.md"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if len(a.attachments) != 1 {
+		t.Fatalf("after removing: %+v", a.attachments)
+	}
+}
+
+func TestArchivePage(t *testing.T) {
+	a := fixture()
+	a.catalog.Sessions = append(a.catalog.Sessions, catalog.Session{ID: "old", MachineID: "m1", Title: "Old experiment", Archived: true, ProjectID: "m1:local:p2", CreatedAt: "2026-09-01T00:00:00Z"})
+	tt := snap(t, a, "archive", false, func(tt *ui.Tester) {
+		tt.Frame()
+		if err := tt.Click("Archived chats"); err != nil {
+			t.Fatal(err)
+		}
+	})
+	if a.page != "archive" || !tt.HasText("Old experiment") || !tt.HasText("Restore") {
+		t.Fatalf("archive page: %q", tt.Texts())
+	}
+}
+
+func TestSettingsDialog(t *testing.T) {
+	a := fixture()
+	tt := snap(t, a, "settings", false, func(tt *ui.Tester) {
+		tt.Frame()
+		if err := tt.Click("Settings"); err != nil {
+			t.Fatal(err)
+		}
+	})
+	for _, want := range []string{"Appearance", "When the agent is busy", "Steer", "ada@example.com"} {
+		if !tt.HasText(want) {
+			t.Errorf("missing %q in %q", want, tt.Texts())
+		}
+	}
+	if err := tt.Click("Steer"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if a.busyBehavior != "steer" {
+		t.Fatalf("busy behavior = %q", a.busyBehavior)
+	}
+}
+
+func TestQueuedActionsAndModes(t *testing.T) {
+	a := fixture()
+	a.catalog.Sessions[0].AgentConfigID = "a1"
+	a.catalog.Capabilities = map[string]catalog.Capability{"a1": {Steer: true, Modes: []catalog.Mode{{ID: "default", Name: "Manual"}, {ID: "plan", Name: "Plan Mode"}, {ID: "bypassPermissions", Name: "Bypass Permissions"}}}}
+	// Answered: no permission card, a queued follow-up instead.
+	a.view.Entries[3].Items[1].Permission = nil
+	a.view.ModeID = "bypassPermissions"
+	a.view.Entries = append(a.view.Entries, session.Entry{ID: "q1", Role: "user", Status: "queued", Queued: true, Timestamp: "2026-10-29T09:21:00Z",
+		Items: []session.Item{{ID: "t", Type: "text", Text: "Also update the README."}}})
+	tt := snap(t, a, "queued", true, nil)
+	for _, want := range []string{"Queued", "Steer", "Send now", "Permission mode: Bypass Permissions"} {
+		if !tt.HasText(want) {
+			t.Errorf("missing %q in %q", want, tt.Texts())
+		}
+	}
+	if err := tt.Click("Permission mode: Bypass Permissions"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if err := tt.Click("Plan Mode"); err != nil {
+		t.Fatalf("%v: %q", err, tt.Texts())
+	}
+	tt.Frame()
+	if a.modes["s1"] != "plan" {
+		t.Fatalf("mode = %q", a.modes["s1"])
+	}
+}

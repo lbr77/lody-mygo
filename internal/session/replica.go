@@ -41,13 +41,24 @@ type Replica struct {
 	readyOnce  sync.Once
 	flushMu    sync.Mutex
 
-	thoughts map[string]*span // thoughts seen streaming, by entry/item
+	thoughts map[string]*span  // thoughts seen streaming, by entry/item
+	steers   map[string]string // steer receipts, by user turn
 }
 
 // span is when a thought streamed: from its first text to its last.
 type span struct {
 	start, end time.Time
 	length     int
+}
+
+// projectLocked projects the document with what only this client knows:
+// thought timings and steer receipts. Callers hold r.mu.
+func (r *Replica) projectLocked() *View {
+	v := project(r.doc, r.status, r.reason)
+	r.timeThoughts(v, time.Now())
+	links, _ := deepValue(r.doc.GetMap(loro.AsContainerId("lodySteerLinks")).GetDeepValue()).(map[string]any)
+	r.markSteers(v, links)
+	return v
 }
 
 // timeThoughts records how long thoughts stream while the replica is live,
@@ -117,9 +128,7 @@ func (r *Replica) Close() {
 func (r *Replica) View() *View {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	v := project(r.doc, r.status, r.reason)
-	r.timeThoughts(v, time.Now())
-	return v
+	return r.projectLocked()
 }
 
 func (r *Replica) setStatus(status, reason string) {
@@ -160,8 +169,7 @@ func (r *Replica) flush() {
 		r.mu.Unlock()
 		return
 	}
-	v := project(r.doc, r.status, r.reason)
-	r.timeThoughts(v, time.Now())
+	v := r.projectLocked()
 	r.mu.Unlock()
 	r.OnChange(v)
 }
@@ -315,6 +323,7 @@ const (
 	Unknown  = "unknown"  // the write may or may not have landed
 	Uploaded = "uploaded" // durable; the machine picks it up from the stream
 	Queued   = "queued"   // behind the running turn
+	Steering = "steering" // written to steer the running turn; awaiting its receipt
 	Accepted = "accepted" // the machine acknowledged it
 )
 
@@ -327,7 +336,14 @@ type Turn struct {
 	CLIType   string
 	Resume    string
 	ModelID   string // empty keeps the previous turn's model
+	ModeID    string // the permission mode; empty keeps the previous one
 	Queue     bool   // the session is busy: queue behind it
+	// Guide steers the running turn with this message instead of queuing
+	// it, for agents that acknowledge steering.
+	Guide bool
+	// Attachments are uploaded blocks ({type: "image", imageId, ...} or
+	// {type: "file", fileId, ...}) sent after the text.
+	Attachments []map[string]any
 
 	// MarkDispatch records the turn in the catalog, which wakes the machine.
 	MarkDispatch func(ctx context.Context, sessionID, turnID string, queued bool) error
@@ -339,8 +355,11 @@ var errNotReady = errors.New("session: not synced yet")
 // got; a turn past Unknown is never resent automatically.
 func (r *Replica) Send(ctx context.Context, t Turn) (string, error) {
 	text := strings.TrimSpace(t.Text)
-	if text == "" {
+	if text == "" && len(t.Attachments) == 0 {
 		return NotSent, errors.New("session: empty message")
+	}
+	if len(t.Attachments) > 16 {
+		return NotSent, errors.New("session: too many attachments")
 	}
 	if utf8.RuneCountInString(text) > 32000 {
 		return NotSent, errors.New("session: message is too long")
@@ -371,13 +390,29 @@ func (r *Replica) Send(ctx context.Context, t Turn) (string, error) {
 	history := list(deepValue(r.doc.GetList(loro.AsContainerId("history")).GetDeepValue()))
 	queueLen := r.doc.GetMovableList(loro.AsContainerId("mq")).Len()
 	config := inputConfig(history, t, text)
-	queued := t.Queue || queueLen > 0 || busy(history)
+	// A guide steers the unfinished reply; without one it goes the usual
+	// way, never orphaned.
+	target := ""
+	if t.Guide {
+		target = unfinishedReply(history)
+	}
+	queued := target == "" && (t.Queue || queueLen > 0 || busy(history))
 	before := r.doc.OplogVv()
 	var err error
-	if queued {
+	switch {
+	case target != "":
+		if err = r.doc.GetMap(loro.AsContainerId("lodySteerLinks")).InsertAny(turnID, map[string]any{"targetId": target, "mode": "native"}); err == nil {
+			steered := map[string]any{"_lodyDeliveryKind": "steer"}
+			for k, v := range config {
+				steered[k] = v
+			}
+			err = r.appendUserTurn(turnID, t.UserID, timestamp, steered, "pending_apply")
+		}
+		r.setSteer(turnID, "confirming")
+	case queued:
 		err = r.pushQueued(turnID, text, t.UserID, timestamp, config)
-	} else {
-		err = r.appendUserTurn(turnID, t.UserID, timestamp, config)
+	default:
+		err = r.appendUserTurn(turnID, t.UserID, timestamp, config, "pending")
 	}
 	r.mu.Unlock()
 	if err != nil {
@@ -386,6 +421,18 @@ func (r *Replica) Send(ctx context.Context, t Turn) (string, error) {
 	r.emit(true)
 	if err := r.upload(ctx, before); err != nil {
 		return Unknown, err
+	}
+	if target != "" {
+		// History is durable; the receipt comes back on its own.
+		go r.steer(t.MachineID, map[string]any{
+			"sessionId":      r.ID,
+			"expectedTurnId": target,
+			"userTurnId":     turnID,
+			"userId":         t.UserID,
+			"timestamp":      timestamp,
+			"inputConfig":    config,
+		})
+		return Steering, nil
 	}
 	if queued {
 		if err := t.MarkDispatch(ctx, r.ID, turnID, true); err != nil {
@@ -455,11 +502,18 @@ func inputConfig(history []any, t Turn, text string) map[string]any {
 	if previous == nil {
 		previous = map[string]any{}
 	}
+	var blocks []any
+	if text != "" {
+		blocks = append(blocks, map[string]any{"type": "text", "text": text})
+	}
+	for _, a := range t.Attachments {
+		blocks = append(blocks, a)
+	}
 	config := map[string]any{
 		"cliType":          t.CLIType,
 		"agentType":        t.AgentType,
 		"prompt":           text,
-		"inputBlocks":      []any{map[string]any{"type": "text", "text": text}},
+		"inputBlocks":      blocks,
 		"mcpServerIds":     []any{},
 		"taskToolsEnabled": false,
 	}
@@ -469,8 +523,12 @@ func inputConfig(history []any, t Turn, text string) map[string]any {
 	if v, ok := previous["taskToolsEnabled"].(bool); ok {
 		config["taskToolsEnabled"] = v
 	}
-	if v := str(previous["modeId"]); v != "" {
-		config["modeId"] = v
+	mode := t.ModeID
+	if mode == "" {
+		mode = str(previous["modeId"])
+	}
+	if mode != "" {
+		config["modeId"] = mode
 	}
 	model := t.ModelID
 	if model == "" {
@@ -486,7 +544,8 @@ func inputConfig(history []any, t Turn, text string) map[string]any {
 		config["resume"] = t.Resume
 	}
 	if role := previous["agentRoleId"]; role != nil {
-		changed := str(previous["cliType"]) != t.CLIType || str(previous["agentType"]) != t.AgentType || str(previous["modelId"]) != model
+		changed := str(previous["cliType"]) != t.CLIType || str(previous["agentType"]) != t.AgentType ||
+			str(previous["modelId"]) != model || str(previous["modeId"]) != mode
 		if changed {
 			config["agentRoleId"] = nil
 		} else {
@@ -500,7 +559,7 @@ func inputConfig(history []any, t Turn, text string) map[string]any {
 }
 
 // appendUserTurn pushes a user entry onto history. Callers hold r.mu.
-func (r *Replica) appendUserTurn(id, userID, timestamp string, config map[string]any) error {
+func (r *Replica) appendUserTurn(id, userID, timestamp string, config map[string]any, status string) error {
 	history := r.doc.GetList(loro.AsContainerId("history"))
 	entry, err := history.InsertLoroMap(history.Len())
 	if err != nil {
@@ -508,7 +567,7 @@ func (r *Replica) appendUserTurn(id, userID, timestamp string, config map[string
 	}
 	for k, v := range map[string]any{
 		"id": id, "role": "user", "userId": userID, "timestamp": timestamp,
-		"status": "pending", "read": false, "finished": true, "fileDiff": []any{},
+		"status": status, "read": false, "finished": true, "fileDiff": []any{},
 	} {
 		if err := entry.InsertAny(k, v); err != nil {
 			return err

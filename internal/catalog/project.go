@@ -82,6 +82,37 @@ type AgentConfig struct {
 // Capability lists what an agent config supports.
 type Capability struct {
 	Models []Model `json:"models,omitempty"`
+	Modes  []Mode  `json:"modes,omitempty"` // permission modes
+	// Steer is whether the agent's runtime acknowledges messages given to
+	// a running turn.
+	Steer bool `json:"steer,omitempty"`
+}
+
+// Mode is a permission mode of an agent.
+type Mode struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
+// Lody's built-in modes, for agents that haven't reported theirs.
+var (
+	claudeModes = []Mode{{"auto", "Auto"}, {"default", "Manual"}, {"acceptEdits", "Accept Edits"}, {"plan", "Plan Mode"}, {"dontAsk", "Don't Ask"}, {"bypassPermissions", "Bypass Permissions"}}
+	codexModes  = []Mode{{"read-only", "Read-only"}, {"agent", "Agent"}, {"agent-auto-review", "Auto review"}, {"agent-full-access", "Full access"}}
+)
+
+// ModesFor returns an agent's permission modes: those it reported, or
+// Lody's built-in ones for Claude Code and Codex.
+func (c *Catalog) ModesFor(agentConfigID, agentType string) []Mode {
+	if modes := c.Capabilities[agentConfigID].Modes; len(modes) > 0 {
+		return modes
+	}
+	switch strings.ToLower(agentType) {
+	case "claude", "claude-code":
+		return claudeModes
+	case "codex":
+		return codexModes
+	}
+	return nil
 }
 
 type Catalog struct {
@@ -180,6 +211,17 @@ func projectMachine(rows []flock.Row, machineID string) Catalog {
 					capability.Models = append(capability.Models, *model)
 				}
 			}
+			for _, m := range anyList(value["modes"]) {
+				mode := object(m)
+				if id := text(mode["id"]); id != "" {
+					name := text(mode["name"])
+					if name == "" {
+						name = id
+					}
+					capability.Modes = append(capability.Modes, Mode{ID: id, Name: name})
+				}
+			}
+			capability.Steer = value["acknowledgedSteer"] == true && value["provenance"] == "runtime"
 			c.Capabilities[id] = capability
 		}
 	}

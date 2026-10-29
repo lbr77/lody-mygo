@@ -94,8 +94,17 @@ type App struct {
 	histPos        int
 	searchOpen     bool
 	searchText     string
-	showAll        map[string]bool              // projects listing every session
-	appearance     string                       // System, Light or Dark
+	showAll        map[string]bool   // projects listing every session
+	appearance     string            // System, Light or Dark
+	busyBehavior   string            // queue or steer, for messages sent while the agent works
+	modes          map[string]string // permission mode chosen per session; "" for New chat
+	attachments    []pendingFile     // the composer's
+	attachDrafts   map[string][]pendingFile
+	images         map[string]*remoteImage
+	uploading      string // upload progress while sending
+	settingsOpen   bool
+	page           string // "archive", or "" for chats
+	archiveSearch  string
 	diffs          map[string]*editor.DiffState // tool diffs of the open session
 	md             markdown.Options
 	mdMuted        markdown.Options
@@ -105,13 +114,16 @@ type App struct {
 // New returns the app. Run it with Start once the window exists.
 func New() *App {
 	return &App{
-		api:       &cloud.API{},
-		drafts:    map[string]string{},
-		models:    map[string]string{},
-		diffs:     map[string]*editor.DiffState{},
-		showAll:   map[string]bool{},
-		collapsed: map[string]bool{},
-		expanded:  map[string]bool{},
+		api:          &cloud.API{},
+		drafts:       map[string]string{},
+		models:       map[string]string{},
+		diffs:        map[string]*editor.DiffState{},
+		showAll:      map[string]bool{},
+		modes:        map[string]string{},
+		images:       map[string]*remoteImage{},
+		attachDrafts: map[string][]pendingFile{},
+		collapsed:    map[string]bool{},
+		expanded:     map[string]bool{},
 	}
 }
 
@@ -128,6 +140,7 @@ func (a *App) Start(win *mygo.Window) {
 		a.collapsed = map[string]bool{}
 	}
 	a.appearance = prefs.Appearance
+	a.busyBehavior = prefs.Busy
 	if a.appearance != "" {
 		applyAppearance(a.appearance)
 	}
@@ -362,6 +375,7 @@ func (a *App) signOutLocal() {
 // open shows a session and follows its stream.
 // open shows a session, or New chat for "", recording it for Back.
 func (a *App) open(id string) {
+	a.page = ""
 	if a.selected == id && (id == "" || a.replica != nil) {
 		return
 	}
@@ -410,10 +424,12 @@ func applyAppearance(choice string) {
 
 // show switches to a session and follows its stream.
 func (a *App) show(id string) {
+	a.page = ""
 	a.stashDraft()
 	a.closeSession()
 	a.selected = id
 	a.draft = a.drafts[id]
+	a.attachments = a.attachDrafts[id]
 	a.sendError = ""
 	a.expanded = map[string]bool{}
 	a.diffs = map[string]*editor.DiffState{}
@@ -450,16 +466,28 @@ func (a *App) stashDraft() {
 	} else {
 		a.drafts[a.selected] = a.draft
 	}
+	if len(a.attachments) == 0 {
+		delete(a.attachDrafts, a.selected)
+	} else {
+		a.attachDrafts[a.selected] = a.attachments
+	}
+}
+
+// steerable reports whether a session's agent takes messages mid-turn.
+func (a *App) steerable(s *catalog.Session) bool {
+	return a.catalog.Capabilities[s.AgentConfigID].Steer
 }
 
 // send sends the composer's text to the open session.
 func (a *App) send() {
 	text := strings.TrimSpace(a.draft)
 	sess := a.catalog.Session(a.selected)
-	if text == "" || a.sending || a.replica == nil || sess == nil {
+	files := a.attachments
+	if (text == "" && len(files) == 0) || a.sending || a.replica == nil || sess == nil || a.conn == nil {
 		return
 	}
-	r, sync, userID := a.replica, a.sync, a.account.User.ID
+	r, sync, userID, workspace := a.replica, a.sync, a.account.User.ID, a.conn.ID
+	working := a.view != nil && a.view.Working || sess.Working()
 	turn := session.Turn{
 		Text:         text,
 		UserID:       userID,
@@ -468,29 +496,56 @@ func (a *App) send() {
 		CLIType:      sess.CLIType,
 		Resume:       sess.Resume,
 		ModelID:      a.models[a.selected],
+		ModeID:       a.modes[a.selected],
 		Queue:        sess.Working(),
+		Guide:        working && a.busyBehavior == "steer" && a.steerable(sess),
 		MarkDispatch: sync.MarkDispatch,
 	}
-	a.sending, a.sendError = true, ""
-	a.draft = ""
+	a.sending, a.sendError, a.uploading = true, "", ""
+	a.draft, a.attachments = "", nil
 	delete(a.drafts, a.selected)
+	delete(a.attachDrafts, a.selected)
 	a.chatList.ScrollToEnd()
 	go func() {
-		ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
 		defer cancel()
-		state, err := r.Send(ctx, turn)
+		state := session.NotSent
+		blocks, err := a.upload(ctx, workspace, r.ID, files)
+		if err == nil {
+			turn.Attachments = blocks
+			sendCtx, cancelSend := context.WithTimeout(ctx, 60*time.Second)
+			state, err = r.Send(sendCtx, turn)
+			cancelSend()
+		}
 		a.update(func() {
-			a.sending = false
+			a.sending, a.uploading = false, ""
 			if err != nil && state == session.NotSent {
-				// Nothing was written: give the text back.
-				if a.replica == r && a.draft == "" {
-					a.draft = text
+				// Nothing was written: give the message back.
+				if a.replica == r && a.draft == "" && len(a.attachments) == 0 {
+					a.draft, a.attachments = text, files
 				}
 				a.sendError = err.Error()
 			} else if err != nil {
 				a.sendError = "Sent, but the machine hasn't confirmed it yet."
 			}
 		})
+	}()
+}
+
+// steerQueued gives a queued message to the running turn, or with
+// interrupt cancels the turn so the queue resumes with it.
+func (a *App) steerQueued(id string, interrupt bool) {
+	sess := a.catalog.Session(a.selected)
+	if a.replica == nil || sess == nil {
+		return
+	}
+	r, machine := a.replica, sess.MachineID
+	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 45*time.Second)
+		defer cancel()
+		if err := r.SteerQueued(ctx, machine, id, interrupt); err != nil {
+			a.update(func() { a.sendError = err.Error() })
+		}
 	}()
 }
 
@@ -564,22 +619,27 @@ func (a *App) startChat() {
 	text := strings.TrimSpace(a.draft)
 	nc := a.newChat
 	agent := a.agent(nc.machine, nc.agent)
-	if text == "" || a.sending || agent == nil || a.sync == nil {
+	files := a.attachments
+	if (text == "" && len(files) == 0) || a.sending || agent == nil || a.sync == nil || a.conn == nil {
 		return
 	}
 	id := uuid.NewString()
-	sync, userID := a.sync, a.account.User.ID
-	model := a.models[""]
+	sync, userID, workspace := a.sync, a.account.User.ID, a.conn.ID
+	model, mode := a.models[""], a.modes[""]
+	title := draftTitle(text)
+	if title == "" && len(files) > 0 {
+		title = draftTitle(files[0].Name)
+	}
 	localProject := ""
 	if p := a.catalog.Project(nc.project); p != nil {
 		_, localProject, _ = strings.Cut(p.ID, ":local:")
 	}
-	a.sending, a.sendError = true, ""
+	a.sending, a.sendError, a.uploading = true, "", ""
 	go func() {
-		ctx, cancel := context.WithTimeout(context.Background(), 90*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
 		defer cancel()
 		err := sync.CreateSession(ctx, catalog.NewSession{
-			ID: id, MachineID: nc.machine, UserID: userID, Title: draftTitle(text),
+			ID: id, MachineID: nc.machine, UserID: userID, Title: title,
 			Agent: *agent, LocalProject: localProject, CreatedAt: time.Now(),
 		})
 		if err != nil {
@@ -588,7 +648,7 @@ func (a *App) startChat() {
 		}
 		opened := make(chan *session.Replica, 1)
 		a.update(func() {
-			a.draft = ""
+			a.draft, a.attachments = "", nil
 			a.open(id)
 			opened <- a.replica
 		})
@@ -597,17 +657,20 @@ func (a *App) startChat() {
 			return
 		}
 		state := session.NotSent
-		if err = r.WaitReady(ctx); err == nil {
-			state, err = r.Send(ctx, session.Turn{
-				Text: text, UserID: userID, MachineID: nc.machine, ModelID: model,
-				AgentType: agent.AgentType, CLIType: agent.CLIType, MarkDispatch: sync.MarkDispatch,
-			})
+		var blocks []map[string]any
+		if blocks, err = a.upload(ctx, workspace, id, files); err == nil {
+			if err = r.WaitReady(ctx); err == nil {
+				state, err = r.Send(ctx, session.Turn{
+					Text: text, UserID: userID, MachineID: nc.machine, ModelID: model, ModeID: mode, Attachments: blocks,
+					AgentType: agent.AgentType, CLIType: agent.CLIType, MarkDispatch: sync.MarkDispatch,
+				})
+			}
 		}
 		a.update(func() {
-			a.sending = false
+			a.sending, a.uploading = false, ""
 			if err != nil && state == session.NotSent {
-				if a.draft == "" {
-					a.draft = text
+				if a.draft == "" && len(a.attachments) == 0 {
+					a.draft, a.attachments = text, files
 				}
 				a.sendError = err.Error()
 			}
@@ -632,6 +695,7 @@ type prefs struct {
 	Workspace  string          `json:"workspace"`
 	Collapsed  map[string]bool `json:"collapsed,omitempty"`
 	Appearance string          `json:"appearance,omitempty"`
+	Busy       string          `json:"busy,omitempty"`
 }
 
 func dataDir() string {
@@ -667,7 +731,7 @@ func loadPrefs() prefs {
 }
 
 func (a *App) savePrefs() {
-	writeJSON("prefs.json", prefs{Workspace: a.workspaceID, Collapsed: a.collapsed, Appearance: a.appearance})
+	writeJSON("prefs.json", prefs{Workspace: a.workspaceID, Collapsed: a.collapsed, Appearance: a.appearance, Busy: a.busyBehavior})
 }
 
 func loadAccount() *cloud.Account {
