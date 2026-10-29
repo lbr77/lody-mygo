@@ -1269,5 +1269,15 @@
   "cmdCycleThinkEffort": "循环切换思考强度",
   "cmdThinkEffort": "思考强度",
   "fastModeTooltip": "加速模式：1.5 倍速度，2 倍价格",
-  "fastModeTooltipClaude": "加速模式：2.5 倍速度，更高的单 token 成本"
+  "fastModeTooltipClaude": "加速模式：2.5 倍速度，更高的单 token 成本",
+  "keyLead": "点击快捷键即可重新设置，按 Esc 取消。",
+  "keyResetAll": "全部重置",
+  "keyRecording": "请按键…",
+  "keyRecordingCancel": "点击或按 Esc 取消",
+  "keyEdit": "点击录制新的快捷键",
+  "keyUnbind": "移除快捷键",
+  "keyDefault": "默认: {binding}",
+  "keyNoDefault": "无默认快捷键",
+  "keyConflict": "与命令冲突: {command}",
+  "keyAlreadyUsed": "{binding} 已被 {command} 占用，请按其他组合"
 }

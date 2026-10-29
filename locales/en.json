@@ -2631,5 +2631,39 @@
   "cmdCycleThinkEffort": "Cycle Thinking Effort",
   "cmdThinkEffort": "Thinking effort",
   "fastModeTooltip": "Accelerated mode: 1.5x speed, 2x price",
-  "fastModeTooltipClaude": "Accelerated mode: 2.5x faster at a higher cost per token"
+  "fastModeTooltipClaude": "Accelerated mode: 2.5x faster at a higher cost per token",
+  "keyLead": "Click a shortcut to rebind it. Press Esc to cancel.",
+  "keyResetAll": "Reset all",
+  "keyRecording": "Press keys…",
+  "keyRecordingCancel": "Click or press Esc to cancel",
+  "keyEdit": "Click to record a new shortcut",
+  "keyUnbind": "Remove this shortcut",
+  "keyDefault": "Default: {binding}",
+  "@keyDefault": {
+    "placeholders": {
+      "binding": {
+        "type": "String"
+      }
+    }
+  },
+  "keyNoDefault": "No default shortcut",
+  "keyConflict": "Also bound to: {command}",
+  "@keyConflict": {
+    "placeholders": {
+      "command": {
+        "type": "String"
+      }
+    }
+  },
+  "keyAlreadyUsed": "{binding} is already used by {command} — press another combo",
+  "@keyAlreadyUsed": {
+    "placeholders": {
+      "binding": {
+        "type": "String"
+      },
+      "command": {
+        "type": "String"
+      }
+    }
+  }
 }

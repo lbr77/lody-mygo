@@ -109,6 +109,8 @@ type App struct {
 	history          []string // sessions shown, for Back and Forward
 	histPos          int
 	palette          paletteState
+	keyOverrides     map[string][]string       // chords rebound, by command
+	recording        keyRecording              // the command whose chord is being recorded
 	runValues        map[string]map[string]any // agent settings chosen in the composer, by session; "" for New chat
 	find             findState                 // find in the conversation
 	surf, surfNext   surface                   // what the view offers the commands: the last frame's, and this one's
@@ -251,6 +253,7 @@ func (a *App) Start(win *mygo.Window) {
 	a.busyBehavior = prefs.Busy
 	a.sidebarWidth = prefs.Sidebar
 	a.homeBoard = prefs.HomeBoard
+	a.keyOverrides = prefs.Keys
 	if a.appearance != "" {
 		applyAppearance(a.appearance)
 	}
@@ -871,9 +874,16 @@ type prefs struct {
 	Busy       string          `json:"busy,omitempty"`
 	Sidebar    float32         `json:"sidebar,omitempty"` // the sidebar's width
 	HomeBoard  string          `json:"homeBoard,omitempty"`
+	// Keys are the chords rebound in keyboard settings, by command: none
+	// unbinds it.
+	Keys map[string][]string `json:"keys,omitempty"`
 }
 
 func dataDir() string {
+	// Tests keep what they write in a folder of their own.
+	if dir := os.Getenv("LODY_DATA_DIR"); dir != "" {
+		return dir
+	}
 	dir, err := mygo.App.Path(mygo.PathUserData)
 	if err != nil {
 		dir = filepath.Join(os.TempDir(), "lody-mygo")
@@ -906,7 +916,7 @@ func loadPrefs() prefs {
 }
 
 func (a *App) savePrefs() {
-	writeJSON("prefs.json", prefs{Workspace: a.workspaceID, Collapsed: a.collapsed, Appearance: a.appearance, Busy: a.busyBehavior, Sidebar: a.sidebarWidth, HomeBoard: a.homeBoard})
+	writeJSON("prefs.json", prefs{Workspace: a.workspaceID, Collapsed: a.collapsed, Appearance: a.appearance, Busy: a.busyBehavior, Sidebar: a.sidebarWidth, HomeBoard: a.homeBoard, Keys: a.keyOverrides})
 }
 
 func loadAccount() *cloud.Account {

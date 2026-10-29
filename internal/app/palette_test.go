@@ -281,3 +281,55 @@ func TestEffortAndFast(t *testing.T) {
 		t.Fatalf("haiku: %v", got)
 	}
 }
+
+func TestRebindShortcut(t *testing.T) {
+	a := fixture()
+	a.view.Working = false
+	a.settingsOpen, a.settingsTab = true, "keyboard"
+	tt := ui.NewTester(a.render, 1100, 720)
+	tt.Frame()
+	a.recording = keyRecording{id: "sidebar.toggle"}
+	tt.Frame()
+	if !tt.HasText("Press keys…") {
+		t.Fatalf("recording: %q", tt.Texts())
+	}
+	// A chord another command holds is refused, and recording goes on.
+	tt.Key(ui.Cmd, ui.KeyK)
+	tt.Frame()
+	if a.palette.open || a.recording.id == "" || !tt.HasText("⌘K is already used by Open Command Palette — press another combo") {
+		t.Fatalf("taken chord: palette %v, recording %+v, %q", a.palette.open, a.recording, tt.Texts())
+	}
+	tt.Key(ui.Cmd|ui.Shift, ui.KeyY)
+	tt.Frame()
+	if a.recording.id != "" || strings.Join(a.keyOverrides["sidebar.toggle"], ",") != "Mod+Shift+y" || !tt.HasText("Default: ⌘B") {
+		t.Fatalf("recorded %v, %+v", a.keyOverrides, a.recording)
+	}
+	a.settingsOpen = false
+	tt.Frame()
+	tt.Key(ui.Cmd, ui.KeyB)
+	tt.Frame()
+	if a.sidebarHidden {
+		t.Fatal("⌘B still bound")
+	}
+	tt.Key(ui.Cmd|ui.Shift, ui.KeyY)
+	tt.Frame()
+	if !a.sidebarHidden {
+		t.Fatal("⌘⇧Y not bound")
+	}
+	// Escape cancels; Reset all restores the defaults.
+	a.settingsOpen = true
+	a.recording = keyRecording{id: "nav.back"}
+	tt.Frame()
+	tt.Key(0, ui.KeyEscape)
+	tt.Frame()
+	if a.recording.id != "" || a.keyOverrides["nav.back"] != nil {
+		t.Fatalf("Escape: %+v, %v", a.recording, a.keyOverrides)
+	}
+	if err := tt.Click("Reset all"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if len(a.keyOverrides) != 0 {
+		t.Fatalf("reset: %v", a.keyOverrides)
+	}
+}

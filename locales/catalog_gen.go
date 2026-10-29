@@ -12806,3 +12806,105 @@ func FastModeTooltipClaude() string { return In(i18n.Locale()).FastModeTooltipCl
 func (msgs Messages) FastModeTooltipClaude() string {
 	return Catalog.Format(msgs.locale, "fastModeTooltipClaude", nil)
 }
+
+// KeyLead says "Click a shortcut to rebind it. Press Esc to cancel."
+// in the language the app shows.
+func KeyLead() string { return In(i18n.Locale()).KeyLead() }
+
+// KeyLead says "Click a shortcut to rebind it. Press Esc to cancel."
+// in the language of msgs.
+func (msgs Messages) KeyLead() string {
+	return Catalog.Format(msgs.locale, "keyLead", nil)
+}
+
+// KeyResetAll says "Reset all"
+// in the language the app shows.
+func KeyResetAll() string { return In(i18n.Locale()).KeyResetAll() }
+
+// KeyResetAll says "Reset all"
+// in the language of msgs.
+func (msgs Messages) KeyResetAll() string {
+	return Catalog.Format(msgs.locale, "keyResetAll", nil)
+}
+
+// KeyRecording says "Press keys…"
+// in the language the app shows.
+func KeyRecording() string { return In(i18n.Locale()).KeyRecording() }
+
+// KeyRecording says "Press keys…"
+// in the language of msgs.
+func (msgs Messages) KeyRecording() string {
+	return Catalog.Format(msgs.locale, "keyRecording", nil)
+}
+
+// KeyRecordingCancel says "Click or press Esc to cancel"
+// in the language the app shows.
+func KeyRecordingCancel() string { return In(i18n.Locale()).KeyRecordingCancel() }
+
+// KeyRecordingCancel says "Click or press Esc to cancel"
+// in the language of msgs.
+func (msgs Messages) KeyRecordingCancel() string {
+	return Catalog.Format(msgs.locale, "keyRecordingCancel", nil)
+}
+
+// KeyEdit says "Click to record a new shortcut"
+// in the language the app shows.
+func KeyEdit() string { return In(i18n.Locale()).KeyEdit() }
+
+// KeyEdit says "Click to record a new shortcut"
+// in the language of msgs.
+func (msgs Messages) KeyEdit() string {
+	return Catalog.Format(msgs.locale, "keyEdit", nil)
+}
+
+// KeyUnbind says "Remove this shortcut"
+// in the language the app shows.
+func KeyUnbind() string { return In(i18n.Locale()).KeyUnbind() }
+
+// KeyUnbind says "Remove this shortcut"
+// in the language of msgs.
+func (msgs Messages) KeyUnbind() string {
+	return Catalog.Format(msgs.locale, "keyUnbind", nil)
+}
+
+// KeyDefault says "Default: {binding}"
+// in the language the app shows.
+func KeyDefault(binding string) string { return In(i18n.Locale()).KeyDefault(binding) }
+
+// KeyDefault says "Default: {binding}"
+// in the language of msgs.
+func (msgs Messages) KeyDefault(binding string) string {
+	return Catalog.Format(msgs.locale, "keyDefault", map[string]any{"binding": binding})
+}
+
+// KeyNoDefault says "No default shortcut"
+// in the language the app shows.
+func KeyNoDefault() string { return In(i18n.Locale()).KeyNoDefault() }
+
+// KeyNoDefault says "No default shortcut"
+// in the language of msgs.
+func (msgs Messages) KeyNoDefault() string {
+	return Catalog.Format(msgs.locale, "keyNoDefault", nil)
+}
+
+// KeyConflict says "Also bound to: {command}"
+// in the language the app shows.
+func KeyConflict(command string) string { return In(i18n.Locale()).KeyConflict(command) }
+
+// KeyConflict says "Also bound to: {command}"
+// in the language of msgs.
+func (msgs Messages) KeyConflict(command string) string {
+	return Catalog.Format(msgs.locale, "keyConflict", map[string]any{"command": command})
+}
+
+// KeyAlreadyUsed says "{binding} is already used by {command} — press another combo"
+// in the language the app shows.
+func KeyAlreadyUsed(binding string, command string) string {
+	return In(i18n.Locale()).KeyAlreadyUsed(binding, command)
+}
+
+// KeyAlreadyUsed says "{binding} is already used by {command} — press another combo"
+// in the language of msgs.
+func (msgs Messages) KeyAlreadyUsed(binding string, command string) string {
+	return Catalog.Format(msgs.locale, "keyAlreadyUsed", map[string]any{"binding": binding, "command": command})
+}

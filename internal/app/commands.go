@@ -55,6 +55,7 @@ type command struct {
 	icon     *ui.SVG
 	when     bool
 	run      func()
+	defaults []chord // the chords it ships with
 }
 
 // chord is a key binding in Lody's registry syntax, as "Mod+Shift+p": Mod
@@ -70,8 +71,44 @@ type chord struct {
 
 var chordKeys = map[string]ui.Key{
 	"[": ui.KeyBracketLeft, "]": ui.KeyBracketRight, ",": ui.KeyComma, ".": ui.KeyPeriod, "`": ui.KeyBackquote,
-	"F2": ui.KeyF2, "Tab": ui.KeyTab,
-	"1": ui.Key1, "2": ui.Key2, "3": ui.Key3, "4": ui.Key4, "5": ui.Key5, "6": ui.Key6, "7": ui.Key7, "8": ui.Key8, "9": ui.Key9,
+	"-": ui.KeyMinus, "=": ui.KeyEqual, "/": ui.KeySlash, ";": ui.KeySemicolon, "'": ui.KeyQuote, "\\": ui.KeyBackslash,
+	"F1": ui.KeyF1, "F2": ui.KeyF2, "F3": ui.KeyF3, "F4": ui.KeyF4, "F5": ui.KeyF5, "F6": ui.KeyF6,
+	"F7": ui.KeyF7, "F8": ui.KeyF8, "F9": ui.KeyF9, "F10": ui.KeyF10, "F11": ui.KeyF11, "F12": ui.KeyF12,
+	"Tab": ui.KeyTab, "Enter": ui.KeyEnter, "Space": ui.KeySpace, "Backspace": ui.KeyBackspace, "Delete": ui.KeyDelete,
+	"ArrowUp": ui.KeyUp, "ArrowDown": ui.KeyDown, "ArrowLeft": ui.KeyLeft, "ArrowRight": ui.KeyRight,
+	"0": ui.Key0, "1": ui.Key1, "2": ui.Key2, "3": ui.Key3, "4": ui.Key4, "5": ui.Key5, "6": ui.Key6, "7": ui.Key7, "8": ui.Key8, "9": ui.Key9,
+}
+
+// chordName is a key's name in a chord, "" for one that can't be bound.
+func chordName(k ui.Key) string {
+	if k >= ui.KeyA && k <= ui.KeyZ {
+		return string(rune('a' + k - ui.KeyA))
+	}
+	for name, key := range chordKeys {
+		if key == k {
+			return name
+		}
+	}
+	return ""
+}
+
+// chordSpec writes a chord in the registry's syntax, Mod for the
+// platform's command key.
+func chordSpec(mods ui.Modifiers, k ui.Key) string {
+	var parts []string
+	if mods&ui.Cmd != 0 {
+		parts = append(parts, "Mod")
+	}
+	if mods&ui.Ctrl != 0 && ui.Cmd != ui.Ctrl {
+		parts = append(parts, "Ctrl")
+	}
+	if mods&ui.Alt != 0 {
+		parts = append(parts, "Alt")
+	}
+	if mods&ui.Shift != 0 {
+		parts = append(parts, "Shift")
+	}
+	return strings.Join(append(parts, chordName(k)), "+")
 }
 
 func keyChord(spec string) chord {
@@ -124,6 +161,16 @@ func (ch chord) parts() []string {
 			part = "⇧"
 		case part == "Tab" && mac:
 			part = "⇥"
+		case part == "Enter":
+			part = "↩"
+		case part == "ArrowUp":
+			part = "↑"
+		case part == "ArrowDown":
+			part = "↓"
+		case part == "ArrowLeft":
+			part = "←"
+		case part == "ArrowRight":
+			part = "→"
 		default:
 			part = strings.ToUpper(part[:1]) + part[1:]
 		}
@@ -258,8 +305,17 @@ func (a *App) commands() []command {
 		cmds = append(cmds, command{id: "session.switchToTab" + string(rune('0'+n)), title: locales.CmdSwitchToTab(n), category: catNavigation,
 			keys: keyChords("Mod+" + string(rune('0'+n))), icon: iconRectangle, when: tabs > n-1, run: func() {}})
 	}
-	return append(cmds, command{id: "session.switchToLastTab", title: locales.CmdSwitchToLastTab(), category: catNavigation, keys: keyChords("Mod+9"),
+	cmds = append(cmds, command{id: "session.switchToLastTab", title: locales.CmdSwitchToLastTab(), category: catNavigation, keys: keyChords("Mod+9"),
 		icon: iconArrowToLine, when: tabs > 0, run: func() {}})
+	// A rebound command takes the user's chords in place of its own, bound
+	// everywhere, as Lody's overrides drop a default's binding-level when.
+	for i := range cmds {
+		cmds[i].defaults = cmds[i].keys
+		if keys, ok := a.keyOverrides[cmds[i].id]; ok {
+			cmds[i].keys = keyChords(keys...)
+		}
+	}
+	return cmds
 }
 
 // runCommand runs a command if it still applies.
@@ -272,8 +328,12 @@ func (a *App) runCommand(id string) {
 	}
 }
 
-// bindCommands binds every command's chords for the window.
+// bindCommands binds every command's chords for the window, except while
+// a chord is being recorded, which takes every key.
 func (a *App) bindCommands(c *ui.Context) {
+	if a.recording.id != "" {
+		return
+	}
 	for _, cmd := range a.commands() {
 		id := cmd.id
 		for _, ch := range cmd.keys {
@@ -417,39 +477,4 @@ func (a *App) newTabOrTerminal(id string) {
 		a.newChat.agent = sess.AgentConfigID
 	}
 	a.open("")
-}
-
-// keyboardPage lists every command under its category with the chord that
-// runs it, as Lody's keyboard settings.
-func (a *App) keyboardPage(c *ui.Context, p *palette) {
-	settingsTitle(c, p, locales.SettingsKeyboard())
-	cmds := a.commands()
-	for cat := catNavigation; cat <= catOther; cat++ {
-		var rows []command
-		for _, cmd := range cmds {
-			if cmd.category == cat {
-				rows = append(rows, cmd)
-			}
-		}
-		if len(rows) == 0 {
-			continue
-		}
-		settingsHeading(c, p, cat.label())
-		card(c, p, func() {
-			for _, cmd := range rows {
-				ui.Row(c.Key(cmd.id)).FillWidth().MinHeight(40).Padding(0, 12, 0, 14).Gap(16).AlignItems(ui.Center).Children(func() {
-					ui.Text(c, cmd.title).FontSize(sizeSub).TextColor(p.Text).Grow(1).MinWidth(0)
-					if len(cmd.keys) == 0 {
-						ui.Text(c, locales.KeyUnbound()).FontSize(sizeFoot).TextColor(p.Tertiary).Shrink(0)
-						return
-					}
-					ui.Row(c).Gap(4).Shrink(0).Children(func() {
-						for _, key := range cmd.keys[0].parts() {
-							ui.Text(c, key).FontSize(sizeFoot).TextColor(p.Secondary).Padding(2, 7).Radius(5).Border(1, p.Border).Background(p.Canvas)
-						}
-					})
-				})
-			}
-		})
-	}
 }

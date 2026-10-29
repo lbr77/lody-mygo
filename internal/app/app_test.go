@@ -380,7 +380,13 @@ func TestSettingsAgents(t *testing.T) {
 // The app speaks the system's language; tests pin English but this one.
 func TestMain(m *testing.M) {
 	i18n.SetLocaleFunc(func() string { return "en" })
-	os.Exit(m.Run())
+	dir, err := os.MkdirTemp("", "lody-test")
+	if err == nil {
+		os.Setenv("LODY_DATA_DIR", dir)
+	}
+	code := m.Run()
+	os.RemoveAll(dir)
+	os.Exit(code)
 }
 
 func TestChinese(t *testing.T) {
