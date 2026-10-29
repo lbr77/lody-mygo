@@ -20,6 +20,7 @@ const (
 )
 
 func (a *App) mainView(c *ui.Context, p *palette) {
+	a.openForked()
 	c.OnShortcut(ui.Cmd, ui.KeyN, func() { a.open("") })
 	c.OnShortcut(ui.Cmd, ui.KeyL, func() { a.composerFocus.Focus(c) })
 	c.OnShortcut(ui.Cmd, ui.KeyBackslash, func() { a.sidebarHidden = !a.sidebarHidden })
@@ -133,6 +134,7 @@ func (a *App) sessionView(c *ui.Context, p *palette) {
 func (a *App) sessionMain(c *ui.Context, p *palette) {
 	sess := a.catalog.Session(a.selected)
 	a.tabBar(c, p, sess)
+	a.goalBanner(c, p)
 	if !a.term.open || sess == nil || a.localMachine() == "" {
 		a.conversation(c, p, sess)
 		return
@@ -263,8 +265,13 @@ func (a *App) userMessage(c *ui.Context, p *palette, e session.Entry, firstQueue
 			files = append(files, it)
 		}
 	}
+	editable := a.editableEntry()
+	canEdit := editable != nil && editable.ID == e.ID
+	editing := canEdit && a.msgEdit.id == e.ID
 	ui.Row(c).FillWidth().Gap(8).AlignItems(ui.Start).Justify(ui.End).Children(func() {
-		ui.Column(c).AlignItems(ui.End).Gap(4).Shrink(1).MinWidth(0).MaxWidth(560).Children(func() {
+		col := ui.Column(c).AlignItems(ui.End).Gap(4).Shrink(1).MinWidth(0).MaxWidth(560)
+		hovered := col.Hovered()
+		col.Children(func() {
 			ui.Row(c).Gap(4).AlignItems(ui.Center).Children(func() {
 				label := deliveryLabel(e)
 				switch {
@@ -297,7 +304,9 @@ func (a *App) userMessage(c *ui.Context, p *palette, e session.Entry, firstQueue
 			for _, f := range files {
 				fileChip(c, p, f)
 			}
-			if text := e.Text(); text != "" {
+			if editing {
+				a.messageEditor(c, p)
+			} else if text := e.Text(); text != "" {
 				// A long message folds to its first lines, as Lody's.
 				long := strings.Count(text, "\n") >= 10 || utf8.RuneCountInString(text) > 900
 				key := e.ID + "/more"
@@ -323,6 +332,14 @@ func (a *App) userMessage(c *ui.Context, p *palette, e session.Entry, firstQueue
 			}
 			if e.Queued && a.view != nil && a.view.Working {
 				a.queuedActions(c, p, e, firstQueued)
+			}
+			if canEdit && !editing {
+				entry := e
+				b := iconButton(c, p, iconPencil, locales.EditMessage(), p.Hover).Size(24, 24).Tooltip(locales.EditMessage()).
+					Transition(colorFade).OnClick(func() { a.startEdit(entry) })
+				if !hovered {
+					b.Opacity(0)
+				}
 			}
 		})
 		ui.Box(c).Margin(28, 0, 0, 0).Children(func() {

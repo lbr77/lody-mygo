@@ -243,6 +243,8 @@ func (a *App) step(c *ui.Context, p *palette, key string, it session.Item) {
 		})
 	case "system_notice":
 		ui.Text(c, firstNonEmpty(it.Text, it.Title)).FontSize(sizeSub).TextColor(p.Warning).Padding(2, 4)
+	case "goal":
+		goalMarker(c, p, it)
 	case "tool_call":
 		open := a.expanded[key]
 		row := ui.Row(c).MinHeight(24).Padding(2, 4).Gap(8).AlignItems(ui.Center).Radius(5)
@@ -425,6 +427,9 @@ func (a *App) turnFooter(c *ui.Context, p *palette, e session.Entry, hovered boo
 			}
 			mygo.Clipboard.WriteText(strings.Join(parts, "\n\n"))
 		})
+		if a.forkable(e) {
+			a.forkButton(c, p, e)
+		}
 		var meta []string
 		if e.EndedAt > 0 {
 			meta = append(meta, locales.MessageToday(time.UnixMilli(int64(e.EndedAt)).Local()))

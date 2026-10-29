@@ -7956,3 +7956,355 @@ func McpDefaultEnabledHint() string { return In(i18n.Locale()).McpDefaultEnabled
 func (msgs Messages) McpDefaultEnabledHint() string {
 	return Catalog.Format(msgs.locale, "mcpDefaultEnabledHint", nil)
 }
+
+// EditMessage says "Edit message"
+// in the language the app shows.
+func EditMessage() string { return In(i18n.Locale()).EditMessage() }
+
+// EditMessage says "Edit message"
+// in the language of msgs.
+func (msgs Messages) EditMessage() string {
+	return Catalog.Format(msgs.locale, "editMessage", nil)
+}
+
+// EditResendFailed says "Unable to edit and resend this message"
+// in the language the app shows.
+func EditResendFailed() string { return In(i18n.Locale()).EditResendFailed() }
+
+// EditResendFailed says "Unable to edit and resend this message"
+// in the language of msgs.
+func (msgs Messages) EditResendFailed() string {
+	return Catalog.Format(msgs.locale, "editResendFailed", nil)
+}
+
+// ForkSession says "Fork session"
+// in the language the app shows.
+func ForkSession() string { return In(i18n.Locale()).ForkSession() }
+
+// ForkSession says "Fork session"
+// in the language of msgs.
+func (msgs Messages) ForkSession() string {
+	return Catalog.Format(msgs.locale, "forkSession", nil)
+}
+
+// ForkNewTab says "Fork to new tab"
+// in the language the app shows.
+func ForkNewTab() string { return In(i18n.Locale()).ForkNewTab() }
+
+// ForkNewTab says "Fork to new tab"
+// in the language of msgs.
+func (msgs Messages) ForkNewTab() string {
+	return Catalog.Format(msgs.locale, "forkNewTab", nil)
+}
+
+// ForkNewWorktree says "Fork to new worktree"
+// in the language the app shows.
+func ForkNewWorktree() string { return In(i18n.Locale()).ForkNewWorktree() }
+
+// ForkNewWorktree says "Fork to new worktree"
+// in the language of msgs.
+func (msgs Messages) ForkNewWorktree() string {
+	return Catalog.Format(msgs.locale, "forkNewWorktree", nil)
+}
+
+// ForkFailed says "Unable to fork session"
+// in the language the app shows.
+func ForkFailed() string { return In(i18n.Locale()).ForkFailed() }
+
+// ForkFailed says "Unable to fork session"
+// in the language of msgs.
+func (msgs Messages) ForkFailed() string {
+	return Catalog.Format(msgs.locale, "forkFailed", nil)
+}
+
+// ForkPartial says "Session forked with some historical content unavailable"
+// in the language the app shows.
+func ForkPartial() string { return In(i18n.Locale()).ForkPartial() }
+
+// ForkPartial says "Session forked with some historical content unavailable"
+// in the language of msgs.
+func (msgs Messages) ForkPartial() string {
+	return Catalog.Format(msgs.locale, "forkPartial", nil)
+}
+
+// ForkDirtyTitle says "Uncommitted changes found"
+// in the language the app shows.
+func ForkDirtyTitle() string { return In(i18n.Locale()).ForkDirtyTitle() }
+
+// ForkDirtyTitle says "Uncommitted changes found"
+// in the language of msgs.
+func (msgs Messages) ForkDirtyTitle() string {
+	return Catalog.Format(msgs.locale, "forkDirtyTitle", nil)
+}
+
+// ForkDirtyBody says "The new worktree starts from the latest committed HEAD. Uncommitted and untracked files will not be copied."
+// in the language the app shows.
+func ForkDirtyBody() string { return In(i18n.Locale()).ForkDirtyBody() }
+
+// ForkDirtyBody says "The new worktree starts from the latest committed HEAD. Uncommitted and untracked files will not be copied."
+// in the language of msgs.
+func (msgs Messages) ForkDirtyBody() string {
+	return Catalog.Format(msgs.locale, "forkDirtyBody", nil)
+}
+
+// ForkDirtyConfirm says "Continue from committed HEAD"
+// in the language the app shows.
+func ForkDirtyConfirm() string { return In(i18n.Locale()).ForkDirtyConfirm() }
+
+// ForkDirtyConfirm says "Continue from committed HEAD"
+// in the language of msgs.
+func (msgs Messages) ForkDirtyConfirm() string {
+	return Catalog.Format(msgs.locale, "forkDirtyConfirm", nil)
+}
+
+// GoalActive says "Pursuing goal"
+// in the language the app shows.
+func GoalActive() string { return In(i18n.Locale()).GoalActive() }
+
+// GoalActive says "Pursuing goal"
+// in the language of msgs.
+func (msgs Messages) GoalActive() string {
+	return Catalog.Format(msgs.locale, "goalActive", nil)
+}
+
+// GoalPaused says "Goal paused"
+// in the language the app shows.
+func GoalPaused() string { return In(i18n.Locale()).GoalPaused() }
+
+// GoalPaused says "Goal paused"
+// in the language of msgs.
+func (msgs Messages) GoalPaused() string {
+	return Catalog.Format(msgs.locale, "goalPaused", nil)
+}
+
+// GoalUnmet says "Goal unmet"
+// in the language the app shows.
+func GoalUnmet() string { return In(i18n.Locale()).GoalUnmet() }
+
+// GoalUnmet says "Goal unmet"
+// in the language of msgs.
+func (msgs Messages) GoalUnmet() string {
+	return Catalog.Format(msgs.locale, "goalUnmet", nil)
+}
+
+// GoalBlocked says "Goal blocked"
+// in the language the app shows.
+func GoalBlocked() string { return In(i18n.Locale()).GoalBlocked() }
+
+// GoalBlocked says "Goal blocked"
+// in the language of msgs.
+func (msgs Messages) GoalBlocked() string {
+	return Catalog.Format(msgs.locale, "goalBlocked", nil)
+}
+
+// GoalUsageLimited says "Usage limit reached"
+// in the language the app shows.
+func GoalUsageLimited() string { return In(i18n.Locale()).GoalUsageLimited() }
+
+// GoalUsageLimited says "Usage limit reached"
+// in the language of msgs.
+func (msgs Messages) GoalUsageLimited() string {
+	return Catalog.Format(msgs.locale, "goalUsageLimited", nil)
+}
+
+// GoalAchieved says "Goal achieved"
+// in the language the app shows.
+func GoalAchieved() string { return In(i18n.Locale()).GoalAchieved() }
+
+// GoalAchieved says "Goal achieved"
+// in the language of msgs.
+func (msgs Messages) GoalAchieved() string {
+	return Catalog.Format(msgs.locale, "goalAchieved", nil)
+}
+
+// GoalCleared says "Goal cleared"
+// in the language the app shows.
+func GoalCleared() string { return In(i18n.Locale()).GoalCleared() }
+
+// GoalCleared says "Goal cleared"
+// in the language of msgs.
+func (msgs Messages) GoalCleared() string {
+	return Catalog.Format(msgs.locale, "goalCleared", nil)
+}
+
+// GoalPause says "Pause"
+// in the language the app shows.
+func GoalPause() string { return In(i18n.Locale()).GoalPause() }
+
+// GoalPause says "Pause"
+// in the language of msgs.
+func (msgs Messages) GoalPause() string {
+	return Catalog.Format(msgs.locale, "goalPause", nil)
+}
+
+// GoalResume says "Resume"
+// in the language the app shows.
+func GoalResume() string { return In(i18n.Locale()).GoalResume() }
+
+// GoalResume says "Resume"
+// in the language of msgs.
+func (msgs Messages) GoalResume() string {
+	return Catalog.Format(msgs.locale, "goalResume", nil)
+}
+
+// GoalClear says "Clear"
+// in the language the app shows.
+func GoalClear() string { return In(i18n.Locale()).GoalClear() }
+
+// GoalClear says "Clear"
+// in the language of msgs.
+func (msgs Messages) GoalClear() string {
+	return Catalog.Format(msgs.locale, "goalClear", nil)
+}
+
+// GoalDismiss says "Dismiss goal banner"
+// in the language the app shows.
+func GoalDismiss() string { return In(i18n.Locale()).GoalDismiss() }
+
+// GoalDismiss says "Dismiss goal banner"
+// in the language of msgs.
+func (msgs Messages) GoalDismiss() string {
+	return Catalog.Format(msgs.locale, "goalDismiss", nil)
+}
+
+// GoalObjective says "Goal objective"
+// in the language the app shows.
+func GoalObjective() string { return In(i18n.Locale()).GoalObjective() }
+
+// GoalObjective says "Goal objective"
+// in the language of msgs.
+func (msgs Messages) GoalObjective() string {
+	return Catalog.Format(msgs.locale, "goalObjective", nil)
+}
+
+// GoalCommandError says "Failed to send goal command"
+// in the language the app shows.
+func GoalCommandError() string { return In(i18n.Locale()).GoalCommandError() }
+
+// GoalCommandError says "Failed to send goal command"
+// in the language of msgs.
+func (msgs Messages) GoalCommandError() string {
+	return Catalog.Format(msgs.locale, "goalCommandError", nil)
+}
+
+// GoalTokens says "tokens: {used}"
+// in the language the app shows.
+func GoalTokens(used string) string { return In(i18n.Locale()).GoalTokens(used) }
+
+// GoalTokens says "tokens: {used}"
+// in the language of msgs.
+func (msgs Messages) GoalTokens(used string) string {
+	return Catalog.Format(msgs.locale, "goalTokens", map[string]any{"used": used})
+}
+
+// GoalTokensBudget says "tokens: {used} / {budget}"
+// in the language the app shows.
+func GoalTokensBudget(used string, budget string) string {
+	return In(i18n.Locale()).GoalTokensBudget(used, budget)
+}
+
+// GoalTokensBudget says "tokens: {used} / {budget}"
+// in the language of msgs.
+func (msgs Messages) GoalTokensBudget(used string, budget string) string {
+	return Catalog.Format(msgs.locale, "goalTokensBudget", map[string]any{"used": used, "budget": budget})
+}
+
+// MonitorNoSessions says "No resident ACP sessions"
+// in the language the app shows.
+func MonitorNoSessions() string { return In(i18n.Locale()).MonitorNoSessions() }
+
+// MonitorNoSessions says "No resident ACP sessions"
+// in the language of msgs.
+func (msgs Messages) MonitorNoSessions() string {
+	return Catalog.Format(msgs.locale, "monitorNoSessions", nil)
+}
+
+// MonitorUntitled says "Untitled"
+// in the language the app shows.
+func MonitorUntitled() string { return In(i18n.Locale()).MonitorUntitled() }
+
+// MonitorUntitled says "Untitled"
+// in the language of msgs.
+func (msgs Messages) MonitorUntitled() string {
+	return Catalog.Format(msgs.locale, "monitorUntitled", nil)
+}
+
+// MonitorTerminate says "Terminate ACP process"
+// in the language the app shows.
+func MonitorTerminate() string { return In(i18n.Locale()).MonitorTerminate() }
+
+// MonitorTerminate says "Terminate ACP process"
+// in the language of msgs.
+func (msgs Messages) MonitorTerminate() string {
+	return Catalog.Format(msgs.locale, "monitorTerminate", nil)
+}
+
+// MonitorTerminateAction says "Terminate"
+// in the language the app shows.
+func MonitorTerminateAction() string { return In(i18n.Locale()).MonitorTerminateAction() }
+
+// MonitorTerminateAction says "Terminate"
+// in the language of msgs.
+func (msgs Messages) MonitorTerminateAction() string {
+	return Catalog.Format(msgs.locale, "monitorTerminateAction", nil)
+}
+
+// MonitorTerminateTitle says "Terminate running ACP process?"
+// in the language the app shows.
+func MonitorTerminateTitle() string { return In(i18n.Locale()).MonitorTerminateTitle() }
+
+// MonitorTerminateTitle says "Terminate running ACP process?"
+// in the language of msgs.
+func (msgs Messages) MonitorTerminateTitle() string {
+	return Catalog.Format(msgs.locale, "monitorTerminateTitle", nil)
+}
+
+// MonitorTerminateBody says "The active agent turn will stop immediately. The session and its files will remain available."
+// in the language the app shows.
+func MonitorTerminateBody() string { return In(i18n.Locale()).MonitorTerminateBody() }
+
+// MonitorTerminateBody says "The active agent turn will stop immediately. The session and its files will remain available."
+// in the language of msgs.
+func (msgs Messages) MonitorTerminateBody() string {
+	return Catalog.Format(msgs.locale, "monitorTerminateBody", nil)
+}
+
+// MonitorTerminateFailed says "Failed to terminate ACP process"
+// in the language the app shows.
+func MonitorTerminateFailed() string { return In(i18n.Locale()).MonitorTerminateFailed() }
+
+// MonitorTerminateFailed says "Failed to terminate ACP process"
+// in the language of msgs.
+func (msgs Messages) MonitorTerminateFailed() string {
+	return Catalog.Format(msgs.locale, "monitorTerminateFailed", nil)
+}
+
+// MonitorTerminateUnavailable says "Machine is unavailable"
+// in the language the app shows.
+func MonitorTerminateUnavailable() string { return In(i18n.Locale()).MonitorTerminateUnavailable() }
+
+// MonitorTerminateUnavailable says "Machine is unavailable"
+// in the language of msgs.
+func (msgs Messages) MonitorTerminateUnavailable() string {
+	return Catalog.Format(msgs.locale, "monitorTerminateUnavailable", nil)
+}
+
+// MonitorTruncated says "Only the first 100 sessions are shown."
+// in the language the app shows.
+func MonitorTruncated() string { return In(i18n.Locale()).MonitorTruncated() }
+
+// MonitorTruncated says "Only the first 100 sessions are shown."
+// in the language of msgs.
+func (msgs Messages) MonitorTruncated() string {
+	return Catalog.Format(msgs.locale, "monitorTruncated", nil)
+}
+
+// AgentIdle says "The agent isn't running on the machine."
+// in the language the app shows.
+func AgentIdle() string { return In(i18n.Locale()).AgentIdle() }
+
+// AgentIdle says "The agent isn't running on the machine."
+// in the language of msgs.
+func (msgs Messages) AgentIdle() string {
+	return Catalog.Format(msgs.locale, "agentIdle", nil)
+}

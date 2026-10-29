@@ -391,6 +391,7 @@ func (a *App) machineCard(c *ui.Context, p *palette, id string, machines map[str
 				})
 			})
 			a.resourcePanels(c, p, id)
+			a.sessionProcesses(c, p, id)
 		})
 	})
 }

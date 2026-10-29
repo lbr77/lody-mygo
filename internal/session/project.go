@@ -38,6 +38,7 @@ type Item struct {
 	MimeType         string
 	SizeBytes        int64
 	Images           []Item // image_group
+	Goal             *Goal  // goal
 }
 
 type Permission struct {
@@ -102,6 +103,11 @@ type Entry struct {
 	FileDiffs  []FileDiff
 	StartedAt  float64
 	EndedAt    float64
+	// AcpTurnID is the agent's own id of a reply's turn, which a fork
+	// starts from.
+	AcpTurnID string
+	// Config is a user message's input, as it was sent.
+	Config map[string]any
 }
 
 type FileDiff struct {
@@ -130,6 +136,17 @@ type View struct {
 	ModelID      string // of the last user turn
 	ModeID       string // the permission mode of the last user turn
 	Preview      *Preview
+	Goal         *Goal // the latest goal the agent reported
+}
+
+// Goal is an objective the agent pursues across turns, as Codex's goals.
+type Goal struct {
+	ThreadID    string
+	Objective   string
+	Status      string // active, paused, budgetLimited, blocked, usageLimited, complete or cleared
+	TokenBudget float64
+	TokensUsed  float64
+	Seconds     float64 // time spent on it
 }
 
 // Preview is a web server the session runs that it can show, as the
@@ -274,6 +291,10 @@ func summarizeItem(raw map[string]any, identity string) Item {
 	case "proposed_plan":
 		it.Text = str(raw["markdown"])
 		it.Status = str(raw["status"])
+	case "goal":
+		it.Text, it.Status = str(raw["objective"]), str(raw["status"])
+		it.Goal = &Goal{ThreadID: str(raw["threadId"]), Objective: str(raw["objective"]), Status: str(raw["status"]),
+			TokenBudget: num(raw["tokenBudget"]), TokensUsed: num(raw["tokensUsed"]), Seconds: num(raw["timeUsedSeconds"])}
 	case "file":
 		it.FileName = str(raw["fileName"])
 		it.FileID = str(raw["fileId"])
@@ -477,6 +498,7 @@ func project(doc *loro.LoroDoc, status, reason string) *View {
 			Author:     authorOf(e["author"]),
 			StartedAt:  num(e["startedAt"]),
 			EndedAt:    num(e["endedAt"]),
+			AcpTurnID:  str(e["acpTurnId"]),
 		}
 		if m := obj(e["modelInfo"]); m != nil {
 			entry.Model = strings.TrimSpace(str(m["name"]))
@@ -497,6 +519,7 @@ func project(doc *loro.LoroDoc, status, reason string) *View {
 		}
 		if role == "user" {
 			if cfg := obj(e["inputConfig"]); cfg != nil {
+				entry.Config = cfg
 				view.ModelID = str(cfg["modelId"])
 				view.ModeID = str(cfg["modeId"])
 				entry.Steer = str(cfg["_lodyDeliveryKind"]) == "steer"
@@ -554,6 +577,15 @@ func project(doc *loro.LoroDoc, status, reason string) *View {
 	}
 
 	view.Working = isWorking(raw, len(queue))
+	for i := len(view.Entries) - 1; i >= 0 && view.Goal == nil; i-- {
+		items := view.Entries[i].Items
+		for j := len(items) - 1; j >= 0; j-- {
+			if items[j].Goal != nil && items[j].Goal.ThreadID != "" {
+				view.Goal = items[j].Goal
+				break
+			}
+		}
+	}
 	sess := obj(deepValue(doc.GetMap(loro.AsContainerId("session")).GetDeepValue()))
 	view.AwaitingUser = sess["awaitingUserSince"] != nil
 	view.Preview = previewOf(obj(deepValue(doc.GetMap(loro.AsContainerId("preview")).GetDeepValue())))

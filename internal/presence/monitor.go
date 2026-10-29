@@ -41,6 +41,21 @@ type Sample struct {
 	AvailableMemoryBytes float64  `json:"availableMemoryBytes"`
 	CLI                  Resource `json:"cliControlPlane"`
 	Sessions             Resource `json:"sessionsAggregate"`
+	// SessionList are the agent processes the machine runs, a session each.
+	SessionList []SessionProcess `json:"sessions"`
+	Truncated   bool             `json:"sessionsTruncated"`
+}
+
+// SessionProcess is a session's agent process on the machine.
+type SessionProcess struct {
+	SessionID       string   `json:"sessionId"`
+	ParentSessionID string   `json:"parentSessionId"`
+	CLIType         string   `json:"agentCliType"`
+	AgentType       string   `json:"agentType"`
+	Status          string   `json:"status"` // initializing, running, waiting_permission, finalizing, idle, stopping or failed
+	LastActivityMs  *float64 `json:"lastActivityAtMs"`
+	StartedAtMs     *float64 `json:"startedAtMs"`
+	Resource        Resource `json:"resource"`
 }
 
 const (

@@ -1676,5 +1676,57 @@
   "mcpEnvPassthrough": "Environment variable passthrough",
   "mcpEnvPassthroughHint": "These variables are copied from the target machine's own environment. One name a line.",
   "mcpDefaultEnabled": "Select by default",
-  "mcpDefaultEnabledHint": "New sessions initially select this server; users can still deselect it."
+  "mcpDefaultEnabledHint": "New sessions initially select this server; users can still deselect it.",
+  "editMessage": "Edit message",
+  "editResendFailed": "Unable to edit and resend this message",
+  "forkSession": "Fork session",
+  "forkNewTab": "Fork to new tab",
+  "forkNewWorktree": "Fork to new worktree",
+  "forkFailed": "Unable to fork session",
+  "forkPartial": "Session forked with some historical content unavailable",
+  "forkDirtyTitle": "Uncommitted changes found",
+  "forkDirtyBody": "The new worktree starts from the latest committed HEAD. Uncommitted and untracked files will not be copied.",
+  "forkDirtyConfirm": "Continue from committed HEAD",
+  "goalActive": "Pursuing goal",
+  "goalPaused": "Goal paused",
+  "goalUnmet": "Goal unmet",
+  "goalBlocked": "Goal blocked",
+  "goalUsageLimited": "Usage limit reached",
+  "goalAchieved": "Goal achieved",
+  "goalCleared": "Goal cleared",
+  "goalPause": "Pause",
+  "goalResume": "Resume",
+  "goalClear": "Clear",
+  "goalDismiss": "Dismiss goal banner",
+  "goalObjective": "Goal objective",
+  "goalCommandError": "Failed to send goal command",
+  "goalTokens": "tokens: {used}",
+  "@goalTokens": {
+    "placeholders": {
+      "used": {
+        "type": "String"
+      }
+    }
+  },
+  "goalTokensBudget": "tokens: {used} / {budget}",
+  "@goalTokensBudget": {
+    "placeholders": {
+      "used": {
+        "type": "String"
+      },
+      "budget": {
+        "type": "String"
+      }
+    }
+  },
+  "monitorNoSessions": "No resident ACP sessions",
+  "monitorUntitled": "Untitled",
+  "monitorTerminate": "Terminate ACP process",
+  "monitorTerminateAction": "Terminate",
+  "monitorTerminateTitle": "Terminate running ACP process?",
+  "monitorTerminateBody": "The active agent turn will stop immediately. The session and its files will remain available.",
+  "monitorTerminateFailed": "Failed to terminate ACP process",
+  "monitorTerminateUnavailable": "Machine is unavailable",
+  "monitorTruncated": "Only the first 100 sessions are shown.",
+  "agentIdle": "The agent isn't running on the machine."
 }

@@ -104,6 +104,11 @@ type Capability struct {
 	Efforts map[string][]string `json:"efforts,omitempty"`
 	// SessionTitle is whether the agent names its sessions itself.
 	SessionTitle bool `json:"sessionTitle,omitempty"`
+	// Fork is whether a session can start again from one of its replies.
+	Fork bool `json:"fork,omitempty"`
+	// GoalActions are the goal commands the agent takes: set, pause,
+	// resume, clear.
+	GoalActions []string `json:"goalActions,omitempty"`
 	// CLIType and AgentType are the runtime the agent reported for.
 	CLIType   string `json:"cliType,omitempty"`
 	AgentType string `json:"agentType,omitempty"`
@@ -299,6 +304,10 @@ func projectMachine(rows []flock.Row, machineID string) Catalog {
 			}
 			capability.Steer = value["acknowledgedSteer"] == true && value["provenance"] == "runtime"
 			capability.SessionTitle = value["sessionTitle"] == true
+			capability.Fork = value["sessionFork"] == true && value["provenance"] == "runtime"
+			for _, a := range anyList(value["goalActions"]) {
+				capability.GoalActions = append(capability.GoalActions, text(a))
+			}
 			capability.CLIType, capability.AgentType = text(value["cliType"]), text(value["agentType"])
 			for _, o := range anyList(value["configOptions"]) {
 				opt := object(o)

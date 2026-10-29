@@ -131,6 +131,12 @@ type App struct {
 	agentsMachine   string // the machine whose agents Settings shows
 	confirming      confirmation
 	mcp             mcpForm
+	msgEdit         messageEdit
+	forks           map[string]forkPending   // forks being made, by source session
+	forkOpen        string                   // a fork to show once the workspace lists it
+	goalPending     string                   // a goal command on its way
+	goalSeen        string                   // the goal snapshot the banner last showed
+	goalDismissed   map[string]string        // cleared goals hidden, by session
 	mcpTools        map[string]*mcpTools     // tool lists loaded, by server
 	mcpAuthStatus   map[string]mcpAuthResult // servers' sign-ins, as the daemon last said
 	general         generalForm
@@ -486,6 +492,7 @@ func applyAppearance(choice string) {
 // show switches to a session and follows its stream.
 func (a *App) show(id string) {
 	a.page = ""
+	a.msgEdit = messageEdit{}
 	a.stashDraft()
 	a.closeSession()
 	a.selected = id
@@ -625,7 +632,10 @@ func (a *App) stop() {
 		ctx, cancel := context.WithTimeout(context.Background(), 40*time.Second)
 		defer cancel()
 		if err := r.Stop(ctx, machine); err != nil {
-			a.update(func() { a.sendError = locales.FailStop(err.Error()) })
+			a.update(func() {
+				a.sendError = locales.FailStop(err.Error())
+				a.checkLive()
+			})
 		}
 	}()
 }

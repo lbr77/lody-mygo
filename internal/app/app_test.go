@@ -1072,3 +1072,45 @@ func TestOlderVersion(t *testing.T) {
 		}
 	}
 }
+
+func TestSessionActions(t *testing.T) {
+	a := fixture()
+	a.view.Working = false
+	a.view.Entries = a.view.Entries[:3]
+	a.view.Entries[1].AcpTurnID = "t1"
+	a.catalog.Sessions[0].Status, a.catalog.Sessions[0].AgentConfigID = "idle", "a1"
+	a.catalog.Capabilities = map[string]catalog.Capability{"a1": {Fork: true, GoalActions: []string{"pause", "resume", "clear"}}}
+	if e := a.editableEntry(); e == nil || e.ID != "u2" {
+		t.Fatalf("editable = %v", e)
+	}
+	if !a.forkable(a.view.Entries[1]) {
+		t.Fatal("the reply is forkable")
+	}
+	tt := snap(t, a, "session-actions", false, func(tt *ui.Tester) {})
+	if !tt.HasText("Edit message") || !tt.HasText("Fork session") {
+		t.Fatalf("labels: %q", tt.Texts())
+	}
+	a.startEdit(a.view.Entries[2])
+	tt = snap(t, a, "session-edit", false, nil)
+	if !tt.HasText("Cancel") || a.msgEdit.text != "Now run it against the real stream." {
+		t.Fatalf("editor: %q", tt.Texts())
+	}
+	a.view.Goal = &session.Goal{ThreadID: "g1", Objective: "Ship the native client", Status: "active", TokensUsed: 12400, Seconds: 95}
+	tt = snap(t, a, "session-goal", false, nil)
+	for _, want := range []string{"Goal", "Pursuing goal", "Ship the native client", "Pause", "Clear", "tokens: 12.4K"} {
+		if !tt.HasText(want) {
+			t.Fatalf("no %q in %q", want, tt.Texts())
+		}
+	}
+	if a.editableEntry() != nil {
+		t.Fatal("an active goal keeps messages as they are")
+	}
+	a.view.Goal.Status = "cleared"
+	tt = snap(t, a, "session-goal-cleared", false, nil)
+	if !tt.HasText("Goal cleared") || !tt.HasText("Dismiss goal banner") {
+		t.Fatalf("cleared: %q", tt.Texts())
+	}
+	if tokensCompact(1_234_567) != "1.23M" || tokensCompact(999) != "999" || tokensCompact(120_000) != "120K" {
+		t.Fatal("tokensCompact")
+	}
+}
