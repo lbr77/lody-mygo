@@ -418,6 +418,24 @@ func shareMatSlider(c *ui.Context, p *palette, mat *float64, disabled bool) {
 // secondary raised, ghost bare; a busy one shows its spinner in place of
 // its icon.
 func lodyButton(c *ui.Context, p *palette, variant, key string, icon *ui.SVG, label string, enabled bool, busy ...bool) ui.Element {
+	b, ink := lodyButtonLook(c, p, variant, key, label, enabled)
+	b.Children(func() {
+		switch {
+		case len(busy) > 0 && busy[0]:
+			spinner(c).Size(16, 16)
+		case icon != nil:
+			ui.Icon(c, icon).Size(16, 16).TextColor(ink)
+		}
+		if label != "" {
+			ui.Text(c, label).FontSize(sizeSub).FontWeight(500).LetterSpacing(-0.13).TextColor(ink).SingleLine()
+		}
+	})
+	return b
+}
+
+// lodyButtonLook is lodyButton without its content: the button, and the
+// ink what it holds takes.
+func lodyButtonLook(c *ui.Context, p *palette, variant, key, label string, enabled bool) (ui.Element, ui.Color) {
 	b := ui.ButtonBase(c.Key("btn/" + key)).Height(28).Radius(8).Gap(6).AlignItems(ui.Center).Justify(ui.Center).Shrink(0).
 		Label(label).Disabled(!enabled).Transition(colorFade)
 	if label == "" {
@@ -477,16 +495,5 @@ func lodyButton(c *ui.Context, p *palette, variant, key string, icon *ui.SVG, la
 			pressable(b, 0.97)
 		}
 	}
-	b.Children(func() {
-		switch {
-		case len(busy) > 0 && busy[0]:
-			spinner(c).Size(16, 16)
-		case icon != nil:
-			ui.Icon(c, icon).Size(16, 16).TextColor(ink)
-		}
-		if label != "" {
-			ui.Text(c, label).FontSize(sizeSub).FontWeight(500).LetterSpacing(-0.13).TextColor(ink).SingleLine()
-		}
-	})
-	return b
+	return b, ink
 }

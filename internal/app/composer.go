@@ -527,6 +527,10 @@ func (a *App) optionList(c *ui.Context, p *palette, anchor ui.Element, open *boo
 // floating request does: a question, what it is about, and the choices,
 // refusals first and the suggested one in ink.
 func (a *App) permissionCard(c *ui.Context, p *palette, e session.Entry, it session.Item) {
+	if it.Permission.Questions != nil {
+		a.askQuestionCard(c, p, e, it)
+		return
+	}
 	question := locales.PermissionAction()
 	switch {
 	case it.Permission.Question:

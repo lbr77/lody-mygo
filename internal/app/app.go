@@ -269,6 +269,7 @@ type App struct {
 	membershipAsking bool
 	userNames        map[string]string    // people outside the members list, by id
 	shareJobs        map[string]*shareJob // an agent's share requests being answered, by request
+	asks             map[string]*askCard  // question cards, live and read only, by request
 	shareReqAt       map[string]time.Time // when each conversation's requests were last read
 	ghProfileAsked   map[string]bool      // workspaces whose GitHub profile was refreshed
 	device           deviceAuth

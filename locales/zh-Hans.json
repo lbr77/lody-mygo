@@ -1964,5 +1964,16 @@
   "mqUploadedImage": "上传的图片",
   "mqReorderError": "调整消息顺序失败",
   "mqEditError": "编辑消息失败",
-  "mqRemoveError": "移除消息失败"
+  "mqRemoveError": "移除消息失败",
+  "askAnswered": "已回答",
+  "askContinuesIn": "{seconds} 秒后自动继续",
+  "askContinuing": "正在继续",
+  "askNoteLabel": "补充说明（可选）",
+  "askGoToQuestion": "前往第 {n} 题",
+  "askNext": "下一题",
+  "askPrev": "上一题",
+  "askProgress": "进度",
+  "askSubmit": "提交",
+  "askCustomAnswer": "输入自定义答案...",
+  "askSendFailed": "回答没有送达 Agent，请重试。"
 }

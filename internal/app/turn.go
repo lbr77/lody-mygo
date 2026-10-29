@@ -314,12 +314,15 @@ func (a *App) step(c *ui.Context, p *palette, key string, it session.Item) {
 	case "goal":
 		goalMarker(c, p, it)
 	case "tool_call":
-		open := a.expanded[key]
+		// An answered question opens on its answers, as Lody's step with
+		// a permission does, until it is folded.
+		answered := askAnswered(it)
+		open := a.expanded[key] != answered
 		title := firstNonEmpty(it.Title, it.Path, it.Kind)
 		verb, rest := toolVerbParts(it, title)
 		row := ui.Row(c).MinHeight(24).Padding(2, 4).Gap(6).AlignItems(ui.Center).Radius(5).Label(strings.TrimSpace(verb + " " + rest))
 		shown := b2f(open)
-		if it.HasDetail {
+		if it.HasDetail || answered {
 			row.Cursor(ui.CursorPointer).OnClick(func() { a.expanded[key] = !a.expanded[key] })
 		}
 		// As Lody's step, the title brightens under the pointer over 150ms
@@ -351,7 +354,14 @@ func (a *App) step(c *ui.Context, p *palette, key string, it session.Item) {
 				loader(c, p)
 			}
 		})
-		unfold(c, shown, open, func() { a.toolDetail(c, p, key, it) })
+		unfold(c, shown, open, func() {
+			if it.HasDetail {
+				a.toolDetail(c, p, key, it)
+			}
+			if answered {
+				ui.Column(c).FillWidth().Padding(4, 0, 6, 0).Children(func() { a.askAnsweredCard(c, p, it) })
+			}
+		})
 	default:
 		ui.Text(c, it.Type).FontSize(sizeSub).TextColor(p.Tertiary).Padding(2, 4)
 	}

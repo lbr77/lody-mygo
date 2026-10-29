@@ -800,6 +800,13 @@ func (r *Replica) Stop(ctx context.Context, machineID string) error {
 
 // Answer selects an option of a pending permission request.
 func (r *Replica) Answer(ctx context.Context, entryID, itemID, requestID, optionID string) error {
+	return r.Respond(ctx, entryID, itemID, requestID, map[string]any{"outcome": "selected", "optionId": optionID})
+}
+
+// Respond writes a pending permission request's outcome, once, as Lody's
+// respondPermission does: the agent reads it from the document. A
+// question's outcome carries its answers in _meta (AskOutcome).
+func (r *Replica) Respond(ctx context.Context, entryID, itemID, requestID string, outcome map[string]any) error {
 	r.mu.Lock()
 	if !r.ready {
 		r.mu.Unlock()
@@ -810,7 +817,6 @@ func (r *Replica) Answer(ctx context.Context, entryID, itemID, requestID, option
 		r.mu.Unlock()
 		return errors.New("session: the request is gone")
 	}
-	outcome := map[string]any{"outcome": "selected", "optionId": optionID}
 	before := r.doc.OplogVv()
 	var err error
 	if req, ok := item.GetLoroMap("permissionRequest"); ok && req != nil {
