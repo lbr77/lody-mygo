@@ -333,3 +333,37 @@ func TestRebindShortcut(t *testing.T) {
 		t.Fatalf("reset: %v", a.keyOverrides)
 	}
 }
+
+func TestSessionMentionScope(t *testing.T) {
+	a := fixture()
+	a.view.Entries = a.view.Entries[:2]
+	a.view.Working = false
+	names := func() string {
+		var out []string
+		for _, r := range a.mention.rows {
+			out = append(out, r.item.Name)
+		}
+		return strings.Join(out, "|")
+	}
+	tt := snap(t, a, "mention-scope", false, func(tt *ui.Tester) {
+		tt.Frame()
+		tt.Type("@session:")
+		tt.Frame()
+	})
+	// The current project's sessions, with the scope over them.
+	if !tt.HasText("Current project") || !tt.HasText("All projects") || names() != "Sidebar status marks" {
+		t.Fatalf("current: %q", names())
+	}
+	a.runCommand("mention.toggleSessionProjectScope")
+	tt.Frame()
+	if got := names(); !strings.Contains(got, "Fix the flaky upload test") || !strings.Contains(got, "What is a CRDT?") {
+		t.Fatalf("all: %q", got)
+	}
+	if err := tt.Click("Current project"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if names() != "Sidebar status marks" {
+		t.Fatalf("back to current: %q", names())
+	}
+}

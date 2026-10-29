@@ -264,6 +264,8 @@ func (a *App) commands() []command {
 			icon: iconShieldCheck, when: s.mode.can(), run: func() { a.surf.mode.next() }},
 		{id: "session.cycleProvider", title: locales.CmdCycleProvider(), category: catSession, icon: iconBot, when: s.provider.can(), run: func() { a.surf.provider.next() }},
 		{id: "session.cycleModel", title: locales.CmdCycleModel(), category: catSession, icon: iconSparkles, when: s.model.can(), run: func() { a.surf.model.next() }},
+		{id: "mention.toggleSessionProjectScope", title: locales.CmdToggleMentionScope(), category: catEditor, icon: iconAtSign, when: a.mention.sessionMentionLevel(),
+			run: func() { a.mention.allProjects = !a.mention.allProjects }},
 		{id: "session.cycleThinkEffort", title: locales.CmdCycleThinkEffort(), category: catSession, icon: iconBrain, when: s.effort.can(), run: func() { a.surf.effort.next() }},
 	}
 	// A session's commands are listed without one too, as Lody's

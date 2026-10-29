@@ -12908,3 +12908,93 @@ func KeyAlreadyUsed(binding string, command string) string {
 func (msgs Messages) KeyAlreadyUsed(binding string, command string) string {
 	return Catalog.Format(msgs.locale, "keyAlreadyUsed", map[string]any{"binding": binding, "command": command})
 }
+
+// CmdToggleMentionScope says "Toggle Session Mention Project Scope"
+// in the language the app shows.
+func CmdToggleMentionScope() string { return In(i18n.Locale()).CmdToggleMentionScope() }
+
+// CmdToggleMentionScope says "Toggle Session Mention Project Scope"
+// in the language of msgs.
+func (msgs Messages) CmdToggleMentionScope() string {
+	return Catalog.Format(msgs.locale, "cmdToggleMentionScope", nil)
+}
+
+// MentionSessionScope says "Session project scope"
+// in the language the app shows.
+func MentionSessionScope() string { return In(i18n.Locale()).MentionSessionScope() }
+
+// MentionSessionScope says "Session project scope"
+// in the language of msgs.
+func (msgs Messages) MentionSessionScope() string {
+	return Catalog.Format(msgs.locale, "mentionSessionScope", nil)
+}
+
+// MentionSessionScopeCurrent says "Current project"
+// in the language the app shows.
+func MentionSessionScopeCurrent() string { return In(i18n.Locale()).MentionSessionScopeCurrent() }
+
+// MentionSessionScopeCurrent says "Current project"
+// in the language of msgs.
+func (msgs Messages) MentionSessionScopeCurrent() string {
+	return Catalog.Format(msgs.locale, "mentionSessionScopeCurrent", nil)
+}
+
+// MentionSessionScopeAll says "All projects"
+// in the language the app shows.
+func MentionSessionScopeAll() string { return In(i18n.Locale()).MentionSessionScopeAll() }
+
+// MentionSessionScopeAll says "All projects"
+// in the language of msgs.
+func (msgs Messages) MentionSessionScopeAll() string {
+	return Catalog.Format(msgs.locale, "mentionSessionScopeAll", nil)
+}
+
+// MentionSessionScopeNone says "No project"
+// in the language the app shows.
+func MentionSessionScopeNone() string { return In(i18n.Locale()).MentionSessionScopeNone() }
+
+// MentionSessionScopeNone says "No project"
+// in the language of msgs.
+func (msgs Messages) MentionSessionScopeNone() string {
+	return Catalog.Format(msgs.locale, "mentionSessionScopeNone", nil)
+}
+
+// MentionSessionViewAll says "View all projects"
+// in the language the app shows.
+func MentionSessionViewAll() string { return In(i18n.Locale()).MentionSessionViewAll() }
+
+// MentionSessionViewAll says "View all projects"
+// in the language of msgs.
+func (msgs Messages) MentionSessionViewAll() string {
+	return Catalog.Format(msgs.locale, "mentionSessionViewAll", nil)
+}
+
+// MentionSessionShowAll says "Show sessions from all projects"
+// in the language the app shows.
+func MentionSessionShowAll() string { return In(i18n.Locale()).MentionSessionShowAll() }
+
+// MentionSessionShowAll says "Show sessions from all projects"
+// in the language of msgs.
+func (msgs Messages) MentionSessionShowAll() string {
+	return Catalog.Format(msgs.locale, "mentionSessionShowAll", nil)
+}
+
+// MentionSessionEmptyCurrent says "There are no other sessions in the current project."
+// in the language the app shows.
+func MentionSessionEmptyCurrent() string { return In(i18n.Locale()).MentionSessionEmptyCurrent() }
+
+// MentionSessionEmptyCurrent says "There are no other sessions in the current project."
+// in the language of msgs.
+func (msgs Messages) MentionSessionEmptyCurrent() string {
+	return Catalog.Format(msgs.locale, "mentionSessionEmptyCurrent", nil)
+}
+
+// MentionSessionEmptyNone says "There are no other sessions without a project."
+// in the language the app shows.
+func MentionSessionEmptyNone() string { return In(i18n.Locale()).MentionSessionEmptyNone() }
+
+// MentionSessionEmptyNone says "There are no other sessions without a project."
+// in the language of msgs.
+func (msgs Messages) MentionSessionEmptyNone() string {
+	return Catalog.Format(msgs.locale, "mentionSessionEmptyNone", nil)
+}

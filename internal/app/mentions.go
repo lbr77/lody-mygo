@@ -77,6 +77,23 @@ type mentionState struct {
 	level    string
 	levelDir float32
 	levelRun uint64
+	// allProjects lists sessions of every project, not only the current
+	// one's, until the panel closes.
+	allProjects bool
+}
+
+// sessionScopeKey is the project a session counts as for mentions: its
+// own, or "chat" for one outside any.
+func sessionScopeKey(project string) string {
+	if strings.Contains(project, ":local:") || strings.HasPrefix(project, "github:") {
+		return project
+	}
+	return "chat"
+}
+
+// sessionMentionLevel is whether the panel lists sessions.
+func (m *mentionState) sessionMentionLevel() bool {
+	return m.active && m.trigger.Sigil == '@' && strings.HasPrefix(m.trigger.Query, mention.Session+":")
 }
 
 // mentionLevel is how deep a query has narrowed: to a category, then to
@@ -215,7 +232,7 @@ func fetchSkills(ctx context.Context, conn *cloud.Conn, user string, t mentionTa
 func (a *App) sessionMentions(t mentionTarget) []mention.Item {
 	sessions := make([]int, 0, len(a.catalog.Sessions))
 	for i, s := range a.catalog.Sessions {
-		if s.ID != t.session && !s.Archived {
+		if s.ID != t.session && !s.Archived && (a.mention.allProjects || sessionScopeKey(s.ProjectID) == sessionScopeKey(t.project)) {
 			sessions = append(sessions, i)
 		}
 	}
@@ -410,7 +427,7 @@ func (a *App) mentionPanel(c *ui.Context, p *palette, box, input ui.Element) {
 	start, end := input.TextSelection()
 	tr, ok := mention.Find(a.draft, end)
 	if !ok || start != end || !input.Focused() || input.Composing() || dismissKey(a.draft, tr) == m.dismissed {
-		m.active, m.rows = false, nil
+		m.active, m.rows, m.allProjects = false, nil, false
 		return
 	}
 	if !m.active || tr.Start != m.trigger.Start || tr.Query != m.trigger.Query {
@@ -443,6 +460,9 @@ func (a *App) mentionPanel(c *ui.Context, p *palette, box, input ui.Element) {
 				list.Translate(12*m.levelDir*(1-k), 0).Opacity(k)
 			}
 			list.Children(func() {
+				if m.sessionMentionLevel() {
+					a.sessionScopeHeader(c, p, t)
+				}
 				for i, row := range rows {
 					a.mentionRowView(c.Key(row.category+"|"+row.item.Kind+"|"+row.item.Path), p, row, i == m.highlight)
 				}
@@ -454,6 +474,14 @@ func (a *App) mentionPanel(c *ui.Context, p *palette, box, input ui.Element) {
 							ui.Text(c, locales.Loading()).FontSize(sizeSub).TextColor(p.Secondary)
 						case status != "":
 							ui.Text(c, status).FontSize(sizeSub).TextColor(p.Danger).SingleLine().Grow(1).MinWidth(0)
+						case m.sessionMentionLevel() && !m.allProjects:
+							empty := locales.MentionSessionEmptyCurrent()
+							if sessionScopeKey(t.project) == "chat" {
+								empty = locales.MentionSessionEmptyNone()
+							}
+							ui.Text(c, empty).FontSize(sizeSub).TextColor(p.Secondary).Grow(1).MinWidth(0)
+							ui.Text(c, locales.MentionSessionViewAll()).FontSize(sizeSub).FontWeight(500).TextColor(p.Link).Cursor(ui.CursorPointer).
+								Label(locales.MentionSessionShowAll()).OnClick(func() { m.allProjects = true })
 						default:
 							ui.Text(c, locales.MentionNoMatches()).FontSize(sizeSub).TextColor(p.Secondary)
 						}
@@ -639,4 +667,35 @@ func (a *App) mentionItems(t mentionTarget) (skills, sessions []mention.Item) {
 		}
 	}
 	return skills, a.sessionMentions(t)
+}
+
+// sessionScopeHeader picks the projects the session list covers: the
+// current one, or all.
+func (a *App) sessionScopeHeader(c *ui.Context, p *palette, t mentionTarget) {
+	m := &a.mention
+	current := locales.MentionSessionScopeCurrent()
+	if sessionScopeKey(t.project) == "chat" {
+		current = locales.MentionSessionScopeNone()
+	}
+	ui.Row(c.Key("scope")).Padding(2, 4, 4, 4).Gap(2).Label(locales.MentionSessionScope()).Children(func() {
+		for _, o := range []struct {
+			label string
+			all   bool
+		}{{current, false}, {locales.MentionSessionScopeAll(), true}} {
+			all := o.all
+			b := ui.ButtonBase(c.Key(o.label)).Height(24).Padding(0, 8).Radius(6).Cursor(ui.CursorPointer).Label(o.label).Transition(colorFade).
+				OnClick(func() { m.allProjects = all })
+			selected := m.allProjects == all
+			if selected {
+				b.Background(p.Text.Alpha(0.07))
+			}
+			b.Children(func() {
+				ink := p.Secondary
+				if selected {
+					ink = p.Text
+				}
+				ui.Text(c, o.label).FontSize(sizeFoot).FontWeight(500).TextColor(ink)
+			})
+		}
+	})
 }
