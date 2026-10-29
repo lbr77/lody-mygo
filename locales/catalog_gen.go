@@ -12766,3 +12766,43 @@ func FindNext() string { return In(i18n.Locale()).FindNext() }
 func (msgs Messages) FindNext() string {
 	return Catalog.Format(msgs.locale, "findNext", nil)
 }
+
+// CmdCycleThinkEffort says "Cycle Thinking Effort"
+// in the language the app shows.
+func CmdCycleThinkEffort() string { return In(i18n.Locale()).CmdCycleThinkEffort() }
+
+// CmdCycleThinkEffort says "Cycle Thinking Effort"
+// in the language of msgs.
+func (msgs Messages) CmdCycleThinkEffort() string {
+	return Catalog.Format(msgs.locale, "cmdCycleThinkEffort", nil)
+}
+
+// CmdThinkEffort says "Thinking effort"
+// in the language the app shows.
+func CmdThinkEffort() string { return In(i18n.Locale()).CmdThinkEffort() }
+
+// CmdThinkEffort says "Thinking effort"
+// in the language of msgs.
+func (msgs Messages) CmdThinkEffort() string {
+	return Catalog.Format(msgs.locale, "cmdThinkEffort", nil)
+}
+
+// FastModeTooltip says "Accelerated mode: 1.5x speed, 2x price"
+// in the language the app shows.
+func FastModeTooltip() string { return In(i18n.Locale()).FastModeTooltip() }
+
+// FastModeTooltip says "Accelerated mode: 1.5x speed, 2x price"
+// in the language of msgs.
+func (msgs Messages) FastModeTooltip() string {
+	return Catalog.Format(msgs.locale, "fastModeTooltip", nil)
+}
+
+// FastModeTooltipClaude says "Accelerated mode: 2.5x faster at a higher cost per token"
+// in the language the app shows.
+func FastModeTooltipClaude() string { return In(i18n.Locale()).FastModeTooltipClaude() }
+
+// FastModeTooltipClaude says "Accelerated mode: 2.5x faster at a higher cost per token"
+// in the language of msgs.
+func (msgs Messages) FastModeTooltipClaude() string {
+	return Catalog.Format(msgs.locale, "fastModeTooltipClaude", nil)
+}

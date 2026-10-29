@@ -109,8 +109,9 @@ type App struct {
 	history          []string // sessions shown, for Back and Forward
 	histPos          int
 	palette          paletteState
-	find             findState // find in the conversation
-	surf, surfNext   surface   // what the view offers the commands: the last frame's, and this one's
+	runValues        map[string]map[string]any // agent settings chosen in the composer, by session; "" for New chat
+	find             findState                 // find in the conversation
+	surf, surfNext   surface                   // what the view offers the commands: the last frame's, and this one's
 	zen              zenState
 	focusComposer    bool              // the composer takes the focus as it builds
 	showAll          map[string]bool   // projects listing every session
@@ -221,6 +222,7 @@ func New() *App {
 		api:          &cloud.API{},
 		drafts:       map[string]string{},
 		models:       map[string]string{},
+		runValues:    map[string]map[string]any{},
 		diffs:        map[string]*editor.DiffState{},
 		showAll:      map[string]bool{},
 		modes:        map[string]string{},
@@ -611,18 +613,19 @@ func (a *App) send() {
 	store := a.shortcutStore()
 	working := a.view != nil && a.view.Working || sess.Working()
 	turn := session.Turn{
-		MCPServerIDs: a.mcpSelection(a.selected),
-		Text:         text,
-		UserID:       userID,
-		MachineID:    sess.MachineID,
-		AgentType:    sess.AgentType,
-		CLIType:      sess.CLIType,
-		Resume:       sess.Resume,
-		ModelID:      a.models[a.selected],
-		ModeID:       a.modes[a.selected],
-		Queue:        sess.Working(),
-		Guide:        working && a.busyBehavior == "steer" && a.steerable(sess),
-		MarkDispatch: sync.MarkDispatch,
+		MCPServerIDs:       a.mcpSelection(a.selected),
+		Text:               text,
+		UserID:             userID,
+		MachineID:          sess.MachineID,
+		AgentType:          sess.AgentType,
+		CLIType:            sess.CLIType,
+		Resume:             sess.Resume,
+		ModelID:            a.models[a.selected],
+		ModeID:             a.modes[a.selected],
+		ConfigOptionValues: a.chosenRunValues(a.selected, sess.AgentConfigID, a.currentModel(sess)),
+		Queue:              sess.Working(),
+		Guide:              working && a.busyBehavior == "steer" && a.steerable(sess),
+		MarkDispatch:       sync.MarkDispatch,
 	}
 	a.recordActivity()
 	a.sending, a.sendError, a.uploading = true, "", ""
@@ -774,6 +777,7 @@ func (a *App) startChat() {
 	if (text == "" && len(files) == 0) || a.sending || agent == nil || a.sync == nil || a.conn == nil {
 		return
 	}
+
 	a.recordActivity()
 	id := uuid.NewString()
 	sync, userID, workspace, conn := a.sync, a.account.User.ID, a.conn.ID, a.conn
@@ -781,6 +785,7 @@ func (a *App) startChat() {
 	skills, sessions := a.mentionItems(target)
 	store := a.shortcutStore()
 	model, mode := a.models[""], a.modes[""]
+	runValues := a.chosenRunValues("", agent.ID, model)
 	mcp := a.mcpSelection("")
 	title := draftTitle(text)
 	if title == "" && len(files) > 0 {
@@ -830,7 +835,7 @@ func (a *App) startChat() {
 				state, err = r.Send(ctx, session.Turn{
 					MCPServerIDs: mcp,
 					Text:         expandMentions(ctx, conn, userID, target, text, skills, sessions, store), UserID: userID, MachineID: nc.machine, ModelID: model, ModeID: mode, Attachments: blocks,
-					AgentType: agent.AgentType, CLIType: agent.CLIType, MarkDispatch: sync.MarkDispatch,
+					AgentType: agent.AgentType, CLIType: agent.CLIType, MarkDispatch: sync.MarkDispatch, ConfigOptionValues: runValues,
 				})
 			}
 		}

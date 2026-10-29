@@ -1265,5 +1265,9 @@
   "findInSession": "在会话中查找",
   "findPosition": "{current} / {total}",
   "findPrevious": "上一个结果",
-  "findNext": "下一个结果"
+  "findNext": "下一个结果",
+  "cmdCycleThinkEffort": "循环切换思考强度",
+  "cmdThinkEffort": "思考强度",
+  "fastModeTooltip": "加速模式：1.5 倍速度，2 倍价格",
+  "fastModeTooltipClaude": "加速模式：2.5 倍速度，更高的单 token 成本"
 }

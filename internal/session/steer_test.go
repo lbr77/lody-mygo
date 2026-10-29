@@ -236,3 +236,16 @@ func TestTurnMCPServers(t *testing.T) {
 		t.Fatalf("none chosen: %#v", cfg["mcpServerIds"])
 	}
 }
+
+func TestTurnConfigOptionValues(t *testing.T) {
+	previous := []any{map[string]any{"role": "user", "inputConfig": map[string]any{"configOptionValues": map[string]any{"reasoning_effort": "high", "permission": "ask"}}}}
+	cfg := inputConfig(previous, Turn{CLIType: "builtin", AgentType: "codex"}, "x")
+	if fmt.Sprint(cfg["configOptionValues"]) != "map[permission:ask reasoning_effort:high]" {
+		t.Fatalf("kept: %v", cfg["configOptionValues"])
+	}
+	// A choice lies over what the last turn used, as on iOS.
+	cfg = inputConfig(previous, Turn{CLIType: "builtin", AgentType: "codex", ConfigOptionValues: map[string]any{"reasoning_effort": "low", "fast-mode": true}}, "x")
+	if fmt.Sprint(cfg["configOptionValues"]) != "map[fast-mode:true permission:ask reasoning_effort:low]" {
+		t.Fatalf("chosen: %v", cfg["configOptionValues"])
+	}
+}

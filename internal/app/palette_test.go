@@ -8,6 +8,8 @@ import (
 	"github.com/egoist/mygo"
 	"github.com/egoist/mygo/i18n"
 	"github.com/egoist/mygo/ui"
+
+	"github.com/lbr77/lody-mygo/internal/catalog"
 )
 
 func TestCommandPalette(t *testing.T) {
@@ -239,5 +241,43 @@ func TestKeyboardSettings(t *testing.T) {
 		if !tt.HasText(want) {
 			t.Errorf("missing %q in %q", want, tt.Texts())
 		}
+	}
+}
+
+func TestEffortAndFast(t *testing.T) {
+	a := fixture()
+	a.view.Entries = a.view.Entries[:2]
+	a.view.Working = false
+	a.view.ConfigValues = map[string]any{"reasoning_effort": "high"}
+	a.catalog.Capabilities = map[string]catalog.Capability{"a1": {
+		Models: []catalog.Model{{ModelID: "claude-opus-5-5", Name: "Opus 5.5"}, {ModelID: "claude-haiku-5-5", Name: "Haiku 5.5"}},
+		Options: []catalog.ConfigOption{
+			{ID: "reasoning_effort", Category: "thought_level", Type: "select", Current: "medium", Choices: []catalog.Choice{{Value: "low", Name: "Low"}, {Value: "medium", Name: "Medium"}, {Value: "high", Name: "High"}}},
+			{ID: "fast", Type: "boolean", Current: false},
+		},
+		Efforts: map[string][]string{"claude-haiku-5-5": {"low"}},
+	}}
+	a.catalog.Sessions[0].AgentConfigID = "a1"
+	tt := snap(t, a, "composer-effort", false, nil)
+	// The last turn's effort shows; Fast is off.
+	if !tt.HasText("High") {
+		t.Fatalf("effort: %q", tt.Texts())
+	}
+	a.runCommand("session.cycleThinkEffort")
+	tt.Frame()
+	if got := a.runValues["s1"]["reasoning_effort"]; got != "low" || !tt.HasText("Low") {
+		t.Fatalf("cycled to %v: %q", got, tt.Texts())
+	}
+	if err := tt.Click("Accelerated mode: 2.5x faster at a higher cost per token"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if a.runValues["s1"]["fast"] != true {
+		t.Fatalf("Fast: %v", a.runValues["s1"])
+	}
+	// An effort the model doesn't allow stays out of the message.
+	a.runValues["s1"]["reasoning_effort"] = "high"
+	if got := a.chosenRunValues("s1", "a1", "claude-haiku-5-5"); got["reasoning_effort"] != nil || got["fast"] != true {
+		t.Fatalf("haiku: %v", got)
 	}
 }

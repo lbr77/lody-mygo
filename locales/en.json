@@ -2627,5 +2627,9 @@
     }
   },
   "findPrevious": "Previous result",
-  "findNext": "Next result"
+  "findNext": "Next result",
+  "cmdCycleThinkEffort": "Cycle Thinking Effort",
+  "cmdThinkEffort": "Thinking effort",
+  "fastModeTooltip": "Accelerated mode: 1.5x speed, 2x price",
+  "fastModeTooltipClaude": "Accelerated mode: 2.5x faster at a higher cost per token"
 }

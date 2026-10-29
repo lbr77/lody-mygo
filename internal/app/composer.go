@@ -63,6 +63,11 @@ func (a *App) bottom(c *ui.Context, p *palette, sess *catalog.Session, v *sessio
 			}
 			pickModel := func(id string) { a.models[sess.ID] = id }
 			a.runConfig(c, p, "model/"+sess.ID, sess.AgentConfigID, current, sess.LastModel, pickModel)
+			var last map[string]any
+			if v != nil {
+				last = v.ConfigValues
+			}
+			a.runOptions(c, p, sess.ID, sess.AgentConfigID, current, last)
 			mode := a.modes[sess.ID]
 			if mode == "" && v != nil {
 				mode = v.ModeID

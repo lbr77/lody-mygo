@@ -133,8 +133,9 @@ type View struct {
 	Entries      []Entry
 	Working      bool
 	AwaitingUser bool
-	ModelID      string // of the last user turn
-	ModeID       string // the permission mode of the last user turn
+	ModelID      string         // of the last user turn
+	ModeID       string         // the permission mode of the last user turn
+	ConfigValues map[string]any // the agent settings of the last user turn
 	Preview      *Preview
 	Goal         *Goal // the latest goal the agent reported
 }
@@ -522,6 +523,7 @@ func project(doc *loro.LoroDoc, status, reason string) *View {
 				entry.Config = cfg
 				view.ModelID = str(cfg["modelId"])
 				view.ModeID = str(cfg["modeId"])
+				view.ConfigValues = obj(cfg["configOptionValues"])
 				entry.Steer = str(cfg["_lodyDeliveryKind"]) == "steer"
 			}
 		}

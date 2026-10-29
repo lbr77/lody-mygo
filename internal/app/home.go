@@ -59,6 +59,7 @@ func (a *App) homeView(c *ui.Context, p *palette) {
 			if agent != nil {
 				pickModel := func(id string) { a.models[""] = id }
 				a.runConfig(c, p, "model/new", agent.ID, a.models[""], nil, pickModel)
+				a.runOptions(c, p, "", agent.ID, a.models[""], nil)
 				modes := a.catalog.ModesFor(agent.ID, agent.AgentType)
 				pickMode := func(id string) { a.modes[""] = id }
 				a.modeButton(c, p, "mode/new", modes, a.modes[""], pickMode)

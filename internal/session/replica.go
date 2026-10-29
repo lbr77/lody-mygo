@@ -347,6 +347,9 @@ type Turn struct {
 	// MCPServerIDs are the MCP servers the turn loads; nil keeps the
 	// previous turn's.
 	MCPServerIDs []string
+	// ConfigOptionValues are the agent's settings chosen for the turn, as
+	// its reasoning effort and Fast: laid over the previous turn's.
+	ConfigOptionValues map[string]any
 
 	// MarkDispatch records the turn in the catalog, which wakes the machine.
 	MarkDispatch func(ctx context.Context, sessionID, turnID string, queued bool) error
@@ -547,7 +550,14 @@ func inputConfig(history []any, t Turn, text string) map[string]any {
 	if model != "" {
 		config["modelId"] = model
 	}
-	if opts := obj(previous["configOptionValues"]); len(opts) > 0 {
+	opts := map[string]any{}
+	for k, v := range obj(previous["configOptionValues"]) {
+		opts[k] = v
+	}
+	for k, v := range t.ConfigOptionValues {
+		opts[k] = v
+	}
+	if len(opts) > 0 {
 		config["configOptionValues"] = opts
 	}
 	if t.Resume != "" {
