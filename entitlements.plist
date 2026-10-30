@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Flock runs in wazero, whose compiler writes machine code to
+	     anonymous memory and makes it executable (without MAP_JIT). Under
+	     the hardened runtime that notarization requires, such pages need
+	     this entitlement, or the process is killed with "Code Signature
+	     Invalid" as soon as it runs them. -->
+	<key>com.apple.security.cs.allow-unsigned-executable-memory</key>
+	<true/>
+</dict>
+</plist>
