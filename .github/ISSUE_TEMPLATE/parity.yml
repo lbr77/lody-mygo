@@ -47,4 +47,4 @@ body:
     id: version
     attributes:
       label: Lody Native version / Lody Native 版本
-      placeholder: "0.1.0"
+      placeholder: "0.1.1"
