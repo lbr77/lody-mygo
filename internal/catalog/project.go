@@ -295,38 +295,16 @@ type Mode struct {
 	Description string `json:"description,omitempty"`
 }
 
-// Lody's built-in modes, for agents that haven't reported theirs, with
-// the lines Lody gives them.
-var (
-	claudeModes = []Mode{
-		{"auto", "Auto", "Use a model classifier to approve/deny permission prompts"},
-		{"default", "Manual", "Standard behavior, prompts for dangerous operations"},
-		{"acceptEdits", "Accept Edits", "Auto-accept file edit operations"},
-		{"plan", "Plan Mode", "Planning mode, no actual tool execution"},
-		{"dontAsk", "Don't Ask", "Don't prompt for permissions, deny if not pre-approved"},
-		{"bypassPermissions", "Bypass Permissions", "Bypass all permission checks"},
-	}
-	codexModes = []Mode{
-		{"read-only", "Read-only", "Requires approval to edit files and run commands."},
-		{"agent", "Agent", "Read and edit files, and run commands."},
-		{"agent-auto-review", "Auto review", "Read and edit files, and run commands. Approval requests are reviewed automatically by a Codex subagent."},
-		{"agent-full-access", "Full access", "Codex can edit files outside this workspace and run commands with network access. Exercise caution when using."},
-	}
-)
-
-// ModesFor returns an agent's permission modes: those it reported, or
-// Lody's built-in ones for Claude Code and Codex.
+// ModesFor returns an agent's permission modes, as its capability has
+// them (CapabilityFor): those its machine reported, or a built-in's
+// static ones until it reports. An agent the catalog doesn't list, as one
+// since removed, has the static modes of a built-in of its type.
 func (c *Catalog) ModesFor(agentConfigID, agentType string) []Mode {
-	if modes := c.Capabilities[agentConfigID].Modes; len(modes) > 0 {
+	if modes := c.CapabilityFor(agentConfigID).Modes; len(modes) > 0 || c.agentConfig(agentConfigID) != nil {
 		return modes
 	}
-	switch strings.ToLower(agentType) {
-	case "claude", "claude-code":
-		return claudeModes
-	case "codex":
-		return codexModes
-	}
-	return nil
+	static, _ := StaticCapability("builtin", agentType, false)
+	return static.Modes
 }
 
 type Catalog struct {

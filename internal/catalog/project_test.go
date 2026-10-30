@@ -139,12 +139,18 @@ func TestCapabilityDescriptionsAndDeclaredModels(t *testing.T) {
 	}
 }
 
-// Lody's own modes for Claude Code and Codex say what each allows.
+// Lody's own modes for its built-ins say what each allows.
 func TestBuiltinModeDescriptions(t *testing.T) {
 	var c Catalog
-	for _, m := range append(c.ModesFor("x", "claude"), c.ModesFor("x", "codex")...) {
-		if m.Description == "" {
-			t.Errorf("%s has no description", m.ID)
+	for _, agentType := range []string{"claude", "codex", "kimi", "grok", "deepseek"} {
+		modes := c.ModesFor("x", agentType)
+		if len(modes) == 0 {
+			t.Errorf("%s has no modes", agentType)
+		}
+		for _, m := range modes {
+			if m.Description == "" {
+				t.Errorf("%s's %s has no description", agentType, m.ID)
+			}
 		}
 	}
 }

@@ -755,10 +755,10 @@ func (a *App) choiceButton(c *ui.Context, p *palette, label string, suggested bo
 }
 
 // modelCycle and modeCycle are the composer's models and modes, for the
-// commands that step through them.
+// commands that step through them: the models the picker offers.
 func (a *App) modelCycle(agentConfig, current string, pick func(string)) *cycleTarget {
 	t := &cycleTarget{current: current, pick: pick}
-	for _, m := range a.catalog.Capabilities[agentConfig].Models {
+	for _, m := range pickerModels(a.capability(agentConfig)) {
 		t.values = append(t.values, m.ModelID)
 	}
 	return t
