@@ -105,17 +105,20 @@ func (a *App) accountField(c *ui.Context, p *palette, managed bool) {
 	})
 }
 
-// formCapability is what the machine last found the form's agent
-// supports, if it was for this runtime.
+// formCapability is what the form's agent supports, and whether that is
+// known without a test, as Lody's agent dialog has it: what the machine
+// last found, if it was for this runtime; else, for a built-in on the
+// runtime Lody installs, Lody's static capability, but for Kimi, whose
+// settings wait for a test.
 func (a *App) formCapability(f *providerForm) (catalog.Capability, bool) {
 	cap, ok := a.catalog.Capabilities[f.id]
-	if !ok {
-		return cap, false
+	if ok && (cap.CLIType == "" || cap.CLIType == f.kind.cliType && cap.AgentType == f.agentType()) {
+		return cap, true
 	}
-	if cap.CLIType != "" && (cap.CLIType != f.kind.cliType || cap.AgentType != f.agentType()) {
-		return cap, false
+	if static, ok := catalog.StaticCapability(f.kind.cliType, f.agentType(), f.overridden()); ok && len(static.Options) > 0 && f.agentType() != "kimi" {
+		return static, true
 	}
-	return cap, true
+	return cap, false
 }
 
 // titleOwned is whether the agent names its sessions itself, as Claude

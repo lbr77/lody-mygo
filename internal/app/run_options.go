@@ -172,7 +172,7 @@ func (a *App) chosenRunValues(key, agentConfig, model string) map[string]any {
 		return nil
 	}
 	cap := a.runCapability(agentConfig, model)
-	reported := a.catalog.Capabilities[agentConfig].Options
+	reported := a.capability(agentConfig).Options
 	out := map[string]any{}
 	for id, v := range chosen {
 		at := slices.IndexFunc(cap.Options, func(o catalog.ConfigOption) bool { return o.ID == id })

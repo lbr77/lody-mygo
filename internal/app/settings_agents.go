@@ -176,7 +176,7 @@ type codexAuth struct {
 
 // codexLaunchGuard stands in for the Codex path of a profile's config, so
 // a machine too old for profiles fails rather than use its global login.
-const codexLaunchGuard = "\x00lody-codex-profile-v1"
+const codexLaunchGuard = catalog.CodexProfileGuard
 
 const defaultCodexURL = "https://api.openai.com/v1"
 
@@ -223,6 +223,16 @@ func (f *providerForm) agentType() string {
 		return f.customType
 	}
 	return f.kind.agentType
+}
+
+// overridden is whether the form runs its built-in from a runtime of the
+// user's own, as Lody's runtime overrides: a path, or Pi's extensions. A
+// Codex that signs in with a profile has none, its guard aside.
+func (f *providerForm) overridden() bool {
+	if f.codex != nil {
+		return false
+	}
+	return f.kind.pathKey != "" && strings.TrimSpace(f.path) != "" || f.kind.agentType == "pi" && len(f.piExt) > 0
 }
 
 func (a *App) agentsPage(c *ui.Context, p *palette) {

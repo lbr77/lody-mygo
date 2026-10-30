@@ -20,21 +20,12 @@ import (
 // Medium, High, X-High. Fast shows only for a model that has it.
 
 // capability is agentConfig's capability, knowing which runtime it is
-// even where the agent's report doesn't say.
+// even where the agent's report doesn't say. Until its machine reports,
+// a built-in on the runtime Lody installs has Lody's static capability,
+// whose values the composer names, orders and fits to the model as it
+// does a report's.
 func (a *App) capability(agentConfig string) catalog.Capability {
-	cap := a.catalog.Capabilities[agentConfig]
-	if cap.CLIType != "" && cap.AgentType != "" {
-		return cap
-	}
-	for _, agents := range a.catalog.Agents {
-		for _, ag := range agents {
-			if ag.ID == agentConfig {
-				cap.CLIType, cap.AgentType = firstNonEmpty(cap.CLIType, ag.CLIType), firstNonEmpty(cap.AgentType, ag.AgentType)
-				return cap
-			}
-		}
-	}
-	return cap
+	return a.catalog.CapabilityFor(agentConfig)
 }
 
 // runCapability is agentConfig's capability with its settings as Lody's
